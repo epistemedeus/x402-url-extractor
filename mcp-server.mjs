@@ -761,7 +761,7 @@ export async function mountMcp(app, {
   serverInfo,
   tools,
   typedTelemetry = null,
-  freePageChangeObserver = null,
+  createFreePageChangeObserver = null,
   streamableHttpOptions = undefined,
   configureResourceServer = null,
   httpBaseUrl = null,
@@ -1000,9 +1000,15 @@ export async function mountMcp(app, {
     });
   }
 
+  // Announce coverage only after the free tool and transport have been prepared.
+  let freePageChangeObserver = null;
+  if (catalogByName.get("page_change")?.free === true && typeof createFreePageChangeObserver === "function") {
+    try { freePageChangeObserver = createFreePageChangeObserver(); } catch { /* Optional measurement. */ }
+  }
   app.post("/mcp", parseMcpJson, async (req, res) => {
     let noteFreePageChange = null;
-    if (req.body?.method === "tools/call" && req.body?.params?.name === "page_change"
+    if (isJsonRpcObject(req.body) && req.body.jsonrpc === "2.0"
+      && Object.hasOwn(req.body, "id") && req.body?.method === "tools/call" && req.body?.params?.name === "page_change"
       && catalogByName.get("page_change")?.free === true && typeof freePageChangeObserver === "function") {
       try { noteFreePageChange = freePageChangeObserver(req, res); } catch { /* Optional measurement. */ }
     }

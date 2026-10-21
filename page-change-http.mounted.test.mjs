@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { link, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer as createHttpServer, request as httpRequest } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -10,6 +10,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { PAGE_CHANGE_HTTP_PATH } from "./page-change-http.mjs";
+import { MCP_JSON_RPC_MAX_BYTES } from "./mcp-json-rpc-limit.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const fx = (...parts) => path.join(cwd, "examples/customer-x402/fixtures/page-change", ...parts);
@@ -76,8 +77,8 @@ async function stopChild(child) {
   });
 }
 
-async function startMerchant({ extraEnv = {}, startupTimeout = 20_000 } = {}) {
-  const dataDir = await mkdtemp(path.join(tmpdir(), "page-change-http-"));
+async function startMerchant({ extraEnv = {}, startupTimeout = 20_000, dataDir: retainedDataDir = null } = {}) {
+  const dataDir = retainedDataDir || await mkdtemp(path.join(tmpdir(), "page-change-http-"));
   const facilitator = await startFakeFacilitator();
   const port = await unusedPort();
   const child = spawn(process.execPath, ["server.js"], {
@@ -131,14 +132,17 @@ async function startMerchant({ extraEnv = {}, startupTimeout = 20_000 } = {}) {
     await rm(dataDir, { recursive: true, force: true });
     throw error;
   }
+  child.stdout.on("data", chunk => { output = `${output}${chunk}`.slice(-40_000); });
+  child.stderr.on("data", chunk => { output = `${output}${chunk}`.slice(-40_000); });
   return {
     base: `http://127.0.0.1:${port}`,
+    dataDir,
     child,
     output: () => output,
     async close() {
       await stopChild(child);
       await facilitator.close();
-      await rm(dataDir, { recursive: true, force: true });
+      if (!retainedDataDir) await rm(dataDir, { recursive: true, force: true });
     },
   };
 }
@@ -485,4 +489,222 @@ test("free HTTP and MCP outcomes reach the normal operator summary", { timeout: 
   assert.ok(summary.freePageChange, `missing free outcome observation: HTTP and MCP succeeded; paidSuccesses=${summary.paidSuccesses}`);
   assert.equal(summary.freePageChange.transports.http.byOutcome.unchanged, 1);
   assert.equal(summary.freePageChange.transports.mcp.byOutcome.unchanged, 1);
+});
+
+async function callFreePageChange(base, payload, headers = {}) {
+  for (let n = 0; n < 100; n++) {
+    const response = await fetch(`${base}/mcp`, {
+      method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream", ...headers },
+      body: JSON.stringify({ jsonrpc: "2.0", id: n, method: "tools/call", params: { name: "page_change", arguments: payload } }),
+    });
+    if (response.status === 404) { await delay(30); continue; }
+    const wire = await response.text();
+    const body = JSON.parse(wire.startsWith("event:") ? wire.split("data: ")[1].trim() : wire);
+    return { response, body };
+  }
+  throw new Error("MCP did not mount");
+}
+
+async function freeOutcomeSummary(merchant) {
+  const response = await fetch(`${merchant.base}/v0/commerce-demand.json`);
+  assert.equal(response.status, 200);
+  return response.json();
+}
+
+const unchangedPayload = () => ({ before: load("merchant", "unchanged-before.json"), after: load("merchant", "unchanged-after.json"), fields: ["title"] });
+
+test("mounted HTTP/MCP distinguish complete, partial, unavailable and refused invocations without retaining private bytes", { timeout: 60_000 }, async t => {
+  const internalToken = "root2131-owner-token-".repeat(3);
+  const merchant = await startMerchant({ extraEnv: { PAGE_CHANGE_HTTP_ENABLED: "1", COMMERCE_INTERNAL_TOKEN: internalToken } });
+  t.after(() => merchant.close());
+  const completeChanged = unchangedPayload();
+  completeChanged.after.sources[0].data.title = "private-document-marker-2131";
+  completeChanged.before.sources[0].source = completeChanged.after.sources[0].source = "https://private-source-marker-2131.example/a";
+  const cases = [
+    { input: unchangedPayload(), outcome: "unchanged" },
+    { input: completeChanged, outcome: "changed" },
+    { input: { ...unchangedPayload(), after: load("merchant", "reordered-after.json") }, outcome: "reordered" },
+    { input: { before: load("customer-job", "before.json"), after: load("customer-job", "after.json"), fields: ["title", "description", "headings"] }, outcome: "partial" },
+    { input: { before: {}, after: {}, fields: ["title"] }, outcome: "unavailable" },
+    { input: { ...unchangedPayload(), fields: ["private-property-marker-2131"] }, outcome: "refused" },
+    { input: { ...unchangedPayload(), fields: [] }, outcome: "refused" },
+  ];
+  const privacyHeaders = { "x-private-marker": "private-header-marker-2131", "x-samedaydesk-page-change-outcome": "unchanged", "payment-signature": "private-wallet-secret-marker-2131" };
+  for (const entry of cases) {
+    const http = await postJson(merchant.base, entry.input, { headers: privacyHeaders });
+    assert.equal(http.response.status, entry.outcome === "refused" ? 400 : 200);
+    const mcp = await callFreePageChange(merchant.base, entry.input, privacyHeaders);
+    assert.equal(mcp.response.status, 200);
+    assert.equal(mcp.body.result?.isError === true, entry.outcome === "refused");
+  }
+  // Identical retries are distinct invocations; finish + close cannot double-record one.
+  await postJson(merchant.base, unchangedPayload());
+  await callFreePageChange(merchant.base, unchangedPayload());
+  const populations = [
+    { headers: { "x-samedaydesk-internal": internalToken }, name: "internal" },
+    { headers: { "user-agent": "SameDayDesk-owner-test" }, name: "owner_monitor" },
+    { headers: { "user-agent": "GPTBot" }, name: "crawler" },
+  ];
+  for (const population of populations) {
+    await postJson(merchant.base, unchangedPayload(), { headers: population.headers });
+    await callFreePageChange(merchant.base, unchangedPayload(), population.headers);
+  }
+  // Unverified owner declarations and bogus tokens do not establish identity.
+  const unverified = { "x-samedaydesk-internal": "bogus", "x-samedaydesk-validation-marker": "owner", "x-samedaydesk-origin-class": "internal" };
+  await postJson(merchant.base, unchangedPayload(), { headers: unverified });
+  await callFreePageChange(merchant.base, unchangedPayload(), unverified);
+  const malformed = await postJson(merchant.base, "{private-parser-marker-2131", { headers: { "x-forwarded-for": "203.0.113.201" } });
+  assert.equal(malformed.response.status, 400);
+  const oversized = await postJson(merchant.base, Buffer.alloc(300_000, 97), { headers: { "x-forwarded-for": "203.0.113.202" } });
+  assert.equal(oversized.response.status, 413);
+  const summary = await freeOutcomeSummary(merchant);
+  for (const transport of ["http", "mcp"]) {
+    const observed = summary.freePageChange.transports[transport];
+    assert.equal(observed.byOutcome.changed, 1);
+    assert.equal(observed.byOutcome.reordered, 1);
+    assert.equal(observed.byOutcome.partial, 1);
+    assert.equal(observed.byOutcome.unavailable, 1);
+    assert.equal(observed.byOutcome.unchanged, 3);
+    assert.equal(observed.byOutcome.refused, transport === "http" ? 4 : 2);
+    assert.equal(observed.observations, transport === "http" ? 11 : 9);
+    assert.equal(observed.populations.internal.unchanged, 1);
+    assert.equal(observed.populations.owner_monitor.unchanged, 1);
+    assert.equal(observed.populations.crawler.unchanged, 1);
+    assert.equal(observed.captureVersion, 1);
+    assert.equal(observed.coverage, "prospective_process_only");
+    assert.equal(observed.requestedWindowComplete, false);
+  }
+  assert.equal(summary.freePageChange.usefulness, "unknown");
+  assert.equal(summary.freePageChange.callerIdentity, "unknown");
+  const stored = await readFile(path.join(merchant.dataDir, "commerce-events.ndjson"), "utf8");
+  for (const marker of ["private-document-marker", "private-source-marker", "private-property-marker", "private-header-marker", "private-wallet-secret", "private-parser-marker", internalToken]) assert.ok(!stored.includes(marker), marker);
+  const rows = stored.trim().split("\n").map(JSON.parse).filter(row => row.pageChangeOutcome);
+  assert.equal(rows.length, 26);
+  assert.equal(new Set(rows.map(row => row.id)).size, rows.length);
+  assert.ok(rows.every(row => row.paymentPresent === false && row.paymentActor === null && row.queryKeys.length === 0));
+  assert.equal(summary.paidSuccessActors, 0);
+  assert.equal(summary.byResult.paid_success || 0, 0);
+});
+
+test("mounted timeout, disconnect and worker failure never become completed comparisons", { timeout: 60_000 }, async t => {
+  const timed = await startMerchant({ extraEnv: { PAGE_CHANGE_HTTP_ENABLED: "1", PAGE_CHANGE_HTTP_WORKER_PATH: path.join(cwd, "page-change-http-sleep-worker.mjs"), PAGE_CHANGE_HTTP_TIMEOUT_MS: "180" } });
+  t.after(() => timed.close());
+  assert.equal((await postJson(timed.base, unchangedPayload())).response.status, 408);
+  const mcp = await callFreePageChange(timed.base, unchangedPayload());
+  assert.equal(mcp.body.result.isError, true);
+  const abort = new AbortController();
+  const pending = postJson(timed.base, unchangedPayload(), { signal: abort.signal });
+  await delay(60);
+  abort.abort();
+  await assert.rejects(pending, /abort/i);
+  const mcpAbort = new AbortController();
+  const pendingMcp = fetch(`${timed.base}/mcp`, {
+    method: "POST", signal: mcpAbort.signal,
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 88, method: "tools/call", params: { name: "page_change", arguments: unchangedPayload() } }),
+  }).then(response => response.text());
+  await delay(60);
+  mcpAbort.abort();
+  await assert.rejects(pendingMcp, /abort/i);
+  await delay(220);
+  const timedSummary = await freeOutcomeSummary(timed);
+  assert.equal(timedSummary.freePageChange.transports.http.byOutcome.aborted, 2);
+  assert.equal(timedSummary.freePageChange.transports.mcp.byOutcome.aborted, 2);
+  assert.equal(timedSummary.freePageChange.transports.http.byOutcome.unchanged, 0);
+  const failed = await startMerchant({ extraEnv: { PAGE_CHANGE_HTTP_ENABLED: "1", PAGE_CHANGE_HTTP_WORKER_PATH: path.join(cwd, "does-not-exist-root2131.mjs") } });
+  t.after(() => failed.close());
+  assert.equal((await postJson(failed.base, unchangedPayload())).response.status, 500);
+  assert.equal((await callFreePageChange(failed.base, unchangedPayload())).body.result.isError, true);
+  const failureSummary = await freeOutcomeSummary(failed);
+  assert.equal(failureSummary.freePageChange.transports.http.byOutcome.failed, 1);
+  assert.equal(failureSummary.freePageChange.transports.mcp.byOutcome.failed, 1);
+});
+
+test("mounted restart retains observations but starts fresh process coverage; disabled transports remain unmeasured", { timeout: 60_000 }, async t => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "root2131-restart-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const first = await startMerchant({ dataDir, extraEnv: { PAGE_CHANGE_HTTP_ENABLED: "1" } });
+  t.after(() => first.close());
+  await postJson(first.base, unchangedPayload());
+  await callFreePageChange(first.base, unchangedPayload());
+  const initial = await freeOutcomeSummary(first);
+  await first.close();
+  const second = await startMerchant({ dataDir, extraEnv: { PAGE_CHANGE_HTTP_ENABLED: "1" } });
+  t.after(() => second.close());
+  await callFreePageChange(second.base, unchangedPayload());
+  const restarted = await freeOutcomeSummary(second);
+  for (const transport of ["http", "mcp"]) {
+    assert.ok(restarted.freePageChange.transports[transport].captureStartedAt > initial.freePageChange.transports[transport].captureStartedAt);
+    assert.equal(restarted.freePageChange.transports[transport].requestedWindowComplete, false);
+  }
+  assert.equal(restarted.freePageChange.transports.http.byOutcome.unchanged, 1);
+  assert.equal(restarted.freePageChange.transports.mcp.byOutcome.unchanged, 2);
+  await second.close();
+  const disabled = await startMerchant({ dataDir, extraEnv: { PAGE_CHANGE_HTTP_ENABLED: "0" } });
+  t.after(() => disabled.close());
+  assert.equal((await postJson(disabled.base, unchangedPayload())).response.status, 404);
+  const unmeasured = await freeOutcomeSummary(disabled);
+  for (const transport of ["http", "mcp"]) {
+    assert.equal(unmeasured.freePageChange.transports[transport].captureStartedAt, null);
+    assert.equal(unmeasured.freePageChange.transports[transport].coverage, "unmeasured");
+  }
+  assert.equal(unmeasured.freePageChange.transports.http.byOutcome.unchanged, 1);
+});
+
+test("mounted parser, graph, rate and capacity limits are refusals, while unselected MCP parser failures remain unattributed", { timeout: 60_000 }, async t => {
+  const merchant = await startMerchant({ extraEnv: { PAGE_CHANGE_HTTP_ENABLED: "1", PAGE_CHANGE_HTTP_MAX_CONCURRENT: "1" } });
+  t.after(() => merchant.close());
+  let nested = {};
+  for (let n = 0; n < 25; n++) nested = { child: nested };
+  const input = { ...unchangedPayload(), before: nested };
+  assert.equal((await postJson(merchant.base, input)).json.code, "json_depth_limit");
+  assert.equal((await callFreePageChange(merchant.base, input)).body.result.isError, true);
+  const stream = streamRequest(merchant.base);
+  t.after(() => stream.request.destroy());
+  stream.request.write("{");
+  await delay(80);
+  assert.equal((await postJson(merchant.base, unchangedPayload())).response.status, 503);
+  stream.request.destroy();
+  await delay(80);
+  // Existing rate ceiling is 12: invalid inputs consume admission too.
+  for (let n = 0; n < 9; n++) assert.equal((await postJson(merchant.base, {})).response.status, 400);
+  assert.equal((await postJson(merchant.base, unchangedPayload())).response.status, 429);
+  const before = await freeOutcomeSummary(merchant);
+  assert.equal(before.freePageChange.transports.http.byOutcome.refused, 12);
+  assert.equal(before.freePageChange.transports.http.byOutcome.aborted, 1);
+  const mcpHeaders = { "content-type": "application/json", accept: "application/json, text/event-stream" };
+  const malformed = await fetch(`${merchant.base}/mcp`, { method: "POST", headers: mcpHeaders, body: "{private-mcp-parser-marker" });
+  assert.equal(malformed.status, 400);
+  const overlimit = await fetch(`${merchant.base}/mcp`, { method: "POST", headers: mcpHeaders,
+    body: JSON.stringify({ jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "page_change", arguments: { pad: "a".repeat(MCP_JSON_RPC_MAX_BYTES) } } }) });
+  assert.equal((await overlimit.json()).error.message, "mcp_json_rpc_too_large");
+  const invalidRpc = await fetch(`${merchant.base}/mcp`, { method: "POST", headers: mcpHeaders,
+    body: JSON.stringify({ jsonrpc: "0.1", id: 5, method: "tools/call", params: { name: "page_change", arguments: unchangedPayload() } }) });
+  assert.equal(invalidRpc.status, 400);
+  const after = await freeOutcomeSummary(merchant);
+  assert.equal(after.freePageChange.transports.mcp.observations, before.freePageChange.transports.mcp.observations);
+  assert.equal(after.freePageChange.transports.mcp.byOutcome.refused, 1);
+  assert.equal(after.freePageChange.transports.mcp.byOutcome.changed, 0);
+  assert.equal(after.freePageChange.transports.mcp.scope, "parsed_page_change_tools_call");
+});
+
+test("canonical journal failure cannot change mounted HTTP or MCP free delivery", { timeout: 60_000 }, async t => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "root2131-journal-failure-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  await writeFile(path.join(dataDir, "commerce-events.ndjson"), "");
+  await link(path.join(dataDir, "commerce-events.ndjson"), path.join(dataDir, "unsafe-hardlink"));
+  const merchant = await startMerchant({ dataDir, extraEnv: { PAGE_CHANGE_HTTP_ENABLED: "1" } });
+  t.after(() => merchant.close());
+  const http = await postJson(merchant.base, unchangedPayload()).catch(error => { throw new Error(`${error.message}: ${merchant.output()}`); });
+  assert.equal(http.response.status, 200);
+  assert.equal(http.json.report.verdict, "unchanged");
+  assert.equal(http.json.charged, false);
+  const mcp = await callFreePageChange(merchant.base, unchangedPayload());
+  assert.notEqual(mcp.body.result.isError, true);
+  assert.equal(JSON.parse(mcp.body.result.content[0].text).charged, false);
+  const summary = await freeOutcomeSummary(merchant);
+  for (const transport of ["http", "mcp"]) {
+    assert.equal(summary.freePageChange.transports[transport].coverage, "unmeasured");
+    assert.equal(summary.freePageChange.transports[transport].observations, 0);
+  }
 });

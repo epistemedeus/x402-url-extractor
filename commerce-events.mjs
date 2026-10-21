@@ -1721,7 +1721,9 @@ function isCanonicalPaymentCrossFields(value) {
   return true;
 }
 
-function summarizeFreePageChange(events, { capture, writerHealthy, requestedWindowCoverage }) {
+function summarizeFreePageChange(events, { capture, writerHealthy, requestedWindowCoverage, externalCutoffMs, generatedAtMs }) {
+  events = events.filter(event => eventTimestampMs(event) <= generatedAtMs
+    && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs));
   const transports = {};
   for (const transport of ["http", "mcp"]) {
     const rows = events.filter(event => event.pageChangeOutcome?.transport === transport);
@@ -1745,6 +1747,7 @@ function summarizeFreePageChange(events, { capture, writerHealthy, requestedWind
   }
   return {
     schemaVersion: "samedaydesk.free-page-change-outcomes.v1", transports,
+    unknownOutcomeObservations: events.filter(event => event.kind === "free" && !hasOwn(event, "pageChangeOutcome")).length,
     historicalUse: "unknown", usefulness: "unknown", callerIdentity: "unknown",
     policy: "Retained invocation outcomes, not usefulness, independent customers or revenue. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Capture starts only on this producer's transport registration; restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only.",
   };
@@ -1773,10 +1776,11 @@ function acceptsPageChangeOutcome(event) {
     || event.paymentPresent !== false || event.replayed !== false
     || event.settlementReference !== null || event.protocolsOffered?.length !== 0
     || event.queryKeys?.length !== 0 || event.requestConstruction !== "not_measured") return false;
-  const completedReport = ["changed", "unchanged", "reordered", "partial", "unavailable"].includes(metadata.outcome);
-  if (completedReport && event.status !== 200) return false;
+  const reportOutcome = ["changed", "unchanged", "reordered", "partial", "unavailable"].includes(metadata.outcome);
+  if (reportOutcome && event.status !== 200) return false;
   if (metadata.transport === "http" && metadata.outcome === "refused"
-    && !(event.status >= 400 && event.status < 500 || event.status === 503)) return false;
+    && !((event.status >= 400 && event.status < 500) || event.status === 503)) return false;
+  if (metadata.transport === "http" && metadata.outcome === "failed" && event.status < 400) return false;
   return true;
 }
 
@@ -2303,9 +2307,7 @@ function isCanonicalRareFunnelEvidence(value) {
   }
   if (!isCanonicalHttpMethod(value.method)) return false;
   if (value.kind !== "paid" || value.matched !== true) return false;
-  const freeMcp = value.kind === "free" && value.route === "/mcp" && hasOwn(value, "pageChangeOutcome");
-  if (!freeMcp && !isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
-  if (!acceptsPageChangeOutcome(value)) return false;
+  if (!isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
   if (value.paymentPresent !== true) return false;
   if (typeof value.paymentCredentialParsed !== "boolean") return false;
   if (!CANONICAL_PAYMENT_PROTOCOLS.has(value.paymentProtocol)) return false;
@@ -3988,7 +3990,6 @@ export function createCommerceTelemetry({
       observed: classifyAgentDiscoverySource(userAgent),
     });
     const agentDiscoverySource = sourceSplit.agentDiscoverySource;
-    const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
     let outcomeClaim = null;
     try {
       outcomeClaim = authorizeOutcomeBinding(headers, internalToken);
@@ -4770,7 +4771,7 @@ export function createCommerceTelemetry({
       coverage,
       freePageChange: summarizeFreePageChange(windowedEvents, {
         capture: pageChangeCapture, writerHealthy: !writerFailure,
-        requestedWindowCoverage: coverage.requestedWindowCoverage,
+        requestedWindowCoverage: coverage.requestedWindowCoverage, externalCutoffMs, generatedAtMs,
       }),
       extractBatchInputRefusals: summarizeExtractBatchInputRefusals(events, coverage.requestedWindowCoverage),
       durableRareFunnel: summarizeDurableRareFunnel({

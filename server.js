@@ -4554,7 +4554,7 @@ import("./mcp-server.mjs")
       network: NETWORK,
       payTo: PAY_TO,
       serverInfo: { name: "x402-data-gateway", version: SERVICE_VERSION },
-      freePageChangeObserver: isPageChangeHttpEnabled() ? commerceTelemetry.freePageChangeObserver("mcp") : null,
+      createFreePageChangeObserver: isPageChangeHttpEnabled() ? () => commerceTelemetry.freePageChangeObserver("mcp") : null,
       typedTelemetry: {
         enabled: true,
         onAppend: (decision, requestAttribution, declaredSource, toolDelivery, facilitatorSettlement) =>
