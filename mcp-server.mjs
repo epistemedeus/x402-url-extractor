@@ -20,6 +20,7 @@
 //
 // Verified against @x402/mcp@2.16.0 + @modelcontextprotocol/sdk@1.29.0 (June 2026).
 
+import { pageChangeServiceOutcome } from "./page-change-http.mjs";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { request as requestHttp } from "node:http";
 import express from "express";
@@ -47,6 +48,7 @@ import {
 
 const mcpTypedAttemptAls = new AsyncLocalStorage();
 const mcpHttpRequestAls = new AsyncLocalStorage();
+const mcpFreePageChangeAls = new AsyncLocalStorage();
 
 const MCP_PAYMENT_META_KEY = "x402/payment";
 const MAX_PAYMENT_SIGNATURE_HEADER_BYTES = 32 * 1024;
@@ -398,12 +400,18 @@ function freeUnpaidHandler(tool) {
   return async (args) => {
     try {
       const value = await tool.run(args);
+      if (tool.name === "page_change") {
+        try { mcpFreePageChangeAls.getStore()?.(pageChangeServiceOutcome(value)); } catch { /* Optional measurement. */ }
+      }
       const failed = !value || value.ok === false || Boolean(value.error);
       return withoutSuccessShapedStructuredContent({
         ...asToolResult(value, { structured: !failed }),
         ...(failed ? { isError: true } : {}),
       });
     } catch (error) {
+      if (tool.name === "page_change") {
+        try { mcpFreePageChangeAls.getStore()?.(pageChangeServiceOutcome(null, error)); } catch { /* Optional measurement. */ }
+      }
       return withoutSuccessShapedStructuredContent({
         ...asToolResult({
           ok: false,
@@ -753,6 +761,7 @@ export async function mountMcp(app, {
   serverInfo,
   tools,
   typedTelemetry = null,
+  createFreePageChangeObserver = null,
   streamableHttpOptions = undefined,
   configureResourceServer = null,
   httpBaseUrl = null,
@@ -991,7 +1000,18 @@ export async function mountMcp(app, {
     });
   }
 
+  // Announce coverage only after the free tool and transport have been prepared.
+  let freePageChangeObserver = null;
+  if (catalogByName.get("page_change")?.free === true && typeof createFreePageChangeObserver === "function") {
+    try { freePageChangeObserver = createFreePageChangeObserver(); } catch { /* Optional measurement. */ }
+  }
   app.post("/mcp", parseMcpJson, async (req, res) => {
+    let noteFreePageChange = null;
+    if (isJsonRpcObject(req.body) && req.body.jsonrpc === "2.0"
+      && Object.hasOwn(req.body, "id") && req.body?.method === "tools/call" && req.body?.params?.name === "page_change"
+      && catalogByName.get("page_change")?.free === true && typeof freePageChangeObserver === "function") {
+      try { noteFreePageChange = freePageChangeObserver(req, res); } catch { /* Optional measurement. */ }
+    }
     injectPaymentSignatureHeader(req);
     let requestAttribution = null;
     let declaredSource = null;
@@ -1046,7 +1066,7 @@ export async function mountMcp(app, {
       await mcpHttpRequestAls.run(req, () => mcpTypedAttemptAls.run(created.attempt, run));
       return;
     }
-    await mcpHttpRequestAls.run(req, run);
+    await mcpFreePageChangeAls.run(noteFreePageChange, () => mcpHttpRequestAls.run(req, run));
   });
 
   // Stateless server: no standalone GET (SSE) or DELETE (session teardown) support.
