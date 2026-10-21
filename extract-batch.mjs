@@ -142,6 +142,71 @@ function refusalText(code) {
   return INPUT_REFUSAL_TEXT[code];
 }
 
+// Internal prospective evidence only; public refusal payloads stay unchanged.
+export const EXTRACT_BATCH_INPUT_SHAPE_CONTRACT = Object.freeze({
+  schemaVersion: "samedaydesk.extract-batch.input-shape.v1",
+  stages: Object.freeze(["body", "body_keys", "urls", "url_items", "fields", "text_excerpt"]),
+  types: Object.freeze(["absent", "null", "scalar", "object", "array"]),
+  arrayCounts: Object.freeze(["empty", "in_range", "over_limit"]),
+});
+const INPUT_SHAPE_KEYS = Object.freeze(["stage", "bodyType", "urlsType", "urlsCount"]);
+const INPUT_STAGE_CODES = Object.freeze({
+  body: Object.freeze(["body_not_object"]),
+  body_keys: Object.freeze(["unexpected_field"]),
+  urls: Object.freeze(["urls_invalid"]),
+  url_items: Object.freeze(["url_item_invalid", "url_too_long", "url_malformed", "url_credentials",
+    "url_scheme_not_https", "url_scheme_unsupported", "url_not_public", "url_normalized_too_long"]),
+  fields: Object.freeze(["fields_invalid", "fields_unknown"]),
+  text_excerpt: Object.freeze(["text_excerpt_limit_invalid", "text_excerpt_ceiling", "excerpt_ceiling_unavailable"]),
+});
+const observedInputRefusals = new WeakMap();
+
+function inputType(value) {
+  if (value === undefined) return "absent";
+  if (value === null) return "null";
+  if (Array.isArray(value)) return "array";
+  return typeof value === "object" ? "object" : "scalar";
+}
+
+export function readExtractBatchInputRefusalShape(value, code) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const keys = Object.keys(value);
+  if (keys.length !== INPUT_SHAPE_KEYS.length || keys.some((key) => !INPUT_SHAPE_KEYS.includes(key))) return null;
+  if (!Object.hasOwn(INPUT_STAGE_CODES, value.stage) || !INPUT_STAGE_CODES[value.stage].includes(code)) return null;
+  if (!EXTRACT_BATCH_INPUT_SHAPE_CONTRACT.types.includes(value.bodyType)) return null;
+  if (value.stage === "body" || value.stage === "body_keys") {
+    if (value.stage === "body" ? value.bodyType === "object" : value.bodyType !== "object") return null;
+    if (value.urlsType !== "not_inspected" || value.urlsCount !== null) return null;
+  } else {
+    if (value.bodyType !== "object" || !EXTRACT_BATCH_INPUT_SHAPE_CONTRACT.types.includes(value.urlsType)) return null;
+    if (value.urlsType === "array") {
+      if (!EXTRACT_BATCH_INPUT_SHAPE_CONTRACT.arrayCounts.includes(value.urlsCount)) return null;
+    } else if (value.urlsCount !== null) return null;
+    if (value.stage === "urls") {
+      if (value.urlsType === "array" && value.urlsCount === "in_range") return null;
+    } else if (value.urlsType !== "array" || value.urlsCount !== "in_range") return null;
+  }
+  return Object.freeze({ stage: value.stage, bodyType: value.bodyType,
+    urlsType: value.urlsType, urlsCount: value.urlsCount });
+}
+
+// Only the actual mounted validator can populate this response-bound handoff.
+// A fabricated public response or res.locals property cannot mint shape evidence.
+export function observedExtractBatchInputRefusalShape(res, code) {
+  const observed = observedInputRefusals.get(res);
+  return observed?.code === code ? observed.shape : null;
+}
+
+function refusalShape(stage, body, code) {
+  const inspected = stage !== "body" && stage !== "body_keys";
+  const urls = inspected ? body.urls : undefined;
+  return readExtractBatchInputRefusalShape({ stage, bodyType: inputType(body),
+    urlsType: inspected ? inputType(urls) : "not_inspected",
+    urlsCount: inspected && Array.isArray(urls)
+      ? (urls.length === 0 ? "empty" : urls.length > EXTRACT_BATCH_MAX_URLS ? "over_limit" : "in_range") : null,
+  }, code);
+}
+
 export class ExtractBatchInputError extends Error {
   constructor(reason) {
     const text = refusalText(reason);
@@ -267,40 +332,54 @@ export function assertPublicHttpsUrl(raw) {
 }
 
 export function normalizeExtractBatchInput(body) {
-  if (body == null || typeof body !== "object" || Array.isArray(body)) refusal("body_not_object");
-  const extra = Object.keys(body).filter((key) => !ALLOWED_BODY_KEYS.has(key));
-  if (extra.length) refusal("unexpected_field");
-  if (!Array.isArray(body.urls) || body.urls.length < 1 || body.urls.length > EXTRACT_BATCH_MAX_URLS) refusal("urls_invalid");
-  const urls = body.urls.map((value) => assertPublicHttpsUrl(value));
-  if (body.fields !== undefined) {
-    const fields = body.fields;
-    const shapeOk = Array.isArray(fields)
-      && fields.length >= 1
-      && fields.length <= ALL_FIELDS.length
-      && fields.every((item) => typeof item === "string")
-      && new Set(fields).size === fields.length;
-    if (!shapeOk) refusal("fields_invalid");
-    if (fields.some((item) => !ALL_FIELDS.includes(item))) refusal("fields_unknown");
-  }
-  let requirement;
+  let stage = "body";
   try {
-    requirement = normalizeRequirement(body.fields === undefined ? {} : { fields: body.fields });
-  } catch {
-    refusal("fields_invalid");
+    if (body == null || typeof body !== "object" || Array.isArray(body)) refusal("body_not_object");
+    stage = "body_keys";
+    const extra = Object.keys(body).filter((key) => !ALLOWED_BODY_KEYS.has(key));
+    if (extra.length) refusal("unexpected_field");
+    stage = "urls";
+    if (!Array.isArray(body.urls) || body.urls.length < 1 || body.urls.length > EXTRACT_BATCH_MAX_URLS) refusal("urls_invalid");
+    stage = "url_items";
+    const urls = body.urls.map((value) => assertPublicHttpsUrl(value));
+    stage = "fields";
+    if (body.fields !== undefined) {
+      const fields = body.fields;
+      const shapeOk = Array.isArray(fields)
+        && fields.length >= 1
+        && fields.length <= ALL_FIELDS.length
+        && fields.every((item) => typeof item === "string")
+        && new Set(fields).size === fields.length;
+      if (!shapeOk) refusal("fields_invalid");
+      if (fields.some((item) => !ALL_FIELDS.includes(item))) refusal("fields_unknown");
+    }
+    let requirement;
+    try {
+      requirement = normalizeRequirement(body.fields === undefined ? {} : { fields: body.fields });
+    } catch {
+      refusal("fields_invalid");
+    }
+    stage = "text_excerpt";
+    let textExcerptLimitChars;
+    if (Object.prototype.hasOwnProperty.call(body, "textExcerptLimitChars")) {
+      const parsed = parseTextExcerptLimit(body.textExcerptLimitChars);
+      if (!parsed.ok) refusal("text_excerpt_limit_invalid");
+      const ceiling = maxAdmittedBatchExcerptChars(urls.length);
+      if (parsed.value > ceiling) refusal("text_excerpt_ceiling");
+      textExcerptLimitChars = parsed.value;
+    }
+    return Object.freeze({
+      urls: Object.freeze(urls),
+      fields: Object.freeze([...requirement.fields]),
+      ...(textExcerptLimitChars !== undefined ? { textExcerptLimitChars } : {}),
+    });
+  } catch (error) {
+    if (error instanceof ExtractBatchInputError) {
+      // Optional observation must never replace the original refusal.
+      try { error.inputShape = refusalShape(stage, body, error.reason); } catch { /* unavailable */ }
+    }
+    throw error;
   }
-  let textExcerptLimitChars;
-  if (Object.prototype.hasOwnProperty.call(body, "textExcerptLimitChars")) {
-    const parsed = parseTextExcerptLimit(body.textExcerptLimitChars);
-    if (!parsed.ok) refusal("text_excerpt_limit_invalid");
-    const ceiling = maxAdmittedBatchExcerptChars(urls.length);
-    if (parsed.value > ceiling) refusal("text_excerpt_ceiling");
-    textExcerptLimitChars = parsed.value;
-  }
-  return Object.freeze({
-    urls: Object.freeze(urls),
-    fields: Object.freeze([...requirement.fields]),
-    ...(textExcerptLimitChars !== undefined ? { textExcerptLimitChars } : {}),
-  });
 }
 
 export function extractBatchJobId({ headers, rawBody }) {
@@ -623,6 +702,10 @@ export function validateExtractBatchRequest(req, res, next) {
   } catch (error) {
     res.set("Cache-Control", "no-store");
     if (error instanceof ExtractBatchInputError) {
+      try {
+        const shape = readExtractBatchInputRefusalShape(error.inputShape, error.reason);
+        if (shape) observedInputRefusals.set(res, Object.freeze({ code: error.reason, shape }));
+      } catch { /* Optional metadata cannot gate the owning refusal. */ }
       return res.status(400).json(extractBatchInputRefusalPayload(error.reason));
     }
     return res.status(400).json({

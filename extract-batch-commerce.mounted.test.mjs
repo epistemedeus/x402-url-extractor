@@ -657,3 +657,49 @@ test("mounted refusal evidence carries only semantic codes through HTTP MCP and 
     }
   }
 });
+
+test("prospective URL shapes reach the mounted journal and normal summary", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "batch-input-shapes-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+  const marker = "sk_live_ROOT1862_SHAPE_SECRET";
+  const cases = [
+    [{}, "absent", null],
+    [{ urls: marker }, "scalar", null],
+    [{ urls: null }, "null", null],
+    [{ urls: { [marker]: marker } }, "object", null],
+    [{ urls: [] }, "array", "empty"],
+    [{ urls: Array(6).fill(`https://example.com/${marker}`) }, "array", "over_limit"],
+  ];
+  for (const [body] of cases) {
+    const response = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(body));
+    assert.equal(response.status, 400);
+    const payload = await response.json();
+    assert.equal(readExtractBatchInputRefusalCode(payload), "urls_invalid");
+    assert.equal(Object.hasOwn(payload, "extractBatchInputRefusalShape"), false);
+  }
+  const demand = await fetch(`${merchant.base}/v0/commerce-demand.json?days=90`).then((r) => r.json());
+  await stopChild(merchant.child); merchant = null;
+  const { raw, http } = await readEvents(dataDir);
+  const refused = http.filter((row) => row.extractBatchInputRefusalCode === "urls_invalid");
+  assert.deepEqual(refused.map((row) => row.extractBatchInputRefusalShape), cases.map(([, type, count]) => ({
+    stage: "urls", bodyType: "object", urlsType: type, urlsCount: count,
+  })));
+  const snapshot = await createCommerceTelemetry({ dataDir }).snapshot();
+  for (const summary of [snapshot.extractBatchInputRefusals, demand.extractBatchInputRefusals]) {
+    assert.equal(summary.knownShapeEvents, 6);
+    assert.equal(summary.unknownShapeEvents, 0);
+    assert.equal(Object.keys(summary.byShape).length, 6);
+  }
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+  await assert.rejects(readFile(path.join(dataDir, "source-fetches.log")), { code: "ENOENT" });
+  assert.equal(raw.includes(marker), false);
+  assert.equal(JSON.stringify(demand).includes(marker), false);
+});
