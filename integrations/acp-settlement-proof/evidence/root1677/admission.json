@@ -1,0 +1,29 @@
+{
+  "schema": "root1677-admission/v1",
+  "sourceBase": "85e798b133079492144f6a6ffe7b1e11d8c03a0a",
+  "pilotBase": "e6882ef6edf31896435e5ba6399404b19d302411",
+  "receiptSha256": "3d88710186230bd70471d9ad4a1ddd5afceb96f1dda1cdebca86ee6d2eac2292",
+  "requestedModel": "gpt-6.1-sol",
+  "requestedEffort": "xhigh",
+  "nativeThreadObserved": "01a15c12-1a32-7f70-8ee0-96372b2fbca8",
+  "startedAt": "2026-10-21T01:27:29.607Z",
+  "checkpointBy": "2026-10-21T01:39:29.183Z",
+  "requiredUntil": "2026-10-21T02:05:55.647Z",
+  "checkpointCommit": "569972f4e57fcf5ce1c3f26de70d10b0e1a92d49",
+  "originalSessionPreserved": "01a15be3-8235-7bf2-8d7b-0d00fefe58b2",
+  "agentStatus": "tools/ops/agent-status absent (ENOENT); no replacement monitor",
+  "limit": "Native launched process and actual turn_context independently observe gpt-6.1-sol/xhigh; Root still collects completed terminal/exit metadata. Original historical receipt is not rebound.",
+  "checkpointCommittedAt": "2026-10-21T01:32:34+00:00",
+  "checkpointRemoteReadback": "git ls-remote matched569972f4 during the same native turn before01:33:22Z draftPR creation",
+  "actualNativeTurnContext": {
+    "path": "/home/ubuntu/.codex/sessions/2026/10/21/rollout-2026-10-21T01-27-33-01a15c12-1a32-7f70-8ee0-96372b2fbca8.jsonl",
+    "timestamp": "2026-10-21T01:27:34.526Z",
+    "model": "gpt-6.1-sol",
+    "effort": "xhigh"
+  },
+  "nativeProcessSelection": [
+    "-m",
+    "gpt-6.1-sol",
+    "model_reasoning_effort=\"xhigh\""
+  ]
+}

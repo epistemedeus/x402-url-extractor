@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 const fail = message => { throw Error(message); };
 const sync = directory => { const fd = fs.openSync(directory, 'r'); try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); } };
-export function privateDirectory(directory, uid) {
+export function privateDirectory(directory, uid, gid) {
   const s = fs.lstatSync(directory);
-  if (!s.isDirectory() || fs.realpathSync(directory) !== path.resolve(directory) || s.uid !== uid || (s.mode & 0o077)) fail('Private real owned directory required');
+  if (!s.isDirectory() || fs.realpathSync(directory) !== path.resolve(directory) || s.uid !== uid || (gid !== undefined && s.gid !== gid) || (s.mode & 0o077)) fail('Private real owned directory required');
 }
 export function privateFile(file, uid, max = 65536) {
   const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
@@ -34,7 +34,7 @@ export function initializeStore(directory, { uid = process.getuid(), gid = proce
     // Only the empty mount itself changes ownership; never recursive chown.
     fs.chownSync(directory, uid, gid); fs.chmodSync(directory, 0o700); sync(path.dirname(directory));
   }
-  privateDirectory(directory, uid);
+  privateDirectory(directory, uid, gid);
   const marker = path.join(directory, '.managed-layout.json');
   const identity = JSON.stringify({ schema: 'acp-managed-store/v1', uid, gid });
   const entries = fs.readdirSync(directory);
@@ -55,7 +55,7 @@ export function initializeStore(directory, { uid = process.getuid(), gid = proce
       if (bootstrap) fs.chownSync(target, uid, gid);
       sync(directory);
     }
-    privateDirectory(target, uid);
+    privateDirectory(target, uid, gid);
   }
   if (fs.readdirSync(path.join(directory, 'empty')).length) fail('Native CLI cwd must stay empty');
   const home = path.join(directory, 'home');
@@ -66,8 +66,22 @@ export function initializeStore(directory, { uid = process.getuid(), gid = proce
       if (bootstrap) fs.chownSync(target, uid, gid);
       sync(home);
     }
-    privateDirectory(target, uid);
+    privateDirectory(target, uid, gid);
   }
+  // Inspect metadata only. A copied/symlinked/foreign credential subtree cannot
+  // redirect this service into another writer's store; retained bytes stay untouched.
+  let visited = 0;
+  function inspect(current, depth = 0) {
+    if (++visited > 8192 || depth > 16) fail('Managed store metadata exceeds bound');
+    const entry = fs.lstatSync(current);
+    if (entry.uid !== uid || entry.gid !== gid || entry.isSymbolicLink() || (!entry.isDirectory() && !entry.isFile()) || (!entry.isDirectory() && entry.nlink !== 1)) fail('Foreign or linked managed store entry');
+    if (entry.mode & 0o022) fail('Writable shared managed store entry');
+    if (entry.isDirectory()) for (const name of fs.readdirSync(current)) inspect(path.join(current, name), depth + 1);
+  }
+  for (const name of names) inspect(path.join(directory, name));
+  inspect(marker);
+  try { fs.lstatSync(path.join(directory, 'worker.json')); inspect(path.join(directory, 'worker.json')); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
   return { directory, home, profile: path.join(directory, 'profile'), empty: path.join(directory, 'empty'), operations: path.join(directory, 'operations'), enrollment: path.join(directory, 'enrollment') };
 }
 export function storeEnvironment(store) {

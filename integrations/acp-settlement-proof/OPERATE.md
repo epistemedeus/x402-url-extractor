@@ -251,3 +251,13 @@ Primary source contracts:
 [distinct main1.0.40](https://github.com/Virtual-Protocol/acp-cli/blob/9d2be827cc19e4ea2cecfff3896398607537ea3e/package.json),
 [SDK0.1.15](https://github.com/Virtual-Protocol/acp-node-v2/tree/713392c9fd2cda924026be42d2c8f1b54fa93df4),
 [EventSource](https://github.com/EventSource/eventsource).
+
+## Managed container follow-up (ROOT1677)
+
+For the distinct container/private-volume/native-enrollment deployment package,
+use [managed/OPERATE.md](managed/OPERATE.md). It contains the executable context
+export/build, credential-free receiving, bounded private-shell enrollment and
+observe/serve/rollback commands for Root's dedicated service. The systemd
+candidate above remains a historical qualified-host example; it is not an
+installation inside a Railway container. Original ROOT1652 source/receipts,
+account/offer terms and received lifecycle gates remain unchanged.
