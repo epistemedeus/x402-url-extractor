@@ -57,3 +57,13 @@ The only invocation failure during editing was `python /tmp/root1862-edit.py`:
 `/bin/bash: python: command not found`, exit 127. No edit ran; `python3` applied
 the same edit successfully. The only failed behavioral test was the intentional
 frozen-source red. No failed test or audit output was removed or overwritten.
+
+Final review also ran `git diff --check f31abbce319037bfe7bb98dcd859b598ef041ee5 HEAD`.
+It returned exit 2 solely for whitespace-only raw TAP lines 11 and 56 in
+`docs/prospective-input-shape-evidence/frozen-red.tap`. Their original spaces are
+preserved with the failed-test output. The explicit runtime/test whitespace check
+below passes without rewriting that receipt:
+
+```sh
+git diff --check f31abbce319037bfe7bb98dcd859b598ef041ee5 HEAD -- extract-batch.mjs commerce-events.mjs commerce-refusal-evidence.test.mjs extract-batch.test.mjs extract-batch-commerce.mounted.test.mjs
+```
