@@ -24,3 +24,20 @@ Installed-source 8ac6b44e156a0468a94d615e95c68a6b7dec284c differs only in free
 page-change observation wiring and its supporting files; lockfile/payment gate
 unchanged. Runtime and live deployment remain untested; no production requests.
 Full bounded receipt and command output are exported to the assigned owner.
+
+Final receipt: 31 TAP cases pass on accepted source and on a task-owned checkout
+of installed source with the same dependencies (plus unnamed encoded/free checks).
+Seven existing JSON-alias/resource compatibility tests also pass. Express resolves
+the request pathname without decoding literal route text; v2 middleware preserves
+encoded separators during normalization. Encoded literal `%65xtract` challenges;
+encoded separators appended to literal `/extract` do not dispatch (404).
+`ExpressAdapter.getUrl()` takes protocol + Host + originalUrl, so request input
+can remain in the base64 challenge and JSON body. Browser HTML instead comes from
+core's request-independent `FALLBACK_PAYWALL_HTML`, confirmed by producer tracing
+and actual outputs. This is not browser execution or universal XSS proof. A future
+@x402/paywall install/provider registration must reopen applicability.
+
+Malformed Host rejection originates in `idempotency-replay.mjs`:
+`middleware` → `publicRequestUrl` → `canonicalReplayUrl` → `new URL` throws.
+It precedes x402 and is outside the reported inline-producer/route-bypass defects.
+No runtime correction, SDK upgrade, financial or public-asset change is needed.

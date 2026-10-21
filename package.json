@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "test:extract-batch": "node --test extract.review.test.mjs extract-batch.test.mjs extract-batch.identity.test.mjs extract-batch.http.test.mjs extract-batch-commerce.mounted.test.mjs extract-batch-page-change.test.mjs extract-batch-record.test.mjs",
+    "test:paywall-applicability": "node --test paywall-applicability.http.test.mjs",
     "test:replay-boundary": "node --test idempotency-replay.test.mjs replay-boundary.http.test.mjs",
     "pretest": "node --test construction-surface.test.mjs machine-surface-parity.test.mjs",
     "test:nonlive": "node --test commerce-nonlive-suite.test.mjs commerce-traffic-provenance.test.mjs commerce-privacy-coverage.test.mjs commerce-trust.test.mjs commerce-payment-evidence.test.mjs commerce-settlement-unit.test.mjs ordinary-delivery-join.test.mjs commerce-prospective-delivery.test.mjs caller-result-feedback.test.mjs mcp-caller-result.test.mjs caller-result-client.source.test.mjs caller-result-client/test/client.test.mjs commerce-settlement-reconciler.test.mjs commerce-settlement-source-delivery.test.mjs settlement-proof.test.mjs purchase-evidence-manifest.test.mjs payment-offer-preflight.test.mjs discovery-drift.test.mjs transaction-receipt.test.mjs circle-gateway-route.test.mjs commerce-rare-funnel.mounted.test.mjs",

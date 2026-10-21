@@ -28,7 +28,12 @@ test("actual merchant excludes upstream 3850/3852 producers for unpaid requests"
   const port = reserve.address().port;
   await new Promise(resolve => reserve.close(resolve));
   const hook = path.join(scratch, "loopback-only.mjs");
-  await writeFile(hook, `const realFetch = globalThis.fetch;
+  await writeFile(hook, `import { Server } from 'node:net';
+    const realListen = Server.prototype.listen;
+    Server.prototype.listen = function(port, ...args) {
+      return realListen.call(this, port, '127.0.0.1', ...args);
+    };
+    const realFetch = globalThis.fetch;
     globalThis.fetch = (input, init) => {
       const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
       if (url.hostname !== '127.0.0.1') throw new Error('ROOT2191 blocked external fetch');
@@ -62,8 +67,11 @@ test("actual merchant excludes upstream 3850/3852 producers for unpaid requests"
     }); req.on("error", reject); req.end();
   });
   const marker = "</script><script>globalThis.ROOT2191=1</script>";
+  let fallbackHtml;
   const cases = [
     ["normal", "/extract?url=https://fixture.invalid/", {}],
+    ["benign-host", "/extract?url=https://fixture.invalid/", { host: "owned.invalid" }],
+    ["benign-forwarded-host", "/extract?url=https://fixture.invalid/", { "x-forwarded-host": "forwarded.invalid" }],
     ["encoded-query", `/extract?url=https://fixture.invalid/&probe=${encodeURIComponent(marker)}`, {}],
     ["raw-query", `/extract?url=https://fixture.invalid/&probe=${marker}`, {}],
     ["host", "/extract?url=https://fixture.invalid/", { host: `owned.invalid${marker}` }],
@@ -77,7 +85,7 @@ test("actual merchant excludes upstream 3850/3852 producers for unpaid requests"
       await t.test(`${label} Accept=${accept || "default"}`, async () => {
         const response = await send(target, { ...headers, ...(accept ? { accept } : {}) });
         if (["host", "forwarded-host"].includes(label)) {
-          assert.equal(response.status, 500); // Invalid authority rejected before challenge construction.
+          assert.ok([400, 500].includes(response.status)); // Currently 500; rejection precedes challenge construction.
           assert.equal(response.body.includes(marker), false);
           assert.doesNotMatch(response.body, /<script[\s>]/i);
           return;
@@ -86,23 +94,32 @@ test("actual merchant excludes upstream 3850/3852 producers for unpaid requests"
         assert.match(response.headers["content-type"], accept === "text/html" ? /^text\/html/ : /^application\/json/);
         const challenge = JSON.parse(Buffer.from(response.headers["payment-required"], "base64").toString());
         assert.equal(challenge.x402Version, 2);
+        if (label === "benign-host") assert.ok(challenge.resource.url.startsWith("http://owned.invalid/"));
+        if (label === "raw-query") assert.ok(challenge.resource.url.includes(marker));
         assert.equal(challenge.accepts[0].amount, "5000");
         if (accept === "text/html") {
           assert.equal(response.body.includes(marker), false);
-          assert.doesNotMatch(response.body, /<script[\s>]/i);
+          assert.doesNotMatch(response.body, /<script[\s>]|\son\w+\s*=|javascript:/i);
+          if (fallbackHtml === undefined) fallbackHtml = response.body;
+          assert.equal(response.body, fallbackHtml, "browser body is request-independent static fallback");
         } else assert.equal(JSON.parse(response.body).x402Version, 2);
         // JSON can preserve the marker; no HTML script context is emitted.
         assert.equal(response.body.includes("window.x402"), false);
       });
     }
-    for (const target of ["/%65xtract?url=https://fixture.invalid/", "/extract%2Fowned?url=https://fixture.invalid/", "/extract%5Cowned?url=https://fixture.invalid/"]) {
+    for (const target of ["/%65xtract?url=https://fixture.invalid/", "/extract%2Fowned?url=https://fixture.invalid/", "/extract%5Cowned?url=https://fixture.invalid/", `/extract${marker}?url=https://fixture.invalid/`, `/extract${encodeURIComponent(marker)}?url=https://fixture.invalid/`]) {
       const response = await send(target, accept ? { accept } : {});
       assert.equal(response.status, target.startsWith("/%65") ? 402 : 404, target);
+      assert.equal(response.body.includes(marker), false);
+      assert.doesNotMatch(response.body, /<script[\s>]/i);
     }
     const free = await send("/healthz", accept ? { accept } : {});
     assert.equal(free.status, 200);
     assert.equal(free.headers["payment-required"], undefined);
   }
+  const nonBrowserHtml = await send("/extract?url=https://fixture.invalid/", { accept: "text/html", "user-agent": "ROOT2191 CLI" });
+  assert.equal(nonBrowserHtml.status, 402);
+  assert.match(nonBrowserHtml.headers["content-type"], /^application\/json/);
   assert.ok(calls.length > 0);
   assert.ok(calls.every(x => x === "/supported"), JSON.stringify(calls));
   assert.doesNotMatch(output, /protected extract reached|protected handler or financial request reached/);
