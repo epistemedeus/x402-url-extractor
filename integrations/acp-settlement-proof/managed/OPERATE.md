@@ -103,6 +103,10 @@ acp1677() {
     node /opt/acp/integrations/acp-settlement-proof/managed/entry.mjs "$@"
 }
 acp1677 receive
+# Before first configure, select the supported persistent native auth backend
+# in this private HOME's XDG_CONFIG_HOME/keyring/keyring.config.json:
+# {"defaultBackend":"file"}
+# Create it0600 under its owned0700directory; preserve any other existing config.
 acp1677 cli configure start
 ```
 
@@ -127,6 +131,23 @@ acp1677 cli agent add-signer --agent-id 019fef7a-3b3e-7a67-b825-6abfd8ba0e17 --p
 acp1677 cli agent signer-status --agent-id 019fef7a-3b3e-7a67-b825-6abfd8ba0e17 --request-id "$ACP1677_SIGNER_REQUEST_ID" --public-key "$ACP1677_PUBLIC_KEY" --wait --timeout 120
 acp1677 cli agent signer-policy --agent-id 019fef7a-3b3e-7a67-b825-6abfd8ba0e17
 ```
+
+Actual October21post-login receiving exposed a separate cross-keychain boundary:
+its native-linux writer fails without D-Bus and falls back to its encrypted file
+backend, while the next native-linux reader interprets missing Secret Service as
+a missing token and never takes that fallback. Browser/configure success therefore
+did not establish next-process authentication. The persisted private
+`XDG_CONFIG_HOME/keyring/keyring.config.json` setting `{"defaultBackend":"file"}`
+makes all native processes select the same existing supported encrypted store.
+This is auth storage, separate from the native signer's own encrypted backend.
+Do not export/copy a Mac key or re-login to repair this reader selection.
+
+Root receives native-linux token-found=false and file token-found=true without
+printing credentials, persists the native setting, then independently receives
+agent use and signer-policy in new processes for the original owner/agent.
+Perform those next-process checks after any new enrollment before calling it ready.
+A signer-policy result for an older device is not authority for a new device:
+receive the exact new public key, signerId and actual policy after its grant.
 
 The CLI command allowlist supports only these enrollment/read calls and original
 job list/history. Secret outputs never enter the worker. Native CLI alone owns
