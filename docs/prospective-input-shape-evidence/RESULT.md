@@ -17,7 +17,7 @@ Self-review corrected the fixed type declaration; no open source finding remains
 Draft PR: https://github.com/epistemedeus/x402-url-extractor/pull/222
 Explicit owned base: codex/root1862-frozen-base-f31abbce at
 f31abbce319037bfe7bb98dcd859b598ef041ee5. Useful checkpoint c9739fc was
-remotely confirmed by 05:24:42 UTC, within four minutes of admission.
+remotely confirmed by 05:24:42 UTC, about four minutes after admission.
 Native gpt-6.1-sol/xhigh session 01a15ce7-9aa5-74a1-93da-92d3b39c174b is
 verified in NATIVE.json. SOURCE-EXPORT.json pins the tested source/tree/blobs;
 final receipt-only commit identity is returned at handoff.
