@@ -1,0 +1,863 @@
+TAP version 13
+# Subtest: agent discovery sources reduce user agents to controlled labels
+ok 1 - agent discovery sources reduce user agents to controlled labels
+  ---
+  duration_ms: 6.247306
+  ...
+# Subtest: published Claude and Goose declared sources retain on HTTP without becoming demand
+ok 2 - published Claude and Goose declared sources retain on HTTP without becoming demand
+  ---
+  duration_ms: 57.713247
+  ...
+# Subtest: unknown malformed and spoofed declared sources cannot mint ownership
+ok 3 - unknown malformed and spoofed declared sources cannot mint ownership
+  ---
+  duration_ms: 29.495421
+  ...
+# Subtest: declared AgenticTrade handoff enters the paid-route funnel without exposing the source token
+ok 4 - declared AgenticTrade handoff enters the paid-route funnel without exposing the source token
+  ---
+  duration_ms: 14.986183
+  ...
+# Subtest: constructed request telemetry is prospective, contract-derived, aggregate, and value-free
+ok 5 - constructed request telemetry is prospective, contract-derived, aggregate, and value-free
+  ---
+  duration_ms: 21.93188
+  ...
+# Subtest: provider user fetchers enter the prospective source-quality cohort
+ok 6 - provider user fetchers enter the prospective source-quality cohort
+  ---
+  duration_ms: 24.724831
+  ...
+# Subtest: allowlisted declared sources attribute acquisition without becoming demand or storing raw headers
+ok 7 - allowlisted declared sources attribute acquisition without becoming demand or storing raw headers
+  ---
+  duration_ms: 31.317641
+  ...
+# Subtest: receipt-derived referrals become a controlled acquisition source without retaining the digest
+ok 8 - receipt-derived referrals become a controlled acquisition source without retaining the digest
+  ---
+  duration_ms: 11.578541
+  ...
+# Subtest: writer stores declared source separately from observed UA and does not verify identity
+ok 9 - writer stores declared source separately from observed UA and does not verify identity
+  ---
+  duration_ms: 12.824671
+  ...
+# Subtest: optional invalid source split cannot invalidate core events or change public aggregates
+ok 10 - optional invalid source split cannot invalidate core events or change public aggregates
+  ---
+  duration_ms: 9.787268
+  ...
+# Subtest: payer classification policy validates controlled explicit labels
+ok 11 - payer classification policy validates controlled explicit labels
+  ---
+  duration_ms: 0.568066
+  ...
+# Subtest: route classification preserves useful intent without recording opaque path values
+ok 12 - route classification preserves useful intent without recording opaque path values
+  ---
+  duration_ms: 0.372599
+  ...
+# Subtest: paid response classes separate challenge, validation, success, and failure
+ok 13 - paid response classes separate challenge, validation, success, and failure
+  ---
+  duration_ms: 0.097427
+  ...
+# Subtest: payment failure codes stay bounded and preserve required-input aliases
+ok 14 - payment failure codes stay bounded and preserve required-input aliases
+  ---
+  duration_ms: 0.485615
+  ...
+# Subtest: payment failure evidence names the actual bounded selector
+ok 15 - payment failure evidence names the actual bounded selector
+  ---
+  duration_ms: 0.343724
+  ...
+# Subtest: private paid-success evidence records exact x402 and MPP HTTP attribution
+ok 16 - private paid-success evidence records exact x402 and MPP HTTP attribution
+  ---
+  duration_ms: 63.85997
+  ...
+# Subtest: paid evidence follows the runtime-selected rail when both credential families are present
+ok 17 - paid evidence follows the runtime-selected rail when both credential families are present
+  ---
+  duration_ms: 12.840705
+  ...
+# Subtest: paid evidence requires a matching runtime-selected rail
+ok 18 - paid evidence requires a matching runtime-selected rail
+  ---
+  duration_ms: 3.236645
+  ...
+# Subtest: paid evidence hashes only body bytes that HTTP transfers
+ok 19 - paid evidence hashes only body bytes that HTTP transfers
+  ---
+  duration_ms: 22.012808
+  ...
+# Subtest: rejected response chunks invalidate private paid evidence
+ok 20 - rejected response chunks invalidate private paid evidence
+  ---
+  duration_ms: 4.657053
+  ...
+# Subtest: encoded request bodies fail closed because parser rawBody is post-inflation
+ok 21 - encoded request bodies fail closed because parser rawBody is post-inflation
+  ---
+  duration_ms: 5.346841
+  ...
+# Subtest: paid-success evidence digests are deterministic and independently sensitive
+ok 22 - paid-success evidence digests are deterministic and independently sensitive
+  ---
+  duration_ms: 17.697542
+  ...
+# Subtest: paid-success evidence serialization contains no supplied raw private values
+ok 23 - paid-success evidence serialization contains no supplied raw private values
+  ---
+  duration_ms: 4.982706
+  ...
+# Subtest: private evidence excludes unpaid, challenge, failure, replay, discovery, and MCP HTTP duplicate rows
+ok 24 - private evidence excludes unpaid, challenge, failure, replay, discovery, and MCP HTTP duplicate rows
+  ---
+  duration_ms: 12.992517
+  ...
+# Subtest: private paid evidence survives repeated ordinary traffic rotations
+ok 25 - private paid evidence survives repeated ordinary traffic rotations
+  ---
+  duration_ms: 8.950183
+  ...
+# Subtest: durable rare funnel evidence survives ordinary traffic rotations and stream loss
+ok 26 - durable rare funnel evidence survives ordinary traffic rotations and stream loss
+  ---
+  duration_ms: 16.238789
+  ...
+# Subtest: durable rare funnel deduplicates duplicate ids and retains parseable credential errors
+ok 27 - durable rare funnel deduplicates duplicate ids and retains parseable credential errors
+  ---
+  duration_ms: 8.046821
+  ...
+# Subtest: durable rare funnel captures MCP typed paid outcomes separately from stream counters
+ok 28 - durable rare funnel captures MCP typed paid outcomes separately from stream counters
+  ---
+  duration_ms: 11.050007
+  ...
+# Subtest: durable rare funnel reloads after restart without claiming continuous history
+ok 29 - durable rare funnel reloads after restart without claiming continuous history
+  ---
+  duration_ms: 3.540698
+  ...
+# Subtest: an old retained rare row is not proof of uninterrupted requested-window capture
+ok 30 - an old retained rare row is not proof of uninterrupted requested-window capture
+  ---
+  duration_ms: 5.054618
+  ...
+# Subtest: single-writer concurrent rare appends stay parseable across bounded rotation
+ok 31 - single-writer concurrent rare appends stay parseable across bounded rotation
+  ---
+  duration_ms: 9.847755
+  ...
+# commerce telemetry write failed: EISDIR: illegal operation on a directory, open '/tmp/commerce-rare-funnel-write-failure-VcGby7/commerce-rare-funnel-evidence.ndjson'
+# Subtest: durable rare funnel write failures remain visible to flush without leaking credentials
+ok 32 - durable rare funnel write failures remain visible to flush without leaking credentials
+  ---
+  duration_ms: 8.70373
+  ...
+# Subtest: malformed and hostile paid evidence inputs fail closed without escaping middleware
+ok 33 - malformed and hostile paid evidence inputs fail closed without escaping middleware
+  ---
+  duration_ms: 28.619497
+  ...
+# Subtest: paid evidence requires observing the response end before finish
+ok 34 - paid evidence requires observing the response end before finish
+  ---
+  duration_ms: 26.301729
+  ...
+# Subtest: shutdown drain flushes the private paid evidence write
+ok 35 - shutdown drain flushes the private paid evidence write
+  ---
+  duration_ms: 11.115926
+  ...
+# commerce telemetry write failed: EISDIR: illegal operation on a directory, open '/tmp/commerce-paid-evidence-write-failure-G885Gm/commerce-paid-success-evidence.ndjson'
+# Subtest: private paid evidence append failures remain visible to flush and shutdown
+ok 36 - private paid evidence append failures remain visible to flush and shutdown
+  ---
+  duration_ms: 10.14314
+  ...
+# Subtest: unpaid paid-POST requests do not persist application telemetry
+ok 37 - unpaid paid-POST requests do not persist application telemetry
+  ---
+  duration_ms: 0.706686
+  ...
+# Subtest: unpaid POST /extract/batch still persists challenge and invalid-body rows
+ok 38 - unpaid POST /extract/batch still persists challenge and invalid-body rows
+  ---
+  duration_ms: 42.521134
+  ...
+# Subtest: historical unmatched /extract/* rows stay unmatched and are not backfilled as batch
+ok 39 - historical unmatched /extract/* rows stay unmatched and are not backfilled as batch
+  ---
+  duration_ms: 16.264536
+  ...
+# Subtest: extract-batch body construction inspects urls bounds without retaining values
+ok 40 - extract-batch body construction inspects urls bounds without retaining values
+  ---
+  duration_ms: 0.771471
+  ...
+# Subtest: semantic unmatched classification is high precision and excludes technical misses
+ok 41 - semantic unmatched classification is high precision and excludes technical misses
+  ---
+  duration_ms: 0.184429
+  ...
+# Subtest: aggregate snapshot excludes internal and crawler events and exposes no actor IDs
+ok 42 - aggregate snapshot excludes internal and crawler events and exposes no actor IDs
+  ---
+  duration_ms: 47.865738
+  ...
+# Subtest: only explicitly classified independent payers enter independent demand
+ok 43 - only explicitly classified independent payers enter independent demand
+  ---
+  duration_ms: 9.503824
+  ...
+# Subtest: challenge conversion requires conservative same-actor continuity
+ok 44 - challenge conversion requires conservative same-actor continuity
+  ---
+  duration_ms: 4.986476
+  ...
+# Subtest: aggregate snapshot honors a declared external experiment baseline
+ok 45 - aggregate snapshot honors a declared external experiment baseline
+  ---
+  duration_ms: 27.262978
+  ...
+# Subtest: machine discovery uses an independent baseline and excludes owned monitors
+ok 46 - machine discovery uses an independent baseline and excludes owned monitors
+  ---
+  duration_ms: 9.849429
+  ...
+# Subtest: provider source detail starts prospectively without reclassifying earlier events
+ok 47 - provider source detail starts prospectively without reclassifying earlier events
+  ---
+  duration_ms: 11.802207
+  ...
+# Subtest: coverage helper classifies incomplete windows as unknown_for_full_window
+ok 48 - coverage helper classifies incomplete windows as unknown_for_full_window
+  ---
+  duration_ms: 0.273345
+  ...
+# Subtest: conservative UTC day bounds never overstate retained coverage
+ok 49 - conservative UTC day bounds never overstate retained coverage
+  ---
+  duration_ms: 0.08778
+  ...
+# Subtest: two rotations erase an older construction event and keep the 90-day zero unknown
+ok 50 - two rotations erase an older construction event and keep the 90-day zero unknown
+  ---
+  duration_ms: 15.40953
+  ...
+# Subtest: incomplete 90-day coverage reports retained bounds and does not treat a zero as a full-window result
+ok 51 - incomplete 90-day coverage reports retained bounds and does not treat a zero as a full-window result
+  ---
+  duration_ms: 7.756703
+  ...
+# Subtest: complete short-window coverage can honestly report a retained zero
+ok 52 - complete short-window coverage can honestly report a retained zero
+  ---
+  duration_ms: 1.547143
+  ...
+# Subtest: a metric baseline later than retained start can be complete while the requested window is not
+ok 53 - a metric baseline later than retained start can be complete while the requested window is not
+  ---
+  duration_ms: 1.290426
+  ...
+# Subtest: empty retained files are unknown_for_full_window rather than a complete-window zero
+ok 54 - empty retained files are unknown_for_full_window rather than a complete-window zero
+  ---
+  duration_ms: 1.304194
+  ...
+# Subtest: corrupt lines in an otherwise complete window force unknown coverage without exposing payloads
+ok 55 - corrupt lines in an otherwise complete window force unknown coverage without exposing payloads
+  ---
+  duration_ms: 20.230651
+  ...
+# Subtest: invalid timestamps and non-object records cannot support a complete window
+ok 56 - invalid timestamps and non-object records cannot support a complete window
+  ---
+  duration_ms: 1.461182
+  ...
+# Subtest: construction and discovery counts match coverage across the externalSince cutoff
+ok 57 - construction and discovery counts match coverage across the externalSince cutoff
+  ---
+  duration_ms: 14.465894
+  ...
+# Subtest: metrics still clipped by externalSince include that cutoff in coverage
+ok 58 - metrics still clipped by externalSince include that cutoff in coverage
+  ---
+  duration_ms: 23.371287
+  ...
+# Subtest: one retained event does not expose exact timestamps or millisecond values
+ok 59 - one retained event does not expose exact timestamps or millisecond values
+  ---
+  duration_ms: 1.712944
+  ...
+# Subtest: sparse retained events omit exact timing from serialized public output
+ok 60 - sparse retained events omit exact timing from serialized public output
+  ---
+  duration_ms: 2.484072
+  ...
+# Subtest: February 30 and timestamp-only objects cannot establish coverage
+ok 61 - February 30 and timestamp-only objects cannot establish coverage
+  ---
+  duration_ms: 7.830607
+  ...
+# Subtest: snapshot capture is atomic against a response-triggered 5 MiB rotation
+ok 62 - snapshot capture is atomic against a response-triggered 5 MiB rotation
+  ---
+  duration_ms: 98.177198
+  ...
+# Subtest: agentSourceDetail count inputs and coverage agree across mixed cutoffs
+ok 63 - agentSourceDetail count inputs and coverage agree across mixed cutoffs
+  ---
+  duration_ms: 2.042188
+  ...
+# Subtest: complete writer-emitted v3 paid-success rows can still establish coverage
+ok 64 - complete writer-emitted v3 paid-success rows can still establish coverage
+  ---
+  duration_ms: 3.078598
+  ...
+# Subtest: near-complete paid-success missing payment fields cannot undercount while claiming complete
+ok 65 - near-complete paid-success missing payment fields cannot undercount while claiming complete
+  ---
+  duration_ms: 4.576918
+  ...
+# Subtest: missing or mistyped payment classification fields cannot claim complete
+ok 66 - missing or mistyped payment classification fields cannot claim complete
+  ---
+  duration_ms: 64.947915
+  ...
+# Subtest: missing or mistyped construction inputs cannot undercount while claiming complete
+ok 67 - missing or mistyped construction inputs cannot undercount while claiming complete
+  ---
+  duration_ms: 52.953413
+  ...
+# Subtest: missing or mistyped settlement inputs cannot undercount while claiming complete
+ok 68 - missing or mistyped settlement inputs cannot undercount while claiming complete
+  ---
+  duration_ms: 79.185465
+  ...
+# Subtest: missing or mistyped actor and source fields cannot undercount while claiming complete
+ok 69 - missing or mistyped actor and source fields cannot undercount while claiming complete
+  ---
+  duration_ms: 30.117721
+  ...
+# Subtest: legacy and partial rows cannot establish full-window completeness
+ok 70 - legacy and partial rows cannot establish full-window completeness
+  ---
+  duration_ms: 20.147884
+  ...
+# Subtest: arbitrary private route, source, and failure labels cannot become public keys
+ok 71 - arbitrary private route, source, and failure labels cannot become public keys
+  ---
+  duration_ms: 8.263096
+  ...
+# Subtest: 100000-character route, source, and failure values cannot establish coverage or inflate output
+ok 72 - 100000-character route, source, and failure values cannot establish coverage or inflate output
+  ---
+  duration_ms: 28.547728
+  ...
+# Subtest: every legitimate writer-emitted vocabulary value still passes
+ok 73 - every legitimate writer-emitted vocabulary value still passes
+  ---
+  duration_ms: 8.748518
+  ...
+# Subtest: classifier outputs are exactly the retained writer vocabularies
+ok 74 - classifier outputs are exactly the retained writer vocabularies
+  ---
+  duration_ms: 0.451897
+  ...
+# Subtest: middleware query-key names stay canonical, bounded, and coverage-comparable
+ok 75 - middleware query-key names stay canonical, bounded, and coverage-comparable
+  ---
+  duration_ms: 12.938074
+  ...
+# Subtest: middleware query-key normalization never exceeds its retained cap
+ok 76 - middleware query-key normalization never exceeds its retained cap
+  ---
+  duration_ms: 2.529245
+  ...
+# Subtest: nonhex, uppercase, wrong-version, and extreme identifiers cannot establish coverage
+ok 77 - nonhex, uppercase, wrong-version, and extreme identifiers cannot establish coverage
+  ---
+  duration_ms: 91.420784
+  ...
+# Subtest: writer-impossible cross-field v3 rows cannot establish coverage or change public counts
+ok 78 - writer-impossible cross-field v3 rows cannot establish coverage or change public counts
+  ---
+  duration_ms: 112.809808
+  ...
+# Subtest: middleware stores oversized settlement amounts as null without poisoning integrity
+ok 79 - middleware stores oversized settlement amounts as null without poisoning integrity
+  ---
+  duration_ms: 27.91269
+  ...
+# Subtest: canonical v4 MCP typed rows are consumed separately and corrupt v4 is unusable
+ok 80 - canonical v4 MCP typed rows are consumed separately and corrupt v4 is unusable
+  ---
+  duration_ms: 11.830688
+  ...
+# Subtest: canonical v4 ledger persists absent and rejected challenges without redefining presence
+ok 81 - canonical v4 ledger persists absent and rejected challenges without redefining presence
+  ---
+  duration_ms: 2.530069
+  ...
+# Subtest: authenticated MCP validation markers bind a privacy-safe exact digest to one typed row
+ok 82 - authenticated MCP validation markers bind a privacy-safe exact digest to one typed row
+  ---
+  duration_ms: 8.439408
+  ...
+# Subtest: forged, mismatched, missing, malformed, and hostile MCP markers fail to legacy-compatible rows
+ok 83 - forged, mismatched, missing, malformed, and hostile MCP markers fail to legacy-compatible rows
+  ---
+  duration_ms: 11.130331
+  ...
+# Subtest: appendMcpTypedDecision owns the canonical event at call time
+ok 84 - appendMcpTypedDecision owns the canonical event at call time
+  ---
+  duration_ms: 31.905707
+  ...
+# Subtest: appendMcpTypedDecision contains hostile adaptation failures without surfacing their text
+ok 85 - appendMcpTypedDecision contains hostile adaptation failures without surfacing their text
+  ---
+  duration_ms: 1.82795
+  ...
+# Subtest: appendMcpTypedDecision still stores nonthrowing accessor and plain object decisions
+ok 86 - appendMcpTypedDecision still stores nonthrowing accessor and plain object decisions
+  ---
+  duration_ms: 3.401616
+  ...
+# Subtest: typed snapshot coverage freshness and source-local integrity are retained
+ok 87 - typed snapshot coverage freshness and source-local integrity are retained
+  ---
+  duration_ms: 1.963493
+  ...
+# Subtest: late baseline does not claim full requested window
+ok 88 - late baseline does not claim full requested window
+  ---
+  duration_ms: 5.82918
+  ...
+# Subtest: future rows do not enter window or freshness
+ok 89 - future rows do not enter window or freshness
+  ---
+  duration_ms: 1.299952
+  ...
+# Subtest: production shutdown helper rejects undrained or failed lifecycle visibly
+ok 90 - production shutdown helper rejects undrained or failed lifecycle visibly
+  ---
+  duration_ms: 0.390174
+  ...
+# Subtest: typed MCP declared source is untrusted metadata separate from owner-validation proof
+ok 91 - typed MCP declared source is untrusted metadata separate from owner-validation proof
+  ---
+  duration_ms: 8.708955
+  ...
+# Subtest: writer process gate accepts only the safe integer 1
+ok 92 - writer process gate accepts only the safe integer 1
+  ---
+  duration_ms: 4.408253
+  ...
+# Subtest: mounted HTTP and MCP producers record failure evidence without private text
+ok 93 - mounted HTTP and MCP producers record failure evidence without private text
+  ---
+  duration_ms: 74.830094
+  ...
+# Subtest: historical failure rows stay not_retained and inconsistent evidence is unusable
+ok 94 - historical failure rows stay not_retained and inconsistent evidence is unusable
+  ---
+  duration_ms: 7.070228
+  ...
+# Subtest: writer query keys use the shared presence predicate and round-trip through snapshot
+ok 95 - writer query keys use the shared presence predicate and round-trip through snapshot
+  ---
+  duration_ms: 91.093061
+  ...
+# Subtest: old construction mismatches and damaged lines stay rejected without backfill
+ok 96 - old construction mismatches and damaged lines stay rejected without backfill
+  ---
+  duration_ms: 23.861712
+  ...
+# Subtest: a finished status of 0 stays outside the canonical range
+ok 97 - a finished status of 0 stays outside the canonical range
+  ---
+  duration_ms: 2.01572
+  ...
+# Subtest: public aggregate contains no raw buyer fields
+ok 98 - public aggregate contains no raw buyer fields
+  ---
+  duration_ms: 167.510898
+  ...
+# Subtest: incomplete coverage cannot be reported as a full-window zero
+ok 99 - incomplete coverage cannot be reported as a full-window zero
+  ---
+  duration_ms: 9.038524
+  ...
+# Subtest: classification keeps technical delivery apart from duplicate, conflict, and failure
+ok 100 - classification keeps technical delivery apart from duplicate, conflict, and failure
+  ---
+  duration_ms: 2.293281
+  ...
+# Subtest: validated settlement stays after raw event deletion and a fresh process
+ok 101 - validated settlement stays after raw event deletion and a fresh process
+  ---
+  duration_ms: 1698.525445
+  ...
+# Subtest: same amount and different references stay distinct while http plus mcp counts once
+ok 102 - same amount and different references stay distinct while http plus mcp counts once
+  ---
+  duration_ms: 54.930405
+  ...
+# Subtest: feedback, replay, corruption, mismatch, and saturation stay bounded
+ok 103 - feedback, replay, corruption, mismatch, and saturation stay bounded
+  ---
+  duration_ms: 48.573553
+  ...
+# Subtest: concurrent writes, stale cuts, and unexpected units do not invent a second amount
+ok 104 - concurrent writes, stale cuts, and unexpected units do not invent a second amount
+  ---
+  duration_ms: 18.852863
+  ...
+# Subtest: status echoes the parent admission and an empty store is not historical zero
+ok 105 - status echoes the parent admission and an empty store is not historical zero
+  ---
+  duration_ms: 36.949871
+  ...
+# Subtest: a later ordinary-join capture advances unknown and no_response without rewriting the first clock
+ok 106 - a later ordinary-join capture advances unknown and no_response without rewriting the first clock
+  ---
+  duration_ms: 110.756804
+  ...
+# Subtest: technical counts follow the admitted identity set across a mixed and lagging cut
+ok 107 - technical counts follow the admitted identity set across a mixed and lagging cut
+  ---
+  duration_ms: 17.584709
+  ...
+# Subtest: caller feedback binds from the stored statement, then survives raw deletion
+ok 108 - caller feedback binds from the stored statement, then survives raw deletion
+  ---
+  duration_ms: 1444.556224
+  ...
+# Subtest: reconcile admits payment before response evidence and a later pass advances it
+ok 109 - reconcile admits payment before response evidence and a later pass advances it
+  ---
+  duration_ms: 1264.678903
+  ...
+# Subtest: cold fixture packet keeps the parent amount and withholds historical completeness
+ok 110 - cold fixture packet keeps the parent amount and withholds historical completeness
+  ---
+  duration_ms: 946.984577
+  ...
+# Subtest: continuation transmission separates an offered silent result from one that was not offered
+ok 111 - continuation transmission separates an offered silent result from one that was not offered
+  ---
+  duration_ms: 48.973417
+  ...
+# Subtest: lineage keeps only a comparable prospective cohort
+ok 112 - lineage keeps only a comparable prospective cohort
+  ---
+  duration_ms: 21.810635
+  ...
+# Subtest: bad prospective bounds are rejected by the producer
+ok 113 - bad prospective bounds are rejected by the producer
+  ---
+  duration_ms: 2.064378
+  ...
+# Subtest: a new or short producer stays unknown instead of a complete-window zero
+ok 114 - a new or short producer stays unknown instead of a complete-window zero
+  ---
+  duration_ms: 61.529856
+  ...
+# Subtest: two-file rotations still discard a 24-hour boundary and stay unknown
+ok 115 - two-file rotations still discard a 24-hour boundary and stay unknown
+  ---
+  duration_ms: 40.040252
+  ...
+# Subtest: prospective segments keep a 24-hour boundary across ordinary rotations until capacity is exhausted
+ok 116 - prospective segments keep a 24-hour boundary across ordinary rotations until capacity is exhausted
+  ---
+  duration_ms: 78.114983
+  ...
+# Subtest: restart and a shorter admission list do not rewrite or delete unadmitted segments
+ok 117 - restart and a shorter admission list do not rewrite or delete unadmitted segments
+  ---
+  duration_ms: 2736.961142
+  ...
+# Subtest: existing current and rotated files migrate by read without new segments or rewritten rows
+ok 118 - existing current and rotated files migrate by read without new segments or rewritten rows
+  ---
+  duration_ms: 28.49387
+  ...
+# Subtest: damaged, missing, oversized, bad, and future segments withhold completeness without rewriting survivors
+ok 119 - damaged, missing, oversized, bad, and future segments withhold completeness without rewriting survivors
+  ---
+  duration_ms: 33.130207
+  ...
+# Subtest: authenticated cuts survive in-capacity rotation once and are lost rather than duplicated past capacity
+ok 120 - authenticated cuts survive in-capacity rotation once and are lost rather than duplicated past capacity
+  ---
+  duration_ms: 21.505749
+  ...
+# commerce telemetry write failed: unsafe commerce journal file
+# commerce telemetry write failed: unsafe commerce journal file
+# commerce telemetry write failed: unsafe commerce journal file
+# commerce telemetry write failed: unsafe commerce journal file
+# Subtest: unsafe segment nodes and foreign files are refused or left untouched
+ok 121 - unsafe segment nodes and foreign files are refused or left untouched
+  ---
+  duration_ms: 33.505677
+  ...
+# Subtest: age expiry drops only a segment proved entirely older, and a snapshot does not delete it
+ok 122 - age expiry drops only a segment proved entirely older, and a snapshot does not delete it
+  ---
+  duration_ms: 11.871677
+  ...
+# PROSPECTIVE_MEASUREMENT {"count":400,"retained":400,"complete":false,"disk":335600,"files":1,"lineBytes":838,"writeMs":107,"snapMs":10,"hwmKb":144068,"boundedBytes":20971520}
+# Subtest: concurrent writes and capture stay on the admission queue and parse as whole rows
+ok 123 - concurrent writes and capture stay on the admission queue and parse as whole rows
+  ---
+  duration_ms: 33.511465
+  ...
+# Subtest: measured producer load stays inside the prospective byte cap
+ok 124 - measured producer load stays inside the prospective byte cap
+  ---
+  duration_ms: 1355.652894
+  ...
+# Subtest: producer and strict reader use every code from the accepted refusal contract
+ok 125 - producer and strict reader use every code from the accepted refusal contract
+  ---
+  duration_ms: 32.866294
+  ...
+# Subtest: producer does not infer a code from input, arbitrary enums, prose or crossed responses
+ok 126 - producer does not infer a code from input, arbitrary enums, prose or crossed responses
+  ---
+  duration_ms: 28.161095
+  ...
+# Subtest: strict reader quarantines unknown and crossed codes while old and null codes remain unknown
+ok 127 - strict reader quarantines unknown and crossed codes while old and null codes remain unknown
+  ---
+  duration_ms: 13.456157
+  ...
+# Subtest: existing observation suppression never creates a journal to capture a code
+ok 128 - existing observation suppression never creates a journal to capture a code
+  ---
+  duration_ms: 25.557606
+  ...
+# Subtest: code projection follows the existing external population and cutoff
+ok 129 - code projection follows the existing external population and cutoff
+  ---
+  duration_ms: 13.930946
+  ...
+# Subtest: complete retained window keeps partial historical code coverage explicit
+ok 130 - complete retained window keeps partial historical code coverage explicit
+  ---
+  duration_ms: 9.582051
+  ...
+# Subtest: concurrent refusal append and snapshot remain strict through bounded rotations and restart
+ok 131 - concurrent refusal append and snapshot remain strict through bounded rotations and restart
+  ---
+  duration_ms: 191.497417
+  ...
+# Subtest: only the actual validator handoff can mint a matching prospective shape
+ok 132 - only the actual validator handoff can mint a matching prospective shape
+  ---
+  duration_ms: 29.667853
+  ...
+# Subtest: strict reader quarantines malformed and contradictory shape evidence without rewriting history
+ok 133 - strict reader quarantines malformed and contradictory shape evidence without rewriting history
+  ---
+  duration_ms: 28.822045
+  ...
+# Subtest: prospective shape summary uses existing suppression, external population and cutoff
+ok 134 - prospective shape summary uses existing suppression, external population and cutoff
+  ---
+  duration_ms: 23.827589
+  ...
+# Subtest: shape evidence survives concurrent snapshots, bounded rotation, restart and damaged-line recovery
+ok 135 - shape evidence survives concurrent snapshots, bounded rotation, restart and damaged-line recovery
+  ---
+  duration_ms: 147.855225
+  ...
+# Subtest: strict shape reader enforces every stage's type and count relationship
+ok 136 - strict shape reader enforces every stage's type and count relationship
+  ---
+  duration_ms: 17.369315
+  ...
+# Subtest: a caller coverage label and SHA cannot certify an uncovered empty journal
+ok 137 - a caller coverage label and SHA cannot certify an uncovered empty journal
+  ---
+  duration_ms: 49.183374
+  ...
+# Subtest: registered producers cover a genuinely empty append interval, with honest store-wide limits
+ok 138 - registered producers cover a genuinely empty append interval, with honest store-wide limits
+  ---
+  duration_ms: 42.106319
+  ...
+# Subtest: ordinary CLI consumes the persisted cut using the existing token, without writing stores
+ok 139 - ordinary CLI consumes the persisted cut using the existing token, without writing stores
+  ---
+  duration_ms: 974.390222
+  ...
+# Subtest: no token, wrong token, fabricated evidence and another plane cannot promote coverage
+ok 140 - no token, wrong token, fabricated evidence and another plane cannot promote coverage
+  ---
+  duration_ms: 20.975373
+  ...
+# Subtest: a signed finite cut does not cover history or a future interval
+ok 141 - a signed finite cut does not cover history or a future interval
+  ---
+  duration_ms: 14.238152
+  ...
+# Subtest: missing producers remain exact unknown planes instead of exhaustive zero
+ok 142 - missing producers remain exact unknown planes instead of exhaustive zero
+  ---
+  duration_ms: 15.903692
+  ...
+# Subtest: malformed and truncated prospective writes withhold continuity and allow a fresh recovered interval
+ok 143 - malformed and truncated prospective writes withhold continuity and allow a fresh recovered interval
+  ---
+  duration_ms: 38.10718
+  ...
+# Subtest: a real HTTP capture append failure is observable without making telemetry a payment gate
+ok 144 - a real HTTP capture append failure is observable without making telemetry a payment gate
+  ---
+  duration_ms: 28.984392
+  ...
+# Subtest: a missing retained capture generation cannot retain an earlier completeness claim
+ok 145 - a missing retained capture generation cannot retain an earlier completeness claim
+  ---
+  duration_ms: 10.911659
+  ...
+# Subtest: concurrent producer appends and snapshots serialize on the actual journal admission gate
+ok 146 - concurrent producer appends and snapshots serialize on the actual journal admission gate
+  ---
+  duration_ms: 65.154799
+  ...
+# Subtest: retained rotation remains covered while loss beyond the existing tail stays partial
+ok 147 - retained rotation remains covered while loss beyond the existing tail stays partial
+  ---
+  duration_ms: 33.198097
+  ...
+# Subtest: an overlapping external writer is never certified by this process
+ok 148 - an overlapping external writer is never certified by this process
+  ---
+  duration_ms: 37.884884
+  ...
+# Subtest: restart preserves only the old finite interval; source and store changes refuse it
+ok 149 - restart preserves only the old finite interval; source and store changes refuse it
+  ---
+  duration_ms: 22.305833
+  ...
+# Subtest: missing, malformed and truncated cut metadata never certify an empty journal
+ok 150 - missing, malformed and truncated cut metadata never certify an empty journal
+  ---
+  duration_ms: 14.760157
+  ...
+# Subtest: private normal HTTP report and CLI receive the same source-bound cut
+ok 151 - private normal HTTP report and CLI receive the same source-bound cut
+  ---
+  duration_ms: 48.255257
+  ...
+# Subtest: real feedback writes, rotation loss, idempotent replay and write-failure recovery retain their semantics
+ok 152 - real feedback writes, rotation loss, idempotent replay and write-failure recovery retain their semantics
+  ---
+  duration_ms: 136.527784
+  ...
+# Subtest: the actual MCP store records both successful appends and an uncertain write
+ok 153 - the actual MCP store records both successful appends and an uncertain write
+  ---
+  duration_ms: 32.210001
+  ...
+# Subtest: the actual reconciler append is covered without converting journal continuity to settlement-market completeness
+ok 154 - the actual reconciler append is covered without converting journal continuity to settlement-market completeness
+  ---
+  duration_ms: 111.848826
+  ...
+# Subtest: received evidence is immutable and cannot be reused to inflate a different window
+ok 155 - received evidence is immutable and cannot be reused to inflate a different window
+  ---
+  duration_ms: 14.743222
+  ...
+# Subtest: signed delivery metadata changes no public metric counts or coverage authority
+ok 156 - signed delivery metadata changes no public metric counts or coverage authority
+  ---
+  duration_ms: 25.696311
+  ...
+# commerce telemetry write failed: unsafe commerce journal file
+# Subtest: a failed producer flush still returns useful ordinary lower-bound observations on HTTP
+ok 157 - a failed producer flush still returns useful ordinary lower-bound observations on HTTP
+  ---
+  duration_ms: 25.043316
+  ...
+# Subtest: ordinary owner readouts are excluded from the existing commerce event population
+ok 158 - ordinary owner readouts are excluded from the existing commerce event population
+  ---
+  duration_ms: 0.114795
+  ...
+# Subtest: normal private POST begins a recovered interval without changing earlier gap evidence
+ok 159 - normal private POST begins a recovered interval without changing earlier gap evidence
+  ---
+  duration_ms: 64.908694
+  ...
+# Subtest: normal private recovery works after the first initialization failed
+ok 160 - normal private recovery works after the first initialization failed
+  ---
+  duration_ms: 33.772514
+  ...
+# Subtest: a disabled feedback producer cannot certify a feedback observation period
+ok 161 - a disabled feedback producer cannot certify a feedback observation period
+  ---
+  duration_ms: 31.492845
+  ...
+# Subtest: constructed records join by event, digest, route, and reference
+ok 162 - constructed records join by event, digest, route, and reference
+  ---
+  duration_ms: 1839.228298
+  ...
+# Subtest: empty stores stay empty and a missing directory is not created
+ok 163 - empty stores stay empty and a missing directory is not created
+  ---
+  duration_ms: 1521.40349
+  ...
+# Subtest: a count join without capture is refused
+ok 164 - a count join without capture is refused
+  ---
+  duration_ms: 1570.813587
+  ...
+# Subtest: the receiver does not write ledgers or import the payment server
+ok 165 - the receiver does not write ledgers or import the payment server
+  ---
+  duration_ms: 2.071447
+  ...
+# Subtest: typed MCP canonical joins without an HTTP v1 row
+ok 166 - typed MCP canonical joins without an HTTP v1 row
+  ---
+  duration_ms: 2.511966
+  ...
+# Subtest: canonical settlement cannot borrow another transport, protocol, time or event canon
+ok 167 - canonical settlement cannot borrow another transport, protocol, time or event canon
+  ---
+  duration_ms: 1.417915
+  ...
+# Subtest: a disk parent keeps amount, network, asset, and payee for the typed join
+ok 168 - a disk parent keeps amount, network, asset, and payee for the typed join
+  ---
+  duration_ms: 17.819415
+  ...
+# Subtest: ordinary receiver uses the existing retained event tail beyond the first rotation
+ok 169 - ordinary receiver uses the existing retained event tail beyond the first rotation
+  ---
+  duration_ms: 3.445307
+  ...
+1..169
+# tests 169
+# suites 0
+# pass 169
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13767.757907

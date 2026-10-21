@@ -1,0 +1,286 @@
+
+> x402-merchant@1.23.55 test:extract-batch
+> node --test extract.review.test.mjs extract-batch.test.mjs extract-batch.identity.test.mjs extract-batch.http.test.mjs extract-batch-commerce.mounted.test.mjs extract-batch-page-change.test.mjs extract-batch-record.test.mjs
+
+TAP version 13
+# Subtest: mounted POST /extract/batch records exact paid classification, construction, and source
+ok 1 - mounted POST /extract/batch records exact paid classification, construction, and source
+  ---
+  duration_ms: 3563.855805
+  ...
+# Subtest: mounted POST /extract/batch records settlement error without unmatched fallback
+ok 2 - mounted POST /extract/batch records settlement error without unmatched fallback
+  ---
+  duration_ms: 2995.407833
+  ...
+# Subtest: combined Claude Goose and no-source sessions retain one owning event per request
+ok 3 - combined Claude Goose and no-source sessions retain one owning event per request
+  ---
+  duration_ms: 2251.265622
+  ...
+# Subtest: batch fixture startup timeout reaps a SIGTERM-resistant child
+ok 4 - batch fixture startup timeout reaps a SIGTERM-resistant child
+  ---
+  duration_ms: 2512.092858
+  ...
+# Subtest: mounted refusal evidence carries only semantic codes through HTTP MCP and aggregate
+ok 5 - mounted refusal evidence carries only semantic codes through HTTP MCP and aggregate
+  ---
+  duration_ms: 2062.544301
+  ...
+# Subtest: prospective URL shapes reach the mounted journal and normal summary
+ok 6 - prospective URL shapes reach the mounted journal and normal summary
+  ---
+  duration_ms: 2173.483881
+  ...
+# {"observedHttpShapes":{"urls_invalid:urls:object:absent:none":2,"urls_invalid:urls:object:scalar:none":6,"urls_invalid:urls:object:null:none":2,"urls_invalid:urls:object:object:none":2,"urls_invalid:urls:object:array:empty":2,"urls_invalid:urls:object:array:over_limit":4,"body_not_object:body:array:not_inspected:none":2,"unexpected_field:body_keys:object:not_inspected:none":2,"url_item_invalid:url_items:object:array:in_range":2,"url_credentials:url_items:object:array:in_range":2,"fields_invalid:fields:object:array:in_range":2,"fields_unknown:fields:object:array:in_range":2,"text_excerpt_limit_invalid:text_excerpt:object:array:in_range":2,"text_excerpt_ceiling:text_excerpt:object:array:in_range":2},"normalSummary":{"shapeContract":{"schemaVersion":"samedaydesk.extract-batch.input-shape.v1","stages":["body","body_keys","urls","url_items","fields","text_excerpt"],"bodyTypes":["absent","null","scalar","object","array"],"urlsTypes":["absent","null","scalar","object","array","not_inspected"],"arrayCounts":["empty","in_range","over_limit"],"maxUrls":5},"knownShapeEvents":34,"unknownShapeEvents":0,"shapeCoverage":1,"byShape":{"urls_invalid:urls:object:absent:none":2,"urls_invalid:urls:object:scalar:none":6,"urls_invalid:urls:object:null:none":2,"urls_invalid:urls:object:object:none":2,"urls_invalid:urls:object:array:empty":2,"urls_invalid:urls:object:array:over_limit":4,"body_not_object:body:array:not_inspected:none":2,"unexpected_field:body_keys:object:not_inspected:none":2,"url_item_invalid:url_items:object:array:in_range":2,"url_credentials:url_items:object:array:in_range":2,"fields_invalid:fields:object:array:in_range":2,"fields_unknown:fields:object:array:in_range":2,"text_excerpt_limit_invalid:text_excerpt:object:array:in_range":2,"text_excerpt_ceiling:text_excerpt:object:array:in_range":2},"contract":"samedaydesk.extract-batch.input-refusal.v1","retainedValidationEvents":34,"knownCodeEvents":34,"unknownCodeEvents":0,"codeCoverage":1,"byCode":{"urls_invalid":18,"body_not_object":2,"unexpected_field":2,"url_item_invalid":2,"url_credentials":2,"fields_invalid":2,"fields_unknown":2,"text_excerpt_limit_invalid":2,"text_excerpt_ceiling":2},"windowCoverage":"unknown_for_full_window","usefulness":"unknown","policy":"Retained external POST /extract/batch HTTP 400 validation observations only, including the owning MCP HTTP hop. Codes come from the validator's strict static refusal contract. Optional shapes come from the observed owning validation stage with declared types and capped URL array counts, never caller contents. Missing or null historical codes and shapes stay unknown; parser failures have neither semantic codes nor shapes. Counts are retained observations, not complete-window zeroes, settlement, useful delivery, customers or demand. Existing observation eligibility and retention bounds apply."},"verify":1,"settle":1,"sourceFetches":1,"replay":"hit"}
+# Subtest: mounted shape appends and reads retain bounded rotations, restart and recovery
+ok 7 - mounted shape appends and reads retain bounded rotations, restart and recovery
+  ---
+  duration_ms: 4217.638853
+  ...
+# {"concurrentRefusals":12,"rotations":5,"retainedSegments":4,"retainedShapeEvents":4,"restartShapeEvents":4,"recoveredShapeEvents":5,"recoveryIntegrity":"unusable_records_present"}
+# Subtest: injected HTML batch deliveries compose with the public page-change recipe
+ok 8 - injected HTML batch deliveries compose with the public page-change recipe
+  ---
+  duration_ms: 118.859779
+  ...
+# Subtest: injected HTML batch deliveries compose with the public record recipe
+ok 9 - injected HTML batch deliveries compose with the public record recipe
+  ---
+  duration_ms: 123.803276
+  ...
+# Subtest: flag off leaves live extract and catalogs unchanged
+ok 10 - flag off leaves live extract and catalogs unchanged
+  ---
+  duration_ms: 3759.730311
+  ...
+# Subtest: invalid input is rejected before settlement and source fetch
+ok 11 - invalid input is rejected before settlement and source fetch
+  ---
+  duration_ms: 2290.438056
+  ...
+# Subtest: unpaid valid requests issue x402 and MPP challenges without fetching sources
+ok 12 - unpaid valid requests issue x402 and MPP challenges without fetching sources
+  ---
+  duration_ms: 2028.410515
+  ...
+# Subtest: flag on projects the batch offer across MCP tools/list with matching schemas
+ok 13 - flag on projects the batch offer across MCP tools/list with matching schemas
+  ---
+  duration_ms: 2205.194357
+  ...
+# Subtest: malformed and oversized bodies stay uncharged across HTTP projections
+ok 14 - malformed and oversized bodies stay uncharged across HTTP projections
+  ---
+  duration_ms: 1969.302486
+  ...
+# Subtest: x402 payment runs C1, returns partial facts, and binds the submitted body
+ok 15 - x402 payment runs C1, returns partial facts, and binds the submitted body
+  ---
+  duration_ms: 1967.022051
+  ...
+# Subtest: MPP unpaid challenge binds POST body and pays without a second source execution
+ok 16 - MPP unpaid challenge binds POST body and pays without a second source execution
+  ---
+  duration_ms: 3827.230173
+  ...
+# Subtest: unknown settlement is not retried inside one request; ceilings stop extra hops
+ok 17 - unknown settlement is not retried inside one request; ceilings stop extra hops
+  ---
+  duration_ms: 3414.938135
+  ...
+# Subtest: existing default-on opportunity route preserves unknown settlement on retry
+ok 18 - existing default-on opportunity route preserves unknown settlement on retry
+  ---
+  duration_ms: 1716.311215
+  ...
+# Subtest: existing default-on opportunity replay survives a server restart
+ok 19 - existing default-on opportunity replay survives a server restart
+  ---
+  duration_ms: 3963.506277
+  ...
+# Subtest: concurrent identical paid requests do not duplicate settlement or source execution
+ok 20 - concurrent identical paid requests do not duplicate settlement or source execution
+  ---
+  duration_ms: 1576.367855
+  ...
+# Subtest: both real payment rails reject failed verification without any source reads
+ok 21 - both real payment rails reject failed verification without any source reads
+  ---
+  duration_ms: 3182.731575
+  ...
+# Subtest: mounted MCP same paid batch replays across restart without a second settlement
+ok 22 - mounted MCP same paid batch replays across restart without a second settlement
+  ---
+  duration_ms: 4819.703707
+  ...
+# Subtest: mounted MCP x402 denied authorization does not repeat work or settlement
+ok 23 - mounted MCP x402 denied authorization does not repeat work or settlement
+  ---
+  duration_ms: 3222.401778
+  ...
+# Subtest: mounted MCP x402 unknown authorization does not repeat work or settlement
+ok 24 - mounted MCP x402 unknown authorization does not repeat work or settlement
+  ---
+  duration_ms: 3314.13487
+  ...
+# Subtest: mounted MCP mpp denied authorization does not repeat work or settlement
+ok 25 - mounted MCP mpp denied authorization does not repeat work or settlement
+  ---
+  duration_ms: 3303.869755
+  ...
+# Subtest: mounted MCP mpp unknown authorization does not repeat work or settlement
+ok 26 - mounted MCP mpp unknown authorization does not repeat work or settlement
+  ---
+  duration_ms: 3316.846933
+  ...
+# Subtest: mounted semantic refusal contract is shared by HTTP, OpenAPI, and MCP
+ok 27 - mounted semantic refusal contract is shared by HTTP, OpenAPI, and MCP
+  ---
+  duration_ms: 1892.094911
+  ...
+# Subtest: batch pairs each row to the requested URL, not completion order
+ok 28 - batch pairs each row to the requested URL, not completion order
+  ---
+  duration_ms: 66.370622
+  ...
+# Subtest: duplicate and missing URLs keep original slots and identities
+ok 29 - duplicate and missing URLs keep original slots and identities
+  ---
+  duration_ms: 9.817626
+  ...
+# Subtest: 403/404 with block text keep source HTTP status and parsed text
+ok 30 - 403/404 with block text keep source HTTP status and parsed text
+  ---
+  duration_ms: 7.905425
+  ...
+# Subtest: redirect records requested source and observed final URL
+ok 31 - redirect records requested source and observed final URL
+  ---
+  duration_ms: 8.345117
+  ...
+# Subtest: 429 and 5xx are source failures with retained body, not empty success
+ok 32 - 429 and 5xx are source failures with retained body, not empty success
+  ---
+  duration_ms: 17.26281
+  ...
+# Subtest: rejects invalid batch input before any job is planned
+ok 33 - rejects invalid batch input before any job is planned
+  ---
+  duration_ms: 9.267286
+  ...
+# Subtest: accepted C1 runs after a planned job and reports partial JSON-LD failure
+ok 34 - accepted C1 runs after a planned job and reports partial JSON-LD failure
+  ---
+  duration_ms: 49.036668
+  ...
+# Subtest: redirect hops consume the request ceiling and publicFetch pins verified IPv4
+ok 35 - redirect hops consume the request ceiling and publicFetch pins verified IPv4
+  ---
+  duration_ms: 9.372811
+  ...
+# Subtest: feature flag and cost ceilings cannot raise the documented maxima
+ok 36 - feature flag and cost ceilings cannot raise the documented maxima
+  ---
+  duration_ms: 0.536295
+  ...
+# Subtest: same payment and body reuse a per-job checkpoint path
+ok 37 - same payment and body reuse a per-job checkpoint path
+  ---
+  duration_ms: 0.330823
+  ...
+# Subtest: runtime input matches the declared fields shape and HTTPS redirect boundary
+ok 38 - runtime input matches the declared fields shape and HTTPS redirect boundary
+  ---
+  duration_ms: 5.486263
+  ...
+# Subtest: large structured rows are explicitly partial within the replayable response ceiling
+ok 39 - large structured rows are explicitly partial within the replayable response ceiling
+  ---
+  duration_ms: 8.133983
+  ...
+# Subtest: exception response retains every source and all declared required fields without invented zero costs
+ok 40 - exception response retains every source and all declared required fields without invented zero costs
+  ---
+  duration_ms: 10.127438
+  ...
+# Subtest: semantic refusal codes are static, strict, and do not echo caller values
+ok 41 - semantic refusal codes are static, strict, and do not echo caller values
+  ---
+  duration_ms: 86.854549
+  ...
+# Subtest: shape evidence follows the owning validator stage and never retains caller content
+ok 42 - shape evidence follows the owning validator stage and never retains caller content
+  ---
+  duration_ms: 0.817162
+  ...
+# Subtest: optional metadata failure cannot replace a semantic refusal or gate valid input
+ok 43 - optional metadata failure cannot replace a semantic refusal or gate valid input
+  ---
+  duration_ms: 0.294625
+  ...
+# Subtest: early refusal does not inspect later inputs while collecting evidence
+ok 44 - early refusal does not inspect later inputs while collecting evidence
+  ---
+  duration_ms: 0.099682
+  ...
+# Subtest: default extractor uses DNS-pinned transport; private literals and credentials are rejected
+ok 45 - default extractor uses DNS-pinned transport; private literals and credentials are rejected
+  ---
+  duration_ms: 18.591196
+  ...
+# Subtest: validated DNS address is pinned to the actual request lookup
+ok 46 - validated DNS address is pinned to the actual request lookup
+  ---
+  duration_ms: 2.242484
+  ...
+# Subtest: single URL redirects validate every hop, preserve identity and stop at a finite limit
+ok 47 - single URL redirects validate every hop, preserve identity and stop at a finite limit
+  ---
+  duration_ms: 7.467227
+  ...
+# Subtest: streaming body stalls and nonstreaming responses cannot evade bounds
+ok 48 - streaming body stalls and nonstreaming responses cannot evade bounds
+  ---
+  duration_ms: 46.370912
+  ...
+# Subtest: exact byte cap is not called truncated; over-cap is cancelled and reported
+ok 49 - exact byte cap is not called truncated; over-cap is cancelled and reported
+  ---
+  duration_ms: 16.300927
+  ...
+# Subtest: charset label names the decoder actually used and valid JSON-LD null cannot crash extraction
+ok 50 - charset label names the decoder actually used and valid JSON-LD null cannot crash extraction
+  ---
+  duration_ms: 2.074363
+  ...
+# Subtest: windows-1252 bytes stay labeled and decoded across single, read, and batch
+ok 51 - windows-1252 bytes stay labeled and decoded across single, read, and batch
+  ---
+  duration_ms: 53.573718
+  ...
+# Subtest: real disposable HTTP source refusal stays typed; null-body 204 works in read and batch
+ok 52 - real disposable HTTP source refusal stays typed; null-body 204 works in read and batch
+  ---
+  duration_ms: 45.206154
+  ...
+# Subtest: typed batch reports excerpt limit and partial status without claiming missing discussion is absent
+ok 53 - typed batch reports excerpt limit and partial status without claiming missing discussion is absent
+  ---
+  duration_ms: 24.760306
+  ...
+# Subtest: public read metadata avoids full-page promises and test hooks have no request binding
+ok 54 - public read metadata avoids full-page promises and test hooks have no request binding
+  ---
+  duration_ms: 5.919211
+  ...
+1..54
+# tests 54
+# suites 0
+# pass 54
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 54826.412001
