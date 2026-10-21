@@ -1,0 +1,60 @@
+TAP version 13
+# Subtest: first boot/reopen preserves private identity and unknown operations
+ok 1 - first boot/reopen preserves private identity and unknown operations
+  ---
+  duration_ms: 7.893584
+  ...
+# Subtest: refuses unknown nonempty volume before initialization
+ok 2 - refuses unknown nonempty volume before initialization
+  ---
+  duration_ms: 0.705239
+  ...
+# Subtest: refuses volume and store symlinks
+ok 3 - refuses volume and store symlinks
+  ---
+  duration_ms: 5.895281
+  ...
+# Subtest: refuses wrong ownership or public permissions without changing contents
+ok 4 - refuses wrong ownership or public permissions without changing contents
+  ---
+  duration_ms: 0.438492
+  ...
+# Subtest: refuses marker identity drift and nonempty native cwd
+ok 5 - refuses marker identity drift and nonempty native cwd
+  ---
+  duration_ms: 3.968367
+  ...
+# Subtest: safe default and strict finite/authority parsing
+ok 6 - safe default and strict finite/authority parsing
+  ---
+  duration_ms: 0.409271
+  ...
+# Subtest: actual credential-free entry imports production closure and reopens stable store
+ok 7 - actual credential-free entry imports production closure and reopens stable store
+  ---
+  duration_ms: 2135.779013
+  ...
+# Subtest: actual observe and serve refuse missing auth before network/effects
+ok 8 - actual observe and serve refuse missing auth before network/effects
+  ---
+  duration_ms: 2108.316884
+  ...
+# Subtest: actual enrollment hold expires and SIGTERM exits promptly
+ok 9 - actual enrollment hold expires and SIGTERM exits promptly
+  ---
+  duration_ms: 1072.871164
+  ...
+# Subtest: private config rejects symlink and broad file permissions
+ok 10 - private config rejects symlink and broad file permissions
+  ---
+  duration_ms: 0.829554
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5394.046958

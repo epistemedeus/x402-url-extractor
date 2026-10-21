@@ -1,0 +1,31 @@
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: mppx@0.8.15
+npm error Found: express@4.22.2
+npm error node_modules/express
+npm error   express@"^4.21.2" from the root project
+npm error   peer express@"^4.0.0 || ^5.0.0" from @x402/express@2.16.0
+npm error   node_modules/@x402/express
+npm error     @x402/express@"2.16.0" from the root project
+npm error   1 more (express-rate-limit)
+npm error
+npm error Could not resolve dependency:
+npm error peerOptional express@">=5" from mppx@0.8.15
+npm error node_modules/mppx
+npm error   mppx@"^0.8.15" from the root project
+npm error
+npm error Conflicting peer dependency: express@5.3.0
+npm error node_modules/express
+npm error   peerOptional express@">=5" from mppx@0.8.15
+npm error   node_modules/mppx
+npm error     mppx@"^0.8.15" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error /home/ubuntu/.npm/_logs/2026-10-21T01_41_00_050Z-eresolve-report.txt
+npm error A complete log of this run can be found in: /home/ubuntu/.npm/_logs/2026-10-21T01_41_00_050Z-debug-0.log
