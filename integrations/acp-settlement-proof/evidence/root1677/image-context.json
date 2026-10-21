@@ -4,9 +4,9 @@
   "pilotBase": "e6882ef6edf31896435e5ba6399404b19d302411",
   "platform": "linux/amd64",
   "baseImage": "node:22.14.0-bookworm-slim@sha256:745403dc46b5ab4c998502b07a12cbf020cf2c30645427a68ec0718f02d647de",
-  "sourceIdentitySha256": "0a32e94bea96ff88257e239c9e493753c1477b1c0c9a8f0c24f688a9e14e6fb6",
-  "contextFiles": 42,
-  "sourceContextBytes": 568436,
+  "sourceIdentitySha256": "9eb2924a9fbded2edf0230b71ba56f0c6b4b073d056ec7e3f9511a77b4b0f460",
+  "contextFiles": 43,
+  "sourceContextBytes": 569596,
   "rootCleanInstalledPackages": 238,
   "optionalCleanInstalledPackages": 401,
   "prunedReaderPackages": 17,
@@ -28,5 +28,6 @@
     ".npmrc": "8c1a650ddc3530a573977d80de1d7c68aee65006bde72401acebae06fe1a9c6a",
     "integrations/acp-settlement-proof/runtime/package-lock.json": "8157ace46f98be9c417feab0c34939c91dfa9038d3a66de7aaff9d79eaf7f502",
     "integrations/acp-settlement-proof/runtime/node_modules/@virtuals-protocol/acp-cli/bin/acp-cli-signer-linux": "37cba1511b909a96f4090d5c37321320b7bab2ec19a99a564739192cf182c83c"
-  }
+  },
+  "finalPackagingGate": "3 cold-context checks pass after adding the original repository LICENSE to the image source export"
 }

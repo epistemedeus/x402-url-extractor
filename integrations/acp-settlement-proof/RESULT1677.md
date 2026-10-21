@@ -22,8 +22,8 @@ are in the Git export/PR220 and terminal receipt rather than self-referential he
 [Managed OPERATE](managed/OPERATE.md) supplies exact build/context/upload/private
 shell/configure/agent-use/restricted-signer/policy/observe/serve/rollback commands,
 original service/project/environment IDs, volume/user/env/resource/restart and
-50second signal grace settings. The allowlisted42-file source context has digest
-`0a32e94bea96ff88257e239c9e493753c1477b1c0c9a8f0c24f688a9e14e6fb6`.
+50second signal grace settings. The allowlisted43-file source context has digest
+`9eb2924a9fbded2edf0230b71ba56f0c6b4b073d056ec7e3f9511a77b4b0f460`.
 Its pinned AMD64 Node22.14 container installs the exact received root and optional
 runtime locks serially with scripts disabled; only17root reader packages and
 the optional CLI/SDK/EventSource closure enter the final stage. Merchant web
@@ -72,7 +72,9 @@ The first context test exposed unnecessary vendored tests and the exporter now
 omits them. The actual clean root install then exposed the omitted tracked
 .npmrc/Express peer policy; the unchanged received config is now exported/copied,
 and clean installs pass without changing merchant's lock or dependencies.
-Failed context/install evidence is retained alongside final passes.
+Failed context/install evidence is retained alongside final passes. The original
+repository LICENSE is included in the final43-file context; all three cold-context
+checks pass again for that packaging-only addition.
 
 Docker is unavailable; no OCI image build or platform receiving is claimed and
 nothing was installed globally. Root's remaining concrete gate is the managed

@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const output = process.argv[2];
 if (!output || !path.isAbsolute(output) || fs.existsSync(output)) throw Error('New absolute context directory required');
-const files = ['.npmrc', 'package.json', 'package-lock.json', 'settlement-proof.mjs', 'experiments/scoped-surface-delivery-100312/src/lock.mjs'];
+const files = ['LICENSE', '.npmrc', 'package.json', 'package-lock.json', 'settlement-proof.mjs', 'experiments/scoped-surface-delivery-100312/src/lock.mjs'];
 for (const name of ['start', 'worker', 'operating', 'configured', 'fulfill', 'journal', 'native-boundary', 'native-process', 'native-network-preload']) files.push(`integrations/acp-settlement-proof/${name}.mjs`);
 for (const name of ['package.json', 'package-lock.json', 'worker.example.json']) files.push(`integrations/acp-settlement-proof/runtime/${name}`);
 for (const name of ['entry.mjs', 'store.mjs', 'identity.mjs', 'reader-closure.mjs', 'Dockerfile', 'Dockerfile.dockerignore', 'railway.json']) files.push(`integrations/acp-settlement-proof/managed/${name}`);
