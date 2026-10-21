@@ -30,7 +30,7 @@ export function selectClientRequirement(entries, session, job) {
   return { request, source };
 }
 
-function receiveCatalog(detail) {
+export function receiveCatalog(detail) {
   requireThat(detail && sameAddress(detail.walletAddress, PROVIDER), 'Original provider catalog required');
   const matches = detail.offerings?.filter(o => o.name === 'Settlement Proof') ?? [];
   requireThat(matches.length === 1, 'Unique configured offering required');

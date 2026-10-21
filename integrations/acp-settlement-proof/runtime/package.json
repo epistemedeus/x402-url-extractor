@@ -1,0 +1,10 @@
+{
+  "name": "acp-settlement-proof-runtime",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@virtuals-protocol/acp-cli": "1.0.30",
+    "@virtuals-protocol/acp-node-v2": "0.1.15"
+  },
+  "overrides": { "@virtuals-protocol/acp-node-v2": "0.1.15" }
+}

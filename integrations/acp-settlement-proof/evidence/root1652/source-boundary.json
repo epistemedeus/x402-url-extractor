@@ -1,0 +1,38 @@
+{
+  "receiptSha256": "52140015dbb4ec725ffa517b81f150be7875b5d53f2e340dae4ccbb8a4a0240e",
+  "productBase": "323f76ba9b2eeaba930f324d316e87e638960099",
+  "pilotBase": "e59dfdeffe1a4ceed1b40d107b5e74abb84758ea",
+  "nativeCli": {
+    "version": "1.0.30",
+    "gitHead": "ea26fff56cf3fad50bac23682179de3cac87d89e",
+    "declaredLicense": "ISC"
+  },
+  "officialMain": {
+    "commit": "9d2be827cc19e4ea2cecfff3896398607537ea3e",
+    "version": "1.0.40",
+    "adopted": false
+  },
+  "runtimeSdk": "0.1.15",
+  "lockedPackages": 459,
+  "declaredLicenseCounts": {
+    "0BSD": 1,
+    "Apache-2.0": 8,
+    "BSD-2-Clause": 2,
+    "BSD-3-Clause": 5,
+    "BlueOak-1.0.0": 1,
+    "ISC": 18,
+    "LGPL-3.0-only": 1,
+    "MIT": 413,
+    "SEE LICENSE IN LICENSE": 4,
+    "UNDECLARED": 6,
+    "Unlicense": 1
+  },
+  "limit": "Manifest attribution/import receiving only; not a comprehensive legal or native-binary audit",
+  "hashes": {
+    "package.json": "d7cfdce4bc42fd64e0be97a07e47844f391ceef9b9634ada8ec764cc75fdfdc5",
+    "package-lock.json": "212c78b62206723b04af693e8c828541953b97db92342cd8135268f854236be7",
+    "integrations/acp-settlement-proof/runtime/package-lock.json": "fc1d20559251837f35156421e77a8ae765008bf4ba68344a3b558f558ea6da4e",
+    "integrations/acp-settlement-proof/runtime/node_modules/@virtuals-protocol/acp-cli/dist/bin/acp.js": "9e67961d22ec2dd6b262151fa71adbd016ccf0eab4585b07222ccdcfd85d09fb",
+    "integrations/acp-settlement-proof/runtime/node_modules/@virtuals-protocol/acp-cli/bin/acp-cli-signer-linux": "37cba1511b909a96f4090d5c37321320b7bab2ec19a99a564739192cf182c83c"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "agentId": "019fef7a-3b3e-7a67-b825-6abfd8ba0e17",
+  "provider": "0x561901cf20080e2bed6802ce718c4a17008a1ca2",
+  "offeringId": "019ff030-09d4-7456-91b5-213ec48246b7",
+  "selectionPolicy": "provider-name-terms",
+  "configDirectory": "/var/lib/samedaydesk-acp/profile",
+  "workingDirectory": "/var/lib/samedaydesk-acp/empty",
+  "journalDirectory": "/var/lib/samedaydesk-acp/operations",
+  "signerId": "ROOT_MUST_RECEIVE_EXISTING_NATIVE_SIGNER_ID",
+  "receiptRpcUrl": "https://mainnet.base.org",
+  "declaredMemoryMiB": 2048,
+  "nodeHeapMiB": 768,
+  "runForSeconds": 900,
+  "maxJobs": 16,
+  "pollSeconds": 30,
+  "streamEpochSeconds": 60
+}
