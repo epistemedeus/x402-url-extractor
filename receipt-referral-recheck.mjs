@@ -216,7 +216,7 @@ async function verifyMerchantReceipt(normalized, merchantSigner, retiredMerchant
     // Retirement is diagnostic metadata, never a second signing authority.
     // An exposed key can manufacture both timestamps and signed resource URLs.
     if (retiredMerchantSigners.has(String(verified.signer).toLowerCase())) {
-      fail(`${label} receipt uses a retired signer; historical issuance requires separately received evidence and the obligation remains unresolved`, {
+      fail(`${label} receipt uses a retired signer; historical issuance requires separately received evidence; existing obligations are unchanged`, {
         code: "historical_receipt_verification_unavailable",
         statusCode: 503,
       });
@@ -301,7 +301,7 @@ export async function receiptReferralRecheck(input, {
       statusCode: 503,
     });
   }
-  if (!Array.isArray(retiredMerchantSigners) || retiredMerchantSigners.some(signer => !EVM_ADDRESS.test(String(signer)))
+  if (!Array.isArray(retiredMerchantSigners) || retiredMerchantSigners.some(signer => typeof signer !== "string" || !EVM_ADDRESS.test(signer))
     || retiredMerchantSigners.some(signer => signer.toLowerCase() === merchantSigner.toLowerCase())) {
     fail("receipt signer retirement metadata is not configured correctly", {
       code: "receipt_verification_unavailable", statusCode: 503,

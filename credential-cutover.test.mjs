@@ -16,6 +16,11 @@ import { historicalV1Row, validExtractBody } from './http-delivery-evidence/test
 import { openStore, recordFromObservedResponse } from './http-delivery-evidence/store.mjs';
 import { reconcileCommerceSettlementEvents } from './commerce-settlement-reconciler.mjs';
 import { createIdempotencyReplay } from './idempotency-replay.mjs';
+import { isJournalCutRecord, authenticateJournalCut, JOURNAL_CUT_SCHEMA } from './commerce-journal-cut-auth.mjs';
+import { createHmac, randomUUID } from 'node:crypto';
+import { createMppDualStack, mppAssetForNetwork } from './mpp-dual-stack.mjs';
+import { evm, Mppx } from 'mppx/client';
+import { privateKeyToAccount } from 'viem/accounts';
 
 const network = 'eip155:8453', publicUrl = 'https://agents.samedaydesk.com';
 const oldTrust = createCommerceTrust({ privateKey: '0x' + '1'.repeat(64), network });
@@ -74,6 +79,10 @@ test('retired original, downstream and forged resource remain recoverably unavai
   await refuses(receiptReferralRecheck(await pair(), opts(dataDir)), 'historical_receipt_verification_unavailable', 503);
   const foreign = createCommerceTrust({ privateKey: '0x' + '3'.repeat(64), network });
   await refuses(receiptReferralRecheck(await pair(foreign), opts(dataDir)), 'foreign_receipt_signer', 403);
+  await refuses(receiptReferralRecheck(await pair(), opts(dataDir, { retiredMerchantSigners: [] })), 'foreign_receipt_signer', 403);
+  for (const retiredMerchantSigners of [[newTrust.signerAddress], ['not-an-address'], [null]]) {
+    await refuses(receiptReferralRecheck(await pair(newTrust), opts(dataDir, { retiredMerchantSigners })), 'receipt_verification_unavailable', 503);
+  }
 });
 
 test('consumed old markers stay consumed after restart; current claims recover before consumption and refuse replay', async t => {
@@ -222,4 +231,47 @@ test('actor-key rotation cannot reopen a durable payment replay reservation or s
   request.headers['payment-signature'] = Buffer.from(JSON.stringify(payment)).toString('base64');
   const recovered = createIdempotencyReplay({ dataDir, secret: newKey, now: () => later });
   assert.equal((await recovered.claim(recovered.bindingFor(request))).reserved, true);
+});
+
+test('unverified legacy cut metadata cannot establish coverage, event time, or authentication; malformed metadata remains unusable', async t => {
+  const dataDir = await dir(t), now = Date.now();
+  const body = { schema: JOURNAL_CUT_SCHEMA, kind: 'attempt_useful_capture', cutId: randomUUID(), sessionId: randomUUID(), namespace: '1:2',
+    producer: 'canonical_commerce_and_useful_result_journals', writerProcesses: 1, sourceDigest: 'a'.repeat(64), planes: {},
+    from: new Date(now - 2000).toISOString(), asOf: new Date(now - 1000).toISOString() };
+  const record = { ...body, authentication: createHmac('sha256', oldToken).update('attempt-useful-cut-v1\n').update(JSON.stringify(body)).digest('hex') };
+  assert.equal(isJournalCutRecord(record), true);
+  assert.equal(authenticateJournalCut(record, oldToken), true);
+  assert.equal(authenticateJournalCut(record, newToken), false);
+  const file = path.join(dataDir, 'commerce-events.ndjson');
+  await writeFile(file, JSON.stringify(record) + '\n', { mode: 0o600 });
+  const telemetry = createCommerceTelemetry({ dataDir, secret: newKey, internalToken: newToken });
+  const snapshot = await telemetry.snapshot();
+  assert.equal(snapshot.journalCaptureMetadata.unverifiedRecords, 1);
+  assert.equal(snapshot.retainedParseableEventCount, 0);
+  assert.equal(snapshot.requestedWindowComplete, false);
+  assert.equal(snapshot.paidSuccessActors, 0);
+  assert.equal((await readDeliveryJournalCoverage({ dataDir, internalToken: newToken, windowStart: body.from, windowEnd: body.asOf })).coverage, 'unknown_for_full_window');
+  await writeFile(file, JSON.stringify({ ...record, authentication: 'malformed' }) + '\n');
+  const broken = await telemetry.snapshot();
+  assert.equal(broken.journalCaptureMetadata.unverifiedRecords, 0);
+  assert.equal(broken.integrityStatus, 'unusable_records_present');
+});
+
+test('existing MPP challenge-key rotation refuses old challenges before the synthetic facilitator and accepts fresh ones', async () => {
+  const chain = 'eip155:84532', account = privateKeyToAccount('0x' + '4'.repeat(64));
+  const calls = { verify: 0, settle: 0 };
+  const configured = secretKey => createMppDualStack({ network: chain, payTo: '0x' + 'd'.repeat(40), publicUrl, realm: new URL(publicUrl).hostname,
+    routes: [{ amount: '0.01', path: '/synthetic-report', method: 'GET' }], secretKey,
+    facilitatorClient: { async verify() { calls.verify++; return { isValid: true }; },
+      async settle() { calls.settle++; return { success: true, network: chain, payer: account.address, transaction: '0x' + 'e'.repeat(64) }; } } });
+  const url = publicUrl + '/synthetic-report';
+  const old = configured(oldKey), current = configured(newKey);
+  const client = Mppx.create({ methods: [evm({ account, currencies: [mppAssetForNetwork(chain)], maxAmount: '0.01' })], polyfill: false });
+  const stale = await client.createCredential((await old.authorize(new Request(url))).challenge);
+  const refused = await current.authorize(new Request(url, { headers: { Authorization: stale } }));
+  assert.equal(refused.kind, 'rejected');
+  assert.deepEqual(calls, { verify: 0, settle: 0 });
+  const fresh = await client.createCredential((await current.authorize(new Request(url))).challenge);
+  assert.equal((await current.authorize(new Request(url, { headers: { Authorization: fresh } }))).kind, 'paid');
+  assert.deepEqual(calls, { verify: 1, settle: 1 });
 });

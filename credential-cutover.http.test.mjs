@@ -6,7 +6,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { extractOffersFromPaymentRequired, verifyOfferSignatureEIP712 } from '@x402/extensions/offer-receipt';
+import { extractOffersFromPaymentRequired, extractReceiptFromResponse, verifyOfferSignatureEIP712, verifyReceiptSignatureEIP712 } from '@x402/extensions/offer-receipt';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { createCommerceTrust } from './commerce-trust.mjs';
@@ -57,7 +57,7 @@ async function seedMcpFeedback(dataDir) {
   await writeFile(path.join(dataDir, 'commerce-events.ndjson'), JSON.stringify(event) + '\n', { mode: 0o600 });
   return { fresh: issueMcpCallerResultFeedbackToken({ key: feedbackKey, observation }), stale: issueMcpCallerResultFeedbackToken({ key: oldFeedbackKey, observation }), paidEvidenceId };
 }
-async function merchant(t, { dataDir, facilitatorUrl, retiredSigners = oldTrust.signerAddress }) {
+async function merchant(t, { dataDir, facilitatorUrl, retiredSigners = oldTrust.signerAddress, privateKey = newPrivateKey }) {
   const reservation = createServer();
   await listen(reservation);
   const port = reservation.address().port;
@@ -82,7 +82,7 @@ globalThis.fetch = async (input, init) => {
       COMMERCE_DATA_DIR: dataDir, COMMERCE_INTERNAL_TOKEN: owner,
       COMMERCE_ACTOR_SECRET: 'synthetic-new-actor-key-32-bytes-long',
       COMMERCE_RECONCILIATION_INTERVAL_MS: '86400000',
-      CALLER_RESULT_FEEDBACK_KEY: feedbackKey, RECEIPT_SIGNING_PRIVATE_KEY: newPrivateKey,
+      CALLER_RESULT_FEEDBACK_KEY: feedbackKey, RECEIPT_SIGNING_PRIVATE_KEY: privateKey,
       RECEIPT_RETIRED_SIGNERS: retiredSigners, MPP_SECRET_KEY: '',
     }, stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -210,4 +210,62 @@ test('actual merchant HTTP receives one replacement generation, old-proof bounda
   await running.stop();
   assert.deepEqual(await readFile(oldReplay.storePath), reservedBefore);
   assert.equal(verifyCalls, 0); assert.equal(settleCalls, 0);
+});
+
+test('ordinary HTTP issuance uses the new signer while cached old receipts survive replacement unchanged', { timeout: 45000 }, async t => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), 'credential-issuance-'));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const calls = { verify: 0, settle: 0 };
+  const facilitator = createServer((req, res) => {
+    res.setHeader('content-type', 'application/json');
+    if (req.url === '/supported') return res.end(JSON.stringify({ kinds: [{ network, scheme: 'exact', x402Version: 2 }], extensions: [], signers: {} }));
+    if (req.url === '/verify') { calls.verify++; return res.end(JSON.stringify({ isValid: true, payer: '0x' + 'a'.repeat(40) })); }
+    if (req.url === '/settle') { calls.settle++; return res.end(JSON.stringify({ success: true, network, payer: '0x' + 'a'.repeat(40), transaction: '0x' + String(calls.settle).repeat(64) })); }
+    res.statusCode = 500; res.end('{}');
+  });
+  const facilitatorUrl = await listen(facilitator);
+  t.after(() => new Promise(resolve => facilitator.close(resolve)));
+  let running = await merchant(t, { dataDir, facilitatorUrl, privateKey: oldPrivateKey, retiredSigners: '' });
+  const resource = '/work/opportunity-preflight?rewardUsd=8&hours=1&hourlyCostUsd=2';
+  const transportHeaders = { 'x-forwarded-host': new URL(publicUrl).hostname, 'x-forwarded-proto': 'https' };
+  const challenge = await fetch(running.base + resource, { headers: transportHeaders });
+  assert.equal(challenge.status, 402);
+  let required = JSON.parse(Buffer.from(challenge.headers.get('payment-required'), 'base64').toString());
+  await challenge.text();
+  const accepted = required.accepts[0];
+  const payment = n => Buffer.from(JSON.stringify({ x402Version: 2, accepted,
+    payload: { signature: '0x' + '4'.repeat(130), authorization: { from: '0x' + 'a'.repeat(40), to: accepted.payTo, value: accepted.amount,
+      validAfter: '0', validBefore: String(Math.floor(Date.now() / 1000) + 300), nonce: '0x' + String(n).repeat(64) } },
+    extensions: { 'payment-identifier': { info: { ...required.extensions?.['payment-identifier']?.info, id: 'synthetic_ordinary_order_' + n } } } })).toString('base64');
+  const firstCredential = payment(1);
+  const request = credential => fetch(running.base + resource, { headers: { ...transportHeaders, 'payment-signature': credential } });
+  const first = await request(firstCredential);
+  assert.equal(first.status, 200, (await first.clone().text()).slice(0, 1000));
+  const oldReceipt = extractReceiptFromResponse(first), oldBody = await first.text();
+  assert.equal((await verifyReceiptSignatureEIP712(oldReceipt)).signer.toLowerCase(), oldTrust.signerAddress.toLowerCase());
+  assert.equal(oldReceipt.payload.resourceUrl, running.base.replace('http:', 'https:') + resource);
+  await running.stop();
+  running = await merchant(t, { dataDir, facilitatorUrl });
+  const cached = await request(firstCredential);
+  assert.equal(cached.status, 200);
+  assert.equal(cached.headers.get('x-payment-replay'), 'hit');
+  assert.deepEqual(extractReceiptFromResponse(cached), oldReceipt);
+  assert.equal(await cached.text(), oldBody);
+  const refreshed = await fetch(running.base + resource, { headers: transportHeaders });
+  required = JSON.parse(Buffer.from(refreshed.headers.get('payment-required'), 'base64').toString());
+  await refreshed.text();
+  const freshCredential = payment(2), fresh = await request(freshCredential);
+  assert.equal(fresh.status, 200);
+  const newReceipt = extractReceiptFromResponse(fresh);
+  assert.equal((await verifyReceiptSignatureEIP712(newReceipt)).signer.toLowerCase(), newTrust.signerAddress.toLowerCase());
+  assert.notDeepEqual(newReceipt, oldReceipt);
+  await fresh.text();
+  await running.stop();
+  running = await merchant(t, { dataDir, facilitatorUrl });
+  const recovered = await request(freshCredential);
+  assert.deepEqual(extractReceiptFromResponse(recovered), newReceipt);
+  assert.equal(recovered.headers.get('x-payment-replay'), 'hit');
+  await recovered.text();
+  await running.stop();
+  assert.deepEqual(calls, { verify: 2, settle: 2 });
 });

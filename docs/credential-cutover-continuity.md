@@ -38,9 +38,14 @@ receipt bytes; only newly issued artifacts are expected to use the new signer.
 
 Run `npm run test:credential-cutover` (serial Node; synthetic keys, temporary
 stores, loopback facilitator; no real wallet/payment/provider mutation). The
-merchant-process test exercises actual owner/gateway/offer/referral/HTTP feedback
-and native MCP feedback wiring through restart, and checks that feedback adds no
-paid-success rows and makes zero facilitator verify/settle calls.
+merchant-process feedback control exercises actual owner/gateway/offer/referral/
+HTTP and native MCP feedback wiring through restart, and checks that feedback
+adds no paid-success rows and makes zero facilitator verify/settle calls. A
+separate ordinary-issuance control uses two loopback synthetic settlements to
+verify new receipts and unchanged cached old receipts across signer replacement.
+MPP rotation also uses only synthetic signing and an in-process fake facilitator.
+Native MCP's existing settlement metadata is a separate protocol surface; this
+package does not add EIP-712 receipt issuance to it.
 
 Before correction, seven cutover tests produced three passes and four failures:
 retired proofs and consumed old claims both returned `foreign_receipt_signer`;
@@ -50,6 +55,19 @@ the same reserved payment became a new reservation under the replacement actor
 key. These failures are retained in the receiving export, not rewritten as passes.
 Existing baseline controls passed 75/75. Broader verification commands and exact
 counts belong to the final receiving receipt.
+
+The added issuance fixture initially used the legacy-enriched response body as
+accepted payment requirements (402), then echoed excessive extension schema data
+(431). It now uses the canonical `payment-required` header and a bounded extension
+echo. Its receipt URL is the actual loopback adapter URL, not an invented public
+origin. These fixture failures remain in the export; no runtime patch was needed.
+
+Scope deviation: inherited mounted tests initially attempted the public default
+facilitator's startup `GET /supported`. No credential or payment was involved.
+Final related/replay verification uses a fetch guard that answers only that
+startup URL with a synthetic supported-kind response and blocks every other
+non-loopback URL before transport. An initial deny-only run's three startup
+failures are also retained. The new cutover tests use local fake facilitators.
 
 ## Root's one-shot live readbacks
 
@@ -63,7 +81,8 @@ After issuer revocation and trusted provider recovery, receive:
    post-payment injection uses that same current token. Source tests do not
    establish that the separate stopped gateway was updated.
 3. New unsigned paid challenge's signature/signer/kid; next authorized ordinary
-   HTTP/MCP delivery's receipt verifies under the new signer. Do not create a
+   HTTP delivery's receipt verifies under the new signer. Receive native MCP's
+   existing settlement and feedback bindings separately. Do not create a
    second payment merely to obtain evidence. Preserve old cached receipts.
 4. Consumed old referral remains 409; unconsumed retired/forged old proof remains
    503 without a marker or charge; a current proof can consume once. Record the
@@ -75,5 +94,6 @@ After issuer revocation and trusted provider recovery, receive:
    replay and unchanged paid/settlement totals; actor epoch and legacy count have
    explicit scope and establish no acquisition or revenue.
 
-No credentials, issuer actions, deployment, default-branch changes, provider
-contact, dependency upgrades, or production/private data are part of this package.
+No production credentials, issuer actions, deployment, default-branch changes,
+provider mutations, dependency upgrades, or production/private data are part of
+this package. The startup-discovery test deviation is recorded above.
