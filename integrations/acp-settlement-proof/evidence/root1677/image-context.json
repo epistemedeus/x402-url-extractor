@@ -1,0 +1,32 @@
+{
+  "schema": "root1677-managed-image-receiving/v1",
+  "sourceBase": "85e798b133079492144f6a6ffe7b1e11d8c03a0a",
+  "pilotBase": "e6882ef6edf31896435e5ba6399404b19d302411",
+  "platform": "linux/amd64",
+  "baseImage": "node:22.14.0-bookworm-slim@sha256:745403dc46b5ab4c998502b07a12cbf020cf2c30645427a68ec0718f02d647de",
+  "sourceIdentitySha256": "0a32e94bea96ff88257e239c9e493753c1477b1c0c9a8f0c24f688a9e14e6fb6",
+  "contextFiles": 42,
+  "sourceContextBytes": 568436,
+  "rootCleanInstalledPackages": 238,
+  "optionalCleanInstalledPackages": 401,
+  "prunedReaderPackages": 17,
+  "managedTests": {
+    "tests": 22,
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "concurrency": 1,
+    "nodeHeapMiB": 768
+  },
+  "nativeStoreTest": "unregistered disposable native encrypted-file generate/reopen/sign, no network, no private bytes exported; independent crypto verification reused from Root1671",
+  "ociBuilt": false,
+  "reason": "Docker executable/daemon unavailable; no global or privileged installation",
+  "platformDeployment": "Root-owned and not performed",
+  "hashes": {
+    "package.json": "d7cfdce4bc42fd64e0be97a07e47844f391ceef9b9634ada8ec764cc75fdfdc5",
+    "package-lock.json": "212c78b62206723b04af693e8c828541953b97db92342cd8135268f854236be7",
+    ".npmrc": "8c1a650ddc3530a573977d80de1d7c68aee65006bde72401acebae06fe1a9c6a",
+    "integrations/acp-settlement-proof/runtime/package-lock.json": "8157ace46f98be9c417feab0c34939c91dfa9038d3a66de7aaff9d79eaf7f502",
+    "integrations/acp-settlement-proof/runtime/node_modules/@virtuals-protocol/acp-cli/bin/acp-cli-signer-linux": "37cba1511b909a96f4090d5c37321320b7bab2ec19a99a564739192cf182c83c"
+  }
+}

@@ -153,3 +153,7 @@ test('credential-free reopen refuses a worker-configuration symlink', t => {
   const dir = scratch(t); initializeStore(dir); const target = path.join(dir, 'worker.json'); fs.symlinkSync('/tmp/missing-private-worker-config', target);
   assert.throws(() => initializeStore(dir)); assert.equal(fs.lstatSync(target).isSymbolicLink(), true);
 });
+test('image source policy refuses a missing source receipt before store mutation', async t => {
+  const dir = scratch(t); const result = await launch(dir, ['receive'], { env: { ACP_REQUIRE_SOURCE_IDENTITY: '1' } }).done;
+  assert.equal(result.code, 1); assert.deepEqual(fs.readdirSync(dir), []);
+});

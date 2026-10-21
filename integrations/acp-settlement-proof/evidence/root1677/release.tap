@@ -1,0 +1,120 @@
+TAP version 13
+# Subtest: allowlisted context contains production root modules and no credentials/tests/node_modules
+ok 1 - allowlisted context contains production root modules and no credentials/tests/node_modules
+  ---
+  duration_ms: 80.185961
+  ...
+# Subtest: cold context with only pruned reader and optional runtime resolves real production/native closure
+ok 2 - cold context with only pruned reader and optional runtime resolves real production/native closure
+  ---
+  duration_ms: 6718.668784
+  ...
+# Subtest: real worker entry receives SIGTERM and aborts an owned CLI/signer group preserving unknown records
+ok 3 - real worker entry receives SIGTERM and aborts an owned CLI/signer group preserving unknown records
+  ---
+  duration_ms: 480.511994
+  ...
+# Subtest: first boot/reopen preserves private identity and unknown operations
+ok 4 - first boot/reopen preserves private identity and unknown operations
+  ---
+  duration_ms: 7.862027
+  ...
+# Subtest: refuses unknown nonempty volume before initialization
+ok 5 - refuses unknown nonempty volume before initialization
+  ---
+  duration_ms: 0.625348
+  ...
+# Subtest: refuses volume and store symlinks
+ok 6 - refuses volume and store symlinks
+  ---
+  duration_ms: 5.957718
+  ...
+# Subtest: refuses wrong ownership or public permissions without changing contents
+ok 7 - refuses wrong ownership or public permissions without changing contents
+  ---
+  duration_ms: 0.423639
+  ...
+# Subtest: refuses marker identity drift and nonempty native cwd
+ok 8 - refuses marker identity drift and nonempty native cwd
+  ---
+  duration_ms: 4.790957
+  ...
+# Subtest: safe default and strict finite/authority parsing
+ok 9 - safe default and strict finite/authority parsing
+  ---
+  duration_ms: 0.904293
+  ...
+# Subtest: actual credential-free entry imports production closure and reopens stable store
+ok 10 - actual credential-free entry imports production closure and reopens stable store
+  ---
+  duration_ms: 2113.813289
+  ...
+# Subtest: actual observe and serve refuse missing auth before network/effects
+ok 11 - actual observe and serve refuse missing auth before network/effects
+  ---
+  duration_ms: 2151.030479
+  ...
+# Subtest: actual enrollment hold expires and SIGTERM exits promptly
+ok 12 - actual enrollment hold expires and SIGTERM exits promptly
+  ---
+  duration_ms: 1090.640326
+  ...
+# Subtest: private config rejects symlink and broad file permissions
+ok 13 - private config rejects symlink and broad file permissions
+  ---
+  duration_ms: 0.82956
+  ...
+# Subtest: fixed worker configuration is explicit, durable and never overwrites a changed configuration
+ok 14 - fixed worker configuration is explicit, durable and never overwrites a changed configuration
+  ---
+  duration_ms: 123.342803
+  ...
+# Subtest: entry dispatch passes observe/serve to worker with stable sanitized HOME and argv
+ok 15 - entry dispatch passes observe/serve to worker with stable sanitized HOME and argv
+  ---
+  duration_ms: 84.137195
+  ...
+# Subtest: native entry keeps sensitive output off logs and contains CLI plus descendant on SIGTERM
+ok 16 - native entry keeps sensitive output off logs and contains CLI plus descendant on SIGTERM
+  ---
+  duration_ms: 137.428518
+  ...
+# Subtest: synthetic disposable native signer reopens using managed HOME/XDG in a second process
+ok 17 - synthetic disposable native signer reopens using managed HOME/XDG in a second process
+  ---
+  duration_ms: 82.773927
+  ...
+# Subtest: actual empty root-volume bootstrap drops to UID/GID1000 and reopens without chowning retained data
+ok 18 - actual empty root-volume bootstrap drops to UID/GID1000 and reopens without chowning retained data
+  ---
+  duration_ms: 2158.733199
+  ...
+# Subtest: nested credential symlink and conflicting owner refuse without repair or deletion
+ok 19 - nested credential symlink and conflicting owner refuse without repair or deletion
+  ---
+  duration_ms: 17.021638
+  ...
+# Subtest: private output refuses existing or dangling symlink
+ok 20 - private output refuses existing or dangling symlink
+  ---
+  duration_ms: 0.568085
+  ...
+# Subtest: credential-free reopen refuses a worker-configuration symlink
+ok 21 - credential-free reopen refuses a worker-configuration symlink
+  ---
+  duration_ms: 4.236057
+  ...
+# Subtest: image source policy refuses a missing source receipt before store mutation
+ok 22 - image source policy refuses a missing source receipt before store mutation
+  ---
+  duration_ms: 38.46461
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 15411.062872
