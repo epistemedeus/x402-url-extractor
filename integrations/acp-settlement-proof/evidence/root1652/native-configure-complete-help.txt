@@ -1,0 +1,11 @@
+Usage: acp configure complete [options]
+
+Exchange a requestId for tokens and persist them. Returns {status:'pending'}
+until the human finishes sign-in.
+
+Options:
+  --request-id <requestId>  The requestId returned by `acp configure start`
+  --wait                    Block and keep polling until authenticated or
+                            timeout (instead of a single check)
+  --timeout <seconds>       With --wait, maximum seconds to wait (default 300)
+  -h, --help                display help for command

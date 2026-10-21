@@ -1,12 +1,19 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
 import { createNativeBoundary } from './native-boundary.mjs';
 import { runWorker, receiveWorkerConfig, installNetworkBounds } from './worker.mjs';
 const [mode, configFile, onceFlag] = process.argv.slice(2);
-if (!['observe', 'serve'].includes(mode) || !configFile || (onceFlag && onceFlag !== '--once')) throw Error('Usage: node start.mjs observe|serve /absolute/worker.json [--once]');
+if (!['observe', 'serve'].includes(mode) || !configFile || !path.isAbsolute(configFile) || (onceFlag && onceFlag !== '--once')) throw Error('Usage: node start.mjs observe|serve /absolute/worker.json [--once]');
 if (process.env.NODE_OPTIONS !== '--max-old-space-size=768') throw Error('Explicit NODE_OPTIONS=--max-old-space-size=768 required');
-const config = receiveWorkerConfig(JSON.parse(fs.readFileSync(configFile, 'utf8')));
+const fd = fs.openSync(configFile, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+let config;
+try {
+  const stat = fs.fstatSync(fd);
+  if (!stat.isFile() || stat.uid !== process.getuid() || (stat.mode & 0o077) || stat.size > 65536) throw Error('Private owned bounded worker configuration required');
+  config = receiveWorkerConfig(JSON.parse(fs.readFileSync(fd, 'utf8')));
+} finally { fs.closeSync(fd); }
 const rpc = new URL(config.receiptRpcUrl);
 if (rpc.protocol !== 'https:' || rpc.username || rpc.password || rpc.search || rpc.hash) throw Error('Explicit HTTPS receipt RPC without inline credentials required');
 const stop = new AbortController();

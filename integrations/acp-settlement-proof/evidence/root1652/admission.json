@@ -1,0 +1,52 @@
+{
+  "frozenInputMembers": [
+    {
+      "role": "instructions",
+      "path": "AGENTS.md",
+      "blob": "7160548ef97a8eaccbf88e6a44c266a3ad21295d",
+      "bytesMatch": true,
+      "sha256Match": true
+    },
+    {
+      "role": "state",
+      "path": "overview/STATE.md",
+      "blob": "4c3dd3edab3c7a1b85715db2bfeaf64cde9954bc",
+      "bytesMatch": true,
+      "sha256Match": true
+    },
+    {
+      "role": "execution-plan",
+      "path": "overview/MACHINE-COMMERCE-EXECUTION-PLAN.md",
+      "blob": "57cca9508a9d77a60ed00d1c488a58e2723337f2",
+      "bytesMatch": true,
+      "sha256Match": true
+    },
+    {
+      "role": "assignment",
+      "path": "overview/remote-worker/assignments/ROOT1652-ACP-OPERATING-PROVIDER.md",
+      "blob": "debf7f214e3d6ab0000955ed4513f0ac1070d418",
+      "bytesMatch": true,
+      "sha256Match": true
+    }
+  ],
+  "nativeSession": "01a15be3-8235-7bf2-8d7b-0d00fefe58b2",
+  "observedTurn": {
+    "at": "2026-10-21T00:36:40.601Z",
+    "model": "gpt-6.1-sol",
+    "effort": "xhigh",
+    "cwd": "/home/ubuntu/ae14-work/root1652-acp-operating-provider"
+  },
+  "hostBootMatchesSpec": true,
+  "declaredJobKiB": 2097152,
+  "nodeHeapMiB": 768,
+  "checkpointCommit": "55ad513dc9b21ea3eb0625f3bb73fc7f8cae2deb",
+  "checkpointTree": "7ddfa0c0f3279dae2040fc79f06e85248d751397",
+  "checkpointCommitAt": "2026-10-21T00:45:11+00:00",
+  "checkpointDeadline": "2026-10-21T00:48:35.376Z",
+  "checkpointRemoteReadback": true,
+  "limits": [
+    "native start metadata observed; terminal collection belongs to Root after this turn",
+    "agent-status helper absent from supplied product/context; attempted route returned ENOENT",
+    "no live service/account/job receiving performed"
+  ]
+}

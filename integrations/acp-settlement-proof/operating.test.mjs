@@ -73,3 +73,60 @@ test('startup catches retained completed delivery missing from active-job array'
 test('graceful shutdown drains current read and starts no effects', async t => { const b = fixture(t); const abort = new AbortController(); const boundary = { ...b.boundary, api: { getActiveJobs: async () => { abort.abort(); return [{ chainId: 8453, onChainJobId: '123' }]; } }, async disconnect() {} }; await runWorker({ config: config(b.root), boundary, client: b.client, mode: 'serve', signal: abort.signal }); assert.equal(b.update(d => d.calls.quotes), 0); });
 test('finite admission and declaration reject unbounded work', t => { const b = fixture(t); for (const extra of [{ runForSeconds: 901 }, { maxJobs: 17 }, { declaredMemoryMiB: 1024 }, { selectionPolicy: 'entitled' }]) assert.throws(() => receiveWorkerConfig(config(b.root, extra))); });
 test('HTTP byte/origin/status gates on actual network adapter', async t => { const original = globalThis.fetch; globalThis.fetch = async () => new Response('x'.repeat(1048577)); const restore = installNetworkBounds({ signal: new AbortController().signal }); try { await assert.rejects(fetch('https://api.acp.virtuals.io/jobs'), /byte bound/); await assert.rejects(fetch('https://escape.invalid/jobs'), /origin/); } finally { restore(); globalThis.fetch = original; } });
+
+for (const phase of ['quote', 'delivery']) for (const state of ['prepared', 'sent_unknown']) test(`actual process crash after durable ${phase} ${state} preserves exactly the allowed recovery`, async t => {
+  const b = fixture(t); if (phase === 'delivery') { await b.receiver.run('123'); fund(b.root); }
+  await assert.rejects(exec(process.execPath, [processEntry, b.root, 'fake', `crash:${phase}:directory:${state}`], { env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=768' } }), error => error.code === 86);
+  assert.equal(record(b.root, phase).state, state);
+  assert.equal(b.update(d => d.calls[phase === 'quote' ? 'quotes' : 'submits']), 0);
+  await b.receiver.run('123');
+  assert.equal(b.update(d => d.calls[phase === 'quote' ? 'quotes' : 'submits']), state === 'prepared' ? 1 : 0);
+});
+for (const phase of ['quote', 'delivery']) test(`actual process crash after external ${phase} effect receives stored original without resend`, async t => {
+  const b = fixture(t); if (phase === 'delivery') { await b.receiver.run('123'); fund(b.root); }
+  b.update(d => d.options[`${phase}CrashAfter`] = true);
+  await assert.rejects(exec(process.execPath, [processEntry, b.root], { env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=768' } }), error => error.code === 87);
+  assert.equal(record(b.root, phase).state, 'sent_unknown');
+  b.update(d => d.options = {});
+  await b.receiver.run('123'); assert.equal(record(b.root, phase).state, 'received');
+  assert.equal(b.update(d => d.calls[phase === 'quote' ? 'quotes' : 'submits']), 1);
+});
+for (const phase of ['quote', 'delivery']) for (const point of ['file', 'directory']) test(`${phase} ${point} fsync refusal cannot dispatch before durability`, async t => {
+  const b = fixture(t); if (phase === 'delivery') { await b.receiver.run('123'); fund(b.root); }
+  await assert.rejects(exec(process.execPath, [processEntry, b.root, 'fake', `fail:${phase}:${point}:sent_unknown`], { env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=768' } }));
+  assert.equal(b.update(d => d.calls[phase === 'quote' ? 'quotes' : 'submits']), 0);
+  assert.equal(record(b.root, phase).state, point === 'file' ? 'prepared' : 'sent_unknown');
+  await b.receiver.run('123');
+  assert.equal(b.update(d => d.calls[phase === 'quote' ? 'quotes' : 'submits']), point === 'file' ? 1 : 0);
+});
+test('real EventSource receives hints, ignores spoofed authority and reconnects with fresh REST', async t => {
+  const b = fixture(t); const apiFetch = globalThis.fetch; const hints = []; let controller;
+  globalThis.fetch = async (url, init) => {
+    if (String(url).endsWith('/chats/stream')) return new Response(new ReadableStream({ start(c) { controller = c; } }), { headers: { 'content-type': 'text/event-stream' } });
+    return apiFetch(url, init);
+  };
+  b.boundary.onHint(hint => hints.push(hint));
+  await b.boundary.connect();
+  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ chainId: 8453, onChainJobId: '123', jobStatus: 'FUNDED', amount: 1000 })}\n\n`));
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.equal(hints.length, 1); assert.deepEqual(hints[0], { chainId: 8453, onChainJobId: '123' });
+  assert.equal((await b.receiver.run('123')).state, 'awaiting_funding'); assert.equal(b.update(d => d.calls.submits), 0);
+  b.boundary.disconnect();
+  await b.boundary.connect(); fund(b.root); assert.equal((await b.receiver.run('123')).state, 'received'); b.boundary.disconnect();
+});
+test('initial stream failure closes and allows finite reconnect', async t => { const b = fixture(t); const apiFetch = globalThis.fetch; globalThis.fetch = async (url, init) => { if (String(url).endsWith('/chats/stream')) throw Error('synthetic disconnect'); return apiFetch(url, init); }; await assert.rejects(b.boundary.connect()); await assert.rejects(b.boundary.connect()); b.boundary.disconnect(); });
+test('active HTTP 200 without explicit jobs and final HTTP 401 cannot become an empty backlog', async t => { const b = fixture(t); const base = globalThis.fetch; globalThis.fetch = async (url, init) => String(url).endsWith('/jobs') ? { ok: true, status: 200, json: async () => ({}) } : base(url, init); await assert.rejects(b.boundary.api.getActiveJobs(), /array/); globalThis.fetch = async (url, init) => String(url).endsWith('/jobs') ? { ok: false, status: 401, json: async () => ({ error: 'not authorized' }) } : base(url, init); await assert.rejects(b.boundary.api.getActiveJobs(), /HTTP read/); });
+test('SDK single 401 auth refresh remains available', async t => { const b = fixture(t); const base = globalThis.fetch; let attempts = 0; globalThis.fetch = async (url, init) => { if (String(url).endsWith('/jobs') && attempts++ === 0) return { ok: false, status: 401 }; return base(url, init); }; assert.equal((await b.boundary.api.getActiveJobs()).length, 1); assert.equal(attempts, 2); });
+test('backlog failure is unknown and periodic REST recovers missed job', async t => { const b = fixture(t); let reads = 0; let time = Date.now(); const evidence = []; const boundary = { ...b.boundary, api: { async getActiveJobs() { if (reads++ === 0) throw Error('offline'); return b.boundary.api.getActiveJobs(); } }, async connect() { throw Error('stream down'); }, async disconnect() {}, onHint() {} }; await runWorker({ config: config(b.root, { runForSeconds: 2 }), boundary, client: b.client, mode: 'serve', clock: () => time, wait: async ms => { time += ms; }, evidence: e => evidence.push(e) }); assert.equal(b.update(d => d.calls.quotes), 1); assert.ok(evidence.some(e => e.stage === 'catchup_unavailable' && e.coverage === 'unknown')); });
+test('wrong asset on actual parsed SDK job refuses before quote', async t => { const b = fixture(t); const make = b.boundary.session; const boundary = { ...b.boundary, session(id, entries) { const session = make(id, entries); const fetchJob = session.fetchJob.bind(session); session.fetchJob = async () => { const job = await fetchJob(); job.budget.address = CLIENT; return job; }; return session; } }; const { createOperatingReceiver } = await import('./operating.mjs'); const receiver = createOperatingReceiver({ boundary, journalDirectory: path.join(b.root, 'operations'), client: b.client, mode: 'serve', selectionPolicy: 'provider-name-terms' }); await assert.rejects(receiver.run('123'), /USDC/); assert.equal(b.update(d => d.calls.quotes), 0); });
+test('native command-group timeout contains the owned child', async t => {
+  const { runNativeProcess } = await import('./native-process.mjs');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'root1652-process-')); t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const script = path.join(root, 'group.mjs');
+  fs.writeFileSync(script, `import{spawn}from'node:child_process';import fs from'node:fs';const c=spawn(process.execPath,['-e','setInterval(()=>{},1000)']);fs.writeFileSync(${JSON.stringify(path.join(root, 'child.pid'))},String(c.pid));process.on('SIGTERM',()=>{c.once('exit',()=>process.exit(0));c.kill('SIGTERM')});setInterval(()=>{},1000);`);
+  await assert.rejects(runNativeProcess(process.execPath, [script], { timeoutMs: 200 }));
+  const pid = Number(fs.readFileSync(path.join(root, 'child.pid'))); assert.throws(() => process.kill(pid, 0), error => error.code === 'ESRCH');
+});
+
+test('original received quote preserves old terms through first funded delivery after catalog changes', async t => { const b = fixture(t); await b.receiver.run('123'); b.update(d => { d.catalog.offerings = []; }); fund(b.root); assert.equal((await b.receiver.run('123')).state, 'received'); assert.equal(b.update(d => d.calls.quotes), 1); assert.equal(b.update(d => d.calls.submits), 1); });
+test('forged or unreceived quote cannot skip configured catalog terms', async t => { const b = fixture(t); b.update(d => d.options.quoteBefore = true); await b.receiver.run('123'); fund(b.root); const { configureSettlementProofDelivery } = await import('./configured.mjs'); const entries = b.update(d => d.entries); const delivery = configureSettlementProofDelivery({ session: b.boundary.session('123', entries), history: b.boundary.history, catalog: b.boundary.catalog, journalDirectory: path.join(b.root, 'operations'), client: b.client, selectionPolicy: 'provider-name-terms' }); await assert.rejects(delivery.run(), /Received original quote/); assert.equal(b.update(d => d.calls.submits), 0); });

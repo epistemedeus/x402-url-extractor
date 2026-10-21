@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
-import { bindJob, PROVIDER } from './fulfill.mjs';
+import { bindJob, validateRequirement, PROVIDER } from './fulfill.mjs';
 import { receiveCatalog, selectClientRequirement, configureSettlementProofDelivery } from './configured.mjs';
 import { openDeliveryJournal } from './journal.mjs';
 
@@ -18,6 +18,7 @@ export function receiveHistory(entries, jobId) {
   check(creations.length === 1, 'Exactly one original creation required');
   const created = creations[0].event;
   check(created.jobId === jobId && sameAddress(created.provider, PROVIDER), 'Original provider creation required');
+  for (const field of ['client', 'provider', 'evaluator', 'hook']) check(/^0x[0-9a-fA-F]{40}$/.test(created[field]), 'Canonical creation addresses required');
   return created;
 }
 
@@ -26,7 +27,7 @@ function freshBinding(session, job, entries, allowUnquoted) {
   const created = receiveHistory(entries, session.jobId);
   check(sameAddress(created.client, job.clientAddress) && sameAddress(created.evaluator, job.evaluatorAddress) && sameAddress(created.hook, job.hookAddress) && BigInt(created.expiredAt) === job.expiredAt, 'Creation/job binding mismatch');
   const selected = selectClientRequirement(entries, session, job);
-  return bindJob(session, job, selected.request, selected.source, { allowUnquoted });
+  return bindJob(session, job, validateRequirement(selected.request), selected.source, { allowUnquoted });
 }
 
 function hasQuote(entries, id) {
@@ -48,7 +49,7 @@ export function retainedJobIds(directory) {
 
 /** One exact-offer lifecycle. The durable implementation and funded delivery are
  * shared with configured.mjs. Quote records retain process intent, not balances. */
-export function createOperatingReceiver({ boundary, journalDirectory, client, mode, selectionPolicy, now = () => new Date(), stopped = () => false, evidence = () => {} }) {
+export function createOperatingReceiver({ boundary, journalDirectory, client, mode, selectionPolicy, now = () => new Date(), stopped = () => false, admit = () => true, evidence = () => {} }) {
   check(['observe', 'serve'].includes(mode), 'Explicit observe or serve mode required');
   check(selectionPolicy === 'provider-name-terms', 'Explicit qualified selection policy required');
   const quotes = openDeliveryJournal(journalDirectory, { phase: 'quote' });
@@ -76,6 +77,7 @@ export function createOperatingReceiver({ boundary, journalDirectory, client, mo
       const quoted = hasQuote(current.entries, id);
       if (quoted || quote?.state === 'received') check(current.job.budget.rawAmount === 5000n, 'Retained quote fee changed');
       evidence({ stage: 'validated', jobId: id, status: current.job.status, selection: 'provider-name-terms', registryJobAssociation: 'unavailable-in-sdk' });
+      if (!admit(id)) return { state: 'capacity_refused' };
       if (mode === 'observe') return { state: 'observed', jobStatus: current.job.status, quoteState: quote?.state ?? null, deliveryState: delivery?.state ?? null, quoted };
       if (stopped()) return { state: 'stopping' };
       if (current.job.status === 'OPEN' && !quoted) {

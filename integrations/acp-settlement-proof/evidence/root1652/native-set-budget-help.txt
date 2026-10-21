@@ -1,0 +1,10 @@
+Usage: acp provider set-budget [options]
+
+Propose a budget for a job (USDC)
+
+Options:
+  --job-id <id>      On-chain job ID
+  --amount <usdc>    USDC amount to propose
+  --chain-id <id>    Chain ID (default: "8453")
+  --package-id <id>  Package ID
+  -h, --help         display help for command

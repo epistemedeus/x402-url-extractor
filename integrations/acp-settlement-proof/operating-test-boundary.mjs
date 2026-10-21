@@ -2,8 +2,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { encodeAbiParameters, encodeEventTopics, parseAbiItem } from 'viem';
 import { withDirectoryLock } from '../../experiments/scoped-surface-delivery-100312/src/lock.mjs';
@@ -12,12 +10,12 @@ import { OFFERING_ID, PROVIDER } from './fulfill.mjs';
 import { createNativeBoundary, AGENT_ID } from './native-boundary.mjs';
 import { createOperatingReceiver } from './operating.mjs';
 import { openDeliveryJournal } from './journal.mjs';
+import { runNativeProcess } from './native-process.mjs';
 
 export const CLIENT = `0x${'3'.repeat(40)}`;
 export const REQUEST = { transactionHash: `0x${'1'.repeat(64)}`, recipient: `0x${'2'.repeat(40)}`, amountAtomic: '8000000' };
 export const NOW = '2026-10-21T00:00:00.000Z';
 export const TOKEN = `offline.${Buffer.from(JSON.stringify({ exp: 4102444800 })).toString('base64url')}.sentinel`;
-const exec = promisify(execFile);
 export function initialState() {
   const creation = { type: 'job.created', jobId: '123', client: CLIENT, provider: PROVIDER, evaluator: CLIENT, expiredAt: '1792620000', hook: `0x${'0'.repeat(40)}` };
   return { options: {}, calls: { quotes: 0, submits: 0, auth: 0, receipt: 0, block: 0, commands: [] },
@@ -67,6 +65,7 @@ export function executeSentinel(root, args) {
     }
     return data.options[`${phase}After`] ? 'response lost after effect' : null;
   });
+  if (update(data => data.options[`${phase}CrashAfter`])) process.exit(87);
   if (failure) throw Error(failure);
   return { success: true };
 }
@@ -92,8 +91,8 @@ export function createTestBoundary(root, { mode = 'serve', realCli = false, evid
     return { ok: status === 200, status, json: async () => structuredClone(result) };
   };
   const runCli = realCli ? async args => {
-    const { stdout } = await exec(process.execPath, ['--import', fileURLToPath(new URL('./native-cli-sentinel-preload.mjs', import.meta.url)), fileURLToPath(new URL('./runtime/node_modules/@virtuals-protocol/acp-cli/dist/bin/acp.js', import.meta.url)), ...args, '--json'], {
-      cwd: path.join(root, 'empty'), env: { PATH: process.env.PATH, HOME: root, ACP_CONFIG_DIR: path.join(root, 'profile'), ROOT1652_SENTINEL_ROOT: root, NODE_OPTIONS: '--max-old-space-size=768', NO_COLOR: '1' }, timeout: 15000, maxBuffer: 1048576,
+    const { stdout } = await runNativeProcess(process.execPath, ['--import', fileURLToPath(new URL('./native-network-preload.mjs', import.meta.url)), '--import', fileURLToPath(new URL('./native-cli-sentinel-preload.mjs', import.meta.url)), fileURLToPath(new URL('./runtime/node_modules/@virtuals-protocol/acp-cli/dist/bin/acp.js', import.meta.url)), ...args, '--json'], {
+      cwd: path.join(root, 'empty'), env: { PATH: process.env.PATH, HOME: root, ACP_CONFIG_DIR: path.join(root, 'profile'), ROOT1652_SENTINEL_ROOT: root, NODE_OPTIONS: '--max-old-space-size=768', NO_COLOR: '1' }, timeoutMs: 15000,
     });
     const result = JSON.parse(stdout); if (result.error) throw Error(result.error); return result;
   } : async args => executeSentinel(root, args);

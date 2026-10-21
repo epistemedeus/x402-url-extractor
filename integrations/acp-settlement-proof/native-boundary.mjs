@@ -2,16 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
+import { runNativeProcess } from './native-process.mjs';
 import { PROVIDER } from './fulfill.mjs';
 import { validJobId } from './operating.mjs';
 
 export const AGENT_ID = '019fef7a-3b3e-7a67-b825-6abfd8ba0e17';
 const requireRuntime = createRequire(new URL('./runtime/package.json', import.meta.url));
 export const sdk = await import(pathToFileURL(requireRuntime.resolve('@virtuals-protocol/acp-node-v2')));
+const { EventSource } = await import(pathToFileURL(requireRuntime.resolve('eventsource')));
 const check = (ok, message) => { if (!ok) throw Error(message); };
-const exec = promisify(execFile);
 
 export function receiveProfile(configDirectory) {
   check(typeof configDirectory === 'string' && path.isAbsolute(configDirectory) && fs.realpathSync(configDirectory) === path.resolve(configDirectory), 'Explicit real ACP profile directory required');
@@ -46,7 +46,7 @@ export function createNativeBoundary({ configDirectory, workingDirectory, signer
     const env = { PATH: process.env.PATH, HOME: process.env.HOME, ACP_CONFIG_DIR: configDirectory, NODE_OPTIONS: '--max-old-space-size=768', NO_COLOR: '1' };
     // The native credential backend uses the service user's existing environment.
     for (const name of ['XDG_DATA_HOME', 'XDG_CONFIG_HOME', 'XDG_RUNTIME_DIR', 'DBUS_SESSION_BUS_ADDRESS']) if (process.env[name]) env[name] = process.env[name];
-    const { stdout } = await exec(process.execPath, [path.join(cliRoot, 'dist/bin/acp.js'), ...args, '--json'], { env, cwd: workingDirectory, timeout: 45000, killSignal: 'SIGKILL', maxBuffer: 1024 * 1024, signal });
+    const { stdout } = await runNativeProcess(process.execPath, ['--import', fileURLToPath(new URL('./native-network-preload.mjs', import.meta.url)), path.join(cliRoot, 'dist/bin/acp.js'), ...args, '--json'], { env, cwd: workingDirectory, signal });
     const result = JSON.parse(stdout);
     check(!result.error, 'Native CLI refused operation');
     return result;
@@ -78,6 +78,14 @@ export function createNativeBoundary({ configDirectory, workingDirectory, signer
     transport.authedFetch = async (...args) => {
       const response = await fetch(...args);
       check(response.ok, 'Authenticated receiver HTTP read failed');
+      const json = response.json.bind(response);
+      response.json = async () => {
+        const body = await json();
+        const pathname = new URL(args[0]).pathname;
+        if (pathname === '/jobs') check(Array.isArray(body?.jobs), 'Explicit active-job array required');
+        if (pathname.endsWith('/history')) check(Array.isArray(body?.entries), 'Explicit job-history array required');
+        return body;
+      };
       return response;
     };
   }
@@ -93,10 +101,36 @@ export function createNativeBoundary({ configDirectory, workingDirectory, signer
       return run(['provider', 'submit', '--chain-id', '8453', '--job-id', String(params.jobId), '--deliverable', params.deliverable]);
     },
   };
+  let source = null;
+  let hintHandler = null;
+  let rejectConnection = null;
+  function disconnect() {
+    source?.close(); source = null;
+    rejectConnection?.(Error('Native stream stopped')); rejectConnection = null;
+  }
+  signal?.addEventListener('abort', disconnect);
   return Object.freeze({ api, catalog: api, history, receivePolicy,
-    async connect(onConnected) { history.setContext(context); await history.connect(onConnected, ['chat']); },
-    disconnect: () => history.disconnect(),
-    onHint: handler => history.onEntry(handler),
+    async connect(onConnected) {
+      check(!source && !signal?.aborted, 'Existing stream must close before reconnect');
+      await history.ensureAuthenticated();
+      // SDK0.1.15's initial SSE open can retry forever without rejecting. Use
+      // its documented route/auth and the same public EventSource dependency,
+      // with an owned handle and a finite initial-open deadline.
+      return new Promise((resolve, reject) => {
+        let opened = false;
+        const timer = setTimeout(() => disconnect(), 15000);
+        rejectConnection = error => { clearTimeout(timer); if (!opened) reject(error); };
+        source = new EventSource(`${serverUrl}/chats/stream`, { fetch: (url, init) => history.authedFetch(url, { ...init, headers: { ...init?.headers, 'x-supported-chains': '[8453]' } }) });
+        source.onopen = () => { if (!opened) { opened = true; clearTimeout(timer); rejectConnection = null; onConnected?.(); resolve(); } };
+        source.onerror = () => { if (!opened) disconnect(); };
+        source.onmessage = message => {
+          if (Buffer.byteLength(message.data) > 16384) return;
+          try { const hint = JSON.parse(message.data); hintHandler?.({ chainId: hint.chainId, onChainJobId: hint.onChainJobId }); } catch { /* malformed hints carry no authority */ }
+        };
+      });
+    },
+    disconnect,
+    onHint: handler => { hintHandler = handler; },
     session(id, entries) {
       check(validJobId(id), 'Canonical session identity required');
       return new sdk.JobSession(facade, [PROVIDER], id, 8453, ['provider'], entries);

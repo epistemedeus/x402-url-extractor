@@ -1,5 +1,11 @@
 # Configured ACP Settlement Proof delivery
 
+The complete optional operating receiver is now documented in [OPERATE.md](OPERATE.md):
+new-job intake, quote-before-funding, durable uncertainty, native CLI1.0.30 account
+loading, observe mode and a finite dedicated service candidate. It reuses the
+configured funded-delivery function described below. Root owns actual enrollment
+and activation; no live service or independent demand is established here.
+
 `configured.mjs` consumes an explicitly supplied existing provider `JobSession`,
 SDK history/catalog clients, receipt RPC and declared journal directory. It
 selects the original client's sole requirement message, validates strict reader
@@ -52,8 +58,8 @@ const operation = await delivery.run();
 ```
 
 Retain the same directory, original job and authenticated clients on reopen.
-There is no live CLI loader, default signer, secret-store reader or listener.
-Root owns actual account/secret-store enrollment. SDK reads may sign an
+This lower-level function creates no account, signer or listener. The optional
+operating entry point is separate from merchant. Root owns actual account/secret-store enrollment. SDK reads may sign an
 authentication challenge; they are not signature-free live recovery.
 
 The explicit policy is necessary: SDK0.1.15 `createJobFromOffering` writes only

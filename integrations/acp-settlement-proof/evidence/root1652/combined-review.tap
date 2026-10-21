@@ -1,0 +1,950 @@
+TAP version 13
+# Subtest: configured installed SDK + history + catalog + reader retains one exact client-bound artifact
+ok 1 - configured installed SDK + history + catalog + reader retains one exact client-bound artifact
+  ---
+  duration_ms: 86.065628
+  ...
+# Subtest: published producer sends requirement into original job but omits registry ID and stable message ID
+ok 2 - published producer sends requirement into original job but omits registry ID and stable message ID
+  ---
+  duration_ms: 66.357043
+  ...
+# Subtest: configured refuses absent requirement before reader or dispatch
+ok 3 - configured refuses absent requirement before reader or dispatch
+  ---
+  duration_ms: 17.632614
+  ...
+# Subtest: configured refuses duplicate requirement before reader or dispatch
+ok 4 - configured refuses duplicate requirement before reader or dispatch
+  ---
+  duration_ms: 16.879625
+  ...
+# Subtest: configured refuses wrong message sender before reader or dispatch
+ok 5 - configured refuses wrong message sender before reader or dispatch
+  ---
+  duration_ms: 18.018479
+  ...
+# Subtest: configured refuses wrong message job before reader or dispatch
+ok 6 - configured refuses wrong message job before reader or dispatch
+  ---
+  duration_ms: 16.947178
+  ...
+# Subtest: configured refuses wrong message chain before reader or dispatch
+ok 7 - configured refuses wrong message chain before reader or dispatch
+  ---
+  duration_ms: 16.975127
+  ...
+# Subtest: configured refuses subscription message before reader or dispatch
+ok 8 - configured refuses subscription message before reader or dispatch
+  ---
+  duration_ms: 17.567384
+  ...
+# Subtest: configured refuses malformed JSON before reader or dispatch
+ok 9 - configured refuses malformed JSON before reader or dispatch
+  ---
+  duration_ms: 17.092793
+  ...
+# Subtest: configured refuses primitive requirement before reader or dispatch
+ok 10 - configured refuses primitive requirement before reader or dispatch
+  ---
+  duration_ms: 17.23521
+  ...
+# Subtest: configured refuses unsupported offering before reader or dispatch
+ok 11 - configured refuses unsupported offering before reader or dispatch
+  ---
+  duration_ms: 23.129389
+  ...
+# Subtest: configured refuses duplicate offering name before reader or dispatch
+ok 12 - configured refuses duplicate offering name before reader or dispatch
+  ---
+  duration_ms: 22.914303
+  ...
+# Subtest: configured refuses changed registry price before reader or dispatch
+ok 13 - configured refuses changed registry price before reader or dispatch
+  ---
+  duration_ms: 23.000328
+  ...
+# Subtest: configured refuses changed registry SLA before reader or dispatch
+ok 14 - configured refuses changed registry SLA before reader or dispatch
+  ---
+  duration_ms: 22.51601
+  ...
+# Subtest: configured refuses registry working funds before reader or dispatch
+ok 15 - configured refuses registry working funds before reader or dispatch
+  ---
+  duration_ms: 22.580778
+  ...
+# Subtest: configured refuses wrong provider catalog before reader or dispatch
+ok 16 - configured refuses wrong provider catalog before reader or dispatch
+  ---
+  duration_ms: 25.028839
+  ...
+# Subtest: configured refuses unfunded original job before reader or dispatch
+ok 17 - configured refuses unfunded original job before reader or dispatch
+  ---
+  duration_ms: 28.917002
+  ...
+# Subtest: configured refuses wrong job before reader or dispatch
+ok 18 - configured refuses wrong job before reader or dispatch
+  ---
+  duration_ms: 27.42756
+  ...
+# Subtest: configured refuses wrong service before reader or dispatch
+ok 19 - configured refuses wrong service before reader or dispatch
+  ---
+  duration_ms: 27.416364
+  ...
+# Subtest: configured refuses wrong provider job before reader or dispatch
+ok 20 - configured refuses wrong provider job before reader or dispatch
+  ---
+  duration_ms: 27.323492
+  ...
+# Subtest: configured refuses wrong service fee before reader or dispatch
+ok 21 - configured refuses wrong service fee before reader or dispatch
+  ---
+  duration_ms: 27.647444
+  ...
+# Subtest: configured refuses subscription job before reader or dispatch
+ok 22 - configured refuses subscription job before reader or dispatch
+  ---
+  duration_ms: 28.242225
+  ...
+# Subtest: configured refuses custom hook config before reader or dispatch
+ok 23 - configured refuses custom hook config before reader or dispatch
+  ---
+  duration_ms: 28.066032
+  ...
+# Subtest: requires explicit selection policy and existing provider role before network
+ok 24 - requires explicit selection policy and existing provider role before network
+  ---
+  duration_ms: 1.228573
+  ...
+# Subtest: configured consumer refuses mutable session job or role before network
+ok 25 - configured consumer refuses mutable session job or role before network
+  ---
+  duration_ms: 2.857282
+  ...
+# Subtest: refuses noncanonical or over-uint256 session identifiers before network
+ok 26 - refuses noncanonical or over-uint256 session identifiers before network
+  ---
+  duration_ms: 1.027248
+  ...
+# Subtest: persistent retry refuses changed original client
+ok 27 - persistent retry refuses changed original client
+  ---
+  duration_ms: 60.607075
+  ...
+# Subtest: persistent retry refuses changed original evaluator
+ok 28 - persistent retry refuses changed original evaluator
+  ---
+  duration_ms: 70.818654
+  ...
+# Subtest: persistent retry refuses changed original expiry
+ok 29 - persistent retry refuses changed original expiry
+  ---
+  duration_ms: 68.662271
+  ...
+# Subtest: persistent retry refuses changed original fee
+ok 30 - persistent retry refuses changed original fee
+  ---
+  duration_ms: 67.314986
+  ...
+# Subtest: persistent retry refuses changed original message bytes
+ok 31 - persistent retry refuses changed original message bytes
+  ---
+  duration_ms: 68.176896
+  ...
+# Subtest: persistent retry refuses changed original message timestamp
+ok 32 - persistent retry refuses changed original message timestamp
+  ---
+  duration_ms: 72.817758
+  ...
+# Subtest: persistent retry refuses changed original message sender
+ok 33 - persistent retry refuses changed original message sender
+  ---
+  duration_ms: 60.13603
+  ...
+# Subtest: persistent retry refuses changed original message duplication
+ok 34 - persistent retry refuses changed original message duplication
+  ---
+  duration_ms: 61.050435
+  ...
+# Subtest: fresh pre-send history drift refuses while retaining prepared artifact
+ok 35 - fresh pre-send history drift refuses while retaining prepared artifact
+  ---
+  duration_ms: 37.561861
+  ...
+# Subtest: fresh pre-send job drift refuses before SDK submission
+ok 36 - fresh pre-send job drift refuses before SDK submission
+  ---
+  duration_ms: 36.98582
+  ...
+# Subtest: configured carries unchanged useful mismatch reader result
+ok 37 - configured carries unchanged useful mismatch reader result
+  ---
+  duration_ms: 54.958688
+  ...
+# Subtest: configured carries unchanged useful unavailable RPC reader result
+ok 38 - configured carries unchanged useful unavailable RPC reader result
+  ---
+  duration_ms: 53.402875
+  ...
+# Subtest: another process reopens received artifact without RPC or SDK replay
+ok 39 - another process reopens received artifact without RPC or SDK replay
+  ---
+  duration_ms: 2239.132564
+  ...
+# Subtest: competing processes share real flock/CAS and dispatch at most once
+ok 40 - competing processes share real flock/CAS and dispatch at most once
+  ---
+  duration_ms: 1331.374555
+  ...
+# Subtest: actual process crash after synced uncertainty marker cannot replay unobserved dispatch
+ok 41 - actual process crash after synced uncertainty marker cannot replay unobserved dispatch
+  ---
+  duration_ms: 2178.332304
+  ...
+# Subtest: marker fsync failure retains prepared operation; fresh process resumes exact bytes once
+ok 42 - marker fsync failure retains prepared operation; fresh process resumes exact bytes once
+  ---
+  duration_ms: 2242.115083
+  ...
+# Subtest: directory fsync failure after rename refuses dispatch and visible uncertainty cannot replay
+ok 43 - directory fsync failure after rename refuses dispatch and visible uncertainty cannot replay
+  ---
+  duration_ms: 2232.397107
+  ...
+# Subtest: fresh-process recovery after lost transaction response never resubmits
+ok 44 - fresh-process recovery after lost transaction response never resubmits
+  ---
+  duration_ms: 2190.696171
+  ...
+# Subtest: fresh-process recovery after lost HTTP response never resubmits
+ok 45 - fresh-process recovery after lost HTTP response never resubmits
+  ---
+  duration_ms: 2253.806844
+  ...
+# Subtest: fresh-process recovery after refused signer never resubmits
+ok 46 - fresh-process recovery after refused signer never resubmits
+  ---
+  duration_ms: 2255.811949
+  ...
+# Subtest: fresh-process recovery after lost readback never resubmits
+ok 47 - fresh-process recovery after lost readback never resubmits
+  ---
+  duration_ms: 2243.805107
+  ...
+# Subtest: catalog changes do not rewrite or strand an old retained obligation
+ok 48 - catalog changes do not rewrite or strand an old retained obligation
+  ---
+  duration_ms: 72.873347
+  ...
+# Subtest: corrupt or symlink operation refuses instead of treating prior operation as absent
+ok 49 - corrupt or symlink operation refuses instead of treating prior operation as absent
+  ---
+  duration_ms: 68.319771
+  ...
+# Subtest: journal refuses artifact replacement and backwards state transitions
+ok 50 - journal refuses artifact replacement and backwards state transitions
+  ---
+  duration_ms: 57.714754
+  ...
+# Subtest: unbound legacy retained operation cannot silently acquire a message association
+ok 51 - unbound legacy retained operation cannot silently acquire a message association
+  ---
+  duration_ms: 66.767822
+  ...
+# Subtest: existing shared journal directory refuses instead of changing another owner permissions
+ok 52 - existing shared journal directory refuses instead of changing another owner permissions
+  ---
+  duration_ms: 0.603691
+  ...
+# Subtest: real reader + installed SDK HTTP/post/submit path retains exact verified bytes
+ok 53 - real reader + installed SDK HTTP/post/submit path retains exact verified bytes
+  ---
+  duration_ms: 7.767309
+  ...
+# Subtest: refuses missing before RPC, HTTP, signing or persistence
+ok 54 - refuses missing before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.59207
+  ...
+# Subtest: refuses null before RPC, HTTP, signing or persistence
+ok 55 - refuses null before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.152091
+  ...
+# Subtest: refuses string before RPC, HTTP, signing or persistence
+ok 56 - refuses string before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.21514
+  ...
+# Subtest: refuses number before RPC, HTTP, signing or persistence
+ok 57 - refuses number before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.149086
+  ...
+# Subtest: refuses array before RPC, HTTP, signing or persistence
+ok 58 - refuses array before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.119796
+  ...
+# Subtest: refuses boolean before RPC, HTTP, signing or persistence
+ok 59 - refuses boolean before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.205912
+  ...
+# Subtest: refuses missingRecipient before RPC, HTTP, signing or persistence
+ok 60 - refuses missingRecipient before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.237153
+  ...
+# Subtest: refuses malformedHash before RPC, HTTP, signing or persistence
+ok 61 - refuses malformedHash before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.455451
+  ...
+# Subtest: refuses malformedRecipient before RPC, HTTP, signing or persistence
+ok 62 - refuses malformedRecipient before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.430045
+  ...
+# Subtest: refuses malformedPayer before RPC, HTTP, signing or persistence
+ok 63 - refuses malformedPayer before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.17966
+  ...
+# Subtest: refuses nullPayer before RPC, HTTP, signing or persistence
+ok 64 - refuses nullPayer before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.104811
+  ...
+# Subtest: refuses numericAmount before RPC, HTTP, signing or persistence
+ok 65 - refuses numericAmount before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.086338
+  ...
+# Subtest: refuses zero before RPC, HTTP, signing or persistence
+ok 66 - refuses zero before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.080903
+  ...
+# Subtest: refuses leadingZero before RPC, HTTP, signing or persistence
+ok 67 - refuses leadingZero before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.084036
+  ...
+# Subtest: refuses amountCap before RPC, HTTP, signing or persistence
+ok 68 - refuses amountCap before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.182506
+  ...
+# Subtest: refuses unknownNetwork before RPC, HTTP, signing or persistence
+ok 69 - refuses unknownNetwork before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.186341
+  ...
+# Subtest: refuses unknownAsset before RPC, HTTP, signing or persistence
+ok 70 - refuses unknownAsset before RPC, HTTP, signing or persistence
+  ---
+  duration_ms: 0.093042
+  ...
+# Subtest: preserves useful payee mismatch outcome through original SDK delivery
+ok 71 - preserves useful payee mismatch outcome through original SDK delivery
+  ---
+  duration_ms: 1.347065
+  ...
+# Subtest: preserves useful payer mismatch outcome through original SDK delivery
+ok 72 - preserves useful payer mismatch outcome through original SDK delivery
+  ---
+  duration_ms: 1.126219
+  ...
+# Subtest: preserves useful amount mismatch outcome through original SDK delivery
+ok 73 - preserves useful amount mismatch outcome through original SDK delivery
+  ---
+  duration_ms: 1.030964
+  ...
+# Subtest: preserves useful wrong asset outcome through original SDK delivery
+ok 74 - preserves useful wrong asset outcome through original SDK delivery
+  ---
+  duration_ms: 0.746712
+  ...
+# Subtest: preserves useful failed receipt outcome through original SDK delivery
+ok 75 - preserves useful failed receipt outcome through original SDK delivery
+  ---
+  duration_ms: 0.927964
+  ...
+# Subtest: preserves useful unavailable RPC outcome through original SDK delivery
+ok 76 - preserves useful unavailable RPC outcome through original SDK delivery
+  ---
+  duration_ms: 0.588738
+  ...
+# Subtest: preserves useful missing block outcome through original SDK delivery
+ok 77 - preserves useful missing block outcome through original SDK delivery
+  ---
+  duration_ms: 0.954142
+  ...
+# Subtest: preserves useful ambiguous transfer outcome through original SDK delivery
+ok 78 - preserves useful ambiguous transfer outcome through original SDK delivery
+  ---
+  duration_ms: 1.069652
+  ...
+# Subtest: optional payer is absent without weakening recipient or amount
+ok 79 - optional payer is absent without weakening recipient or amount
+  ---
+  duration_ms: 0.967897
+  ...
+# Subtest: refuses unfunded job before receipt execution and delivery
+ok 80 - refuses unfunded job before receipt execution and delivery
+  ---
+  duration_ms: 0.310959
+  ...
+# Subtest: refuses stale funded event before receipt execution and delivery
+ok 81 - refuses stale funded event before receipt execution and delivery
+  ---
+  duration_ms: 0.188277
+  ...
+# Subtest: refuses wrong role before receipt execution and delivery
+ok 82 - refuses wrong role before receipt execution and delivery
+  ---
+  duration_ms: 0.152992
+  ...
+# Subtest: refuses wrong agent before receipt execution and delivery
+ok 83 - refuses wrong agent before receipt execution and delivery
+  ---
+  duration_ms: 0.109103
+  ...
+# Subtest: refuses wrong provider before receipt execution and delivery
+ok 84 - refuses wrong provider before receipt execution and delivery
+  ---
+  duration_ms: 0.16428
+  ...
+# Subtest: refuses wrong job ID before receipt execution and delivery
+ok 85 - refuses wrong job ID before receipt execution and delivery
+  ---
+  duration_ms: 0.140657
+  ...
+# Subtest: refuses wrong service before receipt execution and delivery
+ok 86 - refuses wrong service before receipt execution and delivery
+  ---
+  duration_ms: 0.149358
+  ...
+# Subtest: refuses changed fee before receipt execution and delivery
+ok 87 - refuses changed fee before receipt execution and delivery
+  ---
+  duration_ms: 0.173107
+  ...
+# Subtest: refuses working funds before receipt execution and delivery
+ok 88 - refuses working funds before receipt execution and delivery
+  ---
+  duration_ms: 0.23863
+  ...
+# Subtest: wrong original offering refuses before HTTP
+ok 89 - wrong original offering refuses before HTTP
+  ---
+  duration_ms: 0.145008
+  ...
+# Subtest: cannot dispatch when original journal persistence fails
+ok 90 - cannot dispatch when original journal persistence fails
+  ---
+  duration_ms: 0.733425
+  ...
+# Subtest: lost transaction response recovers exact original artifact without another send
+ok 91 - lost transaction response recovers exact original artifact without another send
+  ---
+  duration_ms: 1.283049
+  ...
+# Subtest: HTTP storage alone remains unknown (postResponseLost); retry is read-only
+ok 92 - HTTP storage alone remains unknown (postResponseLost); retry is read-only
+  ---
+  duration_ms: 1.148372
+  ...
+# Subtest: HTTP storage alone remains unknown (signerRefuse); retry is read-only
+ok 93 - HTTP storage alone remains unknown (signerRefuse); retry is read-only
+  ---
+  duration_ms: 0.981151
+  ...
+# Subtest: lost readback persists unknown; later original-job read recovers
+ok 94 - lost readback persists unknown; later original-job read recovers
+  ---
+  duration_ms: 1.030063
+  ...
+# Subtest: same job cannot replace original request/artifact on retry
+ok 95 - same job cannot replace original request/artifact on retry
+  ---
+  duration_ms: 1.061249
+  ...
+# Subtest: competing dispatches produce at most one original SDK submission
+ok 96 - competing dispatches produce at most one original SDK submission
+  ---
+  duration_ms: 1.216861
+  ...
+# Subtest: no-evaluator auto-completion readback is carriage evidence
+ok 97 - no-evaluator auto-completion readback is carriage evidence
+  ---
+  duration_ms: 0.790587
+  ...
+# Subtest: readback cannot receive changed original identity
+ok 98 - readback cannot receive changed original identity
+  ---
+  duration_ms: 0.789824
+  ...
+# Subtest: refuses custom hooks on the no-working-funds path
+ok 99 - refuses custom hooks on the no-working-funds path
+  ---
+  duration_ms: 0.281358
+  ...
+# Subtest: rechecks funded state after receipt RPC and before dispatch
+ok 100 - rechecks funded state after receipt RPC and before dispatch
+  ---
+  duration_ms: 0.7494
+  ...
+# Subtest: failed durable sent marker leaves original prepared artifact and sends nothing
+ok 101 - failed durable sent marker leaves original prepared artifact and sends nothing
+  ---
+  duration_ms: 0.963902
+  ...
+# Subtest: crash after durable sent marker never auto-replays an unobserved dispatch
+ok 102 - crash after durable sent marker never auto-replays an unobserved dispatch
+  ---
+  duration_ms: 1.026799
+  ...
+# Subtest: competing sends of a persisted prepared artifact have one CAS winner
+ok 103 - competing sends of a persisted prepared artifact have one CAS winner
+  ---
+  duration_ms: 1.124964
+  ...
+# Subtest: submitted state with different artifact stays unknown and cannot overwrite original
+ok 104 - submitted state with different artifact stays unknown and cannot overwrite original
+  ---
+  duration_ms: 0.860412
+  ...
+# Subtest: reader cap remains inclusive and positive with no payer
+ok 105 - reader cap remains inclusive and positive with no payer
+  ---
+  duration_ms: 0.738498
+  ...
+# Subtest: binding readback tolerates storage reordering without changing artifact bytes
+ok 106 - binding readback tolerates storage reordering without changing artifact bytes
+  ---
+  duration_ms: 2.518947
+  ...
+# Subtest: changed original client after receipt RPC refuses before dispatch
+ok 107 - changed original client after receipt RPC refuses before dispatch
+  ---
+  duration_ms: 0.624833
+  ...
+# Subtest: escrow intent is outside the original no-working-funds job
+ok 108 - escrow intent is outside the original no-working-funds job
+  ---
+  duration_ms: 0.250379
+  ...
+# Subtest: actual native CLI 1.0.30 parsing/factory and SDK guard quote then deliver exact receipt; cross-process reopen
+ok 109 - actual native CLI 1.0.30 parsing/factory and SDK guard quote then deliver exact receipt; cross-process reopen
+  ---
+  duration_ms: 22117.287482
+  ...
+# Subtest: observe receives eligible new/funded jobs without quote, RPC or delivery
+ok 110 - observe receives eligible new/funded jobs without quote, RPC or delivery
+  ---
+  duration_ms: 43.485715
+  ...
+# Subtest: new intake refuses other offering name before any effect
+ok 111 - new intake refuses other offering name before any effect
+  ---
+  duration_ms: 20.13948
+  ...
+# Subtest: new intake refuses wrong provider role before any effect
+ok 112 - new intake refuses wrong provider role before any effect
+  ---
+  duration_ms: 18.832099
+  ...
+# Subtest: new intake refuses wrong client before any effect
+ok 113 - new intake refuses wrong client before any effect
+  ---
+  duration_ms: 19.77669
+  ...
+# Subtest: new intake refuses wrong fee before any effect
+ok 114 - new intake refuses wrong fee before any effect
+  ---
+  duration_ms: 18.393719
+  ...
+# Subtest: new intake refuses missing requirement before any effect
+ok 115 - new intake refuses missing requirement before any effect
+  ---
+  duration_ms: 18.921293
+  ...
+# Subtest: new intake refuses duplicate requirement before any effect
+ok 116 - new intake refuses duplicate requirement before any effect
+  ---
+  duration_ms: 18.46188
+  ...
+# Subtest: new intake refuses wrong sender before any effect
+ok 117 - new intake refuses wrong sender before any effect
+  ---
+  duration_ms: 18.986516
+  ...
+# Subtest: new intake refuses wrong chain before any effect
+ok 118 - new intake refuses wrong chain before any effect
+  ---
+  duration_ms: 12.469599
+  ...
+# Subtest: new intake refuses wrong job before any effect
+ok 119 - new intake refuses wrong job before any effect
+  ---
+  duration_ms: 12.402607
+  ...
+# Subtest: new intake refuses malformed requirement before any effect
+ok 120 - new intake refuses malformed requirement before any effect
+  ---
+  duration_ms: 17.679848
+  ...
+# Subtest: new intake refuses ambiguous primitive before any effect
+ok 121 - new intake refuses ambiguous primitive before any effect
+  ---
+  duration_ms: 19.302481
+  ...
+# Subtest: new intake refuses unknown request field before any effect
+ok 122 - new intake refuses unknown request field before any effect
+  ---
+  duration_ms: 18.729616
+  ...
+# Subtest: new intake refuses subscription requirement before any effect
+ok 123 - new intake refuses subscription requirement before any effect
+  ---
+  duration_ms: 18.577718
+  ...
+# Subtest: new intake refuses custom hook before any effect
+ok 124 - new intake refuses custom hook before any effect
+  ---
+  duration_ms: 17.682124
+  ...
+# Subtest: new intake refuses fund request intent before any effect
+ok 125 - new intake refuses fund request intent before any effect
+  ---
+  duration_ms: 18.964491
+  ...
+# Subtest: new intake refuses hook config before any effect
+ok 126 - new intake refuses hook config before any effect
+  ---
+  duration_ms: 17.101171
+  ...
+# Subtest: new intake refuses subscription before any effect
+ok 127 - new intake refuses subscription before any effect
+  ---
+  duration_ms: 19.967625
+  ...
+# Subtest: new intake refuses wrong catalog price before any effect
+ok 128 - new intake refuses wrong catalog price before any effect
+  ---
+  duration_ms: 23.948611
+  ...
+# Subtest: new intake refuses wrong registry catalog ID before any effect
+ok 129 - new intake refuses wrong registry catalog ID before any effect
+  ---
+  duration_ms: 23.854449
+  ...
+# Subtest: new intake refuses wrong SLA before any effect
+ok 130 - new intake refuses wrong SLA before any effect
+  ---
+  duration_ms: 23.529208
+  ...
+# Subtest: new intake refuses working funds before any effect
+ok 131 - new intake refuses working funds before any effect
+  ---
+  duration_ms: 24.033687
+  ...
+# Subtest: new intake refuses duplicate offering before any effect
+ok 132 - new intake refuses duplicate offering before any effect
+  ---
+  duration_ms: 23.908926
+  ...
+# Subtest: new intake refuses missing creation before any effect
+ok 133 - new intake refuses missing creation before any effect
+  ---
+  duration_ms: 11.624821
+  ...
+# Subtest: new intake refuses duplicate creation before any effect
+ok 134 - new intake refuses duplicate creation before any effect
+  ---
+  duration_ms: 11.472904
+  ...
+# Subtest: new intake refuses creation role mismatch before any effect
+ok 135 - new intake refuses creation role mismatch before any effect
+  ---
+  duration_ms: 12.008061
+  ...
+# Subtest: new intake refuses history oversized before any effect
+ok 136 - new intake refuses history oversized before any effect
+  ---
+  duration_ms: 19.860661
+  ...
+# Subtest: quote response loss before effect recovers without resend
+ok 137 - quote response loss before effect recovers without resend
+  ---
+  duration_ms: 74.959432
+  ...
+# Subtest: quote response loss after effect recovers without resend
+ok 138 - quote response loss after effect recovers without resend
+  ---
+  duration_ms: 76.345973
+  ...
+# Subtest: delivery response loss before effect recovers without resend
+ok 139 - delivery response loss before effect recovers without resend
+  ---
+  duration_ms: 193.435237
+  ...
+# Subtest: delivery response loss after effect recovers without resend
+ok 140 - delivery response loss after effect recovers without resend
+  ---
+  duration_ms: 181.993421
+  ...
+# Subtest: quote lost response and unavailable readback remains durable then recovers
+ok 141 - quote lost response and unavailable readback remains durable then recovers
+  ---
+  duration_ms: 62.841034
+  ...
+# Subtest: stored deliverable without submitted status stays uncertain; later stored state receives once
+ok 142 - stored deliverable without submitted status stays uncertain; later stored state receives once
+  ---
+  duration_ms: 186.312479
+  ...
+# Subtest: useful receipt_unavailable result delivered unchanged
+ok 143 - useful receipt_unavailable result delivered unchanged
+  ---
+  duration_ms: 119.124117
+  ...
+# Subtest: useful not_verified result delivered unchanged
+ok 144 - useful not_verified result delivered unchanged
+  ---
+  duration_ms: 122.3965
+  ...
+# Subtest: retained client drift refuses on reopen
+ok 145 - retained client drift refuses on reopen
+  ---
+  duration_ms: 58.960146
+  ...
+# Subtest: retained requirement bytes drift refuses on reopen
+ok 146 - retained requirement bytes drift refuses on reopen
+  ---
+  duration_ms: 63.612696
+  ...
+# Subtest: retained fee drift refuses on reopen
+ok 147 - retained fee drift refuses on reopen
+  ---
+  duration_ms: 57.697386
+  ...
+# Subtest: requirement drift during receipt refuses delivery
+ok 148 - requirement drift during receipt refuses delivery
+  ---
+  duration_ms: 99.158865
+  ...
+# Subtest: concurrent instances dispatch one quote and one delivery
+ok 149 - concurrent instances dispatch one quote and one delivery
+  ---
+  duration_ms: 175.469121
+  ...
+# Subtest: cross-process competing workers use real directory CAS
+ok 150 - cross-process competing workers use real directory CAS
+  ---
+  duration_ms: 2435.497324
+  ...
+# Subtest: corrupt retained quote refuses without external effect
+ok 151 - corrupt retained quote refuses without external effect
+  ---
+  duration_ms: 18.80182
+  ...
+# Subtest: corrupt retained delivery refuses without external effect
+ok 152 - corrupt retained delivery refuses without external effect
+  ---
+  duration_ms: 64.891764
+  ...
+# Subtest: fsync failure before quote dispatch cannot send; prepared record resumes
+ok 153 - fsync failure before quote dispatch cannot send; prepared record resumes
+  ---
+  duration_ms: 66.917804
+  ...
+# Subtest: wrong signer policy quarantines quote before native provider command
+ok 154 - wrong signer policy quarantines quote before native provider command
+  ---
+  duration_ms: 52.523902
+  ...
+# Subtest: expired original job cannot be quoted
+ok 155 - expired original job cannot be quoted
+  ---
+  duration_ms: 23.103559
+  ...
+# Subtest: profile missing signer, wrong agent and identity drift refuse
+ok 156 - profile missing signer, wrong agent and identity drift refuse
+  ---
+  duration_ms: 1.81782
+  ...
+# Subtest: missed events catch up, periodic reconnect and duplicate/out-of-order hints are bounded
+ok 157 - missed events catch up, periodic reconnect and duplicate/out-of-order hints are bounded
+  ---
+  duration_ms: 404.255178
+  ...
+# Subtest: startup catches retained completed delivery missing from active-job array
+ok 158 - startup catches retained completed delivery missing from active-job array
+  ---
+  duration_ms: 166.047415
+  ...
+# Subtest: graceful shutdown drains current read and starts no effects
+ok 159 - graceful shutdown drains current read and starts no effects
+  ---
+  duration_ms: 8.100503
+  ...
+# Subtest: finite admission and declaration reject unbounded work
+ok 160 - finite admission and declaration reject unbounded work
+  ---
+  duration_ms: 1.691613
+  ...
+# Subtest: HTTP byte/origin/status gates on actual network adapter
+ok 161 - HTTP byte/origin/status gates on actual network adapter
+  ---
+  duration_ms: 3.627354
+  ...
+# Subtest: actual process crash after durable quote prepared preserves exactly the allowed recovery
+ok 162 - actual process crash after durable quote prepared preserves exactly the allowed recovery
+  ---
+  duration_ms: 1226.450472
+  ...
+# Subtest: actual process crash after durable quote sent_unknown preserves exactly the allowed recovery
+ok 163 - actual process crash after durable quote sent_unknown preserves exactly the allowed recovery
+  ---
+  duration_ms: 1118.355656
+  ...
+# Subtest: actual process crash after durable delivery prepared preserves exactly the allowed recovery
+ok 164 - actual process crash after durable delivery prepared preserves exactly the allowed recovery
+  ---
+  duration_ms: 1220.780496
+  ...
+# Subtest: actual process crash after durable delivery sent_unknown preserves exactly the allowed recovery
+ok 165 - actual process crash after durable delivery sent_unknown preserves exactly the allowed recovery
+  ---
+  duration_ms: 1172.66685
+  ...
+# Subtest: actual process crash after external quote effect receives stored original without resend
+ok 166 - actual process crash after external quote effect receives stored original without resend
+  ---
+  duration_ms: 1138.759473
+  ...
+# Subtest: actual process crash after external delivery effect receives stored original without resend
+ok 167 - actual process crash after external delivery effect receives stored original without resend
+  ---
+  duration_ms: 1252.092186
+  ...
+# Subtest: quote file fsync refusal cannot dispatch before durability
+ok 168 - quote file fsync refusal cannot dispatch before durability
+  ---
+  duration_ms: 1172.456129
+  ...
+# Subtest: quote directory fsync refusal cannot dispatch before durability
+ok 169 - quote directory fsync refusal cannot dispatch before durability
+  ---
+  duration_ms: 1136.794922
+  ...
+# Subtest: delivery file fsync refusal cannot dispatch before durability
+ok 170 - delivery file fsync refusal cannot dispatch before durability
+  ---
+  duration_ms: 1253.203671
+  ...
+# Subtest: delivery directory fsync refusal cannot dispatch before durability
+ok 171 - delivery directory fsync refusal cannot dispatch before durability
+  ---
+  duration_ms: 1227.489592
+  ...
+# Subtest: real EventSource receives hints, ignores spoofed authority and reconnects with fresh REST
+ok 172 - real EventSource receives hints, ignores spoofed authority and reconnects with fresh REST
+  ---
+  duration_ms: 145.128763
+  ...
+# Subtest: initial stream failure closes and allows finite reconnect
+ok 173 - initial stream failure closes and allows finite reconnect
+  ---
+  duration_ms: 6.695585
+  ...
+# Subtest: active HTTP 200 without explicit jobs and final HTTP 401 cannot become an empty backlog
+ok 174 - active HTTP 200 without explicit jobs and final HTTP 401 cannot become an empty backlog
+  ---
+  duration_ms: 10.294186
+  ...
+# Subtest: SDK single 401 auth refresh remains available
+ok 175 - SDK single 401 auth refresh remains available
+  ---
+  duration_ms: 11.981097
+  ...
+# Subtest: backlog failure is unknown and periodic REST recovers missed job
+ok 176 - backlog failure is unknown and periodic REST recovers missed job
+  ---
+  duration_ms: 78.602742
+  ...
+# Subtest: wrong asset on actual parsed SDK job refuses before quote
+ok 177 - wrong asset on actual parsed SDK job refuses before quote
+  ---
+  duration_ms: 16.069981
+  ...
+# Subtest: native command-group timeout contains the owned child
+ok 178 - native command-group timeout contains the owned child
+  ---
+  duration_ms: 209.452775
+  ...
+# Subtest: original received quote preserves old terms through first funded delivery after catalog changes
+ok 179 - original received quote preserves old terms through first funded delivery after catalog changes
+  ---
+  duration_ms: 126.054926
+  ...
+# Subtest: forged or unreceived quote cannot skip configured catalog terms
+ok 180 - forged or unreceived quote cannot skip configured catalog terms
+  ---
+  duration_ms: 67.538132
+  ...
+# Subtest: normalizes the exact bounded Base-USDC proof request
+ok 181 - normalizes the exact bounded Base-USDC proof request
+  ---
+  duration_ms: 2.302985
+  ...
+# Subtest: verifies one exact successful canonical Base USDC transfer
+ok 182 - verifies one exact successful canonical Base USDC transfer
+  ---
+  duration_ms: 4.253448
+  ...
+# Subtest: fails closed on recipient, amount, payer, duplicate, status, and block mismatches
+ok 183 - fails closed on recipient, amount, payer, duplicate, status, and block mismatches
+  ---
+  duration_ms: 2.439631
+  ...
+# Subtest: returns a bounded diagnostic when the public receipt is unavailable
+ok 184 - returns a bounded diagnostic when the public receipt is unavailable
+  ---
+  duration_ms: 0.497888
+  ...
+# Subtest: normalizes a bounded Base or Ethereum receipt request
+ok 185 - normalizes a bounded Base or Ethereum receipt request
+  ---
+  duration_ms: 1.416738
+  ...
+# Subtest: returns normalized fee, block, and decoded transfer evidence
+ok 186 - returns normalized fee, block, and decoded transfer evidence
+  ---
+  duration_ms: 4.411791
+  ...
+# Subtest: preserves a useful receipt when the block timestamp is unavailable
+ok 187 - preserves a useful receipt when the block timestamp is unavailable
+  ---
+  duration_ms: 1.44832
+  ...
+# Subtest: distinguishes a missing receipt from RPC unavailability
+ok 188 - distinguishes a missing receipt from RPC unavailability
+  ---
+  duration_ms: 0.392335
+  ...
+1..188
+# tests 188
+# suites 0
+# pass 188
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67206.845563
