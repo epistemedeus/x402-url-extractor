@@ -143,11 +143,14 @@ function refusalText(code) {
 }
 
 // Internal prospective evidence only; public refusal payloads stay unchanged.
+const INPUT_TYPES = Object.freeze(["absent", "null", "scalar", "object", "array"]);
 export const EXTRACT_BATCH_INPUT_SHAPE_CONTRACT = Object.freeze({
   schemaVersion: "samedaydesk.extract-batch.input-shape.v1",
   stages: Object.freeze(["body", "body_keys", "urls", "url_items", "fields", "text_excerpt"]),
-  types: Object.freeze(["absent", "null", "scalar", "object", "array"]),
+  bodyTypes: INPUT_TYPES,
+  urlsTypes: Object.freeze([...INPUT_TYPES, "not_inspected"]),
   arrayCounts: Object.freeze(["empty", "in_range", "over_limit"]),
+  maxUrls: EXTRACT_BATCH_MAX_URLS,
 });
 const INPUT_SHAPE_KEYS = Object.freeze(["stage", "bodyType", "urlsType", "urlsCount"]);
 const INPUT_STAGE_CODES = Object.freeze({
@@ -172,13 +175,13 @@ export function readExtractBatchInputRefusalShape(value, code) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const keys = Object.keys(value);
   if (keys.length !== INPUT_SHAPE_KEYS.length || keys.some((key) => !INPUT_SHAPE_KEYS.includes(key))) return null;
-  if (!Object.hasOwn(INPUT_STAGE_CODES, value.stage) || !INPUT_STAGE_CODES[value.stage].includes(code)) return null;
-  if (!EXTRACT_BATCH_INPUT_SHAPE_CONTRACT.types.includes(value.bodyType)) return null;
+  if (typeof value.stage !== "string" || !Object.hasOwn(INPUT_STAGE_CODES, value.stage) || !INPUT_STAGE_CODES[value.stage].includes(code)) return null;
+  if (!EXTRACT_BATCH_INPUT_SHAPE_CONTRACT.bodyTypes.includes(value.bodyType)) return null;
   if (value.stage === "body" || value.stage === "body_keys") {
     if (value.stage === "body" ? value.bodyType === "object" : value.bodyType !== "object") return null;
     if (value.urlsType !== "not_inspected" || value.urlsCount !== null) return null;
   } else {
-    if (value.bodyType !== "object" || !EXTRACT_BATCH_INPUT_SHAPE_CONTRACT.types.includes(value.urlsType)) return null;
+    if (value.bodyType !== "object" || !EXTRACT_BATCH_INPUT_SHAPE_CONTRACT.bodyTypes.includes(value.urlsType)) return null;
     if (value.urlsType === "array") {
       if (!EXTRACT_BATCH_INPUT_SHAPE_CONTRACT.arrayCounts.includes(value.urlsCount)) return null;
     } else if (value.urlsCount !== null) return null;

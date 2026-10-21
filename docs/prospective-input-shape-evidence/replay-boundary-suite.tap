@@ -1,0 +1,154 @@
+
+> x402-merchant@1.23.55 test:replay-boundary
+> node --test idempotency-replay.test.mjs replay-boundary.http.test.mjs
+
+TAP version 13
+# Subtest: ordinary x402 payment without a resource url executes once and replays on the same tool
+ok 1 - ordinary x402 payment without a resource url executes once and replays on the same tool
+  ---
+  duration_ms: 37.292162
+  ...
+# Subtest: native reservation pins its original credential and operation across process restart
+ok 2 - native reservation pins its original credential and operation across process restart
+  ---
+  duration_ms: 26.841944
+  ...
+# Subtest: native completed output survives failed persistence in its execution and can save without re-execution
+ok 3 - native completed output survives failed persistence in its execution and can save without re-execution
+  ---
+  duration_ms: 18.790016
+  ...
+# Subtest: native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+ok 4 - native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+  ---
+  duration_ms: 18.170074
+  ...
+# Subtest: native unpaid terminal refusal keeps its useful result without inventing settlement
+ok 5 - native unpaid terminal refusal keeps its useful result without inventing settlement
+  ---
+  duration_ms: 7.403592
+  ...
+# Subtest: concurrent native continuation never starts a second execution while the first runs
+ok 6 - concurrent native continuation never starts a second execution while the first runs
+  ---
+  duration_ms: 10.772192
+  ...
+# Subtest: persistent identity and capacity preserve pending claims, corrupt state fails closed
+ok 7 - persistent identity and capacity preserve pending claims, corrupt state fails closed
+  ---
+  duration_ms: 10.088196
+  ...
+# Subtest: canonical replay URL binds sorted query keys and values
+ok 8 - canonical replay URL binds sorted query keys and values
+  ---
+  duration_ms: 5.232757
+  ...
+# Subtest: payment decoder requires a complete x402 v2 exact payment binding
+ok 9 - payment decoder requires a complete x402 v2 exact payment binding
+  ---
+  duration_ms: 0.334073
+  ...
+# Subtest: same payment ID and canonical request replays without a second handler run
+ok 10 - same payment ID and canonical request replays without a second handler run
+  ---
+  duration_ms: 3.758372
+  ...
+# Subtest: same payment ID on changed input or payer fails with uncharged 409
+ok 11 - same payment ID on changed input or payer fails with uncharged 409
+  ---
+  duration_ms: 5.496714
+  ...
+# Subtest: cached x402 response requires the exact credential that originally settled
+ok 12 - cached x402 response requires the exact credential that originally settled
+  ---
+  duration_ms: 2.603091
+  ...
+# Subtest: paid POST replay binds the exact request bytes and rejects body drift before the handler
+ok 13 - paid POST replay binds the exact request bytes and rejects body drift before the handler
+  ---
+  duration_ms: 4.662177
+  ...
+# Subtest: expired records return to normal payment processing
+ok 14 - expired records return to normal payment processing
+  ---
+  duration_ms: 6.572452
+  ...
+# Subtest: a newly settled response is durable before the network response ends
+ok 15 - a newly settled response is durable before the network response ends
+  ---
+  duration_ms: 8.459083
+  ...
+# Subtest: in-flight claim prevents a twin POST from running a second handler
+ok 16 - in-flight claim prevents a twin POST from running a second handler
+  ---
+  duration_ms: 219.748919
+  ...
+# Subtest: required replay paths classify missing identifier separately from unbounded validity
+ok 17 - required replay paths classify missing identifier separately from unbounded validity
+  ---
+  duration_ms: 4.23829
+  ...
+# Subtest: oversized completed MCP output is unrecoverable and is not executed again
+ok 18 - oversized completed MCP output is unrecoverable and is not executed again
+  ---
+  duration_ms: 15.5236
+  ...
+# Subtest: retryable MCP persistence stays bounded by expiry and entry pressure without a second settlement
+ok 19 - retryable MCP persistence stays bounded by expiry and entry pressure without a second settlement
+  ---
+  duration_ms: 20.128342
+  ...
+# Subtest: ephemeral MCP bytes above the cap drop the older body and do not settle it again
+ok 20 - ephemeral MCP bytes above the cap drop the older body and do not settle it again
+  ---
+  duration_ms: 47.148417
+  ...
+# Subtest: existing x402 unknown settlement is durable across retry and restart
+ok 21 - existing x402 unknown settlement is durable across retry and restart
+  ---
+  duration_ms: 3353.505137
+  ...
+# Subtest: existing x402 successful response replays after restart without settlement
+ok 22 - existing x402 successful response replays after restart without settlement
+  ---
+  duration_ms: 3272.608673
+  ...
+# Subtest: existing x402 definite verification rejection permits a valid retry
+ok 23 - existing x402 definite verification rejection permits a valid retry
+  ---
+  duration_ms: 1721.635957
+  ...
+# Subtest: existing mpp unknown settlement is durable across retry and restart
+ok 24 - existing mpp unknown settlement is durable across retry and restart
+  ---
+  duration_ms: 3125.948556
+  ...
+# Subtest: existing mpp successful response replays after restart without settlement
+ok 25 - existing mpp successful response replays after restart without settlement
+  ---
+  duration_ms: 3060.875744
+  ...
+# Subtest: existing mpp definite verification rejection permits a valid retry
+ok 26 - existing mpp definite verification rejection permits a valid retry
+  ---
+  duration_ms: 1570.687338
+  ...
+# Subtest: existing x402 without optional payment ID still works and gets restart replay
+ok 27 - existing x402 without optional payment ID still works and gets restart replay
+  ---
+  duration_ms: 3043.303876
+  ...
+# Subtest: changing only the x402 payment identifier cannot reuse a settled authorization
+ok 28 - changing only the x402 payment identifier cannot reuse a settled authorization
+  ---
+  duration_ms: 1534.515468
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 23301.166465

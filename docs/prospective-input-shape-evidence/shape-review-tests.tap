@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: producer and strict reader use every code from the accepted refusal contract
+ok 1 - producer and strict reader use every code from the accepted refusal contract
+  ---
+  duration_ms: 26.648438
+  ...
+# Subtest: producer does not infer a code from input, arbitrary enums, prose or crossed responses
+ok 2 - producer does not infer a code from input, arbitrary enums, prose or crossed responses
+  ---
+  duration_ms: 9.809183
+  ...
+# Subtest: strict reader quarantines unknown and crossed codes while old and null codes remain unknown
+ok 3 - strict reader quarantines unknown and crossed codes while old and null codes remain unknown
+  ---
+  duration_ms: 6.203602
+  ...
+# Subtest: existing observation suppression never creates a journal to capture a code
+ok 4 - existing observation suppression never creates a journal to capture a code
+  ---
+  duration_ms: 4.025637
+  ...
+# Subtest: code projection follows the existing external population and cutoff
+ok 5 - code projection follows the existing external population and cutoff
+  ---
+  duration_ms: 5.361765
+  ...
+# Subtest: complete retained window keeps partial historical code coverage explicit
+ok 6 - complete retained window keeps partial historical code coverage explicit
+  ---
+  duration_ms: 3.252635
+  ...
+# Subtest: concurrent refusal append and snapshot remain strict through bounded rotations and restart
+ok 7 - concurrent refusal append and snapshot remain strict through bounded rotations and restart
+  ---
+  duration_ms: 42.573396
+  ...
+# Subtest: only the actual validator handoff can mint a matching prospective shape
+ok 8 - only the actual validator handoff can mint a matching prospective shape
+  ---
+  duration_ms: 4.430548
+  ...
+# Subtest: strict reader quarantines malformed and contradictory shape evidence without rewriting history
+ok 9 - strict reader quarantines malformed and contradictory shape evidence without rewriting history
+  ---
+  duration_ms: 4.935228
+  ...
+# Subtest: prospective shape summary uses existing suppression, external population and cutoff
+ok 10 - prospective shape summary uses existing suppression, external population and cutoff
+  ---
+  duration_ms: 3.939329
+  ...
+# Subtest: shape evidence survives concurrent snapshots, bounded rotation, restart and damaged-line recovery
+ok 11 - shape evidence survives concurrent snapshots, bounded rotation, restart and damaged-line recovery
+  ---
+  duration_ms: 42.852291
+  ...
+# Subtest: strict shape reader enforces every stage's type and count relationship
+ok 12 - strict shape reader enforces every stage's type and count relationship
+  ---
+  duration_ms: 5.567385
+  ...
+# Subtest: rejects invalid batch input before any job is planned
+ok 13 - rejects invalid batch input before any job is planned
+  ---
+  duration_ms: 5.005729
+  ...
+# Subtest: accepted C1 runs after a planned job and reports partial JSON-LD failure
+ok 14 - accepted C1 runs after a planned job and reports partial JSON-LD failure
+  ---
+  duration_ms: 19.466512
+  ...
+# Subtest: redirect hops consume the request ceiling and publicFetch pins verified IPv4
+ok 15 - redirect hops consume the request ceiling and publicFetch pins verified IPv4
+  ---
+  duration_ms: 3.722653
+  ...
+# Subtest: feature flag and cost ceilings cannot raise the documented maxima
+ok 16 - feature flag and cost ceilings cannot raise the documented maxima
+  ---
+  duration_ms: 0.450894
+  ...
+# Subtest: same payment and body reuse a per-job checkpoint path
+ok 17 - same payment and body reuse a per-job checkpoint path
+  ---
+  duration_ms: 0.329836
+  ...
+# Subtest: runtime input matches the declared fields shape and HTTPS redirect boundary
+ok 18 - runtime input matches the declared fields shape and HTTPS redirect boundary
+  ---
+  duration_ms: 9.529577
+  ...
+# Subtest: large structured rows are explicitly partial within the replayable response ceiling
+ok 19 - large structured rows are explicitly partial within the replayable response ceiling
+  ---
+  duration_ms: 5.630629
+  ...
+# Subtest: exception response retains every source and all declared required fields without invented zero costs
+ok 20 - exception response retains every source and all declared required fields without invented zero costs
+  ---
+  duration_ms: 1.535075
+  ...
+# Subtest: semantic refusal codes are static, strict, and do not echo caller values
+ok 21 - semantic refusal codes are static, strict, and do not echo caller values
+  ---
+  duration_ms: 27.481709
+  ...
+# Subtest: shape evidence follows the owning validator stage and never retains caller content
+ok 22 - shape evidence follows the owning validator stage and never retains caller content
+  ---
+  duration_ms: 0.836545
+  ...
+# Subtest: optional metadata failure cannot replace a semantic refusal or gate valid input
+ok 23 - optional metadata failure cannot replace a semantic refusal or gate valid input
+  ---
+  duration_ms: 0.299789
+  ...
+# Subtest: early refusal does not inspect later inputs while collecting evidence
+ok 24 - early refusal does not inspect later inputs while collecting evidence
+  ---
+  duration_ms: 0.101997
+  ...
+1..24
+# tests 24
+# suites 0
+# pass 24
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 805.01951
