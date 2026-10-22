@@ -2243,6 +2243,7 @@ app.post(RECEIPT_REFERRAL_RECHECK_ROUTE, async (req, res) => {
   try {
     return res.json(await receiptReferralRecheck(req.body, {
       merchantSigner: commerceTrust.signerAddress,
+      retiredMerchantSigners: (process.env.RECEIPT_RETIRED_SIGNERS || "").split(",").map(value => value.trim()).filter(Boolean),
       network: NETWORK,
       publicUrl: PUBLIC_URL,
       claimStore: receiptReferralClaimStore,

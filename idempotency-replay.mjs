@@ -202,9 +202,9 @@ async function readStore(filePath) {
   try {
     const parsed = JSON.parse(await readFile(filePath, "utf8"));
     if (parsed?.v !== 1 || !Array.isArray(parsed.records)) throw new Error("invalid replay store");
-    return parsed.records;
+    return parsed;
   } catch (error) {
-    if (error?.code === "ENOENT") return [];
+    if (error?.code === "ENOENT") return { v: 1, records: [] };
     throw error;
   }
 }
@@ -236,6 +236,7 @@ export function createIdempotencyReplay({
     throw new Error("invalid unpersisted byte cap");
   }
   const replaySecret = secret || persistentReplaySecret(dataDir);
+  const keyEpoch = createHmac("sha256", replaySecret).update("samedaydesk.replay-key-epoch.v1").digest("hex");
 
   const digest = (label, value) => createHmac("sha256", replaySecret).update(`${label}:${value}`).digest("hex");
 
@@ -282,7 +283,14 @@ export function createIdempotencyReplay({
       await mkdir(dataDir, { recursive: true, mode: 0o700 });
       await chmod(dataDir, 0o700).catch(() => {});
       const currentTime = now();
-      const records = (await readStore(storePath)).filter((record) => Number(record.expiresAt) > currentTime);
+      const persisted = await readStore(storePath);
+      const records = persisted.records.filter((record) => Number(record.expiresAt) > currentTime);
+      // An unknown generation is not an empty replay namespace. This also
+      // quarantines active pre-epoch stores: neither rotation nor deployment
+      // can reopen possible spend. Existing expiry is the automatic recovery.
+      if (records.length && persisted.keyEpoch !== keyEpoch) {
+        throw new Error("replay_key_generation_unavailable");
+      }
       const mutation = await operation(records, currentTime);
       result = mutation.result;
       const protectedRecords = mutation.records.filter((record) => record.protected);
@@ -292,7 +300,7 @@ export function createIdempotencyReplay({
         .slice(0, maxEntries - protectedRecords.length)];
       const temporary = await open(tempPath, constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW, 0o600);
       try {
-        await temporary.writeFile(`${JSON.stringify({ v: 1, records: bounded })}\n`, "utf8");
+        await temporary.writeFile(`${JSON.stringify({ v: 1, keyEpoch, records: bounded })}\n`, "utf8");
         await temporary.chmod(0o600);
         await temporary.sync();
       } finally { await temporary.close(); }
@@ -625,7 +633,11 @@ export function createIdempotencyReplay({
       return mcpFailure("bounded_payment_validity_required", false);
     }
     let cached;
-    try { cached = await claim(binding); } catch { return mcpFailure("recovery_storage_unavailable", false); }
+    try { cached = await claim(binding); } catch {
+      // The durable state may contain earlier possible spend, including a
+      // retired key generation. Refusal is not evidence of no prior charge.
+      return mcpFailure("recovery_storage_unavailable", null);
+    }
     if (cached.kind === "hit") return decodeMcpRecord(binding, cached.record);
     if (cached.kind === "conflict") return mcpFailure("payment_identifier_request_conflict", false);
     if (cached.kind === "pending") return recoverMcpResult(input);
@@ -666,8 +678,9 @@ export function createIdempotencyReplay({
         maxResponseBytes,
         privacy: "HMAC-bound payment IDs and request fingerprints; response bodies expire and storage is mode 0600",
       },
-    })).catch(() => ({
+    })).catch(error => ({
       ready: false,
+      reason: error.message === "replay_key_generation_unavailable" ? error.message : "replay_storage_unavailable",
       activeEntries: null,
       ttlSeconds: Math.floor(ttlMs / 1_000),
       maxEntries,
@@ -713,7 +726,14 @@ export function createIdempotencyReplay({
     if (requiredReplayPaths.has(req.path) && (!Number.isFinite(binding.validUntilMs) || binding.validUntilMs > now() + ttlMs)) {
       return res.status(400).json({ ok: false, error: "bounded_payment_validity_required", charged: false });
     }
-    let cached = useInFlight ? await claim(binding) : await lookup(binding);
+    let cached;
+    try { cached = useInFlight ? await claim(binding) : await lookup(binding); }
+    catch (error) {
+      if (error.message !== "replay_key_generation_unavailable") throw error;
+      res.set("Cache-Control", "no-store");
+      return res.status(503).json({ ok: false, error: error.message, charged: null, newSettlementAttempt: false,
+        boundary: "Retained replay reservations use an unavailable key generation. Preserve and reconcile the original state or wait for its existing expiry; do not create a replacement payment automatically." });
+    }
     if (cached.kind === "expired" || cached.kind === "capacity") {
       return res.status(cached.kind === "expired" ? 409 : 503).json({ ok: false, error: `payment_replay_${cached.kind}`, charged: false });
     }
