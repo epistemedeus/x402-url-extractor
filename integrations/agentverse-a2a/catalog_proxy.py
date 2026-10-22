@@ -380,7 +380,7 @@ async def read_availability(client: httpx.AsyncClient) -> dict:
     try:
         # HTTPX's per-operation timeout alone does not bound a slow body.
         return await asyncio.wait_for(_read_availability(client), STATUS_TIMEOUT_SECONDS)
-    except (httpx.HTTPError, ValueError, CatalogProxyError, asyncio.TimeoutError):
+    except (httpx.HTTPError, ValueError, RecursionError, CatalogProxyError, asyncio.TimeoutError):
         return unknown_availability()
 
 

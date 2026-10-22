@@ -111,6 +111,7 @@ async def test_missing_projection_is_unknown(body):
     '{"origin":"https://agents.samedaydesk.com","state":"paused","state":"available","callable":true,"observedAt":"2026-10-22T21:10:00.000Z"}',
     json.dumps(availability_body())[:-1] + ',"extra":NaN}',
     json.dumps(availability_body())[:-1] + ',"extra":Infinity}',
+    '[' * 1200 + ']' * 1200,
 ])
 async def test_ambiguous_or_non_json_status_fails_unknown(body):
     async def handler(request):
