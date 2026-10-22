@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
+import { createServer as createHttpServer } from "node:http";
 import { mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -379,12 +380,26 @@ function unusedPort() {
 
 test("HTTP and machine surfaces expose the POST as free and non-paywalled", { timeout: 30_000 }, async (t) => {
   const dataDir = await mkdtemp(path.join(os.tmpdir(), "receipt-referral-http-"));
+  const facilitatorCalls = { supported: 0, unexpected: 0 };
+  const facilitator = createHttpServer((req, res) => {
+    res.setHeader("content-type", "application/json");
+    if (req.url === "/supported") {
+      facilitatorCalls.supported++;
+      return res.end(JSON.stringify({ kinds: [{ network: NETWORK, scheme: "exact", x402Version: 2 }], extensions: [], signers: {} }));
+    }
+    facilitatorCalls.unexpected++; res.statusCode = 500; res.end("{}");
+  });
+  await new Promise(resolve => facilitator.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise(resolve => facilitator.close(resolve)));
+  const facilitatorUrl = `http://127.0.0.1:${facilitator.address().port}`;
   const port = await unusedPort();
   const child = spawn(process.execPath, ["server.js"], {
     cwd,
     env: {
       ...process.env,
       PORT: String(port),
+      FACILITATOR: "xpay",
+      FACILITATOR_URL: facilitatorUrl,
       COMMERCE_DATA_DIR: dataDir,
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
       MPP_SECRET_KEY: "",
@@ -448,4 +463,6 @@ test("HTTP and machine surfaces expose the POST as free and non-paywalled", { ti
   assert.equal(body.boundary.paidDemandRecorded, false);
   assert.equal(body.boundary.settlementRecorded, false);
   assert.equal(body.boundary.revenueRecorded, false);
+  assert.ok(facilitatorCalls.supported > 0);
+  assert.equal(facilitatorCalls.unexpected, 0);
 });

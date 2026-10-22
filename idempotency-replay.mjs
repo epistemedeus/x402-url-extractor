@@ -633,7 +633,11 @@ export function createIdempotencyReplay({
       return mcpFailure("bounded_payment_validity_required", false);
     }
     let cached;
-    try { cached = await claim(binding); } catch { return mcpFailure("recovery_storage_unavailable", false); }
+    try { cached = await claim(binding); } catch {
+      // The durable state may contain earlier possible spend, including a
+      // retired key generation. Refusal is not evidence of no prior charge.
+      return mcpFailure("recovery_storage_unavailable", null);
+    }
     if (cached.kind === "hit") return decodeMcpRecord(binding, cached.record);
     if (cached.kind === "conflict") return mcpFailure("payment_identifier_request_conflict", false);
     if (cached.kind === "pending") return recoverMcpResult(input);

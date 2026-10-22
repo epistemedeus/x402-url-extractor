@@ -214,7 +214,17 @@ test('actor-key rotation cannot reopen a durable payment replay reservation or s
     scope: { endpointUrl: publicUrl + '/mcp', tenantId: 'synthetic-cutover' } };
   const native = await replacement.runMcpTool(nativeInput, () => assert.fail('rotation must not execute a reserved operation'));
   assert.equal(JSON.parse(native.content[0].text).error, 'recovery_storage_unavailable');
+  assert.equal(JSON.parse(native.content[0].text).charged, null);
   assert.deepEqual(await readFile(oldReplay.storePath), before);
+  // An unreadable durable store can also hide earlier spend. It is not proof
+  // of an uncharged operation, and must never execute or replace its bytes.
+  const corrupt = 'synthetic-unreadable-replay-store';
+  await writeFile(oldReplay.storePath, corrupt);
+  const unavailable = await replacement.runMcpTool(nativeInput, () => assert.fail('unreadable storage must not execute'));
+  assert.equal(JSON.parse(unavailable.content[0].text).error, 'recovery_storage_unavailable');
+  assert.equal(JSON.parse(unavailable.content[0].text).charged, null);
+  assert.equal(await readFile(oldReplay.storePath, 'utf8'), corrupt);
+  await writeFile(oldReplay.storePath, before);
   assert.equal((await replacement.storageStatus()).reason, 'replay_key_generation_unavailable');
   const restart = createIdempotencyReplay({ dataDir, secret: oldKey, now: () => now });
   assert.equal((await restart.lookup(restart.bindingFor(request))).kind, 'pending');
