@@ -134,7 +134,7 @@ async def test_sync_chat_returns_the_unpaid_challenge_and_ignores_a_payment_fiel
     assert body["paymentIgnored"] == ["PAYMENT-SIGNATURE"]
     assert body["challenge"]["httpStatus"] == 402
     assert body["challenge"]["body"]["accepts"][0]["amount"] == "10000"
-    get = [call for call in seen if call["method"] == "GET"][0]
+    get = [call for call in seen if call["url"] == EXAMPLE_URL][0]
     assert "payment-signature" not in get["headers"]
 
 

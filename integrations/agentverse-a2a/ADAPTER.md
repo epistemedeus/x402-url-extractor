@@ -1,6 +1,14 @@
 # Agentverse A2A adapter
 
-This process exposes the existing catalog and two bounded free SameDayDesk tools through JSON-RPC 1.0 and the registered AgentChat identity. It can retrieve an unpaid merchant challenge, but it never forwards payment authority, pays, or performs a paid tool call. AgentChat replies are signed by the existing registered identity. The first-party catalog remains `a2a-storefront.mjs` (`A2A_VERSION = "1.0"`).
+This process exposes current paid-gateway availability and two bounded free SameDayDesk tools through JSON-RPC 1.0 and the registered AgentChat identity. When the canonical gateway state is available, it exposes the existing catalog and can retrieve an unpaid merchant challenge. It never forwards payment authority, pays, or performs a paid tool call. AgentChat replies are signed by the existing registered identity. The first-party catalog remains `a2a-storefront.mjs` (`A2A_VERSION = "1.0"`). Documentation is at `https://samedaydesk.com/skill.md`.
+
+## Availability and useful next actions
+
+Discovery and `paid-challenge` first GET `https://samedaydesk.com/discovery/paid-gateway.json`. This existing SameDayDesk projection owns the received dependency state. The consumer preserves its exact `origin`, `state`, `callable` and `observedAt` with the canonical `source` URL. It accepts only `origin: "https://agents.samedaydesk.com"` and consistent `available`/`paused`/`unknown` facts. Restoration evidence stays with the producer; the adapter adds no expiry, background probe or stored status.
+
+A read has a five-second total deadline, three-second HTTP operation timeouts and a 16KiB decoded body ceiling. Only one redirect to the exact HTTPS apex/www status URL is accepted. Self redirects, other origins, paths or query strings are refused. Status requests inherit no client authentication, cookies, caller headers or payment fields. JSON-supplied URLs never select a network destination.
+
+Paused status returns `availability.state: "paused"`; a missing, malformed or failed read returns `unknown`. Both prevent catalog and challenge requests to the merchant. Discovery returns the existing offline job catalog and copyable free-tool selections; `paid-challenge` returns a refusal with those next actions. Free-tool calls go directly to the apex MCP independently of paid status. Acquired packages remain usable offline.
 
 ## Why `protocol_version` must be set
 
@@ -18,7 +26,7 @@ curl -sS "$PUBLIC_URL/.well-known/agent-card.json"
 
 Expect `supportedInterfaces[0].protocolBinding` = `JSONRPC`, `protocolVersion` = `1.0`, and no top-level `protocolVersion` of `0.3`. JSON-RPC is `POST $PUBLIC_URL/` with header `A2A-Version: 1.0`, method `SendMessage`, and `message.role` = `ROLE_USER`.
 
-Plain text still returns the live seller-integrity audit `route` / `priceAtomicUsdc` / `exampleUrl`. Callers pay the merchant URL themselves. The bridge does not infer a payment header from the message and does not pay.
+Plain text checks availability. With a valid available projection it returns the current seller-integrity audit `route` / `priceAtomicUsdc` / `exampleUrl`; otherwise it returns status and free/offline next actions. Callers authorize any later merchant request themselves. The bridge does not infer a payment header from the message and does not pay.
 
 Two exact JSON selections use the same `SendMessage` envelope:
 
@@ -27,7 +35,9 @@ Two exact JSON selections use the same `SendMessage` envelope:
 {"kind":"paid-challenge"}
 ```
 
-`check_ai_readiness` and `check_agent_readiness` are the apex free tools at `https://samedaydesk.com/mcp`. Any other tool name is a refusal. `paid-challenge` reads the catalog example URL with `X-SameDayDesk-Agent-Source: agentverse-a2a-v1` and returns the merchant 402. That header is caller-declared metadata, not attribution. A 200, redirect, event stream, or oversized body is refused. The optional later paid call is the caller's own request to `selectedAction.exampleUrl`. The existing merchant outcome header `x-samedaydesk-outcome-task` is not written here.
+`check_ai_readiness` and `check_agent_readiness` are the apex free tools at `https://samedaydesk.com/mcp`. Any other tool name is a refusal. When available, `paid-challenge` reads the catalog example URL with `X-SameDayDesk-Agent-Source: agentverse-a2a-v1` and returns the merchant 402. That header is caller-declared metadata, not attribution. A 200, redirect, event stream, or oversized body is refused. The optional later paid call is the caller's own request to `selectedAction.exampleUrl`. The existing merchant outcome header `x-samedaydesk-outcome-task` is not written here.
+
+Run the complete owning suite serially in an isolated Python environment from this directory with `python -m pytest -q`. It includes emitted-card, paused/unknown/failure, origin/redirect, streaming/deadline, valid-restoration and overlapping-call cases alongside native protocol and signed Chat regressions. Fixtures do not establish installed behavior. After Root releases the exact reviewed source, receive the public card, native SendMessage and signed sync/async Chat paths separately. Paid restoration is owned by the canonical SameDayDesk receiving workflow; the next request consumes its valid available projection without an adapter restart or a local switch.
 
 ## AgentChat sync return
 

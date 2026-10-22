@@ -12,6 +12,7 @@ from catalog_proxy import (
     parse_caller_selection,
 )
 from main import create_app
+from availability_fixture import STATUS_URL, availability_body
 
 
 EXAMPLE_URL = "https://agents.example/commerce/seller-integrity-audit?url=https%3A%2F%2Fexample.com"
@@ -84,6 +85,7 @@ class Queue:
 
 
 def route_transport(routes):
+    routes = {("GET", STATUS_URL): (200, availability_body()), **routes}
     seen = []
 
     async def handler(request: httpx.Request):
@@ -253,13 +255,13 @@ async def test_paid_challenge_returns_402_and_drops_seeded_payment_header():
     assert payload["challenge"]["body"]["body"]["accepts"][0]["amount"] == "10000"
     assert payload["declaredSource"]["value"] == "agentverse-a2a-v1"
     assert "not attribution" in payload["declaredSource"]["boundary"]
-    assert [item["method"] for item in seen] == ["POST", "GET"]
-    challenge = seen[1]
+    assert [item["method"] for item in seen] == ["GET", "POST", "GET"]
+    challenge = seen[2]
     assert challenge["headers"]["x-samedaydesk-agent-source"] == "agentverse-a2a-v1"
     for name in PAYMENT_HEADERS:
         assert name not in challenge["headers"]
     assert "PAYMENT-SIGNATURE" not in json.dumps(challenge["headers"])
-    assert seen[0]["body"]["message"]["parts"][0]["text"] == "List the current paid actions."
+    assert seen[1]["body"]["message"]["parts"][0]["text"] == "List the current paid actions."
 
 
 @pytest.mark.asyncio
@@ -282,6 +284,6 @@ async def test_challenge_transport_failures_are_refused(spec, reason):
     assert payload["reason"] == reason
     assert payload["useful"] is False
     assert "machine_buyable" not in json.dumps(payload)
-    assert len(seen) == 2
+    assert len(seen) == 3
     for name in PAYMENT_HEADERS:
-        assert name not in seen[1]["headers"]
+        assert name not in seen[2]["headers"]

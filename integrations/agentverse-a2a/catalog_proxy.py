@@ -1,6 +1,9 @@
+import asyncio
 import json
+import re
+from datetime import datetime
 from ipaddress import ip_address
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 from uuid import uuid4
 
 import httpx
@@ -15,6 +18,15 @@ MAX_AGENT_TEXT_BYTES = 32 * 1024
 MAX_ACTIONS = 64
 DEFAULT_UPSTREAM_URL = "https://agents.samedaydesk.com/a2a/message:send"
 DEFAULT_READINESS_URL = "https://samedaydesk.com/mcp"
+AVAILABILITY_URL = "https://samedaydesk.com/discovery/paid-gateway.json"
+AVAILABILITY_URLS = frozenset({
+    AVAILABILITY_URL,
+    "https://www.samedaydesk.com/discovery/paid-gateway.json",
+})
+GATEWAY_ORIGIN = "https://agents.samedaydesk.com"
+OFFLINE_JOBS_URL = "https://samedaydesk.com/discovery/useful-jobs.json"
+MAX_STATUS_BYTES = 16 * 1024
+STATUS_TIMEOUT_SECONDS = 5.0
 READINESS_PROTOCOL = "2025-11-25"
 PAYMENT_INTEGRITY_ROUTE = "/commerce/seller-integrity-audit"
 DECLARED_SOURCE_HEADER = "X-SameDayDesk-Agent-Source"
@@ -260,7 +272,7 @@ def project_challenge_body(body: bytes) -> dict:
     return projected
 
 
-async def read_bounded(response: httpx.Response) -> bytes:
+async def read_bounded(response: httpx.Response, max_bytes: int = MAX_UPSTREAM_BYTES) -> bytes:
     content_type = response.headers.get("content-type", "")
     if "text/event-stream" in content_type.lower():
         await response.aclose()
@@ -269,18 +281,133 @@ async def read_bounded(response: httpx.Response) -> bytes:
         await response.aclose()
         raise CatalogProxyError("redirect_refused")
     declared = response.headers.get("content-length")
-    if declared is not None and declared.isdigit() and int(declared) > MAX_UPSTREAM_BYTES:
+    if declared is not None and declared.isdigit() and int(declared) > max_bytes:
         await response.aclose()
         raise CatalogProxyError("body_budget")
     chunks = []
     total = 0
     async for chunk in response.aiter_bytes():
         total += len(chunk)
-        if total > MAX_UPSTREAM_BYTES:
+        if total > max_bytes:
             await response.aclose()
             raise CatalogProxyError("body_budget")
         chunks.append(chunk)
     return b"".join(chunks)
+
+
+def unknown_availability() -> dict:
+    return {
+        "source": AVAILABILITY_URL,
+        "origin": GATEWAY_ORIGIN,
+        "state": "unknown",
+        "callable": False,
+        "observedAt": None,
+    }
+
+
+def parse_availability(payload: object) -> dict:
+    # The origin validates restoration evidence. Consume only its public facts,
+    # without copying financial evidence, imposing an expiry, or following URLs
+    # supplied in the JSON.
+    if not isinstance(payload, dict) or payload.get("origin") != GATEWAY_ORIGIN:
+        raise CatalogProxyError("invalid_status_origin")
+    state = payload.get("state")
+    if state not in ("available", "paused", "unknown"):
+        raise CatalogProxyError("invalid_status_state")
+    if payload.get("callable") is not (state == "available"):
+        raise CatalogProxyError("invalid_status_callable")
+    observed = payload.get("observedAt")
+    if observed is not None or state != "unknown":
+        if not isinstance(observed, str) or not re.fullmatch(
+            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z", observed
+        ):
+            raise CatalogProxyError("invalid_status_observation")
+        datetime.strptime(observed, "%Y-%m-%dT%H:%M:%S.%fZ")
+    elif "observedAt" not in payload:
+        raise CatalogProxyError("missing_status_observation")
+    return {**unknown_availability(), "state": state, "callable": state == "available", "observedAt": observed}
+
+
+def _status_object(pairs: list) -> dict:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise CatalogProxyError("duplicate_status_field")
+        result[key] = value
+    return result
+
+
+def _invalid_status_constant(_value: str):
+    raise CatalogProxyError("invalid_status_json")
+
+
+async def _read_availability(client: httpx.AsyncClient) -> dict:
+    url = AVAILABILITY_URL
+    visited = set()
+    for _ in range(2):
+        visited.add(url)
+        # Build a fresh request rather than inheriting client auth, cookies,
+        # caller headers, query parameters, or payment fields.
+        request = httpx.Request(
+            "GET", url,
+            headers={"Accept": "application/json", "Accept-Encoding": "identity", "Cache-Control": "no-cache"},
+            extensions={"timeout": httpx.Timeout(3.0).as_dict()},
+        )
+        response = await client.send(request, stream=True, auth=None, follow_redirects=False)
+        try:
+            if response.status_code in REDIRECT_STATUSES:
+                destination = urljoin(url, response.headers.get("location", ""))
+                if destination not in AVAILABILITY_URLS or destination in visited:
+                    raise CatalogProxyError("status_redirect_refused")
+                url = destination
+                continue
+            if response.status_code != 200:
+                raise CatalogProxyError("status_unavailable")
+            if response.headers.get("content-type", "").split(";")[0].strip().lower() != "application/json":
+                raise CatalogProxyError("status_not_json")
+            if response.headers.get("content-encoding", "identity").strip().lower() not in ("", "identity"):
+                raise CatalogProxyError("status_encoding_refused")
+            body = await read_bounded(response, MAX_STATUS_BYTES)
+            return parse_availability(json.loads(
+                body, object_pairs_hook=_status_object, parse_constant=_invalid_status_constant,
+            ))
+        finally:
+            await response.aclose()
+    raise CatalogProxyError("status_redirect_refused")
+
+
+async def read_availability(client: httpx.AsyncClient) -> dict:
+    try:
+        # HTTPX's per-operation timeout alone does not bound a slow body.
+        return await asyncio.wait_for(_read_availability(client), STATUS_TIMEOUT_SECONDS)
+    except (httpx.HTTPError, ValueError, RecursionError, CatalogProxyError, asyncio.TimeoutError):
+        return unknown_availability()
+
+
+def availability_reply(availability: dict, *, paid: bool = False) -> dict:
+    state = availability["state"]
+    return {
+        "availability": availability,
+        "kind": "refusal" if paid else "discovery",
+        "cash": 0,
+        "paymentForwarded": False,
+        "paymentInferred": False,
+        "useful": not paid,
+        **({"reason": "paid_gateway_paused" if state == "paused" else "paid_gateway_unconfirmed"} if paid else {}),
+        "instruction": (
+            "Paid gateway temporarily paused. Use a free readiness tool or an offline package."
+            if state == "paused" else
+            "Paid gateway availability unconfirmed. Use a free readiness tool or an offline package."
+        ),
+        "nextAction": OFFLINE_JOBS_URL,
+        "documentation": "https://samedaydesk.com/skill.md",
+        "freeApexMcp": DEFAULT_READINESS_URL,
+        "freeTools": [
+            {"kind": "free-tool", "tool": "check_ai_readiness", "arguments": {"url": "https://example.com"}},
+            {"kind": "free-tool", "tool": "check_agent_readiness", "arguments": {"host": "example.com"}},
+        ],
+        "offlinePackages": OFFLINE_JOBS_URL,
+    }
 
 
 def agent_message(text: str, context_id: str | None = None) -> Message:
@@ -304,7 +431,7 @@ class CatalogProxyExecutor(AgentExecutor):
         self._readiness_url = readiness_url
         self._client = client
 
-    async def _discovery_text(self, user_input: str, context_id: str | None, client: httpx.AsyncClient) -> str:
+    async def _discovery_text(self, user_input: str, context_id: str | None, client: httpx.AsyncClient, availability: dict) -> str:
         async with client.stream(
             "POST",
             self._upstream_url,
@@ -317,6 +444,7 @@ class CatalogProxyExecutor(AgentExecutor):
         catalog = extract_catalog_response(json.loads(body))
         selected_action = select_payment_integrity_action(catalog)
         return dumps({
+            "availability": availability,
             "authority": "agents.samedaydesk.com",
             "canonicalCatalog": "https://agents.samedaydesk.com/api/actions",
             "instruction": (
@@ -405,7 +533,7 @@ class CatalogProxyExecutor(AgentExecutor):
             payload["truncated"] = True
             return dumps(payload)
 
-    async def _paid_challenge_text(self, selection: dict, context_id: str | None, client: httpx.AsyncClient) -> str:
+    async def _paid_challenge_text(self, selection: dict, context_id: str | None, client: httpx.AsyncClient, availability: dict) -> str:
         selected = await self._load_selected_action("List the current paid actions.", context_id, client)
         example_url = selected.get("exampleUrl")
         action_url = selected.get("url")
@@ -433,6 +561,7 @@ class CatalogProxyExecutor(AgentExecutor):
                 f"merchant HTTP {status} is not an unpaid challenge",
             )
         payload = {
+            "availability": availability,
             "cash": 0,
             "challenge": {
                 "body": project_challenge_body(body),
@@ -461,27 +590,36 @@ class CatalogProxyExecutor(AgentExecutor):
             follow_redirects=False,
         )
         selection = parse_caller_selection(context.get_user_input())
+        availability = unknown_availability()
         try:
             if selection["kind"] == "invalid":
                 extra = {"tool": selection["tool"]} if selection.get("tool") else {}
                 text = refusal(selection["reason"], selection.get("detail"), **extra)
             elif selection["kind"] == "free-tool":
                 text = await self._free_tool_text(selection, client)
-            elif selection["kind"] == "paid-challenge":
-                text = await self._paid_challenge_text(selection, context.context_id, client)
             else:
-                text = await self._discovery_text(context.get_user_input(), context.context_id, client)
+                availability = await read_availability(client)
+                if not availability["callable"]:
+                    payload = availability_reply(availability, paid=selection["kind"] == "paid-challenge")
+                    payload["paymentIgnored"] = selection.get("paymentIgnored") or []
+                    text = dumps(payload)
+                elif selection["kind"] == "paid-challenge":
+                    text = await self._paid_challenge_text(selection, context.context_id, client, availability)
+                else:
+                    user_input = context.get_user_input() if "paymentIgnored" not in selection else "List the current paid actions."
+                    text = await self._discovery_text(user_input, context.context_id, client, availability)
         except (httpx.HTTPError, ValueError, CatalogProxyError) as exc:
             reason = str(exc)
-            if selection["kind"] == "discovery" and reason not in {
-                "stream_refused",
-                "redirect_refused",
-                "body_budget",
-            }:
+            if selection["kind"] == "discovery":
                 text = dumps({
+                    **availability_reply(availability),
+                    "instruction": "Current paid catalog could not be read. Use a free readiness tool or an offline package.",
                     "canonicalCatalog": "https://agents.samedaydesk.com/api/actions",
                     "detail": reason[:256],
                     "error": "catalog_temporarily_unavailable",
+                    **({"kind": "refusal", "reason": reason, "useful": False} if reason in {
+                        "stream_refused", "redirect_refused", "body_budget",
+                    } else {}),
                 })
             else:
                 code = reason if reason in {
