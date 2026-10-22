@@ -287,3 +287,16 @@ async def test_challenge_transport_failures_are_refused(spec, reason):
     assert len(seen) == 3
     for name in PAYMENT_HEADERS:
         assert name not in seen[2]["headers"]
+
+@pytest.mark.asyncio
+async def test_free_wire_has_fixed_spoofable_source_without_caller_authority():
+    payload, seen = await run_selection(json.dumps({
+        "kind": "free-tool", "tool": "check_ai_readiness",
+        "arguments": {"url": "https://example.com", "X-SameDayDesk-Agent-Source": "caller-secret"},
+        "X-SameDayDesk-Agent-Source": "caller-secret",
+    }), {("POST", DEFAULT_READINESS_URL): (200, readiness_body())})
+    assert payload["kind"] == "free-tool"
+    assert len(seen) == 1
+    assert seen[0]["headers"]["x-samedaydesk-agent-source"] == "agentverse-a2a-v1"
+    assert seen[0]["body"]["params"]["arguments"] == {"url": "https://example.com"}
+    assert not any(name in seen[0]["headers"] for name in PAYMENT_HEADERS)
