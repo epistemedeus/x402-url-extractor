@@ -28,6 +28,7 @@ from a2a.utils.errors import JSON_RPC_ERROR_CODE_MAP, VersionNotSupportedError
 
 from catalog_proxy import DEFAULT_UPSTREAM_URL, CatalogProxyExecutor
 from main import build_agent_card, create_app
+from availability_fixture import STATUS_URL, availability_body
 
 
 PAYMENT_HEADERS = (
@@ -94,6 +95,8 @@ class UpstreamState:
 
 def make_executor(state: UpstreamState):
     async def handler(request: httpx.Request):
+        if str(request.url) == STATUS_URL:
+            return httpx.Response(200, json=availability_body())
         body = json.loads(request.content) if request.content else None
         state.requests.append(
             {

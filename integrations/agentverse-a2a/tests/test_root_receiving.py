@@ -8,6 +8,7 @@ import pytest
 import catalog_proxy
 from catalog_proxy import CatalogProxyExecutor, DEFAULT_READINESS_URL, DEFAULT_UPSTREAM_URL
 from test_readiness_handoff import Context, Queue, EXAMPLE_URL, catalog_body, readiness_body, run_selection
+from availability_fixture import STATUS_URL, availability_body
 
 
 @pytest.mark.asyncio
@@ -32,6 +33,8 @@ async def test_overlapping_owned_clients_do_not_close_or_clear_each_other(monkey
     release_free, release_catalog = asyncio.Event(), asyncio.Event()
 
     async def handler(request):
+        if str(request.url) == STATUS_URL:
+            return httpx.Response(200, json=availability_body())
         if str(request.url) == DEFAULT_READINESS_URL:
             free_entered.set()
             await release_free.wait()
@@ -97,6 +100,8 @@ async def test_plain_discovery_is_stream_bounded_before_full_buffering():
     stream = OversizedStream()
 
     async def handler(request):
+        if str(request.url) == STATUS_URL:
+            return httpx.Response(200, json=availability_body())
         return httpx.Response(200, stream=stream)
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:

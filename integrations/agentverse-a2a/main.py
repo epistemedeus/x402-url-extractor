@@ -16,7 +16,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from catalog_proxy import DEFAULT_UPSTREAM_URL, CatalogProxyExecutor
+from catalog_proxy import AVAILABILITY_URL, DEFAULT_READINESS_URL, DEFAULT_UPSTREAM_URL, CatalogProxyExecutor
 from chat_sync import chat_endpoint
 from uagents_core.identity import Identity
 
@@ -25,14 +25,14 @@ skill = AgentSkill(
     id="discover-samedaydesk-payment-integrity",
     name="Discover SameDayDesk payment integrity",
     description=(
-        "Returns the canonical SameDayDesk x402 and MPP action catalog, including "
-        "the current-price seller-integrity audit and its exact invocation contract. "
-        "A free-tool message calls the public apex readiness tool. A paid-challenge "
-        "message returns the live unpaid challenge and does not pay."
+        "Returns current paid-gateway availability and free readiness next actions. "
+        "A free-tool message calls the public apex readiness tool. When the gateway "
+        "is available, discovery reads the current-price seller-integrity audit "
+        "catalog and paid-challenge reads its unpaid challenge. No payment is sent."
     ),
     tags=["x402", "payment integrity", "machine commerce"],
     examples=[
-        "Find the seller-integrity audit and its exact current price.",
+        "Check current availability and free readiness options.",
         "List the machine-paid actions SameDayDesk offers.",
         '{"kind":"free-tool","tool":"check_ai_readiness","arguments":{"url":"https://example.com"}}',
         '{"kind":"paid-challenge"}',
@@ -48,8 +48,8 @@ def build_agent_card(public_url: str) -> AgentCard:
     return AgentCard(
         name="SameDayDesk Payment Integrity",
         description=(
-            "Discovers exact-price machine-commerce actions and the seller-integrity "
-            "audit that checks constructibility and buyer-required output guarantees."
+            "Checks SameDayDesk paid-gateway availability, offers free readiness "
+            "tools and offline next actions, and discovers current paid actions when available."
         ),
         supported_interfaces=[
             AgentInterface(
@@ -67,7 +67,7 @@ def build_agent_card(public_url: str) -> AgentCard:
             organization="samedaydesk.com",
             url="https://samedaydesk.com",
         ),
-        documentation_url="https://agents.samedaydesk.com/skill.md",
+        documentation_url="https://samedaydesk.com/skill.md",
     )
 
 
@@ -76,7 +76,8 @@ async def health(_request: Request) -> JSONResponse:
         {
             "status": "ok",
             "agent": "SameDayDesk Payment Integrity",
-            "authority": "https://agents.samedaydesk.com/api/actions",
+            "authority": AVAILABILITY_URL,
+            "freeApexMcp": DEFAULT_READINESS_URL,
         }
     )
 

@@ -3,6 +3,8 @@ import json
 import httpx
 import pytest
 
+from availability_fixture import STATUS_URL, availability_body
+
 from catalog_proxy import (
     CatalogProxyError,
     CatalogProxyExecutor,
@@ -107,6 +109,8 @@ async def test_executor_proxies_the_canonical_catalog_without_payment():
     observed = {}
 
     async def handler(request):
+        if str(request.url) == STATUS_URL:
+            return httpx.Response(200, json=availability_body())
         observed["headers"] = request.headers
         observed["body"] = json.loads(request.content)
         return httpx.Response(200, json=upstream_payload())
@@ -134,6 +138,8 @@ async def test_executor_proxies_the_canonical_catalog_without_payment():
 @pytest.mark.asyncio
 async def test_executor_fails_closed_to_the_canonical_catalog_link():
     async def handler(_request):
+        if str(_request.url) == STATUS_URL:
+            return httpx.Response(200, json=availability_body())
         return httpx.Response(200, json={"unexpected": True})
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
