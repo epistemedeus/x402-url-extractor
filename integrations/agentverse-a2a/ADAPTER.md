@@ -35,7 +35,11 @@ Two exact JSON selections use the same `SendMessage` envelope:
 {"kind":"paid-challenge"}
 ```
 
+The actual free-tool POST sends the fixed optional `X-SameDayDesk-Agent-Source: agentverse-a2a-v1` header. Caller input cannot choose it. This is bounded, caller-declared and spoofable metadata: it proves neither identity, independent acquisition, useful acceptance nor revenue. Apex Pulse records server-produced normal results, tool refusals and protocol errors separately; a local HTTP finish is not peer receipt. Historical calls without this dimension remain unknown. The adapter response contract is unchanged.
+
 `check_ai_readiness` and `check_agent_readiness` are the apex free tools at `https://samedaydesk.com/mcp`. Any other tool name is a refusal. When available, `paid-challenge` reads the catalog example URL with `X-SameDayDesk-Agent-Source: agentverse-a2a-v1` and returns the merchant 402. That header is caller-declared metadata, not attribution. A 200, redirect, event stream, or oversized body is refused. The optional later paid call is the caller's own request to `selectedAction.exampleUrl`. The existing merchant outcome header `x-samedaydesk-outcome-task` is not written here.
+
+The companion `samedaydesk/server/lib/pulse-store/README.md` owns the cross-repository receiving command. Its tests invoke `tests/apex_loopback.py`, which uses this actual executor/client and refuses every destination except a loopback HTTP apex. It requires no Agentverse identity or production service.
 
 Run the complete owning suite serially in an isolated Python environment from this directory with `python -m pytest -q`. It includes emitted-card, paused/unknown/failure, origin/redirect, streaming/deadline, valid-restoration and overlapping-call cases alongside native protocol and signed Chat regressions. Fixtures do not establish installed behavior. After Root releases the exact reviewed source, receive the public card, native SendMessage and signed sync/async Chat paths separately. Paid restoration is owned by the canonical SameDayDesk receiving workflow; the next request consumes its valid available projection without an adapter restart or a local switch.
 

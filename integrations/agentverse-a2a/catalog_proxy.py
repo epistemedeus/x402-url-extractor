@@ -487,6 +487,7 @@ class CatalogProxyExecutor(AgentExecutor):
                 "Accept": "application/json",
                 "Content-Type": "application/json",
                 "mcp-protocol-version": READINESS_PROTOCOL,
+                DECLARED_SOURCE_HEADER: DECLARED_SOURCE_VALUE,
             },
             json=request,
             follow_redirects=False,
