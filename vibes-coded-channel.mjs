@@ -7,6 +7,23 @@ export const VIBES_DISCOVERABILITY_SLUG = "samedaydesk-discoverability-audit";
 const MAX_TICKET_BYTES = 8_192;
 const MAX_RESPONSE_BYTES = 500_000;
 
+// Default enabled preserves existing installations. A supplied value must be
+// explicit so a misspelled disable request cannot reopen the channel.
+export function isVibesCodedEnabled(env = process.env) {
+  const raw = env.VIBES_CODED_ENABLED;
+  if (raw === undefined) return true;
+  if (typeof raw === "string") {
+    const value = raw.trim().toLowerCase();
+    if (value === "true" || value === "1") return true;
+    if (value === "false" || value === "0") return false;
+  }
+  throw new Error("VIBES_CODED_ENABLED must be true, false, 1, or 0 (or unset)");
+}
+
+export function vibesChannelDisabledResponse() {
+  return { status: 503, body: { ok: false, error: "vibes_channel_disabled", charged: false } };
+}
+
 function sha256Hex(value) {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -114,6 +131,7 @@ async function submitReceipt({ ticket, status, responseSha256, note, apiKey, fet
 }
 
 export function createVibesChannel({
+  enabled = isVibesCodedEnabled(),
   product,
   validateInput = (value) => value,
   expectedSlug = VIBES_DISCOVERABILITY_SLUG,
@@ -123,6 +141,7 @@ export function createVibesChannel({
   origin = VIBES_CODED_ORIGIN,
   now = () => Date.now(),
 } = {}) {
+  if (typeof enabled !== "boolean") throw new Error("Vibes-Coded channel enabled must be boolean");
   if (typeof product !== "function") throw new Error("Vibes-Coded channel requires a product function");
   const cache = new Map();
   const pending = new Set();
@@ -133,7 +152,12 @@ export function createVibesChannel({
   }
 
   return {
-    async execute({ ticket, rawBody, body }) {
+    enabled,
+    async execute(request) {
+      // Own the refusal here as well as at HTTP dispatch. No validation,
+      // replay mutation, product execution or failure receipt may precede it.
+      if (!enabled) return vibesChannelDisabledResponse();
+      const { ticket, rawBody, body } = request;
       prune();
       if (typeof ticket !== "string" || ticket.length < 16 || Buffer.byteLength(ticket) > MAX_TICKET_BYTES) {
         return { status: 401, body: { ok: false, error: "missing_or_invalid_vibes_call_ticket", charged: false } };

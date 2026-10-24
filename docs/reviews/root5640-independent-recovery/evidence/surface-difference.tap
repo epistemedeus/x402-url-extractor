@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: disabled-to-enabled restart preserves state and receives the real verification/product/receipt contract
+not ok 1 - disabled-to-enabled restart preserves state and receives the real verification/product/receipt contract
+  ---
+  duration_ms: 3071.779154
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root5640-merchant-independent-recovery-20261024/merchant-independent-recovery.http.test.mjs:153:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+    + [
+    +   '$.actions.17.response.example.evaluatedAt',
+    +   '$.actions.18.response.example.evaluatedAt'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: '$.actions.17.response.example.evaluatedAt'
+    1: '$.actions.18.response.example.evaluatedAt'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root5640-merchant-independent-recovery-20261024/merchant-independent-recovery.http.test.mjs:169:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3196.63648

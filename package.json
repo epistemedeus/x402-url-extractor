@@ -15,6 +15,7 @@
     "test:paid-useful-journey:live": "node --test paid-useful-journey.live.test.mjs",
     "test:privacy-coverage": "node --test commerce-privacy-coverage.test.mjs",
     "test:credential-cutover": "node --test --test-concurrency=1 credential-cutover.test.mjs credential-cutover.http.test.mjs",
+    "test:independent-recovery": "node --max-old-space-size=128 test/run-independent-recovery.mjs",
     "test:agent-plugin": "node --test plugins/samedaydesk-x402/plugin.test.mjs",
     "test:claude-marketplace": "node --test claude-code-marketplace.test.mjs",
     "test:claude-marketplace:live": "node --test claude-code-marketplace.live.test.mjs",

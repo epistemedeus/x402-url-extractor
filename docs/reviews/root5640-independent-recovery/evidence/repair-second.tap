@@ -1,0 +1,119 @@
+TAP version 13
+# Subtest: disabled mounted channel refuses before outbound and durable attempts (no key)
+ok 1 - disabled mounted channel refuses before outbound and durable attempts (no key)
+  ---
+  duration_ms: 1831.625227
+  type: 'test'
+  ...
+# Subtest: disabled mounted channel refuses before outbound and durable attempts (key supplied)
+ok 2 - disabled mounted channel refuses before outbound and durable attempts (key supplied)
+  ---
+  duration_ms: 1780.806616
+  type: 'test'
+  ...
+# Subtest: disabled-to-enabled restart preserves state and receives the real verification/product/receipt contract
+ok 3 - disabled-to-enabled restart preserves state and receives the real verification/product/receipt contract
+  ---
+  duration_ms: 2969.586187
+  type: 'test'
+  ...
+# Subtest: normal default xpay SDK loads supported kinds without CDP auth and keeps exact mainnet requirements
+not ok 4 - normal default xpay SDK loads supported kinds without CDP auth and keeps exact mainnet requirements
+  ---
+  duration_ms: 1425.151141
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root5640-merchant-independent-recovery-20261024/merchant-independent-recovery.http.test.mjs:171:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'http://127.0.0.1:46669/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1'
+    - 'https://agents.samedaydesk.com/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'https://agents.samedaydesk.com/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1'
+  actual: 'http://127.0.0.1:46669/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root5640-merchant-independent-recovery-20261024/merchant-independent-recovery.http.test.mjs:180:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: malformed or unavailable authority refuses startup: {"VIBES_CODED_ENABLED":"flase"}
+ok 5 - malformed or unavailable authority refuses startup: {"VIBES_CODED_ENABLED":"flase"}
+  ---
+  duration_ms: 613.071951
+  type: 'test'
+  ...
+# Subtest: malformed or unavailable authority refuses startup: {"VIBES_CODED_ENABLED":""}
+ok 6 - malformed or unavailable authority refuses startup: {"VIBES_CODED_ENABLED":""}
+  ---
+  duration_ms: 630.114281
+  type: 'test'
+  ...
+# Subtest: malformed or unavailable authority refuses startup: {"FACILITATOR":"xpaay"}
+ok 7 - malformed or unavailable authority refuses startup: {"FACILITATOR":"xpaay"}
+  ---
+  duration_ms: 613.241774
+  type: 'test'
+  ...
+# Subtest: malformed or unavailable authority refuses startup: {"FACILITATOR":"cdp"}
+ok 8 - malformed or unavailable authority refuses startup: {"FACILITATOR":"cdp"}
+  ---
+  duration_ms: 609.736273
+  type: 'test'
+  ...
+# Subtest: disabled channel refuses even malformed direct calls before every verification, product and receipt seam
+ok 9 - disabled channel refuses even malformed direct calls before every verification, product and receipt seam
+  ---
+  duration_ms: 1.661372
+  type: 'test'
+  ...
+# Subtest: channel configuration accepts explicit decisions and refuses malformed disable requests
+ok 10 - channel configuration accepts explicit decisions and refuses malformed disable requests
+  ---
+  duration_ms: 0.421085
+  type: 'test'
+  ...
+# Subtest: rejects missing ticket before product or network use
+ok 11 - rejects missing ticket before product or network use
+  ---
+  duration_ms: 0.161789
+  type: 'test'
+  ...
+# Subtest: settles a failed receipt when a paid ticket carries malformed input
+ok 12 - settles a failed receipt when a paid ticket carries malformed input
+  ---
+  duration_ms: 26.917455
+  type: 'test'
+  ...
+# Subtest: verifies request binding, delivers product, and confirms receipt
+ok 13 - verifies request binding, delivers product, and confirms receipt
+  ---
+  duration_ms: 0.820881
+  type: 'test'
+  ...
+# Subtest: replays the same ticket and body without another network or product call
+ok 14 - replays the same ticket and body without another network or product call
+  ---
+  duration_ms: 0.710311
+  type: 'test'
+  ...
+# Subtest: fails closed on wrong slug, amount, or body hash
+ok 15 - fails closed on wrong slug, amount, or body hash
+  ---
+  duration_ms: 1.892651
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 14
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10648.581295

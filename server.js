@@ -307,6 +307,8 @@ import {
   VIBES_DISCOVERABILITY_PATH,
   VIBES_DISCOVERABILITY_SLUG,
   createVibesChannel,
+  isVibesCodedEnabled,
+  vibesChannelDisabledResponse,
 } from "./vibes-coded-channel.mjs";
 import {
   glamaConnectorVerification,
@@ -459,6 +461,7 @@ const THE402_API_KEY = process.env.THE402_API_KEY;
 const THE402_WEBHOOK_SECRET = process.env.THE402_WEBHOOK_SECRET;
 const THE402_SERVICE_ID = process.env.THE402_SERVICE_ID;
 const VIBES_CODED_API_KEY = process.env.VIBES_CODED_API_KEY || "";
+const VIBES_CODED_ENABLED = isVibesCodedEnabled();
 
 const AGENTHANSA_API_KEY = process.env.AGENTHANSA_API_KEY;
 const TOPIFY_OFFER_ID =
@@ -475,19 +478,14 @@ const resolveManyChatReferral = createReferralResolver({
 });
 
 // ---------------------------------------------------------------------------
-// 2. FACILITATOR SELECTION  (this is the autonomy lever)
+// 2. FACILITATOR SELECTION
 //
 //   FACILITATOR=xpay  (DEFAULT) -> https://facilitator.xpay.sh
-//        * Base MAINNET (eip155:8453) supported, exact scheme.
-//        * NO ACCOUNT, NO API KEY. Fully autonomous. Non-custodial.
-//        * Tradeoff: NOT listed in the CDP Bazaar (~4,400 buyers). Discovery
-//          must come from us advertising the URL (well-known, README, posts).
+//        * Public transport without CDP authentication. Supported kinds are
+//          read by the SDK; advertisement is not verification or settlement.
 //
 //   FACILITATOR=cdp -> https://api.cdp.coinbase.com/platform/v2/x402
-//        * Base MAINNET + automatic CDP Bazaar discovery.
 //        * REQUIRES a Coinbase CDP account + CDP_API_KEY_ID / CDP_API_KEY_SECRET.
-//        * The moment those two env vars exist, set FACILITATOR=cdp and we get
-//          Bazaar reach with no other code change.
 //
 //   FACILITATOR=testnet -> https://x402.org/facilitator
 //        * Base Sepolia ONLY (eip155:84532). No account, no key.
@@ -497,6 +495,9 @@ const resolveManyChatReferral = createReferralResolver({
 const FACILITATOR = (process.env.FACILITATOR || "xpay").toLowerCase();
 
 function buildFacilitatorClient() {
+  if (!["xpay", "cdp", "testnet"].includes(FACILITATOR)) {
+    throw new Error("Unsupported FACILITATOR; expected xpay, cdp, or testnet");
+  }
   if (FACILITATOR === "cdp") {
     const id = process.env.CDP_API_KEY_ID;
     const secret = process.env.CDP_API_KEY_SECRET;
@@ -580,6 +581,16 @@ const app = express();
 // Railway terminates TLS before forwarding to Express. Trust exactly one proxy
 // hop so x402 payment requirements preserve the public https:// resource URL.
 app.set("trust proxy", 1);
+if (!VIBES_CODED_ENABLED) {
+  // Refuse before parsing and observation, including malformed JSON and every
+  // method Express would dispatch to this channel (case/trailing-slash parity).
+  app.all(VIBES_DISCOVERABILITY_PATH, (_req, res) => {
+    const result = vibesChannelDisabledResponse();
+    res.set("Cache-Control", "no-store");
+    res.set("X-Robots-Tag", "noindex, nofollow");
+    return res.status(result.status).json(result.body);
+  });
+}
 app.use(browserAgentCorsMiddleware);
 const jsonParser = express.json({
   limit: ORDINARY_HTTP_JSON_MAX_BYTES,
@@ -780,6 +791,7 @@ app.post("/integrations/agoragentic/ai-readiness-audit", async (req, res) => {
 // the platform, run the existing read-only product without a second payment
 // gate, then consume the ticket with a hash-bound delivery receipt.
 const vibesDiscoverabilityChannel = createVibesChannel({
+  enabled: VIBES_CODED_ENABLED,
   apiKey: VIBES_CODED_API_KEY,
   expectedSlug: VIBES_DISCOVERABILITY_SLUG,
   expectedPriceCents: 50,
@@ -787,24 +799,26 @@ const vibesDiscoverabilityChannel = createVibesChannel({
   product: agentDiscoverabilityAudit,
 });
 
-app.head(VIBES_DISCOVERABILITY_PATH, (_req, res) => {
-  res.set("Cache-Control", "no-store");
-  res.set("X-Robots-Tag", "noindex, nofollow");
-  res.set("X-SameDayDesk-Channel", "vibes-coded");
-  return res.status(200).end();
-});
-
-app.post(VIBES_DISCOVERABILITY_PATH, async (req, res) => {
-  const result = await vibesDiscoverabilityChannel.execute({
-    ticket: req.get("x-vibes-call-ticket"),
-    rawBody: req.rawBody,
-    body: req.body,
+if (vibesDiscoverabilityChannel.enabled) {
+  app.head(VIBES_DISCOVERABILITY_PATH, (_req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.set("X-Robots-Tag", "noindex, nofollow");
+    res.set("X-SameDayDesk-Channel", "vibes-coded");
+    return res.status(200).end();
   });
-  res.set("Cache-Control", "no-store");
-  res.set("X-Robots-Tag", "noindex, nofollow");
-  res.set("X-SameDayDesk-Channel", "vibes-coded");
-  return res.status(result.status).json(result.body);
-});
+
+  app.post(VIBES_DISCOVERABILITY_PATH, async (req, res) => {
+    const result = await vibesDiscoverabilityChannel.execute({
+      ticket: req.get("x-vibes-call-ticket"),
+      rawBody: req.rawBody,
+      body: req.body,
+    });
+    res.set("Cache-Control", "no-store");
+    res.set("X-Robots-Tag", "noindex, nofollow");
+    res.set("X-SameDayDesk-Channel", "vibes-coded");
+    return res.status(result.status).json(result.body);
+  });
+}
 
 // Free health check (NOT behind paywall — used by Railway).
 app.get("/healthz", async (_req, res) => {
@@ -846,6 +860,13 @@ app.get("/healthz", async (_req, res) => {
     },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
+    channels: {
+      vibesCoded: {
+        enabled: vibesDiscoverabilityChannel.enabled,
+        path: VIBES_DISCOVERABILITY_PATH,
+        reason: vibesDiscoverabilityChannel.enabled ? null : "disabled_by_configuration",
+      },
+    },
     paymentProtocols: {
       x402: { enabled: true, routeCount: RESOURCES.length },
       circleGateway: {
