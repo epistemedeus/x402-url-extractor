@@ -1,0 +1,91 @@
+{
+  "task": "ROOT5916",
+  "operation": "root5918-merchant-settled-result-retention-20261024",
+  "session": "01a16d57-2ff0-7d93-95d6-846c6aa2393b",
+  "status": "source_complete_live_original_reconciliation_unreceived",
+  "model": "gpt-6.1-sol",
+  "effort": "xhigh",
+  "branch": "codex/root5876-merchant-signed-attempt-diagnosis-20261024",
+  "canonicalOrigin": "https://github.com/epistemedeus/x402-url-extractor.git",
+  "predecessor": "f4f2bba42e375a755631af105c311530c0b42247",
+  "productBase": "69927a4118ba689d9367cab91e71a194215b811f",
+  "operatingCommit": "f9352e9f5444debb7d2a9a4ec3e3f1bbad7e613a",
+  "sourceChanges": [
+    "idempotency-replay.mjs",
+    "server.js"
+  ],
+  "tests": [
+    "test/prepared-http-result-retention.test.mjs"
+  ],
+  "repair": "Retain bounded unqualified prepared HTTP bytes and correlated stage in the authoritative replay record before SDK settlement; never expose pending content or synthesize payment proof.",
+  "originalAttemptState": "settlement_unknown",
+  "originalAttemptReplayed": false,
+  "originalRequestCryptographicChainJoinReceived": false,
+  "originalLiveFacilitatorOrMemoryStageReceived": false,
+  "originalBodyRecovered": false,
+  "installedEffect": false,
+  "finalQualification": {
+    "exit": 0,
+    "pass": 54,
+    "fail": 0,
+    "skip": 0,
+    "cancelled": 0,
+    "newControls": 17,
+    "affectedExistingRegressions": 37,
+    "durationMs": 49974.976332,
+    "log": "final-qualification.log",
+    "evidenceOwner": "worker; not Root replay"
+  },
+  "baseline": {
+    "exit": 1,
+    "pass": 1,
+    "fail": 11,
+    "log": "retention-before.log"
+  },
+  "selfReviewFailuresPreserved": [
+    "retention-before-initial.log: fixture cleanup leak; owned test child terminated and fixture cleanup fixed",
+    "retention-after-second.log: legacy fixture migration raced writer; stop before fixture migration corrected it"
+  ],
+  "commands": [
+    {
+      "command": "NODE_OPTIONS='--max-old-space-size=384 --import=./test/independent-recovery-preload.mjs' node --test --test-concurrency=1 test/prepared-http-result-retention.test.mjs idempotency-replay.test.mjs mcp-task-recovery.test.mjs replay-boundary.http.test.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node --check idempotency-replay.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node --check test/prepared-http-result-retention.test.mjs",
+      "exit": 0
+    },
+    {
+      "command": "git diff --cached --check",
+      "exit": 0
+    }
+  ],
+  "checkpoint": {
+    "at": "2026-10-24T10:41:36.206853Z",
+    "deadline": "2026-10-24T10:45:32.669Z",
+    "met": true
+  },
+  "requiredUntil": "2026-10-24T11:22:06.354Z",
+  "totalMemoryBudgetKiB": 2097152,
+  "serialTests": true,
+  "modelChildren": 0,
+  "testParentHeapMiB": 384,
+  "aggregatePeakRSSClaimed": false,
+  "cleanupObservation": "CLEANUP-OBSERVATION.json",
+  "nativeTerminalAndClaimCleanup": "Root/controller receives canonical terminal and own admission cleanup after this native session ends; worker did not modify runner metadata",
+  "prohibitedLiveActionsPerformed": false,
+  "preparedReadback": "Existing privileged in-process lookup returns pending record; normal HTTP/MCP pending recovery refuses and sends no prepared bytes. Existing lookup retains write/prune behavior and was never applied to live original state.",
+  "remainingUnmetConditions": [
+    "Independent exact original-request/authorization/transaction binding",
+    "Original facilitator reply/in-memory stage",
+    "Original HTTP body/signed receipt/useful delivery",
+    "Root receiving of source and separately installed behavior"
+  ],
+  "productHandback": "docs/reviews/root5916/WORKER-HANDBACK.md",
+  "sourceAndAdmission": "SOURCE-AND-ADMISSION.json",
+  "completedSourceAt": "2026-10-24T10:57:58.226931+00:00"
+}

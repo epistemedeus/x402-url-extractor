@@ -1,0 +1,338 @@
+TAP version 13
+# Subtest: ordinary x402 payment without a resource url executes once and replays on the same tool
+ok 1 - ordinary x402 payment without a resource url executes once and replays on the same tool
+  ---
+  duration_ms: 25.002582
+  type: 'test'
+  ...
+# Subtest: native reservation pins its original credential and operation across process restart
+ok 2 - native reservation pins its original credential and operation across process restart
+  ---
+  duration_ms: 13.338929
+  type: 'test'
+  ...
+# Subtest: native completed output survives failed persistence in its execution and can save without re-execution
+ok 3 - native completed output survives failed persistence in its execution and can save without re-execution
+  ---
+  duration_ms: 8.004382
+  type: 'test'
+  ...
+# Subtest: native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+ok 4 - native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+  ---
+  duration_ms: 12.333658
+  type: 'test'
+  ...
+# Subtest: native unpaid terminal refusal keeps its useful result without inventing settlement
+ok 5 - native unpaid terminal refusal keeps its useful result without inventing settlement
+  ---
+  duration_ms: 6.347764
+  type: 'test'
+  ...
+# Subtest: concurrent native continuation never starts a second execution while the first runs
+ok 6 - concurrent native continuation never starts a second execution while the first runs
+  ---
+  duration_ms: 9.676204
+  type: 'test'
+  ...
+# Subtest: persistent identity and capacity preserve pending claims, corrupt state fails closed
+ok 7 - persistent identity and capacity preserve pending claims, corrupt state fails closed
+  ---
+  duration_ms: 5.695373
+  type: 'test'
+  ...
+# Subtest: canonical replay URL binds sorted query keys and values
+ok 8 - canonical replay URL binds sorted query keys and values
+  ---
+  duration_ms: 5.36153
+  type: 'test'
+  ...
+# Subtest: payment decoder requires a complete x402 v2 exact payment binding
+ok 9 - payment decoder requires a complete x402 v2 exact payment binding
+  ---
+  duration_ms: 0.344134
+  type: 'test'
+  ...
+# Subtest: same payment ID and canonical request replays without a second handler run
+ok 10 - same payment ID and canonical request replays without a second handler run
+  ---
+  duration_ms: 4.485629
+  type: 'test'
+  ...
+# Subtest: same payment ID on changed input or payer fails with uncharged 409
+ok 11 - same payment ID on changed input or payer fails with uncharged 409
+  ---
+  duration_ms: 5.168383
+  type: 'test'
+  ...
+# Subtest: cached x402 response requires the exact credential that originally settled
+ok 12 - cached x402 response requires the exact credential that originally settled
+  ---
+  duration_ms: 3.058964
+  type: 'test'
+  ...
+# Subtest: paid POST replay binds the exact request bytes and rejects body drift before the handler
+ok 13 - paid POST replay binds the exact request bytes and rejects body drift before the handler
+  ---
+  duration_ms: 4.370961
+  type: 'test'
+  ...
+# Subtest: expired records return to normal payment processing
+ok 14 - expired records return to normal payment processing
+  ---
+  duration_ms: 2.942709
+  type: 'test'
+  ...
+# Subtest: a newly settled response is durable before the network response ends
+ok 15 - a newly settled response is durable before the network response ends
+  ---
+  duration_ms: 5.136209
+  type: 'test'
+  ...
+# Subtest: in-flight claim prevents a twin POST from running a second handler
+ok 16 - in-flight claim prevents a twin POST from running a second handler
+  ---
+  duration_ms: 230.582626
+  type: 'test'
+  ...
+# Subtest: required replay paths classify missing identifier separately from unbounded validity
+ok 17 - required replay paths classify missing identifier separately from unbounded validity
+  ---
+  duration_ms: 0.950009
+  type: 'test'
+  ...
+# Subtest: oversized completed MCP output is unrecoverable and is not executed again
+ok 18 - oversized completed MCP output is unrecoverable and is not executed again
+  ---
+  duration_ms: 10.403321
+  type: 'test'
+  ...
+# Subtest: retryable MCP persistence stays bounded by expiry and entry pressure without a second settlement
+ok 19 - retryable MCP persistence stays bounded by expiry and entry pressure without a second settlement
+  ---
+  duration_ms: 12.106396
+  type: 'test'
+  ...
+# Subtest: ephemeral MCP bytes above the cap drop the older body and do not settle it again
+ok 20 - ephemeral MCP bytes above the cap drop the older body and do not settle it again
+  ---
+  duration_ms: 9.541787
+  type: 'test'
+  ...
+# Subtest: ordinary cold CLI retrieves the same whole outcome after lost response and provider/client process restart
+ok 21 - ordinary cold CLI retrieves the same whole outcome after lost response and provider/client process restart
+  ---
+  duration_ms: 1623.596916
+  type: 'test'
+  ...
+# {"coldRecovery":true,"synthetic":true,"settle":1,"usefulAcceptance":"unknown","paidLiveCalls":0}
+# Subtest: a completed ordinary cold client consumes its local output when the provider is unavailable
+ok 22 - a completed ordinary cold client consumes its local output when the provider is unavailable
+  ---
+  duration_ms: 929.434899
+  type: 'test'
+  ...
+# Subtest: an ordinary process interrupted during the current asynchronous receipt task resumes its retained partial output
+ok 23 - an ordinary process interrupted during the current asynchronous receipt task resumes its retained partial output
+  ---
+  duration_ms: 2903.182611
+  type: 'test'
+  ...
+# Subtest: cold recovery consumes current useful refusal, valid empty and partial results without a paid retry
+ok 24 - cold recovery consumes current useful refusal, valid empty and partial results without a paid retry
+  ---
+  duration_ms: 4682.81278
+  type: 'test'
+  ...
+# Subtest: wrong tenant/endpoint/input/quote/recipient/credential refuse at the actual lookup with no new effects
+ok 25 - wrong tenant/endpoint/input/quote/recipient/credential refuse at the actual lookup with no new effects
+  ---
+  duration_ms: 2432.833629
+  type: 'test'
+  ...
+# Subtest: provider quote changes preserve retrieval of the original purchase without adopting new terms
+ok 26 - provider quote changes preserve retrieval of the original purchase without adopting new terms
+  ---
+  duration_ms: 1676.001091
+  type: 'test'
+  ...
+# Subtest: unknown payment survives restart and reconciliation reads never create another paid request
+ok 27 - unknown payment survives restart and reconciliation reads never create another paid request
+  ---
+  duration_ms: 1628.226249
+  type: 'test'
+  ...
+# Subtest: revoked/expired grants and widened budgets refuse in a fresh ordinary process before lookup
+ok 28 - revoked/expired grants and widened budgets refuse in a fresh ordinary process before lookup
+  ---
+  duration_ms: 1166.024538
+  type: 'test'
+  ...
+# Subtest: fresh feature-source consumer keeps recovery outside the frozen feedback archive
+ok 29 - fresh feature-source consumer keeps recovery outside the frozen feedback archive
+  ---
+  duration_ms: 2509.675555
+  type: 'test'
+  ...
+# {"install":"feature-source copy of caller-result-client/src/mcp-recovery.mjs and bin/recover-mcp.mjs, then npm ci of the existing caller lock","publishedArchiveCanary":false,"archive":"caller-result-client/export/public/bytes/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz","archiveSha256":"3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b","archiveContainsRecovery":false,"merchantCheckoutPresent":false,"secondPaidVerify":false,"secondPaidSettle":false}
+# Subtest: existing x402 unknown settlement is durable across retry and restart
+ok 30 - existing x402 unknown settlement is durable across retry and restart
+  ---
+  duration_ms: 2989.141969
+  type: 'test'
+  ...
+# Subtest: existing x402 successful response replays after restart without settlement
+ok 31 - existing x402 successful response replays after restart without settlement
+  ---
+  duration_ms: 3005.580169
+  type: 'test'
+  ...
+# Subtest: existing x402 definite verification rejection permits a valid retry
+ok 32 - existing x402 definite verification rejection permits a valid retry
+  ---
+  duration_ms: 1483.542162
+  type: 'test'
+  ...
+# Subtest: existing mpp unknown settlement is durable across retry and restart
+ok 33 - existing mpp unknown settlement is durable across retry and restart
+  ---
+  duration_ms: 3098.083549
+  type: 'test'
+  ...
+# Subtest: existing mpp successful response replays after restart without settlement
+ok 34 - existing mpp successful response replays after restart without settlement
+  ---
+  duration_ms: 3015.408661
+  type: 'test'
+  ...
+# Subtest: existing mpp definite verification rejection permits a valid retry
+ok 35 - existing mpp definite verification rejection permits a valid retry
+  ---
+  duration_ms: 1539.607157
+  type: 'test'
+  ...
+# Subtest: existing x402 without optional payment ID still works and gets restart replay
+ok 36 - existing x402 without optional payment ID still works and gets restart replay
+  ---
+  duration_ms: 3104.924342
+  type: 'test'
+  ...
+# Subtest: changing only the x402 payment identifier cannot reuse a settled authorization
+ok 37 - changing only the x402 payment identifier cannot reuse a settled authorization
+  ---
+  duration_ms: 1568.901625
+  type: 'test'
+  ...
+# Subtest: SDK success retains completed replay; unqualified preparation is never the payment proof
+ok 38 - SDK success retains completed replay; unqualified preparation is never the payment proof
+  ---
+  duration_ms: 80.400755
+  type: 'test'
+  ...
+# Subtest: SDK failure after a possible effect retains unqualified result and correlated stage across restart
+ok 39 - SDK failure after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 98.014927
+  type: 'test'
+  ...
+# Subtest: SDK http-error after a possible effect retains unqualified result and correlated stage across restart
+ok 40 - SDK http-error after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 91.47551
+  type: 'test'
+  ...
+# Subtest: SDK drop after a possible effect retains unqualified result and correlated stage across restart
+ok 41 - SDK drop after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 90.441385
+  type: 'test'
+  ...
+# Subtest: SDK truncated after a possible effect retains unqualified result and correlated stage across restart
+ok 42 - SDK truncated after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 6089.448769
+  type: 'test'
+  ...
+# Subtest: SDK invalid after a possible effect retains unqualified result and correlated stage across restart
+ok 43 - SDK invalid after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 98.758785
+  type: 'test'
+  ...
+# Subtest: disconnect during drop settlement retains preparation without claiming delivery
+ok 44 - disconnect during drop settlement retains preparation without claiming delivery
+  ---
+  duration_ms: 58.856745
+  type: 'test'
+  ...
+# Subtest: disconnect during success settlement retains preparation without claiming delivery
+ok 45 - disconnect during success settlement retains preparation without claiming delivery
+  ---
+  duration_ms: 62.318342
+  type: 'test'
+  ...
+# Subtest: known verification refusal creates no prepared result and does not settle
+ok 46 - known verification refusal creates no prepared result and does not settle
+  ---
+  duration_ms: 16.016231
+  type: 'test'
+  ...
+# Subtest: preparation storage failure and oversize fail before facilitator mutation
+    # Subtest: storage
+    ok 1 - storage
+      ---
+      duration_ms: 15.473709
+      type: 'test'
+      ...
+    # Subtest: oversize
+    ok 2 - oversize
+      ---
+      duration_ms: 16.576936
+      type: 'test'
+      ...
+    1..2
+ok 47 - preparation storage failure and oversize fail before facilitator mutation
+  ---
+  duration_ms: 32.536067
+  type: 'test'
+  ...
+# Subtest: unknown preparation remains bound against wrong request, payer, credential and payment ID changes
+ok 48 - unknown preparation remains bound against wrong request, payer, credential and payment ID changes
+  ---
+  duration_ms: 43.915125
+  type: 'test'
+  ...
+# Subtest: protected preparation consumes existing capacity and expires under existing retention rights
+ok 49 - protected preparation consumes existing capacity and expires under existing retention rights
+  ---
+  duration_ms: 27.748985
+  type: 'test'
+  ...
+# Subtest: durable prepared bytes survive a later marker-write failure without external mutation
+ok 50 - durable prepared bytes survive a later marker-write failure without external mutation
+  ---
+  duration_ms: 16.876604
+  type: 'test'
+  ...
+# idempotency replay write failed: EISDIR: illegal operation on a directory, open '/tmp/root5916-prepared-NA6SNb/idempotency-replay.tmp.json'
+# Subtest: completion-store failure preserves unqualified preparation, not a fabricated completed receipt
+ok 51 - completion-store failure preserves unqualified preparation, not a fabricated completed receipt
+  ---
+  duration_ms: 80.657224
+  type: 'test'
+  ...
+# Subtest: legacy pending records and unavailable key generations cannot create or disclose lost prepared bytes
+ok 52 - legacy pending records and unavailable key generations cannot create or disclose lost prepared bytes
+  ---
+  duration_ms: 91.357179
+  type: 'test'
+  ...
+1..52
+# tests 54
+# suites 0
+# pass 54
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 49974.976332

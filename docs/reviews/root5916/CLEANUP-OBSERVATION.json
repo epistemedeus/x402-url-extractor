@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-24T10:53:42.870400+00:00",
+  "initialFixtureTestPidsAbsent": [
+    905568,
+    905562,
+    905560
+  ],
+  "ownedLeakedFixtureDirectoriesRemoved": [
+    "/tmp/root5916-prepared-TI0rVZ"
+  ],
+  "matchingOwnedTestNodesRemaining": [],
+  "modelChildren": 0,
+  "runnerAdmissionRelease": "controller-owned after native terminal; not performed by worker"
+}

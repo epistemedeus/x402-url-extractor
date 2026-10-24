@@ -1,0 +1,108 @@
+TAP version 13
+# Subtest: SDK success retains completed replay; unqualified preparation is never the payment proof
+ok 1 - SDK success retains completed replay; unqualified preparation is never the payment proof
+  ---
+  duration_ms: 89.211761
+  type: 'test'
+  ...
+# Subtest: SDK failure after a possible effect retains unqualified result and correlated stage across restart
+ok 2 - SDK failure after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 102.790075
+  type: 'test'
+  ...
+# Subtest: SDK http-error after a possible effect retains unqualified result and correlated stage across restart
+ok 3 - SDK http-error after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 98.441111
+  type: 'test'
+  ...
+# Subtest: SDK drop after a possible effect retains unqualified result and correlated stage across restart
+ok 4 - SDK drop after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 89.431469
+  type: 'test'
+  ...
+# Subtest: SDK truncated after a possible effect retains unqualified result and correlated stage across restart
+ok 5 - SDK truncated after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 6094.779101
+  type: 'test'
+  ...
+# Subtest: SDK invalid after a possible effect retains unqualified result and correlated stage across restart
+ok 6 - SDK invalid after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 97.529624
+  type: 'test'
+  ...
+# Subtest: disconnect retains preparation while waiting and records missing reply without claiming delivery
+ok 7 - disconnect retains preparation while waiting and records missing reply without claiming delivery
+  ---
+  duration_ms: 56.16884
+  type: 'test'
+  ...
+# Subtest: known verification refusal creates no prepared result and does not settle
+ok 8 - known verification refusal creates no prepared result and does not settle
+  ---
+  duration_ms: 13.927211
+  type: 'test'
+  ...
+# Subtest: preparation storage failure and oversize fail before facilitator mutation
+    # Subtest: storage
+    ok 1 - storage
+      ---
+      duration_ms: 15.718907
+      type: 'test'
+      ...
+    # Subtest: oversize
+    ok 2 - oversize
+      ---
+      duration_ms: 13.72714
+      type: 'test'
+      ...
+    1..2
+ok 9 - preparation storage failure and oversize fail before facilitator mutation
+  ---
+  duration_ms: 30.014892
+  type: 'test'
+  ...
+# Subtest: unknown preparation remains bound against wrong request, payer, credential and payment ID changes
+ok 10 - unknown preparation remains bound against wrong request, payer, credential and payment ID changes
+  ---
+  duration_ms: 43.003432
+  type: 'test'
+  ...
+# Subtest: protected preparation consumes existing capacity and expires under existing retention rights
+ok 11 - protected preparation consumes existing capacity and expires under existing retention rights
+  ---
+  duration_ms: 30.146828
+  type: 'test'
+  ...
+# Subtest: durable prepared bytes survive a later marker-write failure without external mutation
+ok 12 - durable prepared bytes survive a later marker-write failure without external mutation
+  ---
+  duration_ms: 25.942195
+  type: 'test'
+  ...
+# idempotency replay write failed: EISDIR: illegal operation on a directory, open '/tmp/root5916-prepared-ucbihM/idempotency-replay.tmp.json'
+# Subtest: completion-store failure preserves unqualified preparation, not a fabricated completed receipt
+ok 13 - completion-store failure preserves unqualified preparation, not a fabricated completed receipt
+  ---
+  duration_ms: 95.167478
+  type: 'test'
+  ...
+# Subtest: legacy pending records and unavailable key generations cannot create or disclose lost prepared bytes
+ok 14 - legacy pending records and unavailable key generations cannot create or disclose lost prepared bytes
+  ---
+  duration_ms: 84.031898
+  type: 'test'
+  ...
+1..14
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7409.195441

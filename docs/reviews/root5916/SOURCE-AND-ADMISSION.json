@@ -1,0 +1,79 @@
+{
+  "at": "2026-10-24T10:55:21.446689+00:00",
+  "operation": "root5918-merchant-settled-result-retention-20261024",
+  "session": "01a16d57-2ff0-7d93-95d6-846c6aa2393b",
+  "predecessor": "f4f2bba42e375a755631af105c311530c0b42247",
+  "productBase": "69927a4118ba689d9367cab91e71a194215b811f",
+  "branch": "codex/root5876-merchant-signed-attempt-diagnosis-20261024",
+  "canonicalOrigin": "https://github.com/epistemedeus/x402-url-extractor.git",
+  "operatingCommit": "f9352e9f5444debb7d2a9a4ec3e3f1bbad7e613a",
+  "assignment": {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "f9352e9f5444debb7d2a9a4ec3e3f1bbad7e613a",
+    "path": "overview/remote-worker/assignments/ROOT5916-MERCHANT-SETTLED-RESULT-RETENTION.md",
+    "blob": "01c63b07040148ef4bd3ad0ade46bce7ebbd5fdd"
+  },
+  "contextSha256": "0f48b35ef55a202e55a1d7f491dec6826cbebd336069410ca7165d7f655f6fda",
+  "receiptSha256": "de2f273769d7023f50832ec16e85e3ec2c5393787ced5cdf32a16bb163aa4498",
+  "ownAdmissionMatches": true,
+  "ownClaimId": "665154fb9c19443f84766bd2052cddf2",
+  "totalJobKiB": 2097152,
+  "lifetime": {
+    "host": {
+      "provider": "cursor",
+      "agentId": "bc-ec55ab26-6e23-4562-9c7a-649331bdba1f",
+      "bootId": "46920f98-723f-459d-ab1e-985512ebe221"
+    },
+    "enrollment": {
+      "path": "/home/ubuntu/root-sol-window100337/root5918-merchant-settled-result-retention-20261024/pre-admission-2/LIFETIME-ENROLLMENT.json",
+      "sha256": "9bb62a7ddf11ac127a7682db30ad3ed847caf71afff588d2db4862f0be7d5c2d"
+    },
+    "checkpointBy": "2026-10-24T10:45:32.669Z",
+    "requiredUntil": "2026-10-24T11:22:06.354Z"
+  },
+  "frozenPredecessorRunNote": "Authority predecessor pointer is received through immutable PREDECESSOR-RUN.json; canonical RUN has legitimately advanced into this same-session admission.",
+  "finalityInput": {
+    "gitPath": "overview/research/phase-20261024/merchant-independent-recovery/ROOT5902-OWNER-QA-FINALITY-RECEIVING.json",
+    "commit": "f9352e9f5444debb7d2a9a4ec3e3f1bbad7e613a",
+    "sha256": "20d131e53e522fbf4543ac1813448acadbe4ae2d18e992c39c277ee265618815",
+    "evidenceAuthority": "Root supplied; original-attempt cryptographic binding and delivery remain unreceived"
+  },
+  "files": [
+    {
+      "path": "idempotency-replay.mjs",
+      "sha256": "d5d6bfa0e603df5ec370c8949be2070beef7f6b6891ce1e2fdf1b17c4467ab20"
+    },
+    {
+      "path": "server.js",
+      "sha256": "5f7e6fd8a9b01d6510f7f92f928a2210453f49a20bbd2773824f31e337b35df9"
+    },
+    {
+      "path": "test/prepared-http-result-retention.test.mjs",
+      "sha256": "57eef4827f016baf07dcbd17844214916bcad96b5243139f9f68b807c284d652"
+    },
+    {
+      "path": "package.json",
+      "sha256": "37d61a7a5441945c72195823fe886516e0536216e17c8626819dea6dee4eef1f"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "212c78b62206723b04af693e8c828541953b97db92342cd8135268f854236be7"
+    },
+    {
+      "path": "node_modules/@x402/core/dist/esm/chunk-YEYZQZNL.mjs",
+      "sha256": "0185ea2da5bd5975796efd9ea74249bb3ad1aea040eddbaef493aa2e06fc32ac"
+    },
+    {
+      "path": "node_modules/@x402/core/dist/esm/chunk-AGOUMC4P.mjs",
+      "sha256": "55e8530b87aee19a99a6bf990df89b27b160ee8992f775ace8ae5a019b48f147"
+    },
+    {
+      "path": "node_modules/@x402/core/dist/esm/server/index.mjs",
+      "sha256": "2d1c3225c7221753d1d53308e0caca915f893a16798dd8d7bcda6a21f0af629c"
+    },
+    {
+      "path": "node_modules/@x402/express/dist/esm/index.mjs",
+      "sha256": "0cc77e861d294286fbbc94f2076685a7276ca157d252618b42e72f97042ac7e5"
+    }
+  ]
+}

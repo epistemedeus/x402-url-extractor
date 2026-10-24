@@ -1,0 +1,149 @@
+TAP version 13
+# Subtest: real SDK positive completion retains exact result for signer-free readback
+not ok 1 - real SDK positive completion retains exact result for signer-free readback
+  ---
+  duration_ms: 1496.455155
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:123:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    false !== true
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:125:53)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: real SDK known verification refusal releases reservation without settlement
+ok 2 - real SDK known verification refusal releases reservation without settlement
+  ---
+  duration_ms: 1534.337773
+  type: 'test'
+  ...
+# Subtest: real SDK unavailable verification is an error, never a successful payment
+not ok 3 - real SDK unavailable verification is an error, never a successful payment
+  ---
+  duration_ms: 1525.668489
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:138:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    402 !== 500
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 500
+  actual: 402
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:140:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: disconnect while verification waits does not cancel SDK work; late completion can settle
+not ok 4 - disconnect while verification waits does not cancel SDK work; late completion can settle
+  ---
+  duration_ms: 1674.312703
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:144:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'miss' !== 'pending'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'pending'
+  actual: 'miss'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:149:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: actual 20-second normal-client budget leaves pending settlement; later readback sends nothing
+not ok 5 - actual 20-second normal-client budget leaves pending settlement; later readback sends nothing
+  ---
+  duration_ms: 21424.683638
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:155:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'miss' !== 'pending'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'pending'
+  actual: 'miss'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:160:46)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: failed settlement stays quarantined for fresh readback without another transport
+not ok 6 - failed settlement stays quarantined for fresh readback without another transport
+  ---
+  duration_ms: 1539.12043
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:166:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    'miss' !== 'pending'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'pending'
+  actual: 'miss'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:169:44)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: disconnect during source capture also permits late SDK settlement
+not ok 7 - disconnect during source capture also permits late SDK settlement
+  ---
+  duration_ms: 11662.886585
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:173:1'
+  failureType: 'testCodeFailure'
+  error: 'bounded fixture observation'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    until (file:///home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:30:35)
+    async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/normal-client-timeout-diagnosis.test.mjs:176:21)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 1
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 41179.830852

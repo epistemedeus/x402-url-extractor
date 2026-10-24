@@ -1,0 +1,83 @@
+TAP version 13
+# Subtest: SDK success retains completed replay; unqualified preparation is never the payment proof
+ok 1 - SDK success retains completed replay; unqualified preparation is never the payment proof
+  ---
+  duration_ms: 77.937022
+  type: 'test'
+  ...
+# Subtest: SDK failure after a possible effect retains unqualified result and correlated stage across restart
+ok 2 - SDK failure after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 92.551609
+  type: 'test'
+  ...
+# Subtest: SDK drop after a possible effect retains unqualified result and correlated stage across restart
+ok 3 - SDK drop after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 83.754983
+  type: 'test'
+  ...
+# Subtest: SDK truncated after a possible effect retains unqualified result and correlated stage across restart
+ok 4 - SDK truncated after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 6088.702108
+  type: 'test'
+  ...
+# Subtest: SDK invalid after a possible effect retains unqualified result and correlated stage across restart
+ok 5 - SDK invalid after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 83.64537
+  type: 'test'
+  ...
+# Subtest: disconnect retains preparation while waiting and records missing reply without claiming delivery
+ok 6 - disconnect retains preparation while waiting and records missing reply without claiming delivery
+  ---
+  duration_ms: 44.78026
+  type: 'test'
+  ...
+# Subtest: known verification refusal creates no prepared result and does not settle
+ok 7 - known verification refusal creates no prepared result and does not settle
+  ---
+  duration_ms: 23.415384
+  type: 'test'
+  ...
+# Subtest: preparation storage failure and oversize fail before facilitator mutation
+    # Subtest: storage
+    ok 1 - storage
+      ---
+      duration_ms: 14.706244
+      type: 'test'
+      ...
+    # Subtest: oversize
+    ok 2 - oversize
+      ---
+      duration_ms: 16.798194
+      type: 'test'
+      ...
+    1..2
+ok 8 - preparation storage failure and oversize fail before facilitator mutation
+  ---
+  duration_ms: 32.036135
+  type: 'test'
+  ...
+# Subtest: unknown preparation remains bound against wrong request, payer, credential and payment ID changes
+ok 9 - unknown preparation remains bound against wrong request, payer, credential and payment ID changes
+  ---
+  duration_ms: 34.753765
+  type: 'test'
+  ...
+# Subtest: protected preparation consumes existing capacity and expires under existing retention rights
+ok 10 - protected preparation consumes existing capacity and expires under existing retention rights
+  ---
+  duration_ms: 24.865269
+  type: 'test'
+  ...
+1..10
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6938.039448

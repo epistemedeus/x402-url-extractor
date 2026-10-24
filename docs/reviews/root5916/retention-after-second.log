@@ -1,0 +1,145 @@
+TAP version 13
+# Subtest: SDK success retains completed replay; unqualified preparation is never the payment proof
+ok 1 - SDK success retains completed replay; unqualified preparation is never the payment proof
+  ---
+  duration_ms: 86.646697
+  type: 'test'
+  ...
+# Subtest: SDK failure after a possible effect retains unqualified result and correlated stage across restart
+ok 2 - SDK failure after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 99.820416
+  type: 'test'
+  ...
+# Subtest: SDK http-error after a possible effect retains unqualified result and correlated stage across restart
+ok 3 - SDK http-error after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 88.278552
+  type: 'test'
+  ...
+# Subtest: SDK drop after a possible effect retains unqualified result and correlated stage across restart
+ok 4 - SDK drop after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 87.387577
+  type: 'test'
+  ...
+# Subtest: SDK truncated after a possible effect retains unqualified result and correlated stage across restart
+ok 5 - SDK truncated after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 6098.429239
+  type: 'test'
+  ...
+# Subtest: SDK invalid after a possible effect retains unqualified result and correlated stage across restart
+ok 6 - SDK invalid after a possible effect retains unqualified result and correlated stage across restart
+  ---
+  duration_ms: 97.506429
+  type: 'test'
+  ...
+# Subtest: disconnect retains preparation while waiting and records missing reply without claiming delivery
+ok 7 - disconnect retains preparation while waiting and records missing reply without claiming delivery
+  ---
+  duration_ms: 61.329189
+  type: 'test'
+  ...
+# Subtest: known verification refusal creates no prepared result and does not settle
+ok 8 - known verification refusal creates no prepared result and does not settle
+  ---
+  duration_ms: 16.094999
+  type: 'test'
+  ...
+# Subtest: preparation storage failure and oversize fail before facilitator mutation
+    # Subtest: storage
+    ok 1 - storage
+      ---
+      duration_ms: 12.56372
+      type: 'test'
+      ...
+    # Subtest: oversize
+    ok 2 - oversize
+      ---
+      duration_ms: 14.559714
+      type: 'test'
+      ...
+    1..2
+ok 9 - preparation storage failure and oversize fail before facilitator mutation
+  ---
+  duration_ms: 27.691317
+  type: 'test'
+  ...
+# Subtest: unknown preparation remains bound against wrong request, payer, credential and payment ID changes
+ok 10 - unknown preparation remains bound against wrong request, payer, credential and payment ID changes
+  ---
+  duration_ms: 32.554451
+  type: 'test'
+  ...
+# Subtest: protected preparation consumes existing capacity and expires under existing retention rights
+ok 11 - protected preparation consumes existing capacity and expires under existing retention rights
+  ---
+  duration_ms: 21.178552
+  type: 'test'
+  ...
+# Subtest: durable prepared bytes survive a later marker-write failure without external mutation
+ok 12 - durable prepared bytes survive a later marker-write failure without external mutation
+  ---
+  duration_ms: 20.996228
+  type: 'test'
+  ...
+# idempotency replay write failed: EISDIR: illegal operation on a directory, open '/tmp/root5916-prepared-ckTSWW/idempotency-replay.tmp.json'
+# Subtest: completion-store failure preserves unqualified preparation, not a fabricated completed receipt
+ok 13 - completion-store failure preserves unqualified preparation, not a fabricated completed receipt
+  ---
+  duration_ms: 82.391608
+  type: 'test'
+  ...
+# Subtest: legacy pending records and unavailable key generations cannot create or disclose lost prepared bytes
+not ok 14 - legacy pending records and unavailable key generations cannot create or disclose lost prepared bytes
+  ---
+  duration_ms: 38.568142
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/prepared-http-result-retention.test.mjs:194:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + {
+    +   bodyBase64: 'eyJvayI6dHJ1ZSwidGl0bGUiOiJwcmVwYXJlZCB1c2VmdWwgZml4dHVyZSIsInNvdXJjZU9rIjp0cnVlfQ==',
+    +   bodySha256: 'e9ea27b556f2c00b077ed7e25d2a7e1c402d3f3a94bdf99798d3711373291066',
+    +   byteLength: 61,
+    +   headers: {
+    +     'content-type': 'application/json; charset=utf-8'
+    +   },
+    +   preparedAt: 1792838906956,
+    +   qualification: 'unqualified',
+    +   status: 200,
+    +   v: 1
+    + }
+    - undefined
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+    v: 1
+    qualification: 'unqualified'
+    preparedAt: 1792838906956
+    status: 200
+    headers:
+      content-type: 'application/json; charset=utf-8'
+    byteLength: 61
+    bodyBase64: 'eyJvayI6dHJ1ZSwidGl0bGUiOiJwcmVwYXJlZCB1c2VmdWwgZml4dHVyZSIsInNvdXJjZU9rIjp0cnVlfQ=='
+    bodySha256: 'e9ea27b556f2c00b077ed7e25d2a7e1c402d3f3a94bdf99798d3711373291066'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root5876-merchant-signed-attempt-diagnosis-20261024/test/prepared-http-result-retention.test.mjs:202:94)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..14
+# tests 16
+# suites 0
+# pass 15
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7217.050024

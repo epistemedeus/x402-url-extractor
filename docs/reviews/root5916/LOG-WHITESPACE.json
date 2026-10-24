@@ -1,0 +1,9 @@
+{
+  "normalization": "Trailing blank-line whitespace only; failure content unchanged",
+  "files": [
+    {
+      "path": "retention-after-second.log",
+      "originalSha256": "dd80f7eb41859ac7d57ee69be144406fe87babba99230619116691614c27cf32"
+    }
+  ]
+}

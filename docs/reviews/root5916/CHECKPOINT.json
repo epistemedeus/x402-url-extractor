@@ -1,0 +1,20 @@
+{
+  "task": "ROOT5916",
+  "operation": "root5918-merchant-settled-result-retention-20261024",
+  "session": "01a16d57-2ff0-7d93-95d6-846c6aa2393b",
+  "status": "checkpoint_in_progress",
+  "at": "2026-10-24T10:41:36.206853+00:00",
+  "checkpointBy": "2026-10-24T10:45:32.669Z",
+  "requiredUntil": "2026-10-24T11:22:06.354Z",
+  "predecessor": "f4f2bba42e375a755631af105c311530c0b42247",
+  "admissionVerified": true,
+  "immutableFilesVerified": 29,
+  "ownClaim": "665154fb9c19443f84766bd2052cddf2",
+  "sourceFinding": "Installed SDK onBeforeSettle receives prepared body/headers; failed/missing settlement reply discards SDK buffer before current merchant replay capture. Retain unqualified preparation and stage in existing record.",
+  "originalAttempt": "settlement_unknown; original-bound facilitator and live memory stage unreceived",
+  "baseline": "Actual SDK controls reproduce missing prepared bytes. First fixture run had cleanup rejection leak; only its owned test child 905568 was terminated; first log preserved. Corrected fixture baseline running.",
+  "modelChildren": 0,
+  "memoryKiB": 2097152,
+  "installedEffect": false,
+  "runtimeSourceChangedYet": false
+}
