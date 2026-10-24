@@ -1,0 +1,734 @@
+
+> x402-merchant@1.23.55 test:independent-recovery
+> node --max-old-space-size=128 test/run-independent-recovery.mjs
+
+TAP version 13
+# Subtest: accepts exact GET, POST, alternate, manifest, and A2A construction parity
+ok 1 - accepts exact GET, POST, alternate, manifest, and A2A construction parity
+  ---
+  duration_ms: 1.977229
+  type: 'test'
+  ...
+# Subtest: fails when a transform drops a contract or callable example
+ok 2 - fails when a transform drops a contract or callable example
+  ---
+  duration_ms: 0.737398
+  type: 'test'
+  ...
+# Subtest: generates mapped USDC construction terms for eip155:8453
+ok 3 - generates mapped USDC construction terms for eip155:8453
+  ---
+  duration_ms: 0.29666
+  type: 'test'
+  ...
+# Subtest: generates mapped USDC construction terms for eip155:84532
+ok 4 - generates mapped USDC construction terms for eip155:84532
+  ---
+  duration_ms: 0.130665
+  type: 'test'
+  ...
+# Subtest: rejects an unsupported USDC construction network
+ok 5 - rejects an unsupported USDC construction network
+  ---
+  duration_ms: 0.165321
+  type: 'test'
+  ...
+# Subtest: actual merchant HTTP receives one replacement generation, old-proof boundary, feedback and restart
+ok 6 - actual merchant HTTP receives one replacement generation, old-proof boundary, feedback and restart
+  ---
+  duration_ms: 4702.517937
+  type: 'test'
+  ...
+# Subtest: ordinary HTTP issuance uses the new signer while cached old receipts survive replacement unchanged
+ok 7 - ordinary HTTP issuance uses the new signer while cached old receipts survive replacement unchanged
+  ---
+  duration_ms: 4530.865518
+  type: 'test'
+  ...
+# Subtest: existing issuer replacement binds new artifacts and never rewrites old envelopes or kids
+ok 8 - existing issuer replacement binds new artifacts and never rewrites old envelopes or kids
+  ---
+  duration_ms: 15.227231
+  type: 'test'
+  ...
+# Subtest: retired original, downstream and forged resource remain recoverably unavailable without consuming rights
+ok 9 - retired original, downstream and forged resource remain recoverably unavailable without consuming rights
+  ---
+  duration_ms: 62.939662
+  type: 'test'
+  ...
+# Subtest: consumed old markers stay consumed after restart; current claims recover before consumption and refuse replay
+ok 10 - consumed old markers stay consumed after restart; current claims recover before consumption and refuse replay
+  ---
+  duration_ms: 24.235438
+  type: 'test'
+  ...
+# Subtest: rotation refuses old cuts without a writer-defect claim; fresh owner HTTP baseline preserves retained rows and partial planes
+ok 11 - rotation refuses old cuts without a writer-defect claim; fresh owner HTTP baseline preserves retained rows and partial planes
+  ---
+  duration_ms: 78.483906
+  type: 'test'
+  ...
+# Subtest: actor epochs survive restart, change on rotation, and cannot establish new users or revenue
+ok 12 - actor epochs survive restart, change on rotation, and cannot establish new users or revenue
+  ---
+  duration_ms: 11.053093
+  type: 'test'
+  ...
+# Subtest: feedback rotates authority while retained statements and synthetic capture bytes survive without paid events
+ok 13 - feedback rotates authority while retained statements and synthetic capture bytes survive without paid events
+  ---
+  duration_ms: 20.105263
+  type: 'test'
+  ...
+# Subtest: already reconciled settlement remains authoritative across actor-key replacement without another chain call
+ok 14 - already reconciled settlement remains authoritative across actor-key replacement without another chain call
+  ---
+  duration_ms: 1.03077
+  type: 'test'
+  ...
+# Subtest: actor-key rotation cannot reopen a durable payment replay reservation or silently adopt legacy active rows
+ok 15 - actor-key rotation cannot reopen a durable payment replay reservation or silently adopt legacy active rows
+  ---
+  duration_ms: 8.4106
+  type: 'test'
+  ...
+# Subtest: unverified legacy cut metadata cannot establish coverage, event time, or authentication; malformed metadata remains unusable
+ok 16 - unverified legacy cut metadata cannot establish coverage, event time, or authentication; malformed metadata remains unusable
+  ---
+  duration_ms: 5.047232
+  type: 'test'
+  ...
+# Subtest: existing MPP challenge-key rotation refuses old challenges before the synthetic facilitator and accepts fresh ones
+ok 17 - existing MPP challenge-key rotation refuses old challenges before the synthetic facilitator and accepts fresh ones
+  ---
+  duration_ms: 20.918592
+  type: 'test'
+  ...
+# Subtest: ordinary x402 payment without a resource url executes once and replays on the same tool
+ok 18 - ordinary x402 payment without a resource url executes once and replays on the same tool
+  ---
+  duration_ms: 27.196086
+  type: 'test'
+  ...
+# Subtest: native reservation pins its original credential and operation across process restart
+ok 19 - native reservation pins its original credential and operation across process restart
+  ---
+  duration_ms: 17.6944
+  type: 'test'
+  ...
+# Subtest: native completed output survives failed persistence in its execution and can save without re-execution
+ok 20 - native completed output survives failed persistence in its execution and can save without re-execution
+  ---
+  duration_ms: 10.762331
+  type: 'test'
+  ...
+# Subtest: native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+ok 21 - native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+  ---
+  duration_ms: 16.016951
+  type: 'test'
+  ...
+# Subtest: native unpaid terminal refusal keeps its useful result without inventing settlement
+ok 22 - native unpaid terminal refusal keeps its useful result without inventing settlement
+  ---
+  duration_ms: 7.917488
+  type: 'test'
+  ...
+# Subtest: concurrent native continuation never starts a second execution while the first runs
+ok 23 - concurrent native continuation never starts a second execution while the first runs
+  ---
+  duration_ms: 11.238837
+  type: 'test'
+  ...
+# Subtest: persistent identity and capacity preserve pending claims, corrupt state fails closed
+ok 24 - persistent identity and capacity preserve pending claims, corrupt state fails closed
+  ---
+  duration_ms: 6.868376
+  type: 'test'
+  ...
+# Subtest: canonical replay URL binds sorted query keys and values
+ok 25 - canonical replay URL binds sorted query keys and values
+  ---
+  duration_ms: 5.634136
+  type: 'test'
+  ...
+# Subtest: payment decoder requires a complete x402 v2 exact payment binding
+ok 26 - payment decoder requires a complete x402 v2 exact payment binding
+  ---
+  duration_ms: 0.348236
+  type: 'test'
+  ...
+# Subtest: same payment ID and canonical request replays without a second handler run
+ok 27 - same payment ID and canonical request replays without a second handler run
+  ---
+  duration_ms: 6.720441
+  type: 'test'
+  ...
+# Subtest: same payment ID on changed input or payer fails with uncharged 409
+ok 28 - same payment ID on changed input or payer fails with uncharged 409
+  ---
+  duration_ms: 6.844279
+  type: 'test'
+  ...
+# Subtest: cached x402 response requires the exact credential that originally settled
+ok 29 - cached x402 response requires the exact credential that originally settled
+  ---
+  duration_ms: 3.524681
+  type: 'test'
+  ...
+# Subtest: paid POST replay binds the exact request bytes and rejects body drift before the handler
+ok 30 - paid POST replay binds the exact request bytes and rejects body drift before the handler
+  ---
+  duration_ms: 5.881678
+  type: 'test'
+  ...
+# Subtest: expired records return to normal payment processing
+ok 31 - expired records return to normal payment processing
+  ---
+  duration_ms: 3.475691
+  type: 'test'
+  ...
+# Subtest: a newly settled response is durable before the network response ends
+ok 32 - a newly settled response is durable before the network response ends
+  ---
+  duration_ms: 5.658496
+  type: 'test'
+  ...
+# Subtest: in-flight claim prevents a twin POST from running a second handler
+ok 33 - in-flight claim prevents a twin POST from running a second handler
+  ---
+  duration_ms: 212.22628
+  type: 'test'
+  ...
+# Subtest: required replay paths classify missing identifier separately from unbounded validity
+ok 34 - required replay paths classify missing identifier separately from unbounded validity
+  ---
+  duration_ms: 1.355093
+  type: 'test'
+  ...
+# Subtest: oversized completed MCP output is unrecoverable and is not executed again
+ok 35 - oversized completed MCP output is unrecoverable and is not executed again
+  ---
+  duration_ms: 17.071662
+  type: 'test'
+  ...
+# Subtest: retryable MCP persistence stays bounded by expiry and entry pressure without a second settlement
+ok 36 - retryable MCP persistence stays bounded by expiry and entry pressure without a second settlement
+  ---
+  duration_ms: 20.680128
+  type: 'test'
+  ...
+# Subtest: ephemeral MCP bytes above the cap drop the older body and do not settle it again
+ok 37 - ephemeral MCP bytes above the cap drop the older body and do not settle it again
+  ---
+  duration_ms: 11.427312
+  type: 'test'
+  ...
+# unknown format "date-time" ignored in schema at path "\#/properties/paymentEvidence/properties/settlementPlane/properties/baseline/anyOf/0"
+# unknown format "date-time" ignored in schema at path "\#/properties/paymentEvidence/properties/settlementPlane/properties/baseline/anyOf/0"
+# Subtest: live free surfaces keep canonical paid routes and kill Circle as a 23rd action
+ok 38 - live free surfaces keep canonical paid routes and kill Circle as a 23rd action
+  ---
+  duration_ms: 1899.553575
+  type: 'test'
+  ...
+# Subtest: x402-only catalog actions are killed from MPP OpenAPI and kept on default OpenAPI
+ok 39 - x402-only catalog actions are killed from MPP OpenAPI and kept on default OpenAPI
+  ---
+  duration_ms: 2.538289
+  type: 'test'
+  ...
+# Subtest: kills Circle Gateway on MCP, A2A, catalog actions, and MPP OpenAPI
+ok 40 - kills Circle Gateway on MCP, A2A, catalog actions, and MPP OpenAPI
+  ---
+  duration_ms: 0.857515
+  type: 'test'
+  ...
+# Subtest: maps HTTP routes to MCP tool names and formats llms prices
+ok 41 - maps HTTP routes to MCP tool names and formats llms prices
+  ---
+  duration_ms: 0.149603
+  type: 'test'
+  ...
+# Subtest: declared caller client is absent until the served guide opts in
+ok 42 - declared caller client is absent until the served guide opts in
+  ---
+  duration_ms: 1.283681
+  type: 'test'
+  ...
+# Subtest: renders every canonical paid route plus a labeled Circle alternate
+ok 43 - renders every canonical paid route plus a labeled Circle alternate
+  ---
+  duration_ms: 0.259103
+  type: 'test'
+  ...
+# Subtest: accepts exact OpenAPI, x402, MCP, A2A, catalog, llms, and Circle alternate parity
+ok 44 - accepts exact OpenAPI, x402, MCP, A2A, catalog, llms, and Circle alternate parity
+  ---
+  duration_ms: 0.332869
+  type: 'test'
+  ...
+# Subtest: fails when llms omits a canonical paid route, matching the 2026-08-20 snapshot
+ok 45 - fails when llms omits a canonical paid route, matching the 2026-08-20 snapshot
+  ---
+  duration_ms: 0.371899
+  type: 'test'
+  ...
+# Subtest: free recover_paid_result is not a paid action and an unknown tool still drifts
+ok 46 - free recover_paid_result is not a paid action and an unknown tool still drifts
+  ---
+  duration_ms: 0.539174
+  type: 'test'
+  ...
+# Subtest: fails when Circle is promoted onto a killed surface
+ok 47 - fails when Circle is promoted onto a killed surface
+  ---
+  duration_ms: 0.490129
+  type: 'test'
+  ...
+# Subtest: live MCP metadata still matches one tool per canonical route shape
+ok 48 - live MCP metadata still matches one tool per canonical route shape
+  ---
+  duration_ms: 0.367784
+  type: 'test'
+  ...
+# Subtest: maps extract/batch to extract_batch for MCP parity
+ok 49 - maps extract/batch to extract_batch for MCP parity
+  ---
+  duration_ms: 0.117956
+  type: 'test'
+  ...
+# Subtest: root JSON derives configured actions, preserving hints without mutating the human map
+ok 50 - root JSON derives configured actions, preserving hints without mutating the human map
+  ---
+  duration_ms: 0.373274
+  type: 'test'
+  ...
+# Subtest: root parity rejects any missing, stale, duplicate or wrongly priced configured operation
+ok 51 - root parity rejects any missing, stale, duplicate or wrongly priced configured operation
+  ---
+  duration_ms: 1.458563
+  type: 'test'
+  ...
+# Subtest: root builder refuses malformed or duplicate hints and does not invent free recipes
+ok 52 - root builder refuses malformed or duplicate hints and does not invent free recipes
+  ---
+  duration_ms: 0.172857
+  type: 'test'
+  ...
+# Subtest: disabled mounted channel refuses before outbound and durable attempts (no key)
+ok 53 - disabled mounted channel refuses before outbound and durable attempts (no key)
+  ---
+  duration_ms: 1911.29764
+  type: 'test'
+  ...
+# Subtest: disabled mounted channel refuses before outbound and durable attempts (key supplied)
+ok 54 - disabled mounted channel refuses before outbound and durable attempts (key supplied)
+  ---
+  duration_ms: 1792.533221
+  type: 'test'
+  ...
+# Subtest: disabled-to-enabled restart preserves state and receives the real verification/product/receipt contract
+ok 55 - disabled-to-enabled restart preserves state and receives the real verification/product/receipt contract
+  ---
+  duration_ms: 3182.188161
+  type: 'test'
+  ...
+# Subtest: normal default xpay SDK loads supported kinds without CDP auth and keeps exact mainnet requirements
+ok 56 - normal default xpay SDK loads supported kinds without CDP auth and keeps exact mainnet requirements
+  ---
+  duration_ms: 1478.846042
+  type: 'test'
+  ...
+# Subtest: malformed or unavailable authority refuses startup: {"VIBES_CODED_ENABLED":"flase"}
+ok 57 - malformed or unavailable authority refuses startup: {"VIBES_CODED_ENABLED":"flase"}
+  ---
+  duration_ms: 632.58983
+  type: 'test'
+  ...
+# Subtest: malformed or unavailable authority refuses startup: {"VIBES_CODED_ENABLED":""}
+ok 58 - malformed or unavailable authority refuses startup: {"VIBES_CODED_ENABLED":""}
+  ---
+  duration_ms: 632.032692
+  type: 'test'
+  ...
+# Subtest: malformed or unavailable authority refuses startup: {"FACILITATOR":"xpaay"}
+ok 59 - malformed or unavailable authority refuses startup: {"FACILITATOR":"xpaay"}
+  ---
+  duration_ms: 631.374276
+  type: 'test'
+  ...
+# Subtest: malformed or unavailable authority refuses startup: {"FACILITATOR":"cdp"}
+ok 60 - malformed or unavailable authority refuses startup: {"FACILITATOR":"cdp"}
+  ---
+  duration_ms: 631.934461
+  type: 'test'
+  ...
+# Subtest: valid two-receipt claim reruns only the original signed target and persists an empty private marker
+ok 61 - valid two-receipt claim reruns only the original signed target and persists an empty private marker
+  ---
+  duration_ms: 24.378137
+  type: 'test'
+  ...
+# Subtest: a referred buyer can create the next generation while the free audit strips its ancestor referral
+ok 62 - a referred buyer can create the next generation while the free audit strips its ancestor referral
+  ---
+  duration_ms: 19.623107
+  type: 'test'
+  ...
+# Subtest: accepts equal-second receipt issuance and exposes the precise ordering evidence field
+ok 63 - accepts equal-second receipt issuance and exposes the precise ordering evidence field
+  ---
+  duration_ms: 10.992691
+  type: 'test'
+  ...
+# Subtest: rejects foreign signers, same payer, same transaction, wrong referral, and missing transaction binding
+    # Subtest: foreign receipt signer
+    ok 1 - foreign receipt signer
+      ---
+      duration_ms: 5.41742
+      type: 'test'
+      ...
+    # Subtest: same payer with EVM case normalization
+    ok 2 - same payer with EVM case normalization
+      ---
+      duration_ms: 5.223539
+      type: 'test'
+      ...
+    # Subtest: same transaction with hex case normalization
+    ok 3 - same transaction with hex case normalization
+      ---
+      duration_ms: 5.802162
+      type: 'test'
+      ...
+    # Subtest: wrong downstream referral
+    ok 4 - wrong downstream referral
+      ---
+      duration_ms: 4.965226
+      type: 'test'
+      ...
+    # Subtest: missing downstream referral
+    ok 5 - missing downstream referral
+      ---
+      duration_ms: 5.445474
+      type: 'test'
+      ...
+    # Subtest: missing signed transaction
+    ok 6 - missing signed transaction
+      ---
+      duration_ms: 0.977156
+      type: 'test'
+      ...
+    1..6
+ok 64 - rejects foreign signers, same payer, same transaction, wrong referral, and missing transaction binding
+  ---
+  duration_ms: 36.937428
+  type: 'test'
+  ...
+# Subtest: rejects wrong origin, route, network, receipt order, and malformed or ambiguous signed URLs
+    # Subtest: wrong original origin
+    ok 1 - wrong original origin
+      ---
+      duration_ms: 5.566804
+      type: 'test'
+      ...
+    # Subtest: wrong original route
+    ok 2 - wrong original route
+      ---
+      duration_ms: 4.646222
+      type: 'test'
+      ...
+    # Subtest: wrong downstream origin
+    ok 3 - wrong downstream origin
+      ---
+      duration_ms: 4.568401
+      type: 'test'
+      ...
+    # Subtest: wrong downstream route
+    ok 4 - wrong downstream route
+      ---
+      duration_ms: 4.580186
+      type: 'test'
+      ...
+    # Subtest: wrong network
+    ok 5 - wrong network
+      ---
+      duration_ms: 4.366083
+      type: 'test'
+      ...
+    # Subtest: network mismatch
+    ok 6 - network mismatch
+      ---
+      duration_ms: 4.146477
+      type: 'test'
+      ...
+    # Subtest: earlier downstream timestamp
+    ok 7 - earlier downstream timestamp
+      ---
+      duration_ms: 4.98479
+      type: 'test'
+      ...
+    # Subtest: malformed percent escape
+    ok 8 - malformed percent escape
+      ---
+      duration_ms: 4.052452
+      type: 'test'
+      ...
+    # Subtest: ambiguous original query
+    ok 9 - ambiguous original query
+      ---
+      duration_ms: 4.04818
+      type: 'test'
+      ...
+    # Subtest: empty original referral
+    ok 10 - empty original referral
+      ---
+      duration_ms: 4.387553
+      type: 'test'
+      ...
+    # Subtest: fragment
+    ok 11 - fragment
+      ---
+      duration_ms: 4.372624
+      type: 'test'
+      ...
+    # Subtest: ambiguous downstream referral
+    ok 12 - ambiguous downstream referral
+      ---
+      duration_ms: 4.754591
+      type: 'test'
+      ...
+    1..12
+ok 65 - rejects wrong origin, route, network, receipt order, and malformed or ambiguous signed URLs
+  ---
+  duration_ms: 69.391517
+  type: 'test'
+  ...
+# Subtest: invalid publicUrl configurations fail as server errors before signed URL parsing
+    # Subtest: missing
+    ok 1 - missing
+      ---
+      duration_ms: 0.81414
+      type: 'test'
+      ...
+    # Subtest: malformed
+    ok 2 - malformed
+      ---
+      duration_ms: 0.425194
+      type: 'test'
+      ...
+    # Subtest: non-HTTPS
+    ok 3 - non-HTTPS
+      ---
+      duration_ms: 0.504734
+      type: 'test'
+      ...
+    # Subtest: credential-bearing
+    ok 4 - credential-bearing
+      ---
+      duration_ms: 0.79228
+      type: 'test'
+      ...
+    # Subtest: query-bearing
+    ok 5 - query-bearing
+      ---
+      duration_ms: 0.411108
+      type: 'test'
+      ...
+    # Subtest: fragment-bearing
+    ok 6 - fragment-bearing
+      ---
+      duration_ms: 0.390359
+      type: 'test'
+      ...
+    # Subtest: non-origin path
+    ok 7 - non-origin path
+      ---
+      duration_ms: 2.054199
+      type: 'test'
+      ...
+    1..7
+ok 66 - invalid publicUrl configurations fail as server errors before signed URL parsing
+  ---
+  duration_ms: 7.201982
+  type: 'test'
+  ...
+# Subtest: rejects unknown body fields and unsupported receipt modes
+ok 67 - rejects unknown body fields and unsupported receipt modes
+  ---
+  duration_ms: 2.18293
+  type: 'test'
+  ...
+# Subtest: sequential and concurrent duplicate claims have exactly one successful winner
+    # Subtest: sequential
+    ok 1 - sequential
+      ---
+      duration_ms: 7.002022
+      type: 'test'
+      ...
+    # Subtest: concurrent
+    ok 2 - concurrent
+      ---
+      duration_ms: 9.638868
+      type: 'test'
+      ...
+    1..2
+ok 68 - sequential and concurrent duplicate claims have exactly one successful winner
+  ---
+  duration_ms: 16.972256
+  type: 'test'
+  ...
+# Subtest: execution failure occurs before the documented claim consumption point
+ok 69 - execution failure occurs before the documented claim consumption point
+  ---
+  duration_ms: 6.03204
+  type: 'test'
+  ...
+# Subtest: telemetry excludes the free claim route from paid demand, settlement, and revenue evidence
+ok 70 - telemetry excludes the free claim route from paid demand, settlement, and revenue evidence
+  ---
+  duration_ms: 7.045202
+  type: 'test'
+  ...
+# Subtest: HTTP and machine surfaces expose the POST as free and non-paywalled
+ok 71 - HTTP and machine surfaces expose the POST as free and non-paywalled
+  ---
+  duration_ms: 1481.937894
+  type: 'test'
+  ...
+# Subtest: caches a valid referral until its renewal window
+ok 72 - caches a valid referral until its renewal window
+  ---
+  duration_ms: 30.443994
+  type: 'test'
+  ...
+# Subtest: refreshes a referral inside the renewal window
+ok 73 - refreshes a referral inside the renewal window
+  ---
+  duration_ms: 0.703407
+  type: 'test'
+  ...
+# Subtest: rejects an unexpected redirect host
+ok 74 - rejects an unexpected redirect host
+  ---
+  duration_ms: 0.581704
+  type: 'test'
+  ...
+# Subtest: keeps caches isolated across separate offer resolvers
+ok 75 - keeps caches isolated across separate offer resolvers
+  ---
+  duration_ms: 1.347233
+  type: 'test'
+  ...
+# Subtest: existing x402 unknown settlement is durable across retry and restart
+ok 76 - existing x402 unknown settlement is durable across retry and restart
+  ---
+  duration_ms: 3052.243556
+  type: 'test'
+  ...
+# Subtest: existing x402 successful response replays after restart without settlement
+ok 77 - existing x402 successful response replays after restart without settlement
+  ---
+  duration_ms: 3083.338108
+  type: 'test'
+  ...
+# Subtest: existing x402 definite verification rejection permits a valid retry
+ok 78 - existing x402 definite verification rejection permits a valid retry
+  ---
+  duration_ms: 1786.80743
+  type: 'test'
+  ...
+# Subtest: existing mpp unknown settlement is durable across retry and restart
+ok 79 - existing mpp unknown settlement is durable across retry and restart
+  ---
+  duration_ms: 3138.451963
+  type: 'test'
+  ...
+# Subtest: existing mpp successful response replays after restart without settlement
+ok 80 - existing mpp successful response replays after restart without settlement
+  ---
+  duration_ms: 3138.472787
+  type: 'test'
+  ...
+# Subtest: existing mpp definite verification rejection permits a valid retry
+ok 81 - existing mpp definite verification rejection permits a valid retry
+  ---
+  duration_ms: 1547.778594
+  type: 'test'
+  ...
+# Subtest: existing x402 without optional payment ID still works and gets restart replay
+ok 82 - existing x402 without optional payment ID still works and gets restart replay
+  ---
+  duration_ms: 3042.774032
+  type: 'test'
+  ...
+# Subtest: changing only the x402 payment identifier cannot reuse a settled authorization
+ok 83 - changing only the x402 payment identifier cannot reuse a settled authorization
+  ---
+  duration_ms: 1533.529551
+  type: 'test'
+  ...
+# Subtest: production entry reaches the listening state without a startup exception
+ok 84 - production entry reaches the listening state without a startup exception
+  ---
+  duration_ms: 1449.729955
+  type: 'test'
+  ...
+# Subtest: invalid x402 builder code fails closed before listening
+ok 85 - invalid x402 builder code fails closed before listening
+  ---
+  duration_ms: 628.130179
+  type: 'test'
+  ...
+# Subtest: disabled channel refuses even malformed direct calls before every verification, product and receipt seam
+ok 86 - disabled channel refuses even malformed direct calls before every verification, product and receipt seam
+  ---
+  duration_ms: 1.664326
+  type: 'test'
+  ...
+# Subtest: channel configuration accepts explicit decisions and refuses malformed disable requests
+ok 87 - channel configuration accepts explicit decisions and refuses malformed disable requests
+  ---
+  duration_ms: 0.418139
+  type: 'test'
+  ...
+# Subtest: rejects missing ticket before product or network use
+ok 88 - rejects missing ticket before product or network use
+  ---
+  duration_ms: 0.244423
+  type: 'test'
+  ...
+# Subtest: settles a failed receipt when a paid ticket carries malformed input
+ok 89 - settles a failed receipt when a paid ticket carries malformed input
+  ---
+  duration_ms: 27.59612
+  type: 'test'
+  ...
+# Subtest: verifies request binding, delivers product, and confirms receipt
+ok 90 - verifies request binding, delivers product, and confirms receipt
+  ---
+  duration_ms: 0.828955
+  type: 'test'
+  ...
+# Subtest: replays the same ticket and body without another network or product call
+ok 91 - replays the same ticket and body without another network or product call
+  ---
+  duration_ms: 0.771066
+  type: 'test'
+  ...
+# Subtest: fails closed on wrong slug, amount, or body hash
+ok 92 - fails closed on wrong slug, amount, or body hash
+  ---
+  duration_ms: 1.908642
+  type: 'test'
+  ...
+1..92
+# tests 119
+# suites 0
+# pass 119
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 52293.361939

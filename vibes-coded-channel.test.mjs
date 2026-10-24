@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
-import { createVibesChannel } from "./vibes-coded-channel.mjs";
+import { createVibesChannel, isVibesCodedEnabled } from "./vibes-coded-channel.mjs";
 
 function json(payload, status = 200) {
   return new Response(JSON.stringify(payload), { status, headers: { "content-type": "application/json" } });
@@ -11,6 +11,35 @@ const ticket = "header.payload.signature";
 const body = { origin: "https://example.com", intent: "extract public website metadata", route: "/extract" };
 const rawBody = Buffer.from(JSON.stringify(body));
 const requestHash = createHash("sha256").update(rawBody).digest("hex");
+
+test("disabled channel refuses even malformed direct calls before every verification, product and receipt seam", async () => {
+  for (const apiKey of ["", "synthetic-unused-key"]) {
+    const calls = [];
+    const channel = createVibesChannel({ enabled: false, apiKey,
+      now: () => { calls.push("cache-prune"); },
+      validateInput: () => { calls.push("validate"); },
+      product: async () => { calls.push("product/durable-write"); },
+      fetchImpl: async url => { calls.push(String(url)); throw Error("must not send verify or failed receipt"); },
+    });
+    for (const request of [undefined, null, {}, { ticket, rawBody, body },
+      { ticket, body: {} }, { ticket: "bad" },
+      { get ticket() { throw Error("disabled must not inspect the request"); } }]) {
+      assert.deepEqual(await channel.execute(request), { status: 503,
+        body: { ok: false, error: "vibes_channel_disabled", charged: false } });
+    }
+    assert.deepEqual(calls, []);
+  }
+});
+
+test("channel configuration accepts explicit decisions and refuses malformed disable requests", () => {
+  assert.equal(isVibesCodedEnabled({}), true);
+  for (const raw of ["true", "1", " TRUE "]) assert.equal(isVibesCodedEnabled({ VIBES_CODED_ENABLED: raw }), true);
+  for (const raw of ["false", "0", " FALSE "]) assert.equal(isVibesCodedEnabled({ VIBES_CODED_ENABLED: raw }), false);
+  for (const raw of ["", "flase", "disabled", "off", "yes", null, false, 0]) {
+    assert.throws(() => isVibesCodedEnabled({ VIBES_CODED_ENABLED: raw }), /VIBES_CODED_ENABLED must be/);
+  }
+  assert.throws(() => createVibesChannel({ enabled: "false", product: () => {} }), /enabled must be boolean/);
+});
 
 test("rejects missing ticket before product or network use", async () => {
   let calls = 0;
