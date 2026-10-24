@@ -4,6 +4,7 @@ import { constants, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chmod, mkdir, open, readFile, rename } from "node:fs/promises";
 import path from "node:path";
 import { Credential } from "mppx";
+import { SettleError } from "@x402/core/types";
 import { MCP_CONTINUATION_OPERATION_MAX_BYTES } from "./mcp-json-rpc-limit.mjs";
 
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
@@ -28,12 +29,42 @@ export function trackReplaySettlementAttempts(client) {
   return new Proxy(client, {
     get(target, key) {
       if (key === "settle") return async (...args) => {
-        await settlementContext.getStore()?.();
-        return target.settle(...args);
+        const execution = settlementContext.getStore();
+        await execution?.();
+        try {
+          const result = await target.settle(...args);
+          await execution?.settlementReply?.(result?.success === true ? "success" : "non_success", result).catch(() => {});
+          return result;
+        } catch (error) {
+          await execution?.settlementReply?.(error instanceof SettleError ? "non_success" : "unavailable", error).catch(() => {});
+          throw error;
+        }
       };
       const value = Reflect.get(target, key, target);
       return typeof value === "function" ? value.bind(target) : value;
     },
+  });
+}
+
+// The installed Express SDK supplies its buffered body at this supported hook,
+// before it can discard it on settlement failure. Never turn that preparation
+// into payment proof or recover a failed SDK settlement as success.
+export function registerReplayHttpLifecycle(resourceServer) {
+  resourceServer.onBeforeVerify(async () => {
+    await settlementContext.getStore()?.httpStage?.("verification_started").catch(() => {});
+  });
+  resourceServer.onAfterVerify(async ({ result }) => {
+    await settlementContext.getStore()?.httpStage?.(result.isValid ? "verification_accepted" : "verification_refused").catch(() => {});
+  });
+  resourceServer.onBeforeSettle(async ({ transportContext }) => {
+    const execution = settlementContext.getStore();
+    if (!execution?.prepareHttp) return;
+    try { await execution.prepareHttp(transportContext); }
+    catch {
+      // SDK hook exceptions are observational; its explicit abort result is the
+      // supported fail-closed control. The dispatch marker checks this too.
+      return { abort: true, reason: "prepared_result_retention_unavailable" };
+    }
   });
 }
 
@@ -321,7 +352,9 @@ export function createIdempotencyReplay({
       if (existing.fingerprint !== binding.fingerprint) {
         return { records, result: { kind: "conflict" } };
       }
-      if (existing.pending) return { records, result: { kind: "pending" } };
+      // Internal recovery readback only. HTTP/MCP consumers still return their
+      // unknown-outcome refusal; prepared bytes are never a replay hit.
+      if (existing.pending) return { records, result: { kind: "pending", record: existing } };
       return { records, result: { kind: "hit", record: existing } };
     });
   }
@@ -398,10 +431,11 @@ export function createIdempotencyReplay({
       bodyBase64: payload.toString("base64"),
       bodySha256: createHash("sha256").update(payload).digest("hex"),
     };
-    return mutate(async (records) => ({
-      records: [record, ...records.filter((entry) => entry.key !== record.key)],
-      result: true,
-    }));
+    return mutate(async (records) => {
+      const previous = records.find(entry => entry.key === record.key && entry.fingerprint === record.fingerprint);
+      if (previous?.httpLifecycle) record.httpLifecycle = { ...previous.httpLifecycle, stage: "response_retained", at: now() };
+      return { records: [record, ...records.filter((entry) => entry.key !== record.key)], result: true };
+    });
   }
 
   function mcpScope(scope) {
@@ -786,16 +820,66 @@ export function createIdempotencyReplay({
 
     const chunks = [];
     let settlementAttempted = false;
+    let preparationRetained = false;
+    const needsPreparation = cached.reserved && decodeReplayPayment(req.headers)?.protocol === "x402";
+    const updateHttp = async (patch, prepared, required = false) => mutate(async (records) => {
+      const record = records.find(entry => entry.key === binding.key && entry.fingerprint === binding.fingerprint);
+      if (!record || required && !record.pending) {
+        if (required) throw new Error("prepared_replay_reservation_unavailable");
+        return { records, result: false };
+      }
+      return { records: records.map(entry => entry === record ? {
+        ...entry,
+        httpLifecycle: { v: 1, ...entry.httpLifecycle, ...patch, at: now() },
+        ...(prepared ? { prepared } : {}),
+      } : entry), result: true };
+    });
     const markSettlementAttempt = async () => {
       if (!cached.reserved) return;
+      if (needsPreparation && !preparationRetained) throw new Error("prepared_result_retention_unavailable");
       settlementAttempted = true;
       markSettlementAttempt.attempted = true;
-      await mutate(async (records) => ({
-        records: records.map((record) => record.key === binding.key && record.fingerprint === binding.fingerprint
-          ? { ...record, settlementAttempted: true } : record),
-        result: true,
-      }));
+      await mutate(async (records) => {
+        const record = records.find(entry => entry.key === binding.key && entry.fingerprint === binding.fingerprint && entry.pending);
+        if (!record) throw new Error("settlement_replay_reservation_unavailable");
+        return { records: records.map(entry => entry === record ? {
+          ...entry, settlementAttempted: true,
+          ...(needsPreparation ? { httpLifecycle: { ...entry.httpLifecycle, stage: "settlement_attempted", settlementReply: "unknown", at: now() } } : {}),
+        } : entry), result: true };
+      });
     };
+    if (needsPreparation) {
+      markSettlementAttempt.httpStage = stage => updateHttp({ stage });
+      markSettlementAttempt.prepareHttp = async context => {
+        const adapter = context?.request?.adapter;
+        const selected = adapter && bindingFor({ method: adapter.getMethod(), url: adapter.getUrl(), headers: req.headers, bodyBytes: req.rawBody });
+        const payload = context?.responseBody;
+        if (selected?.fingerprint !== binding.fingerprint || !Buffer.isBuffer(payload)
+          || !payload.length || payload.length > maxResponseBytes || res.statusCode < 200 || res.statusCode >= 300) {
+          throw new Error("prepared_result_not_retainable");
+        }
+        const contentType = context.responseHeaders?.["content-type"];
+        if (contentType !== undefined && (typeof contentType !== "string" || contentType.length > 256 || /[\r\n\0]/.test(contentType))) {
+          throw new Error("prepared_result_headers_invalid");
+        }
+        await updateHttp({ stage: "result_prepared" }, {
+          v: 1, qualification: "unqualified", preparedAt: now(), status: res.statusCode,
+          headers: contentType ? { "content-type": contentType } : {},
+          byteLength: payload.length, bodyBase64: payload.toString("base64"),
+          bodySha256: createHash("sha256").update(payload).digest("hex"),
+        }, true);
+        preparationRetained = true;
+      };
+      markSettlementAttempt.settlementReply = (settlementReply, reply) => updateHttp({
+        stage: "settlement_reply_observed", settlementReply,
+        // A reported reference is correlation evidence, never independent chain
+        // verification, an SDK receipt, or permission to promote preparation.
+        ...(/^0x[a-fA-F0-9]{64}$/.test(reply?.transaction || "") ? { reportedTransaction: reply.transaction } : {}),
+        ...(reply instanceof SettleError ? { replyHttpStatus: reply.statusCode } : {}),
+      });
+      res.once?.("finish", () => { void updateHttp({ transport: "finished" }).catch(() => {}); });
+      res.once?.("close", () => { if (!res.writableFinished) void updateHttp({ transport: "closed_before_finish" }).catch(() => {}); });
+    }
     let capturedBytes = 0;
     let overflow = false;
     const originalWrite = res.write.bind(res);

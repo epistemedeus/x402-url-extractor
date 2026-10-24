@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-24T10:46:33.707351+00:00",
+  "kind": "single_snapshot_not_peak",
+  "supervisorPid": 904661,
+  "aggregateRSSKiB": 321164,
+  "processes": [
+    {
+      "pid": 904661,
+      "ppid": 904598,
+      "rssKiB": 12900,
+      "command": "python3"
+    },
+    {
+      "pid": 904662,
+      "ppid": 904661,
+      "rssKiB": 53772,
+      "command": "node"
+    },
+    {
+      "pid": 904669,
+      "ppid": 904662,
+      "rssKiB": 215040,
+      "command": "codex"
+    },
+    {
+      "pid": 905279,
+      "ppid": 904669,
+      "rssKiB": 24196,
+      "command": "codex-code-mode"
+    },
+    {
+      "pid": 907035,
+      "ppid": 904669,
+      "rssKiB": 3516,
+      "command": "bash"
+    },
+    {
+      "pid": 907036,
+      "ppid": 907035,
+      "rssKiB": 11740,
+      "command": "python3"
+    }
+  ]
+}

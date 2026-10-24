@@ -213,7 +213,7 @@ import {
   listDeclaredAgentDiscoverySources,
 } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
-import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
+import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, trackReplaySettlementAttempts, registerReplayHttpLifecycle } from "./idempotency-replay.mjs";
 import { registerIndexingPayloadContinuity } from "./indexing-payload-continuity.mjs";
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
@@ -527,6 +527,7 @@ const resourceServer = new x402ResourceServer(facilitatorClient).register(
   NETWORK,
   new ExactEvmScheme()
 );
+registerReplayHttpLifecycle(resourceServer);
 resourceServer.registerExtension(paymentIdentifierResourceServerExtension);
 if (X402_BUILDER_CODE) {
   resourceServer.registerExtension(builderCodeResourceServerExtension);
