@@ -1,0 +1,92 @@
+{
+  "task": "ROOT5876",
+  "status": "completed_source_diagnosis",
+  "disposition": "source_bound_negative_diagnosis_no_runtime_patch",
+  "merchantBase": "69927a4118ba689d9367cab91e71a194215b811f",
+  "pilotOperatingCommit": "ba6cafec52ec122f3a5bed0e8ef267218fb57f8e",
+  "pilotClientCommit": "3582ba53e6d0d221cd81a44991918c10e2306e8e",
+  "branch": "codex/root5876-merchant-signed-attempt-diagnosis-20261024",
+  "originalAttemptState": "settlement_unknown",
+  "originalAttemptReplayed": false,
+  "runtimeSourceChanged": false,
+  "installedEffect": false,
+  "diagnosisTests": {
+    "exit": 0,
+    "pass": 7,
+    "fail": 0,
+    "durationMs": 31055.464436,
+    "log": "diagnosis-test.log"
+  },
+  "independentRecoveryTests": {
+    "exit": 0,
+    "pass": 120,
+    "fail": 0,
+    "durationMs": 53619.387901,
+    "log": "independent-recovery-test.log"
+  },
+  "modelChildren": 0,
+  "totalMemoryBudgetKiB": 2097152,
+  "serialTests": true,
+  "nodeHeapsMiB": {
+    "diagnosticRunner": 128,
+    "merchantChild": 384,
+    "independentRunner": 128,
+    "independentTests": 384
+  },
+  "checkpointBy": "2026-10-24T10:04:00.000Z",
+  "exportBy": "2026-10-24T10:10:00.000Z",
+  "remainingBoundary": "Live facilitator stage/result and canonical original-attempt settlement evidence are unreceived; Root owns financial receiving.",
+  "completedAt": "2026-10-24T10:08:44.457685+00:00",
+  "checkpoint": {
+    "actualAt": "2026-10-24T10:04:55Z",
+    "deadlineMet": false,
+    "lateSeconds": 55
+  },
+  "ownedDescendantCleanup": {
+    "diagnosticMerchantPids": [
+      902339,
+      902358,
+      902370,
+      902382,
+      902396,
+      902438,
+      902450
+    ],
+    "allReapedExitZero": true,
+    "allAbsentAtExport": true,
+    "temporaryDirectoriesRemoved": true,
+    "loopbackConnectionsClosed": true,
+    "serialSuiteExit": 0,
+    "sharedProcessesSignalled": false
+  },
+  "actualMemoryPeakMeasured": false,
+  "commands": [
+    {
+      "command": "NODE_OPTIONS=--max-old-space-size=384 npm ci --ignore-scripts --no-audit --no-fund",
+      "exit": null,
+      "note": "Completed; terminal exit not retained; installed versions and unchanged lock verified"
+    },
+    {
+      "command": "ROOT5876_PILOT_GIT_DIR=<native Pilot Git directory> NODE_OPTIONS=--max-old-space-size=128 node --test --test-concurrency=1 test/normal-client-timeout-diagnosis.test.mjs",
+      "exit": 0
+    },
+    {
+      "command": "NODE_OPTIONS=--max-old-space-size=128 /usr/bin/time -v node --max-old-space-size=128 test/run-independent-recovery.mjs",
+      "exit": 127
+    },
+    {
+      "command": "NODE_OPTIONS=--max-old-space-size=128 node --max-old-space-size=128 test/run-independent-recovery.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node --check test/normal-client-timeout-diagnosis.test.mjs",
+      "exit": 0
+    },
+    {
+      "command": "git diff --cached --check",
+      "exit": 0
+    }
+  ],
+  "prohibitedEffectsPerformed": false,
+  "exportWhitespaceCorrection": "First export check failed on blank-line whitespace in retained failure log; trimmed whitespace only and rechecked."
+}

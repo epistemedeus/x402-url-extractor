@@ -1,0 +1,94 @@
+{
+  "pilotCommit": "3582ba53e6d0d221cd81a44991918c10e2306e8e",
+  "merchantBase": "69927a4118ba689d9367cab91e71a194215b811f",
+  "pilotInputs": [
+    {
+      "path": "tools/payment-rail/self-test/self-settle-v2.mjs",
+      "bytes": 9543,
+      "sha256": "6c9bc72c21c6f62d61f3851cf221d12029bf4a0b4799471e5c4fe48971a9269b",
+      "blob": "2d3b84a47fdbfbc38dc712096873add57106e4c2"
+    },
+    {
+      "path": "tools/payment-rail/self-test/owner-canary-policy.mjs",
+      "bytes": 12403,
+      "sha256": "fbcf379066c10e08ff01377e503e0082ca8eea03525b690cec5b6c910d3b8490",
+      "blob": "e31d4015caaa399c3282f7d5d0fadcd94f717cea"
+    },
+    {
+      "path": "tools/payment-rail/self-test/owner-canary-attempt.mjs",
+      "bytes": 4770,
+      "sha256": "651231d31d1ee481bed05d9c5130c5d5f2a77786f878573df5c4de695f9510f6",
+      "blob": "085ef502489207e58f382f974d847e1d73abe4c5"
+    },
+    {
+      "path": "tools/payment-rail/self-test/owner-canary-proof.mjs",
+      "bytes": 5309,
+      "sha256": "bc6b4fdcdb1b7f9e13e307f65789a515481f1b15d058a07f69a37f02e3acba66",
+      "blob": "3848117910641553e8e3cb8ef166cd7a0dbe6ce0"
+    },
+    {
+      "path": "tools/payment-rail/self-test/owner-canary-transport.mjs",
+      "bytes": 2298,
+      "sha256": "7426ffe069f8304a367d119794de80dd998924947ebae19e1b793c9ce1ad5bee",
+      "blob": "71ecfe8b173d42749c316dded0fa3d5a55fa878e"
+    },
+    {
+      "path": "tools/payment-rail/self-test/package.json",
+      "bytes": 556,
+      "sha256": "1a9aba26f28e082098af839990652922ea9121c2ba64d7d9526047d3b9e9cb73",
+      "blob": "00c1fe0a51618a1b0df5b9c5999c01f6fcfe714f"
+    },
+    {
+      "path": "tools/payment-rail/self-test/package-lock.json",
+      "bytes": 281852,
+      "sha256": "a721b190c16a8a7c278dd2131a52d2191b9730577edf26b0864efef5e742265d",
+      "blob": "c95fb9a8576245a39fbf040441e78856733fa3d0"
+    }
+  ],
+  "installedInputs": [
+    {
+      "path": "package-lock.json",
+      "bytes": 123263,
+      "sha256": "212c78b62206723b04af693e8c828541953b97db92342cd8135268f854236be7"
+    },
+    {
+      "path": "node_modules/@x402/core/dist/esm/chunk-YEYZQZNL.mjs",
+      "bytes": 45252,
+      "sha256": "0185ea2da5bd5975796efd9ea74249bb3ad1aea040eddbaef493aa2e06fc32ac"
+    },
+    {
+      "path": "node_modules/@x402/core/dist/esm/server/index.mjs",
+      "bytes": 49173,
+      "sha256": "2d1c3225c7221753d1d53308e0caca915f893a16798dd8d7bcda6a21f0af629c"
+    },
+    {
+      "path": "node_modules/@x402/express/dist/esm/index.mjs",
+      "bytes": 11323,
+      "sha256": "0cc77e861d294286fbbc94f2076685a7276ca157d252618b42e72f97042ac7e5"
+    },
+    {
+      "path": "server.js",
+      "bytes": 268079,
+      "sha256": "e9acfed0d29ba27eccb0bd16dfa835957f4713ed80a2ca3a374483d4be221843"
+    },
+    {
+      "path": "idempotency-replay.mjs",
+      "bytes": 38304,
+      "sha256": "9b95652bd967990f17bbcad0c9bb6220265a61a2618dcf09b34560ea53ee4ca6"
+    },
+    {
+      "path": "commerce-events.mjs",
+      "bytes": 221325,
+      "sha256": "02bde4add6aba67c67a5747106ee8379815815239f6a246100605e72a2dec1bb"
+    },
+    {
+      "path": "extract-capture.mjs",
+      "bytes": 6384,
+      "sha256": "64c4c0422bd84cedb7168d0509b694d88ef1f8a694e7c5ecc48b18080493b0d5"
+    }
+  ],
+  "diagnosticTest": {
+    "path": "test/normal-client-timeout-diagnosis.test.mjs",
+    "sha256": "83902133960db00ec8a5460e2a87412e6e1166c2dfc0f2070c576cf29c1a70a9"
+  }
+}
