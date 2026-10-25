@@ -169,7 +169,6 @@
   ],
   "originalFailure": "Both added restart regressions failed against the original owning implementation: actual coverage prospective_process_only, expected unknown_for_full_window. Original diagnostic projections and failures are retained verbatim in original-restart-failures.tap.",
   "selfReviewAmendment": "Named the currentCapture failure classification journalStatus because the existing sticky failure state includes journal queue operations, including failed reads. No new writer or reader behavior.",
-  "otherDiagnosticFailure": "An rg probe against admissions/*.json exited 2 because admission files are in the existing nested directory; corrected the path and read the actual reservation. No test failure or admission change.",
   "fullLogsDirectory": "/home/ubuntu/root-sol-window100337/root7712-trial-measurement-continuity-20261025/outputs",
   "preservation": {
     "exactBase": "dbfd97a42e4fa629cdb028b12952075ca0573acf",
@@ -178,5 +177,9 @@
     "faviconOutputs": 2,
     "humanCollectionSha256": "32a4d1a4962941b5cabdae2c370d88c7974ad9531f7cceed6f9c41ae487ef0ce",
     "paidChallengeAndMcpTools": "Whole-output equality in extraction-trial-discovery.test.mjs."
-  }
+  },
+  "otherDiagnosticFailures": [
+    "An rg probe against admissions/*.json exited 2 because admission files are in the existing nested directory; corrected the path and read the actual reservation. No test failure or admission change.",
+    "Initial staged diff-check reported trailing whitespace on four indented blank lines in the verbatim failing Node TAP. Preserved those bytes and added a whitespace attribute for that exact evidence file only; subsequent full baseline diff-check exited 0."
+  ]
 }

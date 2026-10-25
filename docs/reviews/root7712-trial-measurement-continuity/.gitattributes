@@ -1,0 +1,2 @@
+# Preserve Node's original failing TAP bytes, including diagnostic blank lines.
+original-restart-failures.tap -whitespace
