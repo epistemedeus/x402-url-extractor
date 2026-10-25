@@ -571,7 +571,7 @@ test("mounted HTTP/MCP distinguish complete, partial, unavailable and refused in
     assert.equal(observed.populations.owner_monitor.unchanged, 1);
     assert.equal(observed.populations.crawler.unchanged, 1);
     assert.equal(observed.captureVersion, 1);
-    assert.equal(observed.coverage, "prospective_process_only");
+    assert.equal(observed.currentCapture.coverage, "prospective_process_only");
     assert.equal(observed.requestedWindowComplete, false);
   }
   assert.equal(summary.freePageChange.usefulness, "unknown");
@@ -646,7 +646,7 @@ test("mounted restart retains observations but starts fresh process coverage; di
   const unmeasured = await freeOutcomeSummary(disabled);
   for (const transport of ["http", "mcp"]) {
     assert.equal(unmeasured.freePageChange.transports[transport].captureStartedAt, null);
-    assert.equal(unmeasured.freePageChange.transports[transport].coverage, "unmeasured");
+    assert.equal(unmeasured.freePageChange.transports[transport].currentCapture.coverage, "unmeasured");
   }
   assert.equal(unmeasured.freePageChange.transports.http.byOutcome.unchanged, 1);
 });
@@ -704,7 +704,7 @@ test("canonical journal failure cannot change mounted HTTP or MCP free delivery"
   assert.equal(JSON.parse(mcp.body.result.content[0].text).charged, false);
   const summary = await freeOutcomeSummary(merchant);
   for (const transport of ["http", "mcp"]) {
-    assert.equal(summary.freePageChange.transports[transport].coverage, "unmeasured");
+    assert.equal(summary.freePageChange.transports[transport].currentCapture.coverage, "unmeasured");
     assert.equal(summary.freePageChange.transports[transport].observations, 0);
   }
 });

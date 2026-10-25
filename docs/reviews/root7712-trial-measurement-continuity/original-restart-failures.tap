@@ -1,0 +1,64 @@
+TAP version 13
+# (node:2126625) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: old journal and newly mounted trial keep retained counts separate from process capture
+not ok 1 - old journal and newly mounted trial keep retained counts separate from process capture
+  ---
+  duration_ms: 20.822246
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root7712-trial-measurement-continuity-20261025/extraction-trial-events.test.mjs:55:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'prospective_process_only'
+    - 'unknown_for_full_window'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unknown_for_full_window'
+  actual: 'prospective_process_only'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7712-trial-measurement-continuity-20261025/extraction-trial-events.test.mjs:74:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# {"schemaVersion":"samedaydesk.extraction-trial-outcomes.v1","populations":{"owner_monitor":{"admitted":1,"completed":1,"partial":0,"refused":1,"failed":0,"unknown_response":0}},"captureStartedAt":"2026-10-25T10:17:19.925Z","scope":"actual_mounted_route_all_methods_including_parser_refusals","coverage":"prospective_process_only","requestedWindowComplete":false,"retainedWindowCoverage":"unknown_for_full_window","usefulness":"unknown","independentUse":"unknown","laterPaidChoice":"unknown","policy":"Technical observations only. Admitted and terminal phases are separate counts, without caller joins. Unattributed is not independent. Owner/test and crawler populations remain separate. Capture begins at mount, never backfills or survives as a coverage claim after restart. Unknown response never authorizes automatic retry. No URL, content, arbitrary source or caller identifier is retained by this producer."}
+# (node:2126634) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: new HTTP and MCP mounts cannot relabel old journal observations as process coverage
+not ok 2 - new HTTP and MCP mounts cannot relabel old journal observations as process coverage
+  ---
+  duration_ms: 16.526458
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root7712-trial-measurement-continuity-20261025/free-page-change-outcomes.test.mjs:145:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'prospective_process_only'
+    - 'unknown_for_full_window'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unknown_for_full_window'
+  actual: 'prospective_process_only'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7712-trial-measurement-continuity-20261025/free-page-change-outcomes.test.mjs:160:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# {"schemaVersion":"samedaydesk.free-page-change-outcomes.v1","transports":{"http":{"captureVersion":1,"captureStartedAt":"2026-10-25T10:17:19.925Z","scope":"enabled_route_posts","coverage":"prospective_process_only","requestedWindowComplete":false,"retainedWindowCoverage":"unknown_for_full_window","observations":1,"byOutcome":{"changed":0,"unchanged":1,"reordered":0,"partial":0,"unavailable":0,"refused":0,"failed":0,"aborted":0},"populations":{"external":{"changed":0,"unchanged":1,"reordered":0,"partial":0,"unavailable":0,"refused":0,"failed":0,"aborted":0}}},"mcp":{"captureVersion":1,"captureStartedAt":"2026-10-25T10:17:19.925Z","scope":"parsed_page_change_tools_call","coverage":"prospective_process_only","requestedWindowComplete":false,"retainedWindowCoverage":"unknown_for_full_window","observations":1,"byOutcome":{"changed":0,"unchanged":1,"reordered":0,"partial":0,"unavailable":0,"refused":0,"failed":0,"aborted":0},"populations":{"external":{"changed":0,"unchanged":1,"reordered":0,"partial":0,"unavailable":0,"refused":0,"failed":0,"aborted":0}}}},"unknownOutcomeObservations":0,"historicalUse":"unknown","usefulness":"unknown","callerIdentity":"unknown","policy":"Retained invocation outcomes, not usefulness, independent customers or revenue. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Capture starts only on this producer's transport registration; restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only."}
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1145.160093

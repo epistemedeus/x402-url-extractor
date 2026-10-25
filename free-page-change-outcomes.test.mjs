@@ -52,7 +52,7 @@ test("canonical producer records one bounded semantic outcome per invocation, wi
   assert.equal(view.byOutcome.partial, 1);
   assert.equal(view.byOutcome.aborted, 1);
   for (const population of ["internal", "owner_monitor", "crawler"]) assert.equal(view.populations[population].unchanged, 1);
-  assert.equal(snapshot.freePageChange.transports.http.coverage, "unmeasured");
+  assert.equal(snapshot.freePageChange.transports.http.currentCapture.coverage, "unmeasured");
   assert.equal(snapshot.freePageChange.transports.http.captureStartedAt, null);
   assert.equal(snapshot.freePageChange.callerIdentity, "unknown");
   assert.equal(snapshot.byResult.paid_success || 0, 0);
@@ -125,11 +125,11 @@ test("outcomes rotate in the existing bounded journal, survive reader restart an
   const readerOnly = await restarted.snapshot({ days: 1 });
   assert.equal(readerOnly.freePageChange.transports.http.observations, snapshot.freePageChange.transports.http.observations);
   assert.equal(readerOnly.freePageChange.transports.http.captureStartedAt, null);
-  assert.equal(readerOnly.freePageChange.transports.http.coverage, "unmeasured");
+  assert.equal(readerOnly.freePageChange.transports.http.currentCapture.coverage, "unmeasured");
   restarted.freePageChangeObserver("http");
   const resumed = await restarted.snapshot({ days: 1 });
   assert.ok(resumed.freePageChange.transports.http.captureStartedAt > firstStart);
-  assert.equal(resumed.freePageChange.transports.mcp.coverage, "unmeasured");
+  assert.equal(resumed.freePageChange.transports.mcp.currentCapture.coverage, "unmeasured");
 });
 
 test("external baseline clips external free outcomes without promoting owner observations", async t => {
@@ -140,6 +140,32 @@ test("external baseline clips external free outcomes without promoting owner obs
   const snapshot = await telemetry.snapshot();
   assert.equal(snapshot.freePageChange.transports.mcp.observations, 0);
   assert.equal(snapshot.freePageChange.transports.mcp.populations.owner_monitor.unchanged, 1);
+});
+
+test("new HTTP and MCP mounts cannot relabel old journal observations as process coverage", async t => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-10-25T09:27:00.000Z") });
+  const { telemetry, dataDir } = await fixture(t);
+  for (const transport of ["http", "mcp"]) invoke(telemetry.freePageChangeObserver(transport));
+  await telemetry.flush();
+  const original = await readFile(telemetry.paths.currentPath, "utf8");
+  t.mock.timers.setTime(Date.parse("2026-10-25T10:17:19.925Z"));
+  const restarted = createCommerceTelemetry({ dataDir, secret: "fixture-secret" });
+  for (const transport of ["http", "mcp"]) restarted.freePageChangeObserver(transport);
+  const view = (await restarted.snapshot({ days: 1 })).freePageChange;
+  t.diagnostic(JSON.stringify(view));
+  for (const transport of ["http", "mcp"]) {
+    const result = view.transports[transport];
+    assert.equal(result.observations, 1);
+    assert.equal(result.byOutcome.unchanged, 1);
+    assert.equal(result.coverage, "unknown_for_full_window");
+    assert.equal(result.countScope, "retained_journal_rows_in_requested_window");
+    assert.deepEqual(result.currentCapture, {
+      startedAt: "2026-10-25T10:17:19.925Z", coverage: "prospective_process_only", journalStatus: "no_failure_observed",
+    });
+    assert.equal(result.requestedWindowComplete, false);
+  }
+  assert.equal(await readFile(telemetry.paths.currentPath, "utf8"), original);
+  assert.ok(!JSON.stringify(view).includes("2026-10-25T09:27:00.000Z"));
 });
 
 test("bounded reducer never calls incomplete artifacts, parser refusals or errors completed comparisons", () => {

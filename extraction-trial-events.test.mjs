@@ -12,10 +12,11 @@ async function fixture(t, extra = {}) {
   t.after(() => rm(dataDir, { force: true, recursive: true }));
   return { dataDir, telemetry: createCommerceTelemetry({ dataDir, secret: "fixture-aggregate-key", ...extra }) };
 }
-function invocation(observer, { closed = false, headers = {}, status = 200, outcome = "completed" } = {}) {
+function invocation(observer, { closed = false, headers = {}, status = 200, outcome = "completed", admitted = true } = {}) {
   const response = new EventEmitter(); response.statusCode = status;
   const note = observer({ method: "POST", path: "/trial/extract", headers, ip: "private-ip-marker", query: { "private-key-marker": "private-value-marker" } }, response);
-  note("admitted"); note("admitted"); note(outcome);
+  if (admitted) { note("admitted"); note("admitted"); }
+  note(outcome);
   response.emit(closed ? "close" : "finish"); response.emit("close"); response.emit("finish");
   note("failed"); // terminal observation cannot be amended later
 }
@@ -51,6 +52,36 @@ test("trial retained-event reader rejects unknown, extended and contradictory ph
   assert.doesNotMatch(JSON.stringify(snapshot.extractionTrial), /private-/);
 });
 
+test("old journal and newly mounted trial keep retained counts separate from process capture", async t => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-10-25T09:27:00.000Z") });
+  const { telemetry, dataDir } = await fixture(t);
+  const headers = { "user-agent": "SameDayDesk-owner-test" };
+  const observe = telemetry.extractionTrialObserver();
+  invocation(observe, { headers });
+  invocation(observe, { headers, admitted: false, outcome: "refused", status: 405 });
+  await telemetry.flush();
+  const original = await readFile(telemetry.paths.currentPath, "utf8");
+  t.mock.timers.setTime(Date.parse("2026-10-25T10:17:19.925Z"));
+  const restarted = createCommerceTelemetry({ dataDir, secret: "fixture-aggregate-key" });
+  restarted.extractionTrialObserver(); // Actual server always registers on mount, before any call.
+  t.mock.timers.setTime(Date.parse("2026-10-25T10:28:31.544Z"));
+  const view = (await restarted.snapshot({ days: 1 })).extractionTrial;
+  t.diagnostic(JSON.stringify(view));
+  assert.equal(view.populations.owner_monitor.admitted, 1);
+  assert.equal(view.populations.owner_monitor.completed, 1);
+  assert.equal(view.populations.owner_monitor.refused, 1);
+  assert.equal(view.captureStartedAt, "2026-10-25T10:17:19.925Z");
+  assert.equal(view.coverage, "unknown_for_full_window");
+  assert.equal(view.countScope, "retained_journal_rows_in_requested_window");
+  assert.deepEqual(view.currentCapture, {
+    startedAt: view.captureStartedAt, coverage: "prospective_process_only", journalStatus: "no_failure_observed",
+  });
+  assert.equal(view.requestedWindowComplete, false);
+  assert.equal(view.independentUse, "unknown");
+  assert.equal(await readFile(telemetry.paths.currentPath, "utf8"), original);
+  assert.ok(!JSON.stringify(view).includes("2026-10-25T09:27:00.000Z"), "retained event timestamps stay private");
+});
+
 test("trial observations use existing rotation and retained counts never backdate mounted capture after restart", async t => {
   const { telemetry, dataDir } = await fixture(t, { maxBytes: 1000, retentionSegments: 2 });
   const observe = telemetry.extractionTrialObserver();
@@ -62,7 +93,7 @@ test("trial observations use existing rotation and retained counts never backdat
   const restarted = createCommerceTelemetry({ dataDir, secret: "fixture-aggregate-key", maxBytes: 1000, retentionSegments: 2 });
   const read = await restarted.snapshot();
   assert.deepEqual(read.extractionTrial.populations, current.extractionTrial.populations);
-  assert.equal(read.extractionTrial.captureStartedAt, null); assert.equal(read.extractionTrial.coverage, "unmeasured");
+  assert.equal(read.extractionTrial.captureStartedAt, null); assert.equal(read.extractionTrial.currentCapture.coverage, "unmeasured");
   assert.equal(read.extractionTrial.requestedWindowComplete, false);
   assert.ok(Object.values(read.extractionTrial.populations.unattributed).reduce((a, b) => a + b, 0) < 16);
 });
@@ -85,5 +116,5 @@ test("trial capture failure stays unmeasured and external baseline never promote
   // failure must still prevent a positive capture-coverage claim.
   await rm(brokenDir); await mkdir(brokenDir);
   const view = (await broken.snapshot()).extractionTrial;
-  assert.equal(view.coverage, "unmeasured"); assert.equal(view.requestedWindowComplete, false);
+  assert.equal(view.currentCapture.coverage, "unmeasured"); assert.equal(view.requestedWindowComplete, false);
 });
