@@ -51,7 +51,7 @@ The two schemas and LICENSE under `fixtures/` are exact, unmodified copies:
 The adapter and tests are this repository's implementation, separate from the
 licensed specification copies. No upstream endorsement is implied. The selected
 reuse qualification is the frozen Pilot
-[AIAX source qualification](https://github.com/epistemedeus/pilot/blob/6ace69b7d1f0cabb5a3fcd4dfc261927f2045127/overview/research/phase-20261025/lax-commercial-entry/ROOT-RECEIVING.md#AIAX-source-qualification).
+[AIAX source qualification](https://github.com/epistemedeus/pilot/blob/6ace69b7d1f0cabb5a3fcd4dfc261927f2045127/overview/research/phase-20261025/lax-commercial-entry/ROOT-RECEIVING.md#aiax-source-qualification).
 
 ## Offline receiving
 
