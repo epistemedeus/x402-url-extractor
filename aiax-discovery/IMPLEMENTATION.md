@@ -2,9 +2,14 @@
 
 This optional adapter projects the existing extraction service. It adds two
 aliases for one free manifest and one free extraction section, before either
-payment rail. No shared version, human asset, OpenAPI document, payment route,
+payment rail. No shared version, human asset, payment route,
 credential policy, receipt producer or telemetry classification is changed.
-Removing `aiax-discovery/` leaves the original consumers available. A bad or
+Removing `aiax-discovery/` leaves the original consumers available.
+The manifest and section link the existing walletless extraction trial through
+`extensions.samedaydesk.extraction_trial_discovery`. Only the canonical linked
+contract supplies current availability, request and limits; static projections
+carry no remaining allowance. Standard OpenAPI, MCP service discovery, actions,
+machine guides and Agent Card carry the same link. A bad or
 oversized owning contract logs an adapter failure and leaves the service running.
 
 The server supplies `RESOURCES`, `getDiscoveryRequestContract`,
@@ -23,7 +28,7 @@ evidence, latency statistic or benchmark endpoint. Existing request telemetry
 still classifies the added paths as unmatched; it is not payment evidence.
 
 Responses are precomputed compact JSON, bounded to 1,200 bytes for the manifest
-and 8,192 bytes for the section. Default source produces 669 and 2,539 bytes.
+and 8,192 bytes for the section. Default source produces 791 and 2,630 bytes.
 Express supplies ETags, HEAD handling and conditional 304 responses; the adapter
 uses the existing `public, max-age=300` discovery cache convention and configured
 public origin. The manifest aliases have identical bodies and ETags. Section

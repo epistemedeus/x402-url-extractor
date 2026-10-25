@@ -666,6 +666,7 @@ mountScopedRepairCommerce(app, {
   dataDir: process.env.SCOPED_REPAIR_PACKET_DIR || null,
 });
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
+const extractionTrialDiscoveryUrl = `${PUBLIC_URL}${EXTRACTION_TRIAL_DISCOVERY}`;
 const idempotencyReplay = createIdempotencyReplay({
   publicUrl: PUBLIC_URL,
   requiredReplayPaths: new Set([
@@ -1425,6 +1426,7 @@ const machineActionCatalog = () => ({
     },
   ],
   discovery: {
+    extractionTrial: extractionTrialDiscoveryUrl,
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
     mppOpenapi: `${PUBLIC_URL}/mpp-openapi.json`,
@@ -1451,6 +1453,7 @@ function renderServedLlmsTxt(catalog = machineActionCatalog()) {
     buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
     purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
     freeRecipes: catalog.freeRecipes,
+    extractionTrialDiscovery: catalog.discovery.extractionTrial,
     callerResultClient: catalog.callerResultClient,
   });
 }
@@ -1458,6 +1461,7 @@ const currentAgentCard = () => buildAgentCard({
   publicUrl: PUBLIC_URL,
   serviceVersion: SERVICE_VERSION,
   actions: machineActionCatalog().actions,
+  extractionTrialDiscovery: extractionTrialDiscoveryUrl,
 });
 const constructionParityReceipt = () => {
   const catalog = machineActionCatalog();
@@ -1570,6 +1574,7 @@ app.get("/mcp", (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.json({
     name: "x402-data-gateway",
+    extractionTrial: { discovery: extractionTrialDiscoveryUrl },
     transport: "streamable-http",
     endpoint: `${PUBLIC_URL}/mcp`,
     method: "POST",
@@ -1664,7 +1669,7 @@ if (existsSync(usefulResultReuseMount)) {
 app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   const catalog = machineActionCatalog();
-  return res.type("text/markdown").send(buildSkillContract(PUBLIC_URL, catalog.actions, catalog.callerResultClient));
+  return res.type("text/markdown").send(buildSkillContract(PUBLIC_URL, catalog.actions, catalog.callerResultClient, catalog.discovery.extractionTrial));
 });
 
 app.get("/api/actions", (req, res) => {
@@ -1808,6 +1813,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     "x-service-info": {
       categories: ["agentic-payments", "machine-commerce", "data", "defi"],
       docs: {
+        extractionTrial: extractionTrialDiscoveryUrl,
         apiReference: profile === "mpp"
           ? `${PUBLIC_URL}/mpp-openapi.json`
           : `${PUBLIC_URL}/openapi.json`,
@@ -3819,6 +3825,7 @@ if (existsSync(fileURLToPath(aiaxDiscoveryModule))) {
     const { mountAiaxDiscovery } = await import(aiaxDiscoveryModule.href);
     const resource = RESOURCES.find((entry) => new URL(entry.url).pathname === "/extract");
     mountAiaxDiscovery(app, {
+      extractionTrialDiscovery: extractionTrialDiscoveryUrl,
       publicUrl: PUBLIC_URL,
       resource,
       request: getDiscoveryRequestContract("GET /extract"),

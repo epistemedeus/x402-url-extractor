@@ -12,6 +12,13 @@ import { fixture, authority, NOW, waitFor } from "./extraction-trial-test-fixtur
 const hash = text => createHash("sha256").update(text).digest("hex");
 const post = (merchant, url, extra = {}) => merchant.request(ROUTE, { method: "POST", body: { url }, ...extra });
 const status = async merchant => (await merchant.request(DISCOVERY)).json;
+async function paidDiscoveryBody(merchant) {
+  const document = (await merchant.request("/openapi.json")).json;
+  // The standard-machine amendment may add this one docs link; every existing
+  // operation and all remaining document bytes must still match the old base.
+  delete document["x-service-info"].docs.extractionTrial;
+  return JSON.stringify(document);
+}
 async function ready(merchant, availability = "enabled") { await waitFor(async () => (await status(merchant)).availability === availability, availability); }
 function unpaid(response) {
   for (const header of ["payment-required", "payment-response", "www-authenticate", "set-cookie", "x-samedaydesk-caller-result"]) assert.equal(response.headers[header], undefined, header);
@@ -55,7 +62,7 @@ test("mounted walletless trial preserves source semantics, paid boundaries and h
     baseline = await human(merchant);
     await retainEmissions("before-base-fb88d0b5", baseline);
     before = await paid(merchant);
-    paidDiscovery = (await merchant.request("/openapi.json")).text;
+    paidDiscovery = await paidDiscoveryBody(merchant);
     await merchant.stop();
     assert.equal(f.sourceCalls.length, 0);
   });
@@ -72,7 +79,7 @@ test("mounted walletless trial preserves source semantics, paid boundaries and h
     await retainEmissions("after-disabled", disabledEmissions);
     assert.deepEqual(disabledEmissions, baseline);
     assert.equal((await merchant.request("/")).json.extractionTrial.discovery, DISCOVERY);
-    assert.equal((await merchant.request("/openapi.json")).text, paidDiscovery);
+    assert.equal(await paidDiscoveryBody(merchant), paidDiscovery);
     const view = (await merchant.request("/v0/commerce-demand.json")).json.extractionTrial;
     assert.ok(view.captureStartedAt); assert.equal(view.coverage, "prospective_process_only");
     assert.equal(view.populations.unattributed.refused, 1);
@@ -201,7 +208,7 @@ test("mounted walletless trial preserves source semantics, paid boundaries and h
     assert.deepEqual(enabledEmissions, baseline, "enabled trial also preserves actual emitted human pages");
     t.diagnostic(`raw-equal emitted human pages: ${humanPaths.length}, icon redirects: 2; combined SHA256 ${hash(JSON.stringify(baseline))}`);
     assert.deepEqual(await paid(merchant), before, "paid exact challenge remains byte-equivalent after trial work");
-    assert.equal((await merchant.request("/openapi.json")).text, paidDiscovery, "existing paid discovery bytes remain exact");
+    assert.equal(await paidDiscoveryBody(merchant), paidDiscovery, "existing paid discovery bytes remain exact");
   });
   await merchant.stop();
 });

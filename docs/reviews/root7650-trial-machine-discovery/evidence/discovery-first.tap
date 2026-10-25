@@ -1,0 +1,1740 @@
+TAP version 13
+# Subtest: each machine entry discovers canonical trial request and truthful availability without work
+    # Subtest: disabled
+        # Subtest: /openapi.json
+        ok 1 - /openapi.json
+          ---
+          duration_ms: 18.856365
+          type: 'test'
+          ...
+        # Subtest: /openapi.yaml
+        ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.692362
+          type: 'test'
+          ...
+        # Subtest: /swagger.json
+        ok 3 - /swagger.json
+          ---
+          duration_ms: 5.356967
+          type: 'test'
+          ...
+        # Subtest: /mpp-openapi.json
+        ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 6.000882
+          type: 'test'
+          ...
+        # Subtest: /openapi.mpp.json
+        ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 5.837987
+          type: 'test'
+          ...
+        # Subtest: /.well-known/aiax.json
+        ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 8.933724
+          type: 'test'
+          ...
+        # Subtest: /aiax/manifest.json
+        ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 3.332158
+          type: 'test'
+          ...
+        # Subtest: /aiax/sections/extract.json
+        ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 2.267191
+          type: 'test'
+          ...
+        # Subtest: /mcp
+        ok 9 - /mcp
+          ---
+          duration_ms: 2.49881
+          type: 'test'
+          ...
+        # Subtest: /api/actions
+        ok 10 - /api/actions
+          ---
+          duration_ms: 4.846279
+          type: 'test'
+          ...
+        # Subtest: /llms.txt
+        ok 11 - /llms.txt
+          ---
+          duration_ms: 3.856434
+          type: 'test'
+          ...
+        # Subtest: /skill.md
+        ok 12 - /skill.md
+          ---
+          duration_ms: 3.885971
+          type: 'test'
+          ...
+        # Subtest: /SKILL.md
+        ok 13 - /SKILL.md
+          ---
+          duration_ms: 3.180223
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent-card.json
+        ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 3.834493
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent.json
+        ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 3.256095
+          type: 'test'
+          ...
+        # Subtest: /
+        ok 16 - /
+          ---
+          duration_ms: 5.4233
+          type: 'test'
+          ...
+        1..16
+    ok 1 - disabled
+      ---
+      duration_ms: 1593.702937
+      type: 'test'
+      ...
+    # Subtest: enabled
+        # Subtest: /openapi.json
+        not ok 1 - /openapi.json
+          ---
+          duration_ms: 22.694432
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /openapi.yaml
+        not ok 2 - /openapi.yaml
+          ---
+          duration_ms: 7.168857
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /swagger.json
+        not ok 3 - /swagger.json
+          ---
+          duration_ms: 5.534109
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /mpp-openapi.json
+        not ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 5.959799
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /openapi.mpp.json
+        not ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 6.449732
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /.well-known/aiax.json
+        not ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 3.26825
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /aiax/manifest.json
+        not ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 2.879247
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /aiax/sections/extract.json
+        not ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 3.254218
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /mcp
+        not ok 9 - /mcp
+          ---
+          duration_ms: 2.741124
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /api/actions
+        not ok 10 - /api/actions
+          ---
+          duration_ms: 5.303759
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /llms.txt
+        not ok 11 - /llms.txt
+          ---
+          duration_ms: 4.039426
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /skill.md
+        not ok 12 - /skill.md
+          ---
+          duration_ms: 4.177307
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /SKILL.md
+        not ok 13 - /SKILL.md
+          ---
+          duration_ms: 3.748055
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /.well-known/agent-card.json
+        not ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 4.036167
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /.well-known/agent.json
+        not ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 3.959326
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /
+        not ok 16 - /
+          ---
+          duration_ms: 5.737223
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        1..16
+    not ok 2 - enabled
+      ---
+      duration_ms: 1564.455091
+      type: 'test'
+      location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:87'
+      failureType: 'testCodeFailure'
+      error: "Cannot read properties of undefined (reading 'path')"
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:89:55)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: exhausted
+        # Subtest: /openapi.json
+        not ok 1 - /openapi.json
+          ---
+          duration_ms: 14.425467
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /openapi.yaml
+        not ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.758985
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /swagger.json
+        not ok 3 - /swagger.json
+          ---
+          duration_ms: 14.66559
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /mpp-openapi.json
+        not ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 5.599649
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /openapi.mpp.json
+        not ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 5.742963
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /.well-known/aiax.json
+        not ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 3.648833
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /aiax/manifest.json
+        not ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 4.010555
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /aiax/sections/extract.json
+        not ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 2.480411
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /mcp
+        not ok 9 - /mcp
+          ---
+          duration_ms: 2.71803
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /api/actions
+        not ok 10 - /api/actions
+          ---
+          duration_ms: 5.319914
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /llms.txt
+        not ok 11 - /llms.txt
+          ---
+          duration_ms: 4.226517
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /skill.md
+        not ok 12 - /skill.md
+          ---
+          duration_ms: 5.009726
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /SKILL.md
+        not ok 13 - /SKILL.md
+          ---
+          duration_ms: 4.000626
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /.well-known/agent-card.json
+        not ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 4.201507
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /.well-known/agent.json
+        not ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 4.331067
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /
+        not ok 16 - /
+          ---
+          duration_ms: 6.085053
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        1..16
+    not ok 3 - exhausted
+      ---
+      duration_ms: 1556.304212
+      type: 'test'
+      location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:87'
+      failureType: 'testCodeFailure'
+      error: "Cannot read properties of undefined (reading 'path')"
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:89:55)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: expired
+        # Subtest: /openapi.json
+        not ok 1 - /openapi.json
+          ---
+          duration_ms: 16.576734
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /openapi.yaml
+        not ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.860323
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /swagger.json
+        not ok 3 - /swagger.json
+          ---
+          duration_ms: 6.412481
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /mpp-openapi.json
+        not ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 5.616072
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /openapi.mpp.json
+        not ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 5.754615
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /.well-known/aiax.json
+        not ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 2.996049
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /aiax/manifest.json
+        not ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 2.573988
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /aiax/sections/extract.json
+        not ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 2.105692
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /mcp
+        not ok 9 - /mcp
+          ---
+          duration_ms: 2.647235
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /api/actions
+        not ok 10 - /api/actions
+          ---
+          duration_ms: 4.862846
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /llms.txt
+        not ok 11 - /llms.txt
+          ---
+          duration_ms: 4.053526
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /skill.md
+        not ok 12 - /skill.md
+          ---
+          duration_ms: 4.563104
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /SKILL.md
+        not ok 13 - /SKILL.md
+          ---
+          duration_ms: 3.931032
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /.well-known/agent-card.json
+        not ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 5.559733
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /.well-known/agent.json
+        not ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 4.10913
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: /
+        not ok 16 - /
+          ---
+          duration_ms: 5.543063
+          type: 'test'
+          location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:50'
+          failureType: 'testCodeFailure'
+          error: |-
+            Expected values to be strictly equal:
+            + actual - expected
+            
+            + 'samedaydesk.extraction-trial-budget.v1'
+            - 'samedaydesk.extraction-trial.v1'
+                                           ^
+            
+          code: 'ERR_ASSERTION'
+          name: 'AssertionError'
+          expected: 'samedaydesk.extraction-trial.v1'
+          actual: 'samedaydesk.extraction-trial-budget.v1'
+          operator: 'strictEqual'
+          stack: |-
+            TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:70:14)
+            process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:61:42)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+            async Test.run (node:internal/test_runner/test:1054:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        1..16
+    not ok 4 - expired
+      ---
+      duration_ms: 1555.143489
+      type: 'test'
+      location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:87'
+      failureType: 'testCodeFailure'
+      error: "Cannot read properties of undefined (reading 'path')"
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:89:55)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:52:79)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    1..4
+not ok 1 - each machine entry discovers canonical trial request and truthful availability without work
+  ---
+  duration_ms: 6313.570081
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root7650-trial-machine-discovery-20261025/extraction-trial-discovery.test.mjs:50:1'
+  failureType: 'subtestsFailed'
+  error: '3 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: exact admitted base preserves paid documents, challenges, MCP tools and all emitted human assets
+    # Subtest: /openapi.json
+    ok 1 - /openapi.json
+      ---
+      duration_ms: 2.259528
+      type: 'test'
+      ...
+    # Subtest: /openapi.yaml
+    ok 2 - /openapi.yaml
+      ---
+      duration_ms: 1.790926
+      type: 'test'
+      ...
+    # Subtest: /swagger.json
+    ok 3 - /swagger.json
+      ---
+      duration_ms: 1.366409
+      type: 'test'
+      ...
+    # Subtest: /mpp-openapi.json
+    ok 4 - /mpp-openapi.json
+      ---
+      duration_ms: 1.155508
+      type: 'test'
+      ...
+    # Subtest: /openapi.mpp.json
+    ok 5 - /openapi.mpp.json
+      ---
+      duration_ms: 1.186963
+      type: 'test'
+      ...
+    # Subtest: /.well-known/aiax.json
+    ok 6 - /.well-known/aiax.json
+      ---
+      duration_ms: 0.06206
+      type: 'test'
+      ...
+    # Subtest: /aiax/manifest.json
+    ok 7 - /aiax/manifest.json
+      ---
+      duration_ms: 0.037335
+      type: 'test'
+      ...
+    # Subtest: /aiax/sections/extract.json
+    ok 8 - /aiax/sections/extract.json
+      ---
+      duration_ms: 0.066376
+      type: 'test'
+      ...
+    # Subtest: /mcp
+    ok 9 - /mcp
+      ---
+      duration_ms: 0.055175
+      type: 'test'
+      ...
+    # Subtest: /api/actions
+    ok 10 - /api/actions
+      ---
+      duration_ms: 0.726542
+      type: 'test'
+      ...
+    # Subtest: /llms.txt
+    ok 11 - /llms.txt
+      ---
+      duration_ms: 0.058761
+      type: 'test'
+      ...
+    # Subtest: /skill.md
+    ok 12 - /skill.md
+      ---
+      duration_ms: 0.074264
+      type: 'test'
+      ...
+    # Subtest: /SKILL.md
+    ok 13 - /SKILL.md
+      ---
+      duration_ms: 0.038442
+      type: 'test'
+      ...
+    # Subtest: /.well-known/agent-card.json
+    ok 14 - /.well-known/agent-card.json
+      ---
+      duration_ms: 0.134173
+      type: 'test'
+      ...
+    # Subtest: /.well-known/agent.json
+    ok 15 - /.well-known/agent.json
+      ---
+      duration_ms: 0.122058
+      type: 'test'
+      ...
+    # Subtest: /
+    ok 16 - /
+      ---
+      duration_ms: 0.069579
+      type: 'test'
+      ...
+    # Subtest: challenge
+    ok 17 - challenge
+      ---
+      duration_ms: 0.032963
+      type: 'test'
+      ...
+    # Subtest: tools
+    ok 18 - tools
+      ---
+      duration_ms: 1.087118
+      type: 'test'
+      ...
+    # Subtest: human
+    ok 19 - human
+      ---
+      duration_ms: 0.084711
+      type: 'test'
+      ...
+    1..19
+ok 2 - exact admitted base preserves paid documents, challenges, MCP tools and all emitted human assets
+  ---
+  duration_ms: 3464.250006
+  type: 'test'
+  ...
+# Exact base c2aeb77a8546c1d8bb7b27473fc466b373538c72; 10 HTML routes + 2 favicon outputs raw equal; human SHA256 be45851fcd07e342408504a603dc84e124d33299c73b4e5d5f79fdb0652b874a
+1..2
+# tests 89
+# suites 0
+# pass 37
+# fail 52
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10057.185841

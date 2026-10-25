@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
 import { once } from "node:events";
 import { createServer, request as httpRequest } from "node:http";
-import { mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -82,17 +82,23 @@ function assertHeaders(headers) {
   if (Object.keys(headers).sort().join(',') !== 'accept,accept-encoding,user-agent') throw new Error('root7540_forwarded_header');
 }
 `);
-  async function start({ store, enabled = true, baseline = false } = {}) {
+  async function start({ store, enabled = true, baseline = false, sourceBase = null } = {}) {
     const data = await mkdtemp(path.join(scratch, "data-"));
     let cwd = ROOT;
-    if (baseline) {
+    if (baseline || sourceBase) {
       cwd = await mkdtemp(path.join(scratch, "base-"));
+      const files = ["server.js", "extract.mjs", "commerce-events.mjs",
+        ...(sourceBase ? ["a2a-storefront.mjs", "skill-contract.mjs", "machine-surface-parity.mjs"] : [])];
       for (const entry of await readdir(ROOT)) {
-        if ([".git", "server.js", "extract.mjs", "commerce-events.mjs"].includes(entry)) continue;
+        if ([".git", ...files, ...(sourceBase ? ["aiax-discovery"] : [])].includes(entry)) continue;
         await symlink(path.join(ROOT, entry), path.join(cwd, entry));
       }
-      for (const entry of ["server.js", "extract.mjs", "commerce-events.mjs"]) {
-        await writeFile(path.join(cwd, entry), execFileSync("git", ["show", `${BASE}:${entry}`], { cwd: ROOT }));
+      if (sourceBase) {
+        await mkdir(path.join(cwd, "aiax-discovery"));
+        files.push("aiax-discovery/projection.mjs");
+      }
+      for (const entry of files) {
+        await writeFile(path.join(cwd, entry), execFileSync("git", ["show", `${sourceBase || BASE}:${entry}`], { cwd: ROOT }));
       }
     }
     const listener = createServer();

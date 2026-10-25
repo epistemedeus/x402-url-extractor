@@ -22,7 +22,7 @@ function actionLines(actions) {
   }).join("\n");
 }
 
-export function buildSkillContract(publicUrl, actions, callerResultClient = null) {
+export function buildSkillContract(publicUrl, actions, callerResultClient = null, extractionTrialDiscovery = null) {
   const origin = new URL(publicUrl).origin;
   const actionsMarkdown = actionLines(actions);
   const callerGuide = renderCallerResultClientGuide(callerResultClient);
@@ -32,7 +32,7 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 
 ## Discover
 
-- x402 manifest: ${origin}/.well-known/x402
+${extractionTrialDiscovery ? `- Walletless extraction trial contract (current availability, request and limits): ${extractionTrialDiscovery}\n` : ""}- x402 manifest: ${origin}/.well-known/x402
 - OpenAPI: ${origin}/openapi.json
 - MPP discovery: ${origin}/mpp-openapi.json (per-operation offers)
 - Action catalog: ${origin}/api/actions
