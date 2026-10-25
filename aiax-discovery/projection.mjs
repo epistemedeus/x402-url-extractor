@@ -1,11 +1,11 @@
 // Optional read-only projection. AIAX schema attribution is in IMPLEMENTATION.md.
 // Source revision time, not a request/restart clock. ETag covers configuration.
-export const AIAX_UPDATED_AT = "2026-10-25T06:16:30Z";
+export const AIAX_UPDATED_AT = "2026-10-25T10:00:00Z";
 export const AIAX_MANIFEST_PATHS = ["/.well-known/aiax.json", "/aiax/manifest.json"];
 export const AIAX_SECTION_PATH = "/aiax/sections/extract.json";
 export const AIAX_MAX_BYTES = Object.freeze({ manifest: 1200, section: 8192 });
 
-export function buildAiaxDiscovery({ publicUrl, resource, request, output, amount, operationId, mcpToolName, captureLimits }) {
+export function buildAiaxDiscovery({ publicUrl, resource, request, output, amount, operationId, mcpToolName, captureLimits, extractionTrialDiscovery = null }) {
   const origin = new URL(publicUrl).origin;
   const target = new URL(resource.url);
   const method = request?.example?.method;
@@ -38,6 +38,7 @@ export function buildAiaxDiscovery({ publicUrl, resource, request, output, amoun
       method,
       path: target.pathname,
       capture_limits: structuredClone(captureLimits),
+      ...(extractionTrialDiscovery ? { extraction_trial_discovery: extractionTrialDiscovery } : {}),
       guidance: "Inspect sourceOk, status, error and capture for source failures and truncation. The text is an excerpt, not the full page. Runtime payment offers remain authoritative.",
     } },
   };
@@ -55,6 +56,7 @@ export function buildAiaxDiscovery({ publicUrl, resource, request, output, amoun
     updated_at: AIAX_UPDATED_AT,
     openapi_url: `${origin}/openapi.json`,
     llms_txt_url: `${origin}/llms.txt`,
+    ...(extractionTrialDiscovery ? { extensions: { samedaydesk: { extraction_trial_discovery: extractionTrialDiscovery } } } : {}),
   };
   const documents = { manifest: JSON.stringify(manifest), section: JSON.stringify(section) };
   for (const [kind, bytes] of Object.entries(documents)) {

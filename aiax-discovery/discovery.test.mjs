@@ -286,7 +286,20 @@ test("offline actual merchant AIAX projection and removal preserve owning consum
         const found = await consumers(port);
         for (const [target, response] of Object.entries(found)) {
           assert.equal(response.type, retained[target].type, target);
-          assert.equal(hash(response.body), hash(retained[target].body), `${target} raw body`);
+          let amended = retained[target].body;
+          // This admitted amendment adds only canonical trial links. Keep the
+          // historical whole-document comparison after removing those links.
+          if (baseline && !target.startsWith("HTML ") && target !== "invalid extract") {
+            if (["/llms.txt", "/skill.md"].includes(target)) {
+              amended = amended.replace(/^- Walletless extraction trial contract \(current availability, request and limits\): https:\/\/[^\n]+\n/m, "");
+            } else {
+              const value = JSON.parse(amended);
+              if (target.includes("openapi")) delete value["x-service-info"].docs.extractionTrial;
+              if (target === "/api/actions") delete value.discovery.extractionTrial;
+              amended = JSON.stringify(value);
+            }
+          }
+          assert.equal(hash(response.body), hash(amended), `${target} raw body outside admitted trial links`);
         }
       } });
     });

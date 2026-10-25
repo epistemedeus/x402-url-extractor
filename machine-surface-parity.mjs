@@ -109,6 +109,7 @@ export function renderLlmsTxt({
   purchaseEvidencePath,
   freeRecipes = [],
   callerResultClient = null,
+  extractionTrialDiscovery = null,
 } = {}) {
   if (!origin || !facilitator || !payTo) fail("origin, facilitator, and payTo are required");
   if (!Array.isArray(actions) || actions.length === 0) fail("actions are required");
@@ -150,7 +151,7 @@ ${freeSection}
 5. Runtime payment challenges are authoritative. Enforce the chosen scheme, network, amount, and recipient before signing.
 
 ## Discovery
-- x402 manifest: ${publicOrigin}/.well-known/x402
+${extractionTrialDiscovery ? `- Walletless extraction trial contract (current availability, request and limits): ${extractionTrialDiscovery}\n` : ""}- x402 manifest: ${publicOrigin}/.well-known/x402
 - OpenAPI: ${publicOrigin}/openapi.json
 - Skill contract: ${publicOrigin}/skill.md
 - Agent skills index: ${publicOrigin}/.well-known/skills/index.json

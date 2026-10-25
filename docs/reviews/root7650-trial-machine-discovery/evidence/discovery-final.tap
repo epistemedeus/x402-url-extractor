@@ -1,0 +1,563 @@
+TAP version 13
+# Subtest: each machine entry discovers canonical trial request and truthful availability without work
+    # Subtest: disabled
+        # Subtest: /openapi.json
+        ok 1 - /openapi.json
+          ---
+          duration_ms: 17.337219
+          type: 'test'
+          ...
+        # Subtest: /openapi.yaml
+        ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.997111
+          type: 'test'
+          ...
+        # Subtest: /swagger.json
+        ok 3 - /swagger.json
+          ---
+          duration_ms: 5.753344
+          type: 'test'
+          ...
+        # Subtest: /mpp-openapi.json
+        ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 5.894607
+          type: 'test'
+          ...
+        # Subtest: /openapi.mpp.json
+        ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 7.652188
+          type: 'test'
+          ...
+        # Subtest: /.well-known/aiax.json
+        ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 8.959558
+          type: 'test'
+          ...
+        # Subtest: /aiax/manifest.json
+        ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 3.493313
+          type: 'test'
+          ...
+        # Subtest: /aiax/sections/extract.json
+        ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 2.498506
+          type: 'test'
+          ...
+        # Subtest: /mcp
+        ok 9 - /mcp
+          ---
+          duration_ms: 2.284807
+          type: 'test'
+          ...
+        # Subtest: /api/actions
+        ok 10 - /api/actions
+          ---
+          duration_ms: 4.563607
+          type: 'test'
+          ...
+        # Subtest: /llms.txt
+        ok 11 - /llms.txt
+          ---
+          duration_ms: 3.758729
+          type: 'test'
+          ...
+        # Subtest: /skill.md
+        ok 12 - /skill.md
+          ---
+          duration_ms: 3.719875
+          type: 'test'
+          ...
+        # Subtest: /SKILL.md
+        ok 13 - /SKILL.md
+          ---
+          duration_ms: 3.353262
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent-card.json
+        ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 3.516552
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent.json
+        ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 3.158536
+          type: 'test'
+          ...
+        # Subtest: /
+        ok 16 - /
+          ---
+          duration_ms: 5.357379
+          type: 'test'
+          ...
+        1..16
+    ok 1 - disabled
+      ---
+      duration_ms: 1561.459368
+      type: 'test'
+      ...
+    # Subtest: enabled
+        # Subtest: /openapi.json
+        ok 1 - /openapi.json
+          ---
+          duration_ms: 23.123164
+          type: 'test'
+          ...
+        # Subtest: /openapi.yaml
+        ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.935339
+          type: 'test'
+          ...
+        # Subtest: /swagger.json
+        ok 3 - /swagger.json
+          ---
+          duration_ms: 5.400923
+          type: 'test'
+          ...
+        # Subtest: /mpp-openapi.json
+        ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 6.067439
+          type: 'test'
+          ...
+        # Subtest: /openapi.mpp.json
+        ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 7.016345
+          type: 'test'
+          ...
+        # Subtest: /.well-known/aiax.json
+        ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 2.769435
+          type: 'test'
+          ...
+        # Subtest: /aiax/manifest.json
+        ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 2.330312
+          type: 'test'
+          ...
+        # Subtest: /aiax/sections/extract.json
+        ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 1.974584
+          type: 'test'
+          ...
+        # Subtest: /mcp
+        ok 9 - /mcp
+          ---
+          duration_ms: 2.338122
+          type: 'test'
+          ...
+        # Subtest: /api/actions
+        ok 10 - /api/actions
+          ---
+          duration_ms: 5.116787
+          type: 'test'
+          ...
+        # Subtest: /llms.txt
+        ok 11 - /llms.txt
+          ---
+          duration_ms: 3.738655
+          type: 'test'
+          ...
+        # Subtest: /skill.md
+        ok 12 - /skill.md
+          ---
+          duration_ms: 4.099047
+          type: 'test'
+          ...
+        # Subtest: /SKILL.md
+        ok 13 - /SKILL.md
+          ---
+          duration_ms: 3.559853
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent-card.json
+        ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 3.666328
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent.json
+        ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 3.978308
+          type: 'test'
+          ...
+        # Subtest: /
+        ok 16 - /
+          ---
+          duration_ms: 5.518775
+          type: 'test'
+          ...
+        1..16
+    ok 2 - enabled
+      ---
+      duration_ms: 1588.520452
+      type: 'test'
+      ...
+    # Subtest: exhausted
+        # Subtest: /openapi.json
+        ok 1 - /openapi.json
+          ---
+          duration_ms: 16.603011
+          type: 'test'
+          ...
+        # Subtest: /openapi.yaml
+        ok 2 - /openapi.yaml
+          ---
+          duration_ms: 7.664963
+          type: 'test'
+          ...
+        # Subtest: /swagger.json
+        ok 3 - /swagger.json
+          ---
+          duration_ms: 7.112435
+          type: 'test'
+          ...
+        # Subtest: /mpp-openapi.json
+        ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 5.643877
+          type: 'test'
+          ...
+        # Subtest: /openapi.mpp.json
+        ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 5.772439
+          type: 'test'
+          ...
+        # Subtest: /.well-known/aiax.json
+        ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 4.203061
+          type: 'test'
+          ...
+        # Subtest: /aiax/manifest.json
+        ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 2.685158
+          type: 'test'
+          ...
+        # Subtest: /aiax/sections/extract.json
+        ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 3.326164
+          type: 'test'
+          ...
+        # Subtest: /mcp
+        ok 9 - /mcp
+          ---
+          duration_ms: 2.595306
+          type: 'test'
+          ...
+        # Subtest: /api/actions
+        ok 10 - /api/actions
+          ---
+          duration_ms: 5.230469
+          type: 'test'
+          ...
+        # Subtest: /llms.txt
+        ok 11 - /llms.txt
+          ---
+          duration_ms: 3.956855
+          type: 'test'
+          ...
+        # Subtest: /skill.md
+        ok 12 - /skill.md
+          ---
+          duration_ms: 5.202318
+          type: 'test'
+          ...
+        # Subtest: /SKILL.md
+        ok 13 - /SKILL.md
+          ---
+          duration_ms: 4.590522
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent-card.json
+        ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 3.951221
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent.json
+        ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 4.025778
+          type: 'test'
+          ...
+        # Subtest: /
+        ok 16 - /
+          ---
+          duration_ms: 5.468918
+          type: 'test'
+          ...
+        1..16
+    ok 3 - exhausted
+      ---
+      duration_ms: 1574.032859
+      type: 'test'
+      ...
+    # Subtest: expired
+        # Subtest: /openapi.json
+        ok 1 - /openapi.json
+          ---
+          duration_ms: 24.649064
+          type: 'test'
+          ...
+        # Subtest: /openapi.yaml
+        ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.026539
+          type: 'test'
+          ...
+        # Subtest: /swagger.json
+        ok 3 - /swagger.json
+          ---
+          duration_ms: 5.230107
+          type: 'test'
+          ...
+        # Subtest: /mpp-openapi.json
+        ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 5.801558
+          type: 'test'
+          ...
+        # Subtest: /openapi.mpp.json
+        ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 5.193564
+          type: 'test'
+          ...
+        # Subtest: /.well-known/aiax.json
+        ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 3.028922
+          type: 'test'
+          ...
+        # Subtest: /aiax/manifest.json
+        ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 2.485746
+          type: 'test'
+          ...
+        # Subtest: /aiax/sections/extract.json
+        ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 2.438461
+          type: 'test'
+          ...
+        # Subtest: /mcp
+        ok 9 - /mcp
+          ---
+          duration_ms: 2.6533
+          type: 'test'
+          ...
+        # Subtest: /api/actions
+        ok 10 - /api/actions
+          ---
+          duration_ms: 4.675936
+          type: 'test'
+          ...
+        # Subtest: /llms.txt
+        ok 11 - /llms.txt
+          ---
+          duration_ms: 3.676352
+          type: 'test'
+          ...
+        # Subtest: /skill.md
+        ok 12 - /skill.md
+          ---
+          duration_ms: 4.133123
+          type: 'test'
+          ...
+        # Subtest: /SKILL.md
+        ok 13 - /SKILL.md
+          ---
+          duration_ms: 3.44517
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent-card.json
+        ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 4.594792
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent.json
+        ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 3.786498
+          type: 'test'
+          ...
+        # Subtest: /
+        ok 16 - /
+          ---
+          duration_ms: 5.592284
+          type: 'test'
+          ...
+        1..16
+    ok 4 - expired
+      ---
+      duration_ms: 1606.526557
+      type: 'test'
+      ...
+    1..4
+ok 1 - each machine entry discovers canonical trial request and truthful availability without work
+  ---
+  duration_ms: 6341.770954
+  type: 'test'
+  ...
+# Subtest: exact admitted base preserves paid documents, challenges, MCP tools and all emitted human assets
+    # Subtest: official AgentCash parser /openapi.json
+    ok 1 - official AgentCash parser /openapi.json
+      ---
+      duration_ms: 12.15082
+      type: 'test'
+      ...
+    # Subtest: official AgentCash parser /mpp-openapi.json
+    ok 2 - official AgentCash parser /mpp-openapi.json
+      ---
+      duration_ms: 5.900215
+      type: 'test'
+      ...
+    # Subtest: /openapi.json
+    ok 3 - /openapi.json
+      ---
+      duration_ms: 2.451666
+      type: 'test'
+      ...
+    # Subtest: /openapi.yaml
+    ok 4 - /openapi.yaml
+      ---
+      duration_ms: 1.700733
+      type: 'test'
+      ...
+    # Subtest: /swagger.json
+    ok 5 - /swagger.json
+      ---
+      duration_ms: 1.350079
+      type: 'test'
+      ...
+    # Subtest: /mpp-openapi.json
+    ok 6 - /mpp-openapi.json
+      ---
+      duration_ms: 1.177154
+      type: 'test'
+      ...
+    # Subtest: /openapi.mpp.json
+    ok 7 - /openapi.mpp.json
+      ---
+      duration_ms: 1.100198
+      type: 'test'
+      ...
+    # Subtest: /.well-known/aiax.json
+    ok 8 - /.well-known/aiax.json
+      ---
+      duration_ms: 0.055334
+      type: 'test'
+      ...
+    # Subtest: /aiax/manifest.json
+    ok 9 - /aiax/manifest.json
+      ---
+      duration_ms: 0.036672
+      type: 'test'
+      ...
+    # Subtest: /aiax/sections/extract.json
+    ok 10 - /aiax/sections/extract.json
+      ---
+      duration_ms: 0.05888
+      type: 'test'
+      ...
+    # Subtest: /mcp
+    ok 11 - /mcp
+      ---
+      duration_ms: 0.054513
+      type: 'test'
+      ...
+    # Subtest: /api/actions
+    ok 12 - /api/actions
+      ---
+      duration_ms: 0.737472
+      type: 'test'
+      ...
+    # Subtest: /llms.txt
+    ok 13 - /llms.txt
+      ---
+      duration_ms: 0.049059
+      type: 'test'
+      ...
+    # Subtest: /skill.md
+    ok 14 - /skill.md
+      ---
+      duration_ms: 0.034653
+      type: 'test'
+      ...
+    # Subtest: /SKILL.md
+    ok 15 - /SKILL.md
+      ---
+      duration_ms: 0.032166
+      type: 'test'
+      ...
+    # Subtest: /.well-known/agent-card.json
+    ok 16 - /.well-known/agent-card.json
+      ---
+      duration_ms: 0.116689
+      type: 'test'
+      ...
+    # Subtest: /.well-known/agent.json
+    ok 17 - /.well-known/agent.json
+      ---
+      duration_ms: 0.114127
+      type: 'test'
+      ...
+    # Subtest: /
+    ok 18 - /
+      ---
+      duration_ms: 0.070844
+      type: 'test'
+      ...
+    # Subtest: challenge
+    ok 19 - challenge
+      ---
+      duration_ms: 0.031971
+      type: 'test'
+      ...
+    # Subtest: tools
+    ok 20 - tools
+      ---
+      duration_ms: 1.202781
+      type: 'test'
+      ...
+    # Subtest: human
+    ok 21 - human
+      ---
+      duration_ms: 0.076655
+      type: 'test'
+      ...
+    1..21
+ok 2 - exact admitted base preserves paid documents, challenges, MCP tools and all emitted human assets
+  ---
+  duration_ms: 3505.940434
+  type: 'test'
+  ...
+# Exact base c2aeb77a8546c1d8bb7b27473fc466b373538c72; 10 HTML routes + 2 favicon outputs raw equal; human SHA256 be45851fcd07e342408504a603dc84e124d33299c73b4e5d5f79fdb0652b874a
+1..2
+# tests 91
+# suites 0
+# pass 91
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10154.425017

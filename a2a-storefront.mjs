@@ -42,11 +42,12 @@ export function buildPaidActionSkills(actions = []) {
   });
 }
 
-export function buildAgentCard({ publicUrl, serviceVersion, actions = [] }) {
+export function buildAgentCard({ publicUrl, serviceVersion, actions = [], extractionTrialDiscovery = null }) {
   if (!serviceVersion) throw new Error("serviceVersion is required");
   return {
     name: "SameDayDesk machine commerce storefront",
-    description: "Discovers exact-price x402 data and risk actions that settle USDC on Base.",
+    description: "Discovers exact-price x402 data and risk actions that settle USDC on Base."
+      + (extractionTrialDiscovery ? ` Walletless extraction trial contract (current availability, request and limits): ${extractionTrialDiscovery}` : ""),
     supportedInterfaces: [
       {
         url: `${publicUrl}/a2a`,
