@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Godman-s/aiax/main/schemas/section.schema.json",
+  "title": "AIAX Capability Section (Tier 1)",
+  "description": "A single capability section at /aiax/sections/<section_id>.json. Target size: 200-1,000 tokens.",
+  "type": "object",
+  "required": [
+    "aiax_version",
+    "section_id",
+    "purpose",
+    "inputs",
+    "outputs",
+    "pricing",
+    "examples",
+    "pact_mandate_template"
+  ],
+  "properties": {
+    "aiax_version": {
+      "type": "string",
+      "enum": ["0.1"]
+    },
+    "section_id": {
+      "type": "string",
+      "description": "Matches the entry_points[].id in the Tier 0 manifest.",
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,60}$"
+    },
+    "purpose": {
+      "type": "string",
+      "description": "One-paragraph description of what this capability does.",
+      "maxLength": 600
+    },
+    "inputs": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Inline JSON Schema for the input.",
+          "additionalProperties": true
+        },
+        {
+          "type": "string",
+          "description": "Prose description (use only if JSON Schema is not yet authored).",
+          "maxLength": 400
+        }
+      ]
+    },
+    "outputs": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Inline JSON Schema for the output.",
+          "additionalProperties": true
+        },
+        {
+          "type": "string",
+          "maxLength": 400
+        }
+      ]
+    },
+    "pricing": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["model", "amount", "currency", "rail"],
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Pricing model: per_call, per_minute, per_token, flat, free, subscription.",
+          "enum": ["per_call", "per_minute", "per_token", "flat", "free", "subscription"]
+        },
+        "amount": {
+          "type": "string",
+          "description": "Amount as a string to preserve precision.",
+          "pattern": "^[0-9]+(\\.[0-9]+)?$"
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency code (e.g. USDC, USD, ETH, EUR).",
+          "maxLength": 10
+        },
+        "rail": {
+          "type": "string",
+          "description": "Payment rail (e.g. x402, usdc-base, stripe, lightning).",
+          "maxLength": 30
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "1-3 representative request/response examples.",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["description", "request", "response"],
+        "additionalProperties": false,
+        "properties": {
+          "description": { "type": "string", "maxLength": 200 },
+          "request": {},
+          "response": {}
+        }
+      }
+    },
+    "pact_mandate_template": {
+      "type": ["string", "null"],
+      "format": "uri",
+      "description": "URL to a PACT mandate template that pre-fills negotiation parameters for this capability."
+    },
+    "mcp_tool_name": {
+      "type": "string",
+      "description": "Name of the MCP tool that performs this capability (Tier 2 binding).",
+      "maxLength": 80
+    },
+    "openapi_operation_id": {
+      "type": "string",
+      "description": "operationId from the OpenAPI document, if this capability has a REST equivalent.",
+      "maxLength": 120
+    },
+    "latency_p50_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Measured p50 response latency in milliseconds."
+    },
+    "latency_p99_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Measured p99 response latency in milliseconds."
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

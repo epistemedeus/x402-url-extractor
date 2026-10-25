@@ -95,6 +95,8 @@ import {
   fetchFailureCode,
   EXTRACT_TEXT_EXCERPT_CHARS,
   EXTRACT_TEXT_EXCERPT_MAX_CHARS,
+  EXTRACT_MAX_BODY_BYTES,
+  EXTRACT_TIMEOUT_MS,
   parseTextExcerptLimit,
 } from "./extract-capture.mjs";
 import { parseRepo, scanRepo, scanRepoMcpOutputSchema } from "./scan.mjs";
@@ -3804,6 +3806,34 @@ const x402Paywall = paymentMiddleware(
     },
     resourceServer
   );
+
+// Optional discovery adapter: removing its directory leaves existing consumers
+// intact. Canonical contracts above also own OpenAPI and the payment metadata.
+const aiaxDiscoveryModule = new URL("./aiax-discovery/projection.mjs", import.meta.url);
+if (existsSync(fileURLToPath(aiaxDiscoveryModule))) {
+  try {
+    const { mountAiaxDiscovery } = await import(aiaxDiscoveryModule.href);
+    const resource = RESOURCES.find((entry) => new URL(entry.url).pathname === "/extract");
+    mountAiaxDiscovery(app, {
+      publicUrl: PUBLIC_URL,
+      resource,
+      request: getDiscoveryRequestContract("GET /extract"),
+      output: getDiscoveryOutputContract("GET /extract"),
+      amount: atomicUsdcToDisplay(resource.amount),
+      operationId: RESOURCE_DISCOVERY_METADATA["/extract"].operationId,
+      mcpToolName: mcpToolNameForRoute("/extract"),
+      captureLimits: {
+        timeout_ms: EXTRACT_TIMEOUT_MS,
+        max_body_bytes: EXTRACT_MAX_BODY_BYTES,
+        default_excerpt_chars: EXTRACT_TEXT_EXCERPT_CHARS,
+        max_excerpt_chars: EXTRACT_TEXT_EXCERPT_MAX_CHARS,
+        javascript_executed: false,
+      },
+    });
+  } catch (error) {
+    console.error(`AIAX discovery adapter not mounted: ${error.code || error.message}`);
+  }
+}
 
 const evidenceResources = [];
 for (const { method, path } of SERVICE_DEPLOYMENT_ROUTES) {
