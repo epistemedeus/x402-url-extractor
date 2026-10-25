@@ -52,9 +52,10 @@ import { Server } from 'node:net';
 import http from 'node:http';
 import { publicFetch } from ${JSON.stringify(new URL("./extract-batch-c1/public-fetch.mjs", import.meta.url).href)};
 const RealDate = Date;
+const fixtureNow = Number(process.env.ROOT7540_FIXTURE_NOW);
 globalThis.Date = class extends RealDate {
-  constructor(...args) { super(...(args.length ? args : [${NOW}])); }
-  static now() { return ${NOW}; }
+  constructor(...args) { super(...(args.length ? args : [fixtureNow])); }
+  static now() { return fixtureNow; }
 };
 const listen = Server.prototype.listen;
 Server.prototype.listen = function(port, ...args) { return listen.call(this, port, '127.0.0.1', ...args); };
@@ -82,8 +83,8 @@ function assertHeaders(headers) {
   if (Object.keys(headers).sort().join(',') !== 'accept,accept-encoding,user-agent') throw new Error('root7540_forwarded_header');
 }
 `);
-  async function start({ store, enabled = true, baseline = false, sourceBase = null } = {}) {
-    const data = await mkdtemp(path.join(scratch, "data-"));
+  async function start({ store, enabled = true, baseline = false, sourceBase = null, dataDir = null, now = NOW } = {}) {
+    const data = dataDir || await mkdtemp(path.join(scratch, "data-"));
     let cwd = ROOT;
     if (baseline || sourceBase) {
       cwd = await mkdtemp(path.join(scratch, "base-"));
@@ -107,6 +108,7 @@ function assertHeaders(headers) {
     const child = spawn(process.execPath, ["--import", hook, "server.js"], {
       cwd,
       env: { PATH: process.env.PATH, PORT: String(port), NODE_OPTIONS: "--max-old-space-size=512", UV_THREADPOOL_SIZE: "1", OMP_NUM_THREADS: "1",
+        ROOT7540_FIXTURE_NOW: String(now),
         COMMERCE_DATA_DIR: data, COMMERCE_INTERNAL_TOKEN: "owner-fixture-authority-".repeat(4), COMMERCE_ACTOR_SECRET: "owner-fixture-aggregate-key",
         COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000", FACILITATOR: "xpay", FACILITATOR_URL: `http://127.0.0.1:${facilitatorPort}`,
         PUBLIC_URL: "https://agents.samedaydesk.com", ...(enabled === null ? {} : { EXTRACTION_TRIAL_ENABLED: enabled ? "1" : "0" }), EXTRACTION_TRIAL_STORE: store || "", MPP_SECRET_KEY: "" },

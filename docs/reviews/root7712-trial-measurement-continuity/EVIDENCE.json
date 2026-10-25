@@ -1,0 +1,182 @@
+{
+  "schema": "root7712.trial-measurement-continuity.evidence.v1",
+  "baseline": "dbfd97a42e4fa629cdb028b12952075ca0573acf",
+  "branch": "codex/root7712-trial-measurement-continuity-20261025",
+  "native": {
+    "session": "01a172a1-de6c-7a40-89bc-b57654602f6e",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "modelChildren": 0,
+    "reservationKiB": 2097152,
+    "provenance": "Native session_meta and turn_context; existing admission RESERVATION.json."
+  },
+  "runtime": {
+    "node": "v22.23.3",
+    "NODE_OPTIONS": "--max-old-space-size=512",
+    "UV_THREADPOOL_SIZE": "1",
+    "OMP_NUM_THREADS": "1",
+    "testConcurrency": 1
+  },
+  "dependencyPreparation": {
+    "command": "npm ci --ignore-scripts --no-audit --no-fund",
+    "exit": 0,
+    "packagesAdded": 244,
+    "lockChanged": false,
+    "sha256": "f27aca8a1221472f6aeb6a91c144ccd4816c0d32b45fd9e073eb087a5f249062"
+  },
+  "runs": [
+    {
+      "log": "baseline-events.tap",
+      "command": "node --test --test-concurrency=1 extraction-trial-events.test.mjs free-page-change-outcomes.test.mjs",
+      "exit": 0,
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "sha256": "b7cd1b594e950cf2ffac860d9bf7c6cf2d65a7127b04db1c44a16d67ef11b5fb"
+    },
+    {
+      "log": "original-restart-failures.tap",
+      "command": "node --test --test-concurrency=1 --test-name-pattern='old journal|new HTTP and MCP' extraction-trial-events.test.mjs free-page-change-outcomes.test.mjs",
+      "exit": 1,
+      "tests": 2,
+      "pass": 0,
+      "fail": 2,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "sha256": "4dd4bed934564a59668d5ad18a286e4558776f4bd667d45ec7aa85e51812ce12"
+    },
+    {
+      "log": "events-first-fix.tap",
+      "command": "node --test --test-concurrency=1 extraction-trial-events.test.mjs free-page-change-outcomes.test.mjs",
+      "exit": 0,
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "sha256": "208f700e5bde5cb155dd44e19d7cf3637dcf0d1cd66733b792af93c5f9a68cec"
+    },
+    {
+      "log": "continuity-events.tap",
+      "command": "node --test --test-concurrency=1 trial-measurement-continuity.test.mjs extraction-trial-events.test.mjs free-page-change-outcomes.test.mjs",
+      "exit": 0,
+      "tests": 19,
+      "pass": 19,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "sha256": "90d190ac6b9b910e685faf6d6960c8438e3df5f3c944c8656ec200a92456b6fa"
+    },
+    {
+      "log": "focused-final.tap",
+      "command": "node --test --test-concurrency=1 trial-measurement-continuity.test.mjs extraction-trial-events.test.mjs free-page-change-outcomes.test.mjs extraction-trial.http.test.mjs extraction-trial-discovery.test.mjs page-change-http.mounted.test.mjs commerce-events.test.mjs commerce-privacy-coverage.test.mjs aiax-discovery/discovery.test.mjs",
+      "exit": 0,
+      "tests": 291,
+      "pass": 291,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "sha256": "a0cc37afa775f1bd5e716947d09516be11374bfa36aa49ea0f45d97c5bb5e9a9"
+    },
+    {
+      "log": "focused-reviewed.tap",
+      "command": "node --test --test-concurrency=1 trial-measurement-continuity.test.mjs extraction-trial-events.test.mjs free-page-change-outcomes.test.mjs extraction-trial.http.test.mjs extraction-trial-discovery.test.mjs page-change-http.mounted.test.mjs commerce-events.test.mjs commerce-privacy-coverage.test.mjs aiax-discovery/discovery.test.mjs",
+      "exit": 0,
+      "tests": 291,
+      "pass": 291,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "sha256": "ce139eff823bbe0fa78aaef899b6ac56b65bbcd2c39231e2007081a24d26f25b"
+    }
+  ],
+  "finalQualification": "focused-reviewed.tap; 291 cases including parents, not a sum of repeat runs.",
+  "frozenSources": [
+    {
+      "path": "commerce-events.mjs",
+      "blob": "6ff8e06cbb11143c6838d8f1879eeb31efe5f2e9",
+      "bytes": 226805,
+      "sha256": "388b490a09537009bb66f6cb63a2e7f93d86e6674bf9d53c2bfddd11c8630098"
+    },
+    {
+      "path": "commerce-events.test.mjs",
+      "blob": "897a31c835e2833612d172330f0efd6d6c01ecf5",
+      "bytes": 248325,
+      "sha256": "c4608223f6edc8dd28935d909c801d53d273e16950a916ad034b7287035d53d1"
+    },
+    {
+      "path": "extraction-trial-events.test.mjs",
+      "blob": "fbadd5a06108f1963dc14f6f2c647eef48658953",
+      "bytes": 5537,
+      "sha256": "8d7999769b2695875aaa749e5844be5d354cc58e54c5761cb86e5ae8b51f2458"
+    },
+    {
+      "path": "free-page-change-outcomes.test.mjs",
+      "blob": "75bbef16f2bcabf6e876d36ef7ac4494c8dc6c23",
+      "bytes": 9536,
+      "sha256": "70ca2b9d7a5111cbcf3c834ed9699bfc6966e50fd6836ee351644a5ec838122d"
+    },
+    {
+      "path": "extraction-trial-test-fixture.mjs",
+      "blob": "3a9dab7ae7436a84af1ce6ff0f7df93d5eb3c355",
+      "bytes": 10050,
+      "sha256": "abad30584aa2b16309bbfab62b2723b8d62babe6e8bec0cb43496a42d8202416"
+    },
+    {
+      "path": "extraction-trial.http.test.mjs",
+      "blob": "48c8ff728e0559bfb26296be1c059a23b7dede25",
+      "bytes": 22911,
+      "sha256": "8b2cee4bfc888bf4e43ac4f7db9f54b59eacf87f0804ee03d8e8952542332d29"
+    },
+    {
+      "path": "extraction-trial-discovery.test.mjs",
+      "blob": "654c03f05b88fc8faff04bc3f2c36e95e5d03829",
+      "bytes": 10324,
+      "sha256": "4be6f2ad626d795b87fda13a98e3bb33be4e6d06fc9291672d999a5d1410d7a4"
+    },
+    {
+      "path": "server.js",
+      "blob": "4ad922d1f51d08501b0bb5a705436487a9b2b7ea",
+      "bytes": 270316,
+      "sha256": "e77b2ee250840fbaa53fc9fc399d62915330bc9f695f91d7588f9d8e7313143c"
+    },
+    {
+      "path": "package.json",
+      "blob": "8877d8cb46515709612e9aecb15ff702302bf6b3",
+      "bytes": 11170,
+      "sha256": "37d61a7a5441945c72195823fe886516e0536216e17c8626819dea6dee4eef1f"
+    },
+    {
+      "path": "package-lock.json",
+      "blob": "001fa320adffe2dfb214e8651bcc379a2703c9b7",
+      "bytes": 123263,
+      "sha256": "212c78b62206723b04af693e8c828541953b97db92342cd8135268f854236be7"
+    },
+    {
+      "path": "LICENSE",
+      "blob": "34e784554d75f424552ad2198708c8d99c5b4b67",
+      "bytes": 1068,
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    }
+  ],
+  "originalFailure": "Both added restart regressions failed against the original owning implementation: actual coverage prospective_process_only, expected unknown_for_full_window. Original diagnostic projections and failures are retained verbatim in original-restart-failures.tap.",
+  "selfReviewAmendment": "Named the currentCapture failure classification journalStatus because the existing sticky failure state includes journal queue operations, including failed reads. No new writer or reader behavior.",
+  "otherDiagnosticFailure": "An rg probe against admissions/*.json exited 2 because admission files are in the existing nested directory; corrected the path and read the actual reservation. No test failure or admission change.",
+  "fullLogsDirectory": "/home/ubuntu/root-sol-window100337/root7712-trial-measurement-continuity-20261025/outputs",
+  "preservation": {
+    "exactBase": "dbfd97a42e4fa629cdb028b12952075ca0573acf",
+    "machineEntries": 16,
+    "humanHtmlRoutes": 10,
+    "faviconOutputs": 2,
+    "humanCollectionSha256": "32a4d1a4962941b5cabdae2c370d88c7974ad9531f7cceed6f9c41ae487ef0ce",
+    "paidChallengeAndMcpTools": "Whole-output equality in extraction-trial-discovery.test.mjs."
+  }
+}

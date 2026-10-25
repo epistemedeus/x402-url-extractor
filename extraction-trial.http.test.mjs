@@ -81,7 +81,7 @@ test("mounted walletless trial preserves source semantics, paid boundaries and h
     assert.equal((await merchant.request("/")).json.extractionTrial.discovery, DISCOVERY);
     assert.equal(await paidDiscoveryBody(merchant), paidDiscovery);
     const view = (await merchant.request("/v0/commerce-demand.json")).json.extractionTrial;
-    assert.ok(view.captureStartedAt); assert.equal(view.coverage, "prospective_process_only");
+    assert.ok(view.captureStartedAt); assert.equal(view.currentCapture.coverage, "prospective_process_only");
     assert.equal(view.populations.unattributed.refused, 1);
     await merchant.stop();
     assert.equal(f.sourceCalls.length, 0);
@@ -321,4 +321,46 @@ test("authority provisioning is finite, create-only and never repairs corrupt pe
     assert.equal((await readdir(store)).filter(name => name.startsWith("spent-")).length, 1);
     assert.equal((await readFile(path.join(store, "authority.json"), "utf8")).includes("http"), false);
   });
+});
+
+test("actual merchant restart retains old trial rows while current mount has no new extraction", { timeout: 60000 }, async t => {
+  const f = await fixture(t);
+  const store = await f.store();
+  const headers = { "user-agent": "SameDayDesk-owner-test" };
+  const first = await f.start({ store });
+  assert.equal((await post(first, f.url(), { headers })).json.sourceOk, true);
+  assert.equal((await first.request(ROUTE, { headers })).status, 405);
+  const oldRows = (await f.events(first)).filter(row => row.extractionTrialOutcome);
+  const before = (await first.request("/v0/commerce-demand.json?days=1")).json.extractionTrial;
+  await first.stop();
+  const hops = f.sourceCalls.length;
+  const second = await f.start({ store, dataDir: first.data, now: NOW + 60000 });
+  const read = (await second.request("/v0/commerce-demand.json?days=1")).json.extractionTrial;
+  assert.equal(f.sourceCalls.length, hops, "restart and projection perform no extraction");
+  assert.deepEqual(read.populations, before.populations);
+  assert.equal(read.populations.owner_monitor.admitted, 1);
+  assert.equal(read.populations.owner_monitor.completed, 1);
+  assert.equal(read.populations.owner_monitor.refused, 1);
+  assert.ok(read.captureStartedAt > oldRows.at(-1).ts);
+  assert.equal(read.coverage, "unknown_for_full_window");
+  assert.equal(read.currentCapture.coverage, "prospective_process_only");
+  assert.equal(read.currentCapture.startedAt, read.captureStartedAt);
+  assert.equal(read.retainedObservationContinuity, "unknown");
+  assert.equal(read.requestedWindowComplete, false);
+  assert.equal(read.usefulness, "unknown");
+  assert.equal(read.independentUse, "unknown");
+  assert.equal(read.laterPaidChoice, "unknown");
+  assert.deepEqual((await f.events(second)).filter(row => row.extractionTrialOutcome), oldRows);
+  assert.equal((await status(second)).started, 1);
+  // A current unattributed completion adds technical observations, never identity or a join.
+  assert.equal((await post(second, f.url())).json.sourceOk, true);
+  const current = (await second.request("/v0/commerce-demand.json?days=1")).json.extractionTrial;
+  assert.deepEqual(current.populations.owner_monitor, read.populations.owner_monitor);
+  assert.equal(current.populations.unattributed.admitted, 1);
+  assert.equal(current.populations.unattributed.completed, 1);
+  assert.equal(current.coverage, "unknown_for_full_window");
+  assert.equal(current.currentCapture.startedAt, read.captureStartedAt);
+  assert.equal((await status(second)).started, 2);
+  assert.equal(f.sourceCalls.length, hops + 1);
+  await second.stop();
 });

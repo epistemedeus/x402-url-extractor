@@ -1731,6 +1731,24 @@ function isCanonicalPaymentCrossFields(value) {
   return true;
 }
 
+// These counts come from the retained journal, not from a process-local counter.
+// Registration and a lack of observed writer failure cannot establish capture
+// continuity for that journal, even when the shared journal window is complete.
+function retainedOutcomeCoverage(captureStartedAt, writerHealthy, requestedWindowCoverage) {
+  return {
+    countScope: "retained_journal_rows_in_requested_window",
+    coverage: COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
+    requestedWindowComplete: false,
+    retainedWindowCoverage: requestedWindowCoverage,
+    retainedObservationContinuity: "unknown",
+    currentCapture: {
+      startedAt: captureStartedAt,
+      coverage: captureStartedAt && writerHealthy ? "prospective_process_only" : "unmeasured",
+      journalStatus: writerHealthy ? "no_failure_observed" : "failure_observed",
+    },
+  };
+}
+
 function summarizeFreePageChange(events, { capture, writerHealthy, requestedWindowCoverage, externalCutoffMs, generatedAtMs }) {
   events = events.filter(event => eventTimestampMs(event) <= generatedAtMs
     && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs));
@@ -1749,17 +1767,15 @@ function summarizeFreePageChange(events, { capture, writerHealthy, requestedWind
       captureVersion: capture.has(transport) ? 1 : null,
       captureStartedAt: capture.get(transport) || null,
       scope: transport === "http" ? "enabled_route_posts" : "parsed_page_change_tools_call",
-      coverage: capture.has(transport) && writerHealthy ? "prospective_process_only" : "unmeasured",
-      requestedWindowComplete: false,
-      retainedWindowCoverage: requestedWindowCoverage,
+      ...retainedOutcomeCoverage(capture.get(transport) || null, writerHealthy, requestedWindowCoverage),
       observations: external.length, byOutcome, populations,
     };
   }
   return {
-    schemaVersion: "samedaydesk.free-page-change-outcomes.v1", transports,
+    schemaVersion: "samedaydesk.free-page-change-outcomes.v2", transports,
     unknownOutcomeObservations: events.filter(event => event.route === "/recipes/page-change" && event.kind === "free" && !hasOwn(event, "pageChangeOutcome")).length,
     historicalUse: "unknown", usefulness: "unknown", callerIdentity: "unknown",
-    policy: "Retained invocation outcomes, not usefulness, independent customers or revenue. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Capture starts only on this producer's transport registration; restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only.",
+    policy: "Retained invocation outcomes, not usefulness, independent customers or revenue. Counts include eligible retained rows within the requested window and population cutoffs, which may predate captureStartedAt. Outcome continuity is unknown; retainedWindowCoverage describes the shared journal only. currentCapture describes this process's transport registration and observed journal failure, not historical uptime. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only.",
   };
 }
 
@@ -1800,12 +1816,11 @@ function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, req
     populations[label][event.extractionTrialOutcome.outcome]++;
   }
   return {
-    schemaVersion: "samedaydesk.extraction-trial-outcomes.v1", populations,
+    schemaVersion: "samedaydesk.extraction-trial-outcomes.v2", populations,
     captureStartedAt, scope: "actual_mounted_route_all_methods_including_parser_refusals",
-    coverage: captureStartedAt && writerHealthy ? "prospective_process_only" : "unmeasured",
-    requestedWindowComplete: false, retainedWindowCoverage: requestedWindowCoverage,
+    ...retainedOutcomeCoverage(captureStartedAt, writerHealthy, requestedWindowCoverage),
     usefulness: "unknown", independentUse: "unknown", laterPaidChoice: "unknown",
-    policy: "Technical observations only. Admitted and terminal phases are separate counts, without caller joins. Unattributed is not independent. Owner/test and crawler populations remain separate. Capture begins at mount, never backfills or survives as a coverage claim after restart. Unknown response never authorizes automatic retry. No URL, content, arbitrary source or caller identifier is retained by this producer.",
+    policy: "Technical observations only. Counts include eligible retained rows within the requested window and population cutoffs, which may predate captureStartedAt. Outcome continuity is unknown; retainedWindowCoverage describes the shared journal only. currentCapture describes this process's mounted capture and observed journal failure, not historical uptime. Admitted and terminal phases are separate counts, without caller joins. Unattributed is not independent. Owner/test and crawler populations remain separate. Capture begins at mount and never backfills coverage across restarts. Unknown response never authorizes automatic retry. No URL, content, arbitrary source or caller identifier is retained by this producer.",
   };
 }
 

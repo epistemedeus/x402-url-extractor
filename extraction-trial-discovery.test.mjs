@@ -129,11 +129,11 @@ function withoutLink(route, response) {
 
 test("exact admitted base preserves paid documents, challenges, MCP tools and all emitted human assets", { timeout: 60000 }, async t => {
   const f = await fixture(t);
-  async function capture(merchant) {
+  async function capture(merchant, stripLinks = true) {
     const docs = {};
     for (const [entry] of entries) {
       const response = await merchant.request(entry);
-      assert.equal(response.status, 200); docs[entry] = withoutLink(entry, response);
+      assert.equal(response.status, 200); docs[entry] = stripLinks ? withoutLink(entry, response) : response.json || response.text;
     }
     const challenge = await merchant.request("/extract?url=https%3A%2F%2Fexample.com%2F");
     assert.equal(challenge.status, 402);
@@ -151,6 +151,7 @@ test("exact admitted base preserves paid documents, challenges, MCP tools and al
   const expected = await capture(base); await base.stop();
   const amended = await f.start({ enabled: false });
   const actual = await capture(amended);
+  const fullActual = await capture(amended, false);
   for (const route of ["/openapi.json", "/mpp-openapi.json"]) await t.test(`official AgentCash parser ${route}`, async () => {
     const result = await getOpenAPI(amended.base, {}, undefined, `${amended.base}${route}`);
     assert.equal(result.isErr(), false);
@@ -159,6 +160,13 @@ test("exact admitted base preserves paid documents, challenges, MCP tools and al
     assert.ok(checkL2ForOpenAPI(result.value).routes.some(row => row.path === "/extract"));
   });
   await amended.stop();
+  const measurementBase = "dbfd97a42e4fa629cdb028b12952075ca0573acf";
+  const admitted = await f.start({ sourceBase: measurementBase, enabled: false });
+  const fullExpected = await capture(admitted, false);
+  await admitted.stop();
+  await t.test("exact measurement base preserves all sixteen full entries, paid challenge, MCP tools and human bytes", () => {
+    assert.deepEqual(fullActual, fullExpected);
+  });
   for (const [entry, value] of Object.entries(expected)) await t.test(entry, () => assert.deepEqual(actual[entry], value));
   assert.equal(Object.keys(actual.human).length, 12);
   assert.equal(f.sourceCalls.length, 0);
