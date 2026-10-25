@@ -1,0 +1,954 @@
+TAP version 13
+# Subtest: offline actual merchant AIAX projection and removal preserve owning consumers
+    # Subtest: GET aliases, HEAD and conditional cache stay free, bounded and effect-free
+    ok 1 - GET aliases, HEAD and conditional cache stay free, bounded and effect-free
+      ---
+      duration_ms: 46.17839
+      type: 'test'
+      ...
+    # Subtest: matching IDs and canonical inputs, output, price and usable request
+    ok 2 - matching IDs and canonical inputs, output, price and usable request
+      ---
+      duration_ms: 14.510981
+      type: 'test'
+      ...
+    # Subtest: malformed and unsupported sections never reach extraction or payment
+    ok 3 - malformed and unsupported sections never reach extraction or payment
+      ---
+      duration_ms: 9.765623
+      type: 'test'
+      ...
+    # Subtest: exact schemas reject missing fields and wrong types
+    ok 4 - exact schemas reject missing fields and wrong types
+      ---
+      duration_ms: 1.885389
+      type: 'test'
+      ...
+    # Subtest: canonical price override propagates without stale cache identity
+    ok 5 - canonical price override propagates without stale cache identity
+      ---
+      duration_ms: 1536.304566
+      type: 'test'
+      ...
+    # Subtest: physical adapter removal preserves existing consumers
+    ok 6 - physical adapter removal preserves existing consumers
+      ---
+      duration_ms: 1575.857629
+      type: 'test'
+      ...
+    # Subtest: exact baseline preserves machine and emitted human responses
+    ok 7 - exact baseline preserves machine and emitted human responses
+      ---
+      duration_ms: 1572.756635
+      type: 'test'
+      ...
+    1..7
+ok 1 - offline actual merchant AIAX projection and removal preserve owning consumers
+  ---
+  duration_ms: 6324.079546
+  type: 'test'
+  ...
+# actual JSON bytes: manifest=791 section=2630
+# Subtest: projection rejects unsupported owning contracts and bounds configuration
+ok 2 - projection rejects unsupported owning contracts and bounds configuration
+  ---
+  duration_ms: 1.377466
+  type: 'test'
+  ...
+# Subtest: each machine entry discovers canonical trial request and truthful availability without work
+    # Subtest: disabled
+        # Subtest: /openapi.json
+        ok 1 - /openapi.json
+          ---
+          duration_ms: 17.696044
+          type: 'test'
+          ...
+        # Subtest: /openapi.yaml
+        ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.961894
+          type: 'test'
+          ...
+        # Subtest: /swagger.json
+        ok 3 - /swagger.json
+          ---
+          duration_ms: 5.537971
+          type: 'test'
+          ...
+        # Subtest: /mpp-openapi.json
+        ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 6.104028
+          type: 'test'
+          ...
+        # Subtest: /openapi.mpp.json
+        ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 5.925966
+          type: 'test'
+          ...
+        # Subtest: /.well-known/aiax.json
+        ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 8.943331
+          type: 'test'
+          ...
+        # Subtest: /aiax/manifest.json
+        ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 3.290113
+          type: 'test'
+          ...
+        # Subtest: /aiax/sections/extract.json
+        ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 2.499478
+          type: 'test'
+          ...
+        # Subtest: /mcp
+        ok 9 - /mcp
+          ---
+          duration_ms: 2.48676
+          type: 'test'
+          ...
+        # Subtest: /api/actions
+        ok 10 - /api/actions
+          ---
+          duration_ms: 7.156547
+          type: 'test'
+          ...
+        # Subtest: /llms.txt
+        ok 11 - /llms.txt
+          ---
+          duration_ms: 3.494574
+          type: 'test'
+          ...
+        # Subtest: /skill.md
+        ok 12 - /skill.md
+          ---
+          duration_ms: 4.041297
+          type: 'test'
+          ...
+        # Subtest: /SKILL.md
+        ok 13 - /SKILL.md
+          ---
+          duration_ms: 3.74316
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent-card.json
+        ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 4.015936
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent.json
+        ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 3.574779
+          type: 'test'
+          ...
+        # Subtest: /
+        ok 16 - /
+          ---
+          duration_ms: 5.372204
+          type: 'test'
+          ...
+        1..16
+    ok 1 - disabled
+      ---
+      duration_ms: 1647.342404
+      type: 'test'
+      ...
+    # Subtest: enabled
+        # Subtest: /openapi.json
+        ok 1 - /openapi.json
+          ---
+          duration_ms: 15.754812
+          type: 'test'
+          ...
+        # Subtest: /openapi.yaml
+        ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.676508
+          type: 'test'
+          ...
+        # Subtest: /swagger.json
+        ok 3 - /swagger.json
+          ---
+          duration_ms: 5.453385
+          type: 'test'
+          ...
+        # Subtest: /mpp-openapi.json
+        ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 7.716819
+          type: 'test'
+          ...
+        # Subtest: /openapi.mpp.json
+        ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 6.177428
+          type: 'test'
+          ...
+        # Subtest: /.well-known/aiax.json
+        ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 2.987341
+          type: 'test'
+          ...
+        # Subtest: /aiax/manifest.json
+        ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 2.324003
+          type: 'test'
+          ...
+        # Subtest: /aiax/sections/extract.json
+        ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 2.91451
+          type: 'test'
+          ...
+        # Subtest: /mcp
+        ok 9 - /mcp
+          ---
+          duration_ms: 3.543253
+          type: 'test'
+          ...
+        # Subtest: /api/actions
+        ok 10 - /api/actions
+          ---
+          duration_ms: 6.706176
+          type: 'test'
+          ...
+        # Subtest: /llms.txt
+        ok 11 - /llms.txt
+          ---
+          duration_ms: 5.726071
+          type: 'test'
+          ...
+        # Subtest: /skill.md
+        ok 12 - /skill.md
+          ---
+          duration_ms: 5.185526
+          type: 'test'
+          ...
+        # Subtest: /SKILL.md
+        ok 13 - /SKILL.md
+          ---
+          duration_ms: 4.915049
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent-card.json
+        ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 5.167503
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent.json
+        ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 5.317777
+          type: 'test'
+          ...
+        # Subtest: /
+        ok 16 - /
+          ---
+          duration_ms: 7.689426
+          type: 'test'
+          ...
+        1..16
+    ok 2 - enabled
+      ---
+      duration_ms: 1650.60097
+      type: 'test'
+      ...
+    # Subtest: exhausted
+        # Subtest: /openapi.json
+        ok 1 - /openapi.json
+          ---
+          duration_ms: 14.640352
+          type: 'test'
+          ...
+        # Subtest: /openapi.yaml
+        ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.735656
+          type: 'test'
+          ...
+        # Subtest: /swagger.json
+        ok 3 - /swagger.json
+          ---
+          duration_ms: 6.201103
+          type: 'test'
+          ...
+        # Subtest: /mpp-openapi.json
+        ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 5.695771
+          type: 'test'
+          ...
+        # Subtest: /openapi.mpp.json
+        ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 5.974082
+          type: 'test'
+          ...
+        # Subtest: /.well-known/aiax.json
+        ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 3.315174
+          type: 'test'
+          ...
+        # Subtest: /aiax/manifest.json
+        ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 4.48324
+          type: 'test'
+          ...
+        # Subtest: /aiax/sections/extract.json
+        ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 13.894451
+          type: 'test'
+          ...
+        # Subtest: /mcp
+        ok 9 - /mcp
+          ---
+          duration_ms: 2.928349
+          type: 'test'
+          ...
+        # Subtest: /api/actions
+        ok 10 - /api/actions
+          ---
+          duration_ms: 5.617366
+          type: 'test'
+          ...
+        # Subtest: /llms.txt
+        ok 11 - /llms.txt
+          ---
+          duration_ms: 3.877912
+          type: 'test'
+          ...
+        # Subtest: /skill.md
+        ok 12 - /skill.md
+          ---
+          duration_ms: 4.521203
+          type: 'test'
+          ...
+        # Subtest: /SKILL.md
+        ok 13 - /SKILL.md
+          ---
+          duration_ms: 3.595363
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent-card.json
+        ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 4.016413
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent.json
+        ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 3.880288
+          type: 'test'
+          ...
+        # Subtest: /
+        ok 16 - /
+          ---
+          duration_ms: 5.565867
+          type: 'test'
+          ...
+        1..16
+    ok 3 - exhausted
+      ---
+      duration_ms: 1607.725825
+      type: 'test'
+      ...
+    # Subtest: expired
+        # Subtest: /openapi.json
+        ok 1 - /openapi.json
+          ---
+          duration_ms: 16.888794
+          type: 'test'
+          ...
+        # Subtest: /openapi.yaml
+        ok 2 - /openapi.yaml
+          ---
+          duration_ms: 6.079331
+          type: 'test'
+          ...
+        # Subtest: /swagger.json
+        ok 3 - /swagger.json
+          ---
+          duration_ms: 5.947754
+          type: 'test'
+          ...
+        # Subtest: /mpp-openapi.json
+        ok 4 - /mpp-openapi.json
+          ---
+          duration_ms: 5.221557
+          type: 'test'
+          ...
+        # Subtest: /openapi.mpp.json
+        ok 5 - /openapi.mpp.json
+          ---
+          duration_ms: 5.843106
+          type: 'test'
+          ...
+        # Subtest: /.well-known/aiax.json
+        ok 6 - /.well-known/aiax.json
+          ---
+          duration_ms: 2.675124
+          type: 'test'
+          ...
+        # Subtest: /aiax/manifest.json
+        ok 7 - /aiax/manifest.json
+          ---
+          duration_ms: 2.458637
+          type: 'test'
+          ...
+        # Subtest: /aiax/sections/extract.json
+        ok 8 - /aiax/sections/extract.json
+          ---
+          duration_ms: 1.952163
+          type: 'test'
+          ...
+        # Subtest: /mcp
+        ok 9 - /mcp
+          ---
+          duration_ms: 2.248462
+          type: 'test'
+          ...
+        # Subtest: /api/actions
+        ok 10 - /api/actions
+          ---
+          duration_ms: 4.725288
+          type: 'test'
+          ...
+        # Subtest: /llms.txt
+        ok 11 - /llms.txt
+          ---
+          duration_ms: 3.704731
+          type: 'test'
+          ...
+        # Subtest: /skill.md
+        ok 12 - /skill.md
+          ---
+          duration_ms: 3.814852
+          type: 'test'
+          ...
+        # Subtest: /SKILL.md
+        ok 13 - /SKILL.md
+          ---
+          duration_ms: 3.456141
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent-card.json
+        ok 14 - /.well-known/agent-card.json
+          ---
+          duration_ms: 3.680145
+          type: 'test'
+          ...
+        # Subtest: /.well-known/agent.json
+        ok 15 - /.well-known/agent.json
+          ---
+          duration_ms: 3.900364
+          type: 'test'
+          ...
+        # Subtest: /
+        ok 16 - /
+          ---
+          duration_ms: 6.729855
+          type: 'test'
+          ...
+        1..16
+    ok 4 - expired
+      ---
+      duration_ms: 1584.053852
+      type: 'test'
+      ...
+    1..4
+ok 3 - each machine entry discovers canonical trial request and truthful availability without work
+  ---
+  duration_ms: 6503.636517
+  type: 'test'
+  ...
+# Subtest: exact admitted base preserves paid documents, challenges, MCP tools and all emitted human assets
+    # Subtest: /openapi.json
+    ok 1 - /openapi.json
+      ---
+      duration_ms: 2.10876
+      type: 'test'
+      ...
+    # Subtest: /openapi.yaml
+    ok 2 - /openapi.yaml
+      ---
+      duration_ms: 1.777198
+      type: 'test'
+      ...
+    # Subtest: /swagger.json
+    ok 3 - /swagger.json
+      ---
+      duration_ms: 1.364189
+      type: 'test'
+      ...
+    # Subtest: /mpp-openapi.json
+    ok 4 - /mpp-openapi.json
+      ---
+      duration_ms: 1.175726
+      type: 'test'
+      ...
+    # Subtest: /openapi.mpp.json
+    ok 5 - /openapi.mpp.json
+      ---
+      duration_ms: 1.168908
+      type: 'test'
+      ...
+    # Subtest: /.well-known/aiax.json
+    ok 6 - /.well-known/aiax.json
+      ---
+      duration_ms: 0.062803
+      type: 'test'
+      ...
+    # Subtest: /aiax/manifest.json
+    ok 7 - /aiax/manifest.json
+      ---
+      duration_ms: 0.038999
+      type: 'test'
+      ...
+    # Subtest: /aiax/sections/extract.json
+    ok 8 - /aiax/sections/extract.json
+      ---
+      duration_ms: 0.058641
+      type: 'test'
+      ...
+    # Subtest: /mcp
+    ok 9 - /mcp
+      ---
+      duration_ms: 0.052467
+      type: 'test'
+      ...
+    # Subtest: /api/actions
+    ok 10 - /api/actions
+      ---
+      duration_ms: 1.046837
+      type: 'test'
+      ...
+    # Subtest: /llms.txt
+    ok 11 - /llms.txt
+      ---
+      duration_ms: 0.059055
+      type: 'test'
+      ...
+    # Subtest: /skill.md
+    ok 12 - /skill.md
+      ---
+      duration_ms: 0.038236
+      type: 'test'
+      ...
+    # Subtest: /SKILL.md
+    ok 13 - /SKILL.md
+      ---
+      duration_ms: 0.035979
+      type: 'test'
+      ...
+    # Subtest: /.well-known/agent-card.json
+    ok 14 - /.well-known/agent-card.json
+      ---
+      duration_ms: 0.116735
+      type: 'test'
+      ...
+    # Subtest: /.well-known/agent.json
+    ok 15 - /.well-known/agent.json
+      ---
+      duration_ms: 0.095768
+      type: 'test'
+      ...
+    # Subtest: /
+    ok 16 - /
+      ---
+      duration_ms: 0.072026
+      type: 'test'
+      ...
+    # Subtest: challenge
+    ok 17 - challenge
+      ---
+      duration_ms: 0.033334
+      type: 'test'
+      ...
+    # Subtest: tools
+    ok 18 - tools
+      ---
+      duration_ms: 1.049441
+      type: 'test'
+      ...
+    # Subtest: human
+    ok 19 - human
+      ---
+      duration_ms: 0.08206
+      type: 'test'
+      ...
+    1..19
+ok 4 - exact admitted base preserves paid documents, challenges, MCP tools and all emitted human assets
+  ---
+  duration_ms: 3528.47382
+  type: 'test'
+  ...
+# Exact base c2aeb77a8546c1d8bb7b27473fc466b373538c72; 10 HTML routes + 2 favicon outputs raw equal; human SHA256 be45851fcd07e342408504a603dc84e124d33299c73b4e5d5f79fdb0652b874a
+# Subtest: trial retained-event reader rejects unknown, extended and contradictory phase metadata
+ok 5 - trial retained-event reader rejects unknown, extended and contradictory phase metadata
+  ---
+  duration_ms: 16.012946
+  type: 'test'
+  ...
+# Subtest: trial observations use existing rotation and retained counts never backdate mounted capture after restart
+ok 6 - trial observations use existing rotation and retained counts never backdate mounted capture after restart
+  ---
+  duration_ms: 14.004329
+  type: 'test'
+  ...
+# Subtest: trial capture failure stays unmeasured and external baseline never promotes owner or crawler activity
+ok 7 - trial capture failure stays unmeasured and external baseline never promotes owner or crawler activity
+  ---
+  duration_ms: 9.041666
+  type: 'test'
+  ...
+# Subtest: mounted walletless trial preserves source semantics, paid boundaries and human emissions
+    # Subtest: base emits all human pages and the ordinary exact paid challenge
+    ok 1 - base emits all human pages and the ordinary exact paid challenge
+      ---
+      duration_ms: 1556.945146
+      type: 'test'
+      ...
+    # Subtest: default disabled discovery and refusal preserve emitted human bytes and paid terms
+    ok 2 - default disabled discovery and refusal preserve emitted human bytes and paid terms
+      ---
+      duration_ms: 1573.10767
+      type: 'test'
+      ...
+    # Subtest: caller-selected public URL returns the normal typed result without credentials, signer or facilitator
+    ok 3 - caller-selected public URL returns the normal typed result without credentials, signer or facilitator
+      ---
+      duration_ms: 25.496188
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: missing URL
+    ok 4 - local refusal before allowance or fetch: missing URL
+      ---
+      duration_ms: 7.191208
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: nonstring URL
+    ok 5 - local refusal before allowance or fetch: nonstring URL
+      ---
+      duration_ms: 3.725321
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: invalid URL
+    ok 6 - local refusal before allowance or fetch: invalid URL
+      ---
+      duration_ms: 3.428495
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: private literal
+    ok 7 - local refusal before allowance or fetch: private literal
+      ---
+      duration_ms: 3.063711
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: private IPv6
+    ok 8 - local refusal before allowance or fetch: private IPv6
+      ---
+      duration_ms: 2.832153
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: private name
+    ok 9 - local refusal before allowance or fetch: private name
+      ---
+      duration_ms: 3.034994
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: credentials
+    ok 10 - local refusal before allowance or fetch: credentials
+      ---
+      duration_ms: 3.350869
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: non-HTTP protocol
+    ok 11 - local refusal before allowance or fetch: non-HTTP protocol
+      ---
+      duration_ms: 3.149069
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: arbitrary fetch headers
+    ok 12 - local refusal before allowance or fetch: arbitrary fetch headers
+      ---
+      duration_ms: 3.379229
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: oversized excerpt
+    ok 13 - local refusal before allowance or fetch: oversized excerpt
+      ---
+      duration_ms: 3.515087
+      type: 'test'
+      ...
+    # Subtest: local refusal before allowance or fetch: duplicate-shaped excerpt
+    ok 14 - local refusal before allowance or fetch: duplicate-shaped excerpt
+      ---
+      duration_ms: 2.419297
+      type: 'test'
+      ...
+    # Subtest: mounted parser refusal: malformed JSON
+    ok 15 - mounted parser refusal: malformed JSON
+      ---
+      duration_ms: 1.575264
+      type: 'test'
+      ...
+    # Subtest: mounted parser refusal: oversized JSON
+    ok 16 - mounted parser refusal: oversized JSON
+      ---
+      duration_ms: 1.267987
+      type: 'test'
+      ...
+    # Subtest: mounted parser refusal: compressed body
+    ok 17 - mounted parser refusal: compressed body
+      ---
+      duration_ms: 0.775695
+      type: 'test'
+      ...
+    # Subtest: query data and non-POST methods refuse without work
+    ok 18 - query data and non-POST methods refuse without work
+      ---
+      duration_ms: 5.416325
+      type: 'test'
+      ...
+    # Subtest: admitted network failure consumes each attempted hop: private DNS answer
+    ok 19 - admitted network failure consumes each attempted hop: private DNS answer
+      ---
+      duration_ms: 7.525412
+      type: 'test'
+      ...
+    # Subtest: admitted network failure consumes each attempted hop: private redirect
+    ok 20 - admitted network failure consumes each attempted hop: private redirect
+      ---
+      duration_ms: 10.015447
+      type: 'test'
+      ...
+    # Subtest: admitted network failure consumes each attempted hop: redirect limit
+    ok 21 - admitted network failure consumes each attempted hop: redirect limit
+      ---
+      duration_ms: 17.5312
+      type: 'test'
+      ...
+    # Subtest: admitted network failure consumes each attempted hop: timeout
+    ok 22 - admitted network failure consumes each attempted hop: timeout
+      ---
+      duration_ms: 310.778506
+      type: 'test'
+      ...
+    # Subtest: admitted network failure consumes each attempted hop: invalid streaming response
+    ok 23 - admitted network failure consumes each attempted hop: invalid streaming response
+      ---
+      duration_ms: 13.351244
+      type: 'test'
+      ...
+    # Subtest: public redirects preserve requested/final identity and consume two starts
+    ok 24 - public redirects preserve requested/final identity and consume two starts
+      ---
+      duration_ms: 16.444565
+      type: 'test'
+      ...
+    # Subtest: truthful typed source refusal
+    ok 25 - truthful typed source refusal
+      ---
+      duration_ms: 9.613053
+      type: 'test'
+      ...
+    # Subtest: truthful typed source server error
+    ok 26 - truthful typed source server error
+      ---
+      duration_ms: 10.423389
+      type: 'test'
+      ...
+    # Subtest: oversize content remains bounded and explicitly partial
+    ok 27 - oversize content remains bounded and explicitly partial
+      ---
+      duration_ms: 42.577157
+      type: 'test'
+      ...
+    # Subtest: valid excerpt override reports text truncation independently of the body cap
+    ok 28 - valid excerpt override reports text truncation independently of the body cap
+      ---
+      duration_ms: 10.651878
+      type: 'test'
+      ...
+    # Subtest: Express case and trailing-slash aliases stay inside the same unpaid observed mount
+    ok 29 - Express case and trailing-slash aliases stay inside the same unpaid observed mount
+      ---
+      duration_ms: 10.391728
+      type: 'test'
+      ...
+    # Subtest: credentials and arbitrary caller headers never reach fetched sites or payment code
+    ok 30 - credentials and arbitrary caller headers never reach fetched sites or payment code
+      ---
+      duration_ms: 30.403103
+      type: 'test'
+      ...
+    # Subtest: actual aggregate capture is private and separates owner/test from unattributed
+    ok 31 - actual aggregate capture is private and separates owner/test from unattributed
+      ---
+      duration_ms: 49.321724
+      type: 'test'
+      ...
+    1..31
+ok 8 - mounted walletless trial preserves source semantics, paid boundaries and human emissions
+  ---
+  duration_ms: 5253.319474
+  type: 'test'
+  ...
+# raw-equal emitted human pages: 10, icon redirects: 2; combined SHA256 32a4d1a4962941b5cabdae2c370d88c7974ad9531f7cceed6f9c41ae487ef0ce
+# Subtest: mounted durable authority refuses missing, expired, scheduled, exhausted and corrupt stores
+    # Subtest: missing
+    ok 1 - missing
+      ---
+      duration_ms: 1499.040434
+      type: 'test'
+      ...
+    # Subtest: expired
+    ok 2 - expired
+      ---
+      duration_ms: 1516.679655
+      type: 'test'
+      ...
+    # Subtest: scheduled
+    ok 3 - scheduled
+      ---
+      duration_ms: 1515.160938
+      type: 'test'
+      ...
+    # Subtest: corrupt authority
+    ok 4 - corrupt authority
+      ---
+      duration_ms: 1511.106418
+      type: 'test'
+      ...
+    # Subtest: missing spend authority
+    ok 5 - missing spend authority
+      ---
+      duration_ms: 1532.505501
+      type: 'test'
+      ...
+    # Subtest: symlink spend authority
+    ok 6 - symlink spend authority
+      ---
+      duration_ms: 1485.756685
+      type: 'test'
+      ...
+    # Subtest: unwritable volume directory
+    ok 7 - unwritable volume directory
+      ---
+      duration_ms: 1465.885302
+      type: 'test'
+      ...
+    # Subtest: redirect cannot exceed the last durable start; restart cannot replenish exhausted allowance
+    ok 8 - redirect cannot exceed the last durable start; restart cannot replenish exhausted allowance
+      ---
+      duration_ms: 2987.472317
+      type: 'test'
+      ...
+    1..8
+ok 9 - mounted durable authority refuses missing, expired, scheduled, exhausted and corrupt stores
+  ---
+  duration_ms: 13529.263652
+  type: 'test'
+  ...
+# Subtest: mounted concurrency, duplicate controllers, unknown delivery and interrupted restart never replenish
+    # Subtest: one concurrent fetch across parallel callers and duplicate OS controllers sharing the volume
+    ok 1 - one concurrent fetch across parallel callers and duplicate OS controllers sharing the volume
+      ---
+      duration_ms: 1550.899921
+      type: 'test'
+      ...
+    # Subtest: graceful restart retains spent starts and does not replay work
+    ok 2 - graceful restart retains spent starts and does not replay work
+      ---
+      duration_ms: 1503.09299
+      type: 'test'
+      ...
+    # Subtest: lost HTTP response stays unknown; completion consumes once and triggers no automatic extraction
+    ok 3 - lost HTTP response stays unknown; completion consumes once and triggers no automatic extraction
+      ---
+      duration_ms: 1558.242388
+      type: 'test'
+      ...
+    # Subtest: process crash retains durable spend and abandoned lock; restart refuses ambiguous active work
+    ok 4 - process crash retains durable spend and abandoned lock; restart refuses ambiguous active work
+      ---
+      duration_ms: 1675.910932
+      type: 'test'
+      ...
+    1..4
+ok 10 - mounted concurrency, duplicate controllers, unknown delivery and interrupted restart never replenish
+  ---
+  duration_ms: 7775.365138
+  type: 'test'
+  ...
+# Subtest: authority provisioning is finite, create-only and never repairs corrupt persistence
+    # Subtest: unbounded starts
+    ok 1 - unbounded starts
+      ---
+      duration_ms: 0.524931
+      type: 'test'
+      ...
+    # Subtest: zero starts
+    ok 2 - zero starts
+      ---
+      duration_ms: 0.110733
+      type: 'test'
+      ...
+    # Subtest: long duration
+    ok 3 - long duration
+      ---
+      duration_ms: 0.083254
+      type: 'test'
+      ...
+    # Subtest: missing identity
+    ok 4 - missing identity
+      ---
+      duration_ms: 0.06529
+      type: 'test'
+      ...
+    # Subtest: noncanonical expiry
+    ok 5 - noncanonical expiry
+      ---
+      duration_ms: 0.067806
+      type: 'test'
+      ...
+    # Subtest: extra authority
+    ok 6 - extra authority
+      ---
+      duration_ms: 0.073454
+      type: 'test'
+      ...
+    # Subtest: existing authority cannot be reprovisioned; removing process state changes no spent rights
+    ok 7 - existing authority cannot be reprovisioned; removing process state changes no spent rights
+      ---
+      duration_ms: 9.021124
+      type: 'test'
+      ...
+    1..7
+ok 11 - authority provisioning is finite, create-only and never repairs corrupt persistence
+  ---
+  duration_ms: 12.051446
+  type: 'test'
+  ...
+1..11
+# tests 155
+# suites 0
+# pass 155
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 44085.435421

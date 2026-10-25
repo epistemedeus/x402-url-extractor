@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { getOpenAPI, isOpenApiParseFailure, checkL2ForOpenAPI } from "@agentcash/discovery";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { fixture, authority, NOW } from "./extraction-trial-test-fixture.mjs";
@@ -114,7 +115,14 @@ function withoutLink(route, response) {
   if (route.includes("agent-card") || route === "/.well-known/agent.json") value.description = value.description.replace(/ Walletless extraction trial contract.*$/, "");
   if (route.includes("aiax")) {
     if (route.includes("sections")) delete value.extensions.samedaydesk.extraction_trial_discovery;
-    else { delete value.extensions; delete value.updated_at; }
+    else {
+      if (value.extensions) {
+        assert.deepEqual(Object.keys(value.extensions), ["samedaydesk"]);
+        assert.deepEqual(Object.keys(value.extensions.samedaydesk), ["extraction_trial_discovery"]);
+        delete value.extensions;
+      }
+      delete value.updated_at;
+    }
   }
   return value;
 }
@@ -142,7 +150,15 @@ test("exact admitted base preserves paid documents, challenges, MCP tools and al
   const base = await f.start({ sourceBase: BASE, enabled: false });
   const expected = await capture(base); await base.stop();
   const amended = await f.start({ enabled: false });
-  const actual = await capture(amended); await amended.stop();
+  const actual = await capture(amended);
+  for (const route of ["/openapi.json", "/mpp-openapi.json"]) await t.test(`official AgentCash parser ${route}`, async () => {
+    const result = await getOpenAPI(amended.base, {}, undefined, `${amended.base}${route}`);
+    assert.equal(result.isErr(), false);
+    assert.ok(result.value);
+    assert.equal(isOpenApiParseFailure(result.value), false);
+    assert.ok(checkL2ForOpenAPI(result.value).routes.some(row => row.path === "/extract"));
+  });
+  await amended.stop();
   for (const [entry, value] of Object.entries(expected)) await t.test(entry, () => assert.deepEqual(actual[entry], value));
   assert.equal(Object.keys(actual.human).length, 12);
   assert.equal(f.sourceCalls.length, 0);
