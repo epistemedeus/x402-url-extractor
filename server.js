@@ -1,4 +1,5 @@
 import { mountDeliveryJournalCoverage } from "./delivery-journal-coverage-http.mjs";
+import { mountExtractionTrial, EXTRACTION_TRIAL_DISCOVERY } from "./extraction-trial.mjs";
 import { registerCommerceRuntime } from "./commerce-journal-admission.mjs";
 // x402-merchant — a paid HTTP endpoint that charges AI agents in USDC and
 // settles directly to OUR OWN Base wallet.
@@ -581,6 +582,12 @@ const COMMON_COMMERCE_EXTENSIONS = {
 // ---------------------------------------------------------------------------
 
 const app = express();
+// Own parsing, observation and refusal before ordinary parsers/payment wrappers.
+// Registration marks the actual mounted capture, including disabled refusals.
+const commerceTelemetry = createCommerceTelemetry({
+  writerProcessCount: parseCommerceWriterProcessCount(process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES),
+});
+mountExtractionTrial(app, { observe: commerceTelemetry.extractionTrialObserver() });
 // Railway terminates TLS before forwarding to Express. Trust exactly one proxy
 // hop so x402 payment requirements preserve the public https:// resource URL.
 app.set("trust proxy", 1);
@@ -627,9 +634,6 @@ function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WR
   return Number(raw);
 }
 
-const commerceTelemetry = createCommerceTelemetry({
-  writerProcessCount: parseCommerceWriterProcessCount(process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES),
-});
 mountPageChangeHttp(app, {
   observe: isPageChangeHttpEnabled() ? commerceTelemetry.freePageChangeObserver("http") : null,
 });
@@ -4421,6 +4425,7 @@ app.get("/", (req, res) => {
   const catalog = machineActionCatalog();
   return res.json({
     ...gateway,
+    extractionTrial: { discovery: EXTRACTION_TRIAL_DISCOVERY },
     machineCommerce: {
       ...gateway.machineCommerce,
       callerResultClient: CALLER_RESULT_CLIENT_ENTRY,

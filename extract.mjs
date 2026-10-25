@@ -95,7 +95,7 @@ function links(html, base) {
   return [...set];
 }
 
-async function fetchWithGuards(url) {
+async function fetchWithGuards(url, { beforeFetch } = {}) {
   const fetchImpl = resolveExtractFetch();
   const timeoutMs = resolveExtractTimeoutMs(TIMEOUT_MS);
   const ctrl = new AbortController();
@@ -104,6 +104,9 @@ async function fetchWithGuards(url) {
     let current = assertPublicHttpUrl(url);
     let res;
     for (let hop = 0; hop <= 3; hop++) {
+      // Optional caller-owned durable admission, including each redirect hop.
+      // Paid callers omit it; no URL, header or environment can install a hook.
+      if (beforeFetch) await beforeFetch();
       res = await abortableRead(fetchImpl(current.href, {
         headers: { 'user-agent': UA, accept: 'text/html,*/*', 'accept-encoding': 'identity' },
         redirect: 'manual', signal: ctrl.signal,
@@ -193,7 +196,7 @@ export async function extract(rawUrl, options = {}) {
   }
   const textExcerptLimitChars = excerptLimit.value;
   const u = assertPublicHttpUrl(rawUrl);
-  const fetched = await fetchWithGuards(u.href);
+  const fetched = await fetchWithGuards(u.href, { beforeFetch: options?.beforeFetch });
   const { res, html } = fetched;
   const meta = metaTags(html);
   const ld = jsonLdBlocks(html);

@@ -145,6 +145,7 @@ const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([
 ]);
 
 const EXACT_ROUTES = new Map([
+  ["/trial/extract", { route: "/trial/extract", kind: "free" }],
   ["/recipes/page-change", { route: "/recipes/page-change", kind: "free" }],
   // Known free calls use the existing non-paid request classification.
   ...["deliver", "reuse", "accept", "review"].map((command) => {
@@ -1756,7 +1757,7 @@ function summarizeFreePageChange(events, { capture, writerHealthy, requestedWind
   }
   return {
     schemaVersion: "samedaydesk.free-page-change-outcomes.v1", transports,
-    unknownOutcomeObservations: events.filter(event => event.kind === "free" && !hasOwn(event, "pageChangeOutcome")).length,
+    unknownOutcomeObservations: events.filter(event => event.route === "/recipes/page-change" && event.kind === "free" && !hasOwn(event, "pageChangeOutcome")).length,
     historicalUse: "unknown", usefulness: "unknown", callerIdentity: "unknown",
     policy: "Retained invocation outcomes, not usefulness, independent customers or revenue. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Capture starts only on this producer's transport registration; restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only.",
   };
@@ -1772,9 +1773,44 @@ function commerceOriginClass(req, internalToken, agentDiscoverySource, paymentPr
 }
 
 const PAGE_CHANGE_OUTCOMES = new Set(["changed", "unchanged", "reordered", "partial", "unavailable", "refused", "failed", "aborted"]);
+const TRIAL_OUTCOMES = new Set(["admitted", "completed", "partial", "refused", "failed", "unknown_response"]);
+
+function acceptsTrialOutcome(event) {
+  if (!hasOwn(event, "extractionTrialOutcome")) return event.route !== "/trial/extract";
+  const value = event.extractionTrialOutcome;
+  return value && typeof value === "object" && !Array.isArray(value)
+    && Object.keys(value).sort().join(",") === "outcome,v" && value.v === 1
+    && TRIAL_OUTCOMES.has(value.outcome) && event.route === "/trial/extract"
+    && event.kind === "free" && event.matched === true && event.paymentPresent === false
+    && event.replayed === false && event.settlementReference === null
+    && event.queryKeys?.length === 0 && event.protocolsOffered?.length === 0
+    && event.requestConstruction === "not_measured"
+    && (value.outcome === "refused" || event.method === "POST")
+    && (!["admitted", "completed", "partial", "failed"].includes(value.outcome) || event.status === 200)
+    && (value.outcome !== "refused" || event.status >= 400);
+}
+
+function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, requestedWindowCoverage, externalCutoffMs, generatedAtMs }) {
+  const populations = {};
+  const rows = events.filter(event => event.extractionTrialOutcome && eventTimestampMs(event) <= generatedAtMs
+    && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs));
+  for (const event of rows) {
+    const label = event.originClass === "external" ? "unattributed" : event.originClass;
+    populations[label] ||= Object.fromEntries([...TRIAL_OUTCOMES].map(key => [key, 0]));
+    populations[label][event.extractionTrialOutcome.outcome]++;
+  }
+  return {
+    schemaVersion: "samedaydesk.extraction-trial-outcomes.v1", populations,
+    captureStartedAt, scope: "actual_mounted_route_all_methods_including_parser_refusals",
+    coverage: captureStartedAt && writerHealthy ? "prospective_process_only" : "unmeasured",
+    requestedWindowComplete: false, retainedWindowCoverage: requestedWindowCoverage,
+    usefulness: "unknown", independentUse: "unknown", laterPaidChoice: "unknown",
+    policy: "Technical observations only. Admitted and terminal phases are separate counts, without caller joins. Unattributed is not independent. Owner/test and crawler populations remain separate. Capture begins at mount, never backfills or survives as a coverage claim after restart. Unknown response never authorizes automatic retry. No URL, content, arbitrary source or caller identifier is retained by this producer.",
+  };
+}
 
 function acceptsPageChangeOutcome(event) {
-  if (!hasOwn(event, "pageChangeOutcome")) return event.kind !== "free" || event.route === "/recipes/page-change";
+  if (!hasOwn(event, "pageChangeOutcome")) return event.kind !== "free" || event.route === "/recipes/page-change" || (event.route === "/trial/extract" && hasOwn(event, "extractionTrialOutcome"));
   const metadata = event.pageChangeOutcome;
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)
     || Object.keys(metadata).sort().join(",") !== "outcome,transport,v"
@@ -1808,6 +1844,7 @@ function isCanonicalCommerceEvent(value) {
   const freeMcp = value.kind === "free" && value.route === "/mcp" && hasOwn(value, "pageChangeOutcome");
   if (!freeMcp && !isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
   if (!acceptsPageChangeOutcome(value)) return false;
+  if (!acceptsTrialOutcome(value)) return false;
   if (!isCanonicalQueryKeys(value.queryKeys)) return false;
   if (!isCanonicalRequestConstructionFields(value)) return false;
   if (!isCanonicalPaymentCrossFields(value)) return false;
@@ -3988,6 +4025,47 @@ export function createCommerceTelemetry({
     };
   }
 
+  let extractionTrialCaptureStartedAt = null;
+  function extractionTrialObserver() {
+    extractionTrialCaptureStartedAt ||= new Date().toISOString();
+    return function begin(req, res) {
+      const startedAt = Date.now();
+      const source = classifyAgentDiscoverySource(headerValue(req.headers || {}, "user-agent"));
+      const originClass = commerceOriginClass(req, internalToken, source, false);
+      // Aggregate-only identity: deliberately independent of IP, UA and input.
+      const actor = createHmac("sha256", secret).update("extraction-trial-aggregate").digest("hex").slice(0, 24);
+      let outcome = "refused", ended = false, admitted = false;
+      const append = (phase, status) => {
+        const event = {
+          v: 3, id: randomUUID(), ts: new Date().toISOString(), actor, actorEpoch, originClass,
+          agentDiscoverySource: source, declaredAgentDiscoverySource: null,
+          observedAgentDiscoverySource: source, discoverySourceKind: source ? "observed_user_agent" : "none",
+          method: req.method, route: "/trial/extract", matched: true, kind: "free", queryKeys: [],
+          requestConstruction: "not_measured", requestConstructionRequiredKeyCount: 0,
+          paymentPresent: false, paymentCredentialParsed: false, paymentProtocol: null,
+          paymentFailureCode: null, paymentFailureEvidence: null, protocolsOffered: [], replayed: false,
+          paymentActor: null, paymentIdentifier: null, settlementReference: null,
+          settlementAmountAtomic: null, settlementNetwork: null, settlementCurrency: null,
+          status, result: "request", durationMs: Math.max(0, Date.now() - startedAt),
+          extractionTrialOutcome: { v: 1, outcome: phase },
+        };
+        if (isCanonicalCommerceEvent(event)) enqueueExclusive(() => appendEvent(event)).catch(() => {});
+      };
+      res.once("finish", () => {
+        if (ended) return;
+        ended = true; append(outcome, Number(res.statusCode || 200));
+      });
+      res.once("close", () => {
+        if (ended) return;
+        ended = true; append(req.method === "POST" ? "unknown_response" : "refused", Number(res.statusCode || 200));
+      });
+      return observed => {
+        if (observed === "admitted" && !admitted) { admitted = true; append("admitted", 200); }
+        else if (!ended && TRIAL_OUTCOMES.has(observed) && observed !== "admitted") outcome = observed;
+      };
+    };
+  }
+
   function middleware(req, res, next) {
     const route = classifyCommerceRoute(req.path || req.url);
     if (route.kind === "excluded") return next();
@@ -4802,6 +4880,10 @@ export function createCommerceTelemetry({
         capture: pageChangeCapture, writerHealthy: !writerFailure,
         requestedWindowCoverage: coverage.requestedWindowCoverage, externalCutoffMs, generatedAtMs,
       }),
+      extractionTrial: summarizeExtractionTrial(windowedEvents, {
+        captureStartedAt: extractionTrialCaptureStartedAt, writerHealthy: !writerFailure,
+        requestedWindowCoverage: coverage.requestedWindowCoverage, externalCutoffMs, generatedAtMs,
+      }),
       extractBatchInputRefusals: summarizeExtractBatchInputRefusals(events, coverage.requestedWindowCoverage),
       durableRareFunnel: summarizeDurableRareFunnel({
         generatedAtMs,
@@ -5041,6 +5123,7 @@ export function createCommerceTelemetry({
   return registerJournalProducer({
     middleware,
     freePageChangeObserver,
+    extractionTrialObserver,
     snapshot,
     storageStatus,
     appendMcpTypedDecision,
