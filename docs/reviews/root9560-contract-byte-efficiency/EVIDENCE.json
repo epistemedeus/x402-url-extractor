@@ -1,0 +1,280 @@
+{
+  "operation": "root9560-contract-byte-efficiency-20261026",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor.git",
+  "branch": "codex/root9560-contract-byte-efficiency-20261026",
+  "productBase": "d9e5cde379cf7798f473d0cc6bf2139c9ec857d9",
+  "productBaseTree": "07c318634e8926a3f12446a2c962b320c74efcc9",
+  "operatingAndAssignmentCommit": "b54d36b2c68bb728484a8a26738eac947c719b78",
+  "testedSourceHead": "9f305dea12884a737b47c24b356c614fe142611f",
+  "testedSourceTree": "8f980f94fa79211ee3935fd8e45f18a6a80b9079",
+  "sourceDiff": {
+    "bytes": 22837,
+    "sha256": "7ab36187911755cbc217d7ae84b91b06e7f9c4e9d34aa9f656ebef69207463a8",
+    "command": "git diff --binary d9e5cde379cf7798f473d0cc6bf2139c9ec857d9 9f305dea12884a737b47c24b356c614fe142611f --"
+  },
+  "native": {
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "session": "01a176f7-a517-71a0-8dd9-ce808e5f6bb2",
+    "modelParents": 1,
+    "modelChildren": 0,
+    "totalReservedKiB": 2097152,
+    "nodeHeapMiB": 512,
+    "UV_THREADPOOL_SIZE": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "productMemberReadback": [
+    {
+      "path": "page-change-input-contract.mjs",
+      "blob": "0d0bc87816187d6306513e8423650d198c9cf70a",
+      "mode": "100644",
+      "bytes": 10349,
+      "sha256": "fba04d2a90867645c22529f87d60fa23b8154c7e0ea63e514ea003ce8fa36374"
+    },
+    {
+      "path": "page-change-http.mjs",
+      "blob": "9c8db2fa95be2f0d525d48a91a1ac6338989c895",
+      "mode": "100644",
+      "bytes": 33401,
+      "sha256": "35662908749306eed31a4374e6f36f698b29045c405238000f93e7eb9de3843e"
+    },
+    {
+      "path": "page-change-http.test.mjs",
+      "blob": "2723d8a5c61273545a13856feca34588d3ea9424",
+      "mode": "100644",
+      "bytes": 15517,
+      "sha256": "acb7efec30df5751d2eec234504e8949938bf6778535909f1760bf7cac3b1fc0"
+    },
+    {
+      "path": "page-change-http.mounted.test.mjs",
+      "blob": "58f6f40cbb6c8a0e53f33166009b2a784c946898",
+      "mode": "100644",
+      "bytes": 55533,
+      "sha256": "4586af9042ccd6e190fa6bbceb78fa9ee5ce04178283eb5dc4cbd5c45f341aa0"
+    },
+    {
+      "path": "server.js",
+      "blob": "86f711b212ac0fd2b1cb347299c3a856cbccedd2",
+      "mode": "100644",
+      "bytes": 270019,
+      "sha256": "4c9e17017cc66791215ae69f7aaba087bfb794c83af92f84cc51f3270d8776f2"
+    },
+    {
+      "path": "mcp-server.mjs",
+      "blob": "12b92f0b0a52ea50b0907e624bb815f28ed21825",
+      "mode": "100644",
+      "bytes": 48272,
+      "sha256": "de599ffb44bf71f1da4e7b2e642cada28fa7599fb63d16459be5022e844f76c6"
+    },
+    {
+      "path": "mcp-tool-metadata.mjs",
+      "blob": "97bafc2e557acead4b64b5bf238ce09b75aefa85",
+      "mode": "100644",
+      "bytes": 18648,
+      "sha256": "1cddb84bf3898ba1d939b8cdacbf67ccfd68becd519b6de64e6389938b1883d9"
+    },
+    {
+      "path": "examples/customer-x402/src/page-change/constants.mjs",
+      "blob": "295be77168b22715e2c2f15f32e584e3b50552bd",
+      "mode": "100644",
+      "bytes": 1680,
+      "sha256": "790f42e4e94d8a6ab042b1b430f4b76b6f498d2ff1f1f4f117f1713f48aa416e"
+    },
+    {
+      "path": "examples/customer-x402/src/record/merchant-batch-schema.json",
+      "blob": "b460db20e24fc85b36fad4aec9f871640e877ae2",
+      "mode": "100644",
+      "bytes": 2963,
+      "sha256": "0adbeee2462d752d82998f12e8155634fea12bff82c13db771772a52d8ab1d14"
+    },
+    {
+      "path": "examples/customer-x402/fixtures/page-change/merchant/unchanged-before.json",
+      "blob": "142d6f57e8297fb35d71799cf63278b59f15ab11",
+      "mode": "100644",
+      "bytes": 1711,
+      "sha256": "3f2a70609bf38f973fe20161b3068556798bd43373d039874b19bf3365fb593d"
+    },
+    {
+      "path": "examples/customer-x402/src/page-change/compare.mjs",
+      "blob": "e91711b11a5e322b564e55f4e5614c67691873d6",
+      "mode": "100644",
+      "bytes": 17239,
+      "sha256": "a99ae334dddab75b635f7d0ccff8b304a08b215fa8420621dc5fd9e14fa99b66"
+    },
+    {
+      "path": "test/fixtures/page-change-consumer/original-safe-request.json",
+      "blob": "326fc0f9a861147a41ce2150a8537d1f44d55220",
+      "mode": "100644",
+      "bytes": 2809,
+      "sha256": "a5c0f61bb9827551275a410e8c8f1609be08d796c04b3ad1d51da08230817066"
+    },
+    {
+      "path": "docs/reviews/root9420-page-change-consumer-contract/WORKER-HANDBACK.md",
+      "blob": "7316b4828b31ac1974440d04d3837a35110fba2a",
+      "mode": "100644",
+      "bytes": 5979,
+      "sha256": "400ac935fb75ca4cf314205ff5e477fa9863c00ed67f7ef4d0ba7692e8fb1f6f"
+    },
+    {
+      "path": "package.json",
+      "blob": "8877d8cb46515709612e9aecb15ff702302bf6b3",
+      "mode": "100644",
+      "bytes": 11170,
+      "sha256": "37d61a7a5441945c72195823fe886516e0536216e17c8626819dea6dee4eef1f"
+    },
+    {
+      "path": "package-lock.json",
+      "blob": "001fa320adffe2dfb214e8651bcc379a2703c9b7",
+      "mode": "100644",
+      "bytes": 123263,
+      "sha256": "212c78b62206723b04af693e8c828541953b97db92342cd8135268f854236be7"
+    },
+    {
+      "path": "LICENSE",
+      "blob": "34e784554d75f424552ad2198708c8d99c5b4b67",
+      "mode": "100644",
+      "bytes": 1068,
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    }
+  ],
+  "operatingMembersVerified": [
+    {
+      "role": "instructions",
+      "path": "AGENTS.md",
+      "repository": "https://github.com/epistemedeus/pilot.git",
+      "commit": "b54d36b2c68bb728484a8a26738eac947c719b78",
+      "blob": "7296a6b1d24e589c6ff36d70017e66f201c7a25f",
+      "bytes": 33778,
+      "sha256": "a22983060028472dab85265451d1f66522313a390622ef19db56401af15931a3"
+    },
+    {
+      "role": "state",
+      "path": "overview/STATE.md",
+      "repository": "https://github.com/epistemedeus/pilot.git",
+      "commit": "b54d36b2c68bb728484a8a26738eac947c719b78",
+      "blob": "27193f198731bd68549e84c4c0c3f584fea59345",
+      "bytes": 28895,
+      "sha256": "9106d185b2a3141d5a93ff5816930ae4fdc352a1335fcefacfc533c96b4572ab"
+    },
+    {
+      "role": "execution-plan",
+      "path": "overview/MACHINE-COMMERCE-EXECUTION-PLAN.md",
+      "repository": "https://github.com/epistemedeus/pilot.git",
+      "commit": "b54d36b2c68bb728484a8a26738eac947c719b78",
+      "blob": "a5ccd3173224c91399a4516a27c296fcfc3212c7",
+      "bytes": 43589,
+      "sha256": "5686419e084d98e43c9ece33fee1ffa0820131af941d7d4035d820f1bfb34ece"
+    },
+    {
+      "role": "assignment",
+      "path": "overview/remote-worker/assignments/ROOT9560-CONTRACT-BYTE-EFFICIENCY.md",
+      "repository": "https://github.com/epistemedeus/pilot.git",
+      "commit": "b54d36b2c68bb728484a8a26738eac947c719b78",
+      "blob": "ab3153de204e13b55d92cfe86623ea7f64e862ec",
+      "bytes": 7685,
+      "sha256": "44d015e457fe0ab3c91151f1a0661be1aac419d0ea3fad893c9be06b4ba87d5f"
+    }
+  ],
+  "receiptSha256": "37a48af2013b151a051930574ef7131cde871122b04b368c3301901170f6f855",
+  "receiving": {
+    "path": "overview/research/phase-20261026/renx-consumer-contract/ROOT-RECEIVING.md",
+    "blob": "a17059c9349589c655d906eb686bf3282f9f23be",
+    "bytes": 12018,
+    "sha256": "b1ec1e0af2154fbe514d1c2527ba77e29487e41464fae39cdf21b559eaf6c957"
+  },
+  "measurements": {
+    "/openapi.json": {
+      "baseline": {
+        "utf8Bytes": 196802,
+        "characters": 196802,
+        "compactBytes": 196799,
+        "sha256": "9abcb4ecde9257781b407edb1640f365717864d6aea3e4ff6e173154c01d2ab3"
+      },
+      "candidate": {
+        "utf8Bytes": 177049,
+        "characters": 177049,
+        "compactBytes": 177046,
+        "sha256": "1654d76f13532386e8f1ad89735c4ed47ad60d714b4117ff6d345c3766723c60"
+      }
+    },
+    "/recipes/page-change/openapi.json": {
+      "baseline": {
+        "utf8Bytes": 41172,
+        "characters": 41172,
+        "compactBytes": 41172,
+        "sha256": "6152d049f68db8487dcde2942c3990aeb1452c0018223547e2ce0321a3c3b152"
+      },
+      "candidate": {
+        "utf8Bytes": 21419,
+        "characters": 21419,
+        "compactBytes": 21419,
+        "sha256": "7a9a87badea0533e73b647c73779f6b74cb8440155cfe2e2b1886cc0add5deac"
+      }
+    },
+    "/mpp-openapi.json": {
+      "baseline": {
+        "utf8Bytes": 216546,
+        "characters": 216546,
+        "compactBytes": 216543,
+        "sha256": "45bf1c00eed75d07df0870ab873aa8d06ca37123c1335eb2c056431ef761d347"
+      },
+      "candidate": {
+        "utf8Bytes": 196793,
+        "characters": 196793,
+        "compactBytes": 196790,
+        "sha256": "d8d3b704e4329a98468641b8c26e94667bc88202a0f503059bd1db582e095584"
+      }
+    },
+    "/swagger.json": {
+      "baseline": {
+        "utf8Bytes": 196802,
+        "characters": 196802,
+        "compactBytes": 196799,
+        "sha256": "9abcb4ecde9257781b407edb1640f365717864d6aea3e4ff6e173154c01d2ab3"
+      },
+      "candidate": {
+        "utf8Bytes": 177049,
+        "characters": 177049,
+        "compactBytes": 177046,
+        "sha256": "1654d76f13532386e8f1ad89735c4ed47ad60d714b4117ff6d345c3766723c60"
+      }
+    },
+    "page_change tool": {
+      "baselineBytes": 36074,
+      "candidateBytes": 11432
+    },
+    "tools/list SSE wire": {
+      "baselineBytes": 131699,
+      "candidateBytes": 107057
+    }
+  },
+  "tests": {
+    "install": {
+      "exit": 0,
+      "packages": 244
+    },
+    "focusedFinal": {
+      "exit": 0,
+      "tests": 95,
+      "pass": 93,
+      "fail": 0,
+      "optionalSkips": 2
+    },
+    "preservation": {
+      "exit": 0,
+      "tests": 198,
+      "pass": 198,
+      "fail": 0
+    },
+    "initialMountedQualification": {
+      "exit": 0,
+      "tests": 7,
+      "pass": 7
+    }
+  },
+  "developmentalObservations": [
+    "Initial full-document comparison failed on independently generated wall-clock evaluatedAt annotations. Repeated with the same producer clock; no field normalization or omission.",
+    "First focused run: exit 1, 95 tests, 92 pass, 1 fail, 2 optional skips. Historical pre-9420 base lacked the new shared module; helper now copies actual Git members. Its stuck mounted-test child was terminated; remaining failed-run tail briefly overlapped corrected-run startup. Final focused and preservation commands were sequential."
+  ],
+  "scope": "Source/tests and Git export only. Raw captures/logs private. No deployment, live consumer/model/target/account/payment/trial POST or new model children. Source savings do not establish installed visibility, demand or revenue."
+}
