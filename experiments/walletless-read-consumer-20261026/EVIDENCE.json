@@ -1,0 +1,178 @@
+{
+  "schema": "root9790.source-evidence.v1",
+  "origin": "https://github.com/epistemedeus/x402-url-extractor.git",
+  "base": "59e4807d1a1e2e0482138065738745ed9f632255",
+  "branch": "codex/root9790-walletless-read-consumer-20261026",
+  "testedSourceHead": "b111bd508f11e8a32110ec83cbbd4b150c6dd326",
+  "testedSourceTree": "176ae09be3f4cd83927c1a4813bb7738136035ff",
+  "pr": "https://github.com/epistemedeus/x402-url-extractor/pull/238",
+  "changedPaths": [
+    "commerce-events.mjs",
+    "experiments/walletless-read-consumer-20261026/EVIDENCE.json",
+    "experiments/walletless-read-consumer-20261026/RESULT.md",
+    "experiments/walletless-read-consumer-20261026/WORKER-HANDBACK.md",
+    "extract.mjs",
+    "extraction-trial-discovery.test.mjs",
+    "extraction-trial-events.test.mjs",
+    "extraction-trial-reason.mjs",
+    "extraction-trial-test-fixture.mjs",
+    "extraction-trial.mjs",
+    "walletless-read.http.test.mjs"
+  ],
+  "finalExportReceipt": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/EXPORT.json",
+  "fullCommandTranscript": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/events.jsonl",
+  "resourceProfile": {
+    "totalReserveKiB": 2097152,
+    "modelChildren": 0,
+    "requestedModel": "native gpt-6.1-sol/high",
+    "nodeHeapMiB": 512,
+    "UV_THREADPOOL_SIZE": 1,
+    "OMP_NUM_THREADS": 1,
+    "testConcurrency": 1
+  },
+  "frozenInputs": {
+    "receiptSha256": "114695876e662cbb36f04d659369fd40b6d43fab43dda2eba5a40abd0c81cfcf",
+    "pilotCommit": "ee4a15353a10349d90432edd27c8a899d3486f2f",
+    "allFourMemberLengthsAndSha256": "matched",
+    "supplementalInputs": "complete predecessor, walletless PLAN and reuse gate supplied in admission; no Pilot mutation"
+  },
+  "commands": [
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 npm ci --ignore-scripts --no-audit --no-fund > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/npm-ci.log 2>&1",
+      "exit": 0,
+      "counts": null,
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/npm-ci.log",
+      "sha256": "d5f75b10779b704c6de9aabc14b129d6e93bd3b675c563c0da2044482ac785a0"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 extraction-trial.http.test.mjs extraction-trial-events.test.mjs extraction-trial-discovery.test.mjs trial-measurement-continuity.test.mjs markdown-table.test.mjs extract.review.test.mjs extract.semantics.test.mjs extract.http.test.mjs mcp-output-schema-extract.test.mjs mcp-output-schema.test.mjs > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/baseline.tap 2>&1",
+      "exit": 0,
+      "counts": {
+        "tests": 231,
+        "pass": 231,
+        "fail": 0
+      },
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/baseline.tap",
+      "sha256": "64ad2736a66d4872dda21bae157893b399a9f9feb9fcbf98a4f4c0e3c99da587"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-name-pattern='actual merchant reader' walletless-read.http.test.mjs > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/reader-first.tap 2>&1",
+      "exit": 1,
+      "counts": {
+        "tests": 1,
+        "pass": 0,
+        "fail": 1
+      },
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/reader-first.tap",
+      "sha256": "b5049a40f0914aed4a1646bddfa767e91cf2a270b4769aa7e993524923bffef8"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 walletless-read.http.test.mjs extraction-trial-events.test.mjs > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/reader-implementation-first.tap 2>&1",
+      "exit": 0,
+      "counts": {
+        "tests": 20,
+        "pass": 20,
+        "fail": 0
+      },
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/reader-implementation-first.tap",
+      "sha256": "e93d33280ee9eae7b2034a6f0c1892f890f9cfedc2eb27cb7f2ac138dea8b50e"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 walletless-read.http.test.mjs extraction-trial.http.test.mjs extraction-trial-events.test.mjs extraction-trial-discovery.test.mjs trial-measurement-continuity.test.mjs markdown-table.test.mjs extract.review.test.mjs extract.semantics.test.mjs extract.http.test.mjs mcp-output-schema-extract.test.mjs mcp-output-schema.test.mjs > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/focused-first.tap 2>&1",
+      "exit": 1,
+      "counts": {
+        "tests": 250,
+        "pass": 248,
+        "fail": 2
+      },
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/focused-first.tap",
+      "sha256": "cb06dfa25902cac66531ae95baf883fbede17f7bce32c7ef7719d8a914fd1dae"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-name-pattern='spends sealed starts' walletless-read.http.test.mjs > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/dns-fixture-correction.tap 2>&1",
+      "exit": 0,
+      "counts": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/dns-fixture-correction.tap",
+      "sha256": "4c9f5aece8fe13deabc3ea1d4066fa49b0891907ca893fbb2eba99ed326fcf29"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 walletless-read.http.test.mjs extraction-trial.http.test.mjs extraction-trial-events.test.mjs extraction-trial-discovery.test.mjs trial-measurement-continuity.test.mjs markdown-table.test.mjs extract.review.test.mjs extract.semantics.test.mjs extract.http.test.mjs mcp-output-schema-extract.test.mjs mcp-output-schema.test.mjs > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/focused-final.tap 2>&1",
+      "exit": 0,
+      "counts": {
+        "tests": 250,
+        "pass": 250,
+        "fail": 0
+      },
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/focused-final.tap",
+      "sha256": "5e7bc937b6b343037f8d6ff347cab48af2a830032279d585aa5bcd5963e92164"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 discovery-contract.test.mjs discovery-method-parity.http.test.mjs machine-surface-parity.http.test.mjs openapi-operation-id.test.mjs mcp-tool-metadata.test.mjs > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/related-consumers.tap 2>&1",
+      "exit": 0,
+      "counts": {
+        "tests": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/related-consumers.tap",
+      "sha256": "76866e4d9a127ee9ff2df1871632c22584d7bf04b53dc206e84049ced720e174"
+    },
+    {
+      "command": "git push -u origin codex/root9790-walletless-read-consumer-20261026 > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/push-source.log 2>&1",
+      "exit": 0,
+      "counts": null,
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/push-source.log",
+      "sha256": "fd01466e08f03aae9adf9c51c61ab326565f10e953f40a5317eee43bb7d84013"
+    },
+    {
+      "command": "gh pr create --repo epistemedeus/x402-url-extractor --base master --head codex/root9790-walletless-read-consumer-20261026 --draft --title \"Expose the reader through the original shared walletless trial\" --body-file /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/pr-body.md > /home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/pr-create.log 2>&1",
+      "exit": 0,
+      "counts": null,
+      "log": "/home/ubuntu/root-sol-window100337/root9790-walletless-read-consumer-20261026/artifacts/pr-create.log",
+      "sha256": "6739d2ded555475baad1447a62cdf0d0ec22ba4642dcc1467dd3ff45de7ee40a"
+    }
+  ],
+  "otherChecks": {
+    "git diff --check": 0,
+    "immutableSourceCheck": {
+      "command": "git diff --quiet 59e4807d1a1e2e0482138065738745ed9f632255 -- package.json package-lock.json server.js extract-capture.mjs markdown-table.mjs",
+      "exit": 0
+    },
+    "sourceCommit": {
+      "command": "git add commerce-events.mjs extract.mjs extraction-trial-discovery.test.mjs extraction-trial-events.test.mjs extraction-trial-reason.mjs extraction-trial-test-fixture.mjs extraction-trial.mjs walletless-read.http.test.mjs && git commit -m \"Add walletless reader under the existing shared trial budget\"",
+      "exit": 0
+    }
+  },
+  "firstFailures": [
+    {
+      "log": "reader-first.tap",
+      "cause": "Exact base lacks reader discovery; assertion canonical discovery must describe a reader operation."
+    },
+    {
+      "log": "focused-first.tap",
+      "cause": "One new DNS fixture emitted string chunks instead of bytes; redirect subtest and parent fail. Corrected fixture to Buffer chunks; no production workaround."
+    }
+  ],
+  "selfReview": "Full eight-file source/test delta reviewed. Corrected an initial observer-signature patch location before first implementation run. Original budget/provisioning/seal code unchanged. No unresolved source finding.",
+  "boundary": {
+    "transport": "synthetic source responses, injected DNS/socket transport and loopback fixtures only",
+    "runtimeAuthorityAccess": false,
+    "liveTrialPOST": false,
+    "publicPaidCall": false,
+    "paymentOrWallet": false,
+    "deploymentOrMerge": false,
+    "otherJobChanges": false,
+    "modelProviderRefusals": [],
+    "sourceTestsProveUseOrRevenue": false
+  },
+  "limitations": [
+    "Source-only; independent receiving, configured route, release and outside invitation belong to Root.",
+    "Original 20-hop/one-concurrent authority and November 1 09:24:44.619 UTC expiry are not read, provisioned or renewed. Current live availability unknown.",
+    "Native table/charset/size/timeout/no-JavaScript limits remain those of the existing reader.",
+    "Optional journal operation metadata retains the original aggregate route identity; old or malformed labels remain unknown."
+  ]
+}
