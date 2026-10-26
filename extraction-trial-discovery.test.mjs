@@ -58,7 +58,7 @@ test("each machine entry discovers canonical trial request and truthful availabi
     }
     const merchant = await f.start({ store, enabled: availability !== "disabled" });
     const before = await stored(store), hops = f.sourceCalls.length, calls = f.calls.length;
-    let constructed;
+    let constructed, constructedRead;
     for (const [entry, find] of entries) await t.test(entry, async () => {
       const response = await merchant.request(entry);
       assert.equal(response.status, 200, entry);
@@ -78,6 +78,12 @@ test("each machine entry discovers canonical trial request and truthful availabi
       assert.match(contract.accounting, /No per-caller credit or automatic renewal/);
       constructed = { path: contract.request.path, method: contract.request.method,
         headers: { "content-type": contract.request.contentType }, body: { ...contract.request.body, url: f.url() } };
+      assert.equal(contract.reader.request.path, "/trial/read");
+      assert.equal(contract.reader.markdownLimitChars.maximum, 40000);
+      assert.match(contract.reader.sharedBudget, /same original authority/);
+      assert.equal(contract.reader.paidNextTask.path, "/read?url={encodedPublicUrl}");
+      constructedRead = { path: contract.reader.request.path, method: contract.reader.request.method,
+        headers: { "content-type": contract.reader.request.contentType }, body: { ...contract.reader.request.body, url: f.url("/table") } };
       if (entry.includes("aiax")) {
         const kind = entry.includes("sections") ? "section" : "manifest";
         assert.equal(validate[kind](response.json), true, JSON.stringify(validate[kind].errors));
@@ -88,12 +94,20 @@ test("each machine entry discovers canonical trial request and truthful availabi
     assert.deepEqual(await stored(store), before, "all entry and contract GETs preserve authority bytes");
     assert.equal(f.sourceCalls.length, hops); assert.equal(f.calls.length, calls);
     // Execute only the request constructed from discovery, through disposable transport.
-    const result = await merchant.request(constructed.path, constructed);
+    const result = await merchant.request(constructedRead.path, constructedRead);
     assert.equal(result.status, availability === "enabled" ? 200 : 503);
-    if (availability === "enabled") assert.equal(result.json.sourceOk, true);
+    if (availability === "enabled") {
+      assert.equal(result.json.sourceOk, true);
+      assert.match(result.json.markdown, /<td>Alpha<\/td><td><\/td><td>Yes/);
+      assert.equal(result.json.capture.markdownLimitChars, 40000);
+      assert.equal(result.json.truncated, false);
+    }
     else assert.equal(result.json.availability, availability);
     for (const header of ["payment-required", "www-authenticate", "payment-response"]) assert.equal(result.headers[header], undefined);
     assert.equal(f.sourceCalls.length, hops + (availability === "enabled" ? 1 : 0));
+    const extractResult = await merchant.request(constructed.path, constructed);
+    assert.equal(extractResult.status, 503);
+    assert.equal(extractResult.json.availability, availability === "enabled" ? "exhausted" : availability);
     // Cached entry links still require a fresh contract after the allowance is spent.
     if (availability === "enabled") {
       const response = await merchant.request("/api/actions");
