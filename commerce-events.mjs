@@ -1,4 +1,5 @@
 import { constants as journalFs } from "node:fs";
+import { normalizeExtractionTrialReason } from "./extraction-trial-reason.mjs";
 import { authenticateJournalCut, isJournalCutRecord } from "./commerce-journal-cut-auth.mjs";
 import { admitCommerceJournal, drainJournalObservations, noteJournalRotation, noteJournalWrite, noteJournalFault, observeContinuationTransmission, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
 import {
@@ -1808,15 +1809,32 @@ function acceptsTrialOutcome(event) {
 
 function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, requestedWindowCoverage, externalCutoffMs, generatedAtMs }) {
   const populations = {};
+  const diagnostics = {};
   const rows = events.filter(event => event.extractionTrialOutcome && eventTimestampMs(event) <= generatedAtMs
     && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs));
   for (const event of rows) {
     const label = event.originClass === "external" ? "unattributed" : event.originClass;
     populations[label] ||= Object.fromEntries([...TRIAL_OUTCOMES].map(key => [key, 0]));
     populations[label][event.extractionTrialOutcome.outcome]++;
+    const outcome = event.extractionTrialOutcome.outcome;
+    if (!["failed", "refused", "unknown_response"].includes(outcome)) continue;
+    diagnostics[label] ||= {};
+    const counts = diagnostics[label][outcome] ||= { known: 0, unknown: 0, byReason: {} };
+    // Optional reason corruption never erases a valid pre-existing phase. Old
+    // reasonless rows and unknown responses remain explicitly undiagnosed.
+    const reason = normalizeExtractionTrialReason(outcome, event.extractionTrialReason);
+    if (reason) {
+      counts.known++;
+      increment(counts.byReason, `${reason.family}.${reason.code}`);
+    } else counts.unknown++;
   }
   return {
     schemaVersion: "samedaydesk.extraction-trial-outcomes.v2", populations,
+    diagnostics: {
+      schemaVersion: "samedaydesk.extraction-trial-reasons.v1",
+      scope: "eligible_failed_refused_unknown_response_rows", populations: diagnostics,
+      policy: "Finite technical reasons from the same retained rows and filters. Missing, malformed or incompatible reasons and unknown responses count as unknown. No historical inference, backfill or caller join.",
+    },
     captureStartedAt, scope: "actual_mounted_route_all_methods_including_parser_refusals",
     ...retainedOutcomeCoverage(captureStartedAt, writerHealthy, requestedWindowCoverage),
     usefulness: "unknown", independentUse: "unknown", laterPaidChoice: "unknown",
@@ -4049,8 +4067,9 @@ export function createCommerceTelemetry({
       const originClass = commerceOriginClass(req, internalToken, source, false);
       // Aggregate-only identity: deliberately independent of IP, UA and input.
       const actor = createHmac("sha256", secret).update("extraction-trial-aggregate").digest("hex").slice(0, 24);
-      let outcome = "refused", ended = false, admitted = false;
-      const append = (phase, status) => {
+      let outcome = "refused", reason = null, ended = false, admitted = false;
+      const append = (phase, status, metadata = null) => {
+        const safeReason = normalizeExtractionTrialReason(phase, metadata);
         const event = {
           v: 3, id: randomUUID(), ts: new Date().toISOString(), actor, actorEpoch, originClass,
           agentDiscoverySource: source, declaredAgentDiscoverySource: null,
@@ -4063,20 +4082,25 @@ export function createCommerceTelemetry({
           settlementAmountAtomic: null, settlementNetwork: null, settlementCurrency: null,
           status, result: "request", durationMs: Math.max(0, Date.now() - startedAt),
           extractionTrialOutcome: { v: 1, outcome: phase },
+          ...(safeReason ? { extractionTrialReason: safeReason } : {}),
         };
         if (isCanonicalCommerceEvent(event)) enqueueExclusive(() => appendEvent(event)).catch(() => {});
       };
       res.once("finish", () => {
         if (ended) return;
-        ended = true; append(outcome, Number(res.statusCode || 200));
+        ended = true; append(outcome, Number(res.statusCode || 200), reason);
       });
       res.once("close", () => {
         if (ended) return;
         ended = true; append(req.method === "POST" ? "unknown_response" : "refused", Number(res.statusCode || 200));
       });
-      return observed => {
+      return (observed, metadata) => {
         if (observed === "admitted" && !admitted) { admitted = true; append("admitted", 200); }
-        else if (!ended && TRIAL_OUTCOMES.has(observed) && observed !== "admitted") outcome = observed;
+        else if (!ended && TRIAL_OUTCOMES.has(observed) && observed !== "admitted") {
+          outcome = observed;
+          reason = (observed === "failed" && !admitted) || (observed === "refused" && admitted)
+            ? null : normalizeExtractionTrialReason(observed, metadata);
+        }
       };
     };
   }

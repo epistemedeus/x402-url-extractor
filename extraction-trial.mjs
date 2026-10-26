@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import express from "express";
 import { assertPublicHttpUrl, extract } from "./extract.mjs";
 import { buildCapture, fetchFailureCode, parseTextExcerptLimit, EXTRACT_MAX_BODY_BYTES, EXTRACT_TIMEOUT_MS } from "./extract-capture.mjs";
+import { trialFetchFailureReason, trialRefusalReason, trialSourceHttpReason } from "./extraction-trial-reason.mjs";
 
 export const EXTRACTION_TRIAL_PATH = "/trial/extract";
 export const EXTRACTION_TRIAL_DISCOVERY = "/.well-known/extraction-trial";
@@ -151,7 +152,7 @@ export function mountExtractionTrial(app, { budget = createExtractionTrialBudget
     res.set("Cache-Control", "no-store");
     res.set("X-Samedaydesk-Trial", "walletless-first-use-v1");
     const refuse = (status, error, availability) => {
-      note("refused");
+      note("refused", trialRefusalReason(error, availability));
       return res.status(status).json({ ok: false, charged: false, error, ...(availability ? { availability } : {}) });
     };
     if (req.method !== "POST") { res.set("Allow", "POST"); return refuse(405, "method_not_allowed"); }
@@ -175,17 +176,19 @@ export function mountExtractionTrial(app, { budget = createExtractionTrialBudget
           await lease.spend();
           if (!admitted) { admitted = true; note("admitted"); }
         } });
-        note(!data.sourceOk ? "failed" : data.capture.bodyTruncated || data.capture.textTruncated ? "partial" : "completed");
+        note(!data.sourceOk ? "failed" : data.capture.bodyTruncated || data.capture.textTruncated ? "partial" : "completed",
+          trialSourceHttpReason(data));
         if (!res.destroyed) res.json(data);
       } catch (error) {
         if (!admitted) {
           const availability = (await budget.status()).availability;
           return refuse(503, "trial_unavailable", availability);
         }
-        note("failed");
+        const code = fetchFailureCode(error);
+        note("failed", trialFetchFailureReason(code));
         if (!res.destroyed) res.status(200).json({
           ok: false, url, requestedUrl: url, finalUrl: null, status: null, sourceOk: false,
-          error: { code: fetchFailureCode(error), message: "Bounded trial extraction failed" },
+          error: { code, message: "Bounded trial extraction failed" },
           capture: buildCapture({ textExcerptLimitChars: limit.value, bodyBytes: 0, charset: null, charsetSource: "default-utf-8" }),
         });
       } finally { await lease?.release(); }

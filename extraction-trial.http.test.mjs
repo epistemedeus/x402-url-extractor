@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { request as httpRequest } from "node:http";
+import { execFileSync } from "node:child_process";
+import { once } from "node:events";
+import { createServer, request as httpRequest } from "node:http";
 import { mkdir, readFile, readdir, writeFile, chmod, symlink } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import express from "express";
+import { createCommerceTelemetry } from "./commerce-events.mjs";
 import { extractMcpOutputSchema } from "./extract.mjs";
 import { PLATFORM_HEALTH_CARDS } from "./platform-health.mjs";
-import { createExtractionTrialBudget, EXTRACTION_TRIAL_PATH as ROUTE, EXTRACTION_TRIAL_DISCOVERY as DISCOVERY, provisionExtractionTrial } from "./extraction-trial.mjs";
+import { createExtractionTrialBudget, EXTRACTION_TRIAL_PATH as ROUTE, EXTRACTION_TRIAL_DISCOVERY as DISCOVERY, mountExtractionTrial, provisionExtractionTrial } from "./extraction-trial.mjs";
 import { fixture, authority, NOW, waitFor } from "./extraction-trial-test-fixture.mjs";
 
 const hash = text => createHash("sha256").update(text).digest("hex");
@@ -83,6 +87,8 @@ test("mounted walletless trial preserves source semantics, paid boundaries and h
     const view = (await merchant.request("/v0/commerce-demand.json")).json.extractionTrial;
     assert.ok(view.captureStartedAt); assert.equal(view.currentCapture.coverage, "prospective_process_only");
     assert.equal(view.populations.unattributed.refused, 1);
+    assert.deepEqual(view.diagnostics.populations.unattributed.refused,
+      { known: 1, unknown: 0, byReason: { "admission.disabled": 1 } });
     await merchant.stop();
     assert.equal(f.sourceCalls.length, 0);
   });
@@ -144,6 +150,8 @@ test("mounted walletless trial preserves source semantics, paid boundaries and h
     assert.equal(response.status, 200); unpaid(response); assert.equal(response.json.ok, false);
     assert.equal(response.json.sourceOk, false); assert.equal(response.json.error.code, code);
     await ready(merchant); assert.equal((await status(merchant)).started, count + starts);
+    assert.deepEqual((await f.events(merchant)).filter(row => row.extractionTrialOutcome?.outcome === "failed").at(-1).extractionTrialReason,
+      { v: 1, family: "fetch", code });
   });
   await t.test("public redirects preserve requested/final identity and consume two starts", async () => {
     const count = (await status(merchant)).started;
@@ -158,6 +166,8 @@ test("mounted walletless trial preserves source semantics, paid boundaries and h
     assert.equal(response.json.status, sourceStatus); assert.equal(response.json.sourceOk, false);
     assert.equal(response.json.error.code, `http_${sourceStatus}`); assert.equal(extractMcpOutputSchema.safeParse(response.json).success, true);
     await ready(merchant);
+    assert.deepEqual((await f.events(merchant)).filter(row => row.extractionTrialOutcome?.outcome === "failed").at(-1).extractionTrialReason,
+      { v: 1, family: "source_http", code: sourceStatus === 403 ? "http_403" : "http_5xx" });
   });
   await t.test("oversize content remains bounded and explicitly partial", async () => {
     const response = await post(merchant, f.url("/oversize"));
@@ -230,6 +240,9 @@ test("mounted durable authority refuses missing, expired, scheduled, exhausted a
     assert.equal((await status(merchant)).availability, availability);
     const response = await post(merchant, f.url());
     assert.equal(response.status, 503); assert.equal(response.json.availability, availability); unpaid(response);
+    const rows = (await f.events(merchant)).filter(row => row.extractionTrialOutcome);
+    assert.equal(rows.length, 1, "authority refusal emits no admitted phase");
+    assert.deepEqual(rows[0].extractionTrialReason, { v: 1, family: "admission", code: availability });
     await merchant.stop(); assert.equal(f.sourceCalls.length, 0);
     if (store === unwritable) await chmod(store, 0o700);
   });
@@ -260,6 +273,10 @@ test("mounted concurrency, duplicate controllers, unknown delivery and interrupt
       await waitFor(() => f.sourceCalls.length === count + 1, "first request at controlled source");
       const refused = await Promise.all([post(merchant, f.url()), post(duplicate, f.url())]);
       assert.ok(refused.every(response => response.status === 503 && response.json.availability === "busy"));
+      for (const current of [merchant, duplicate]) {
+        const row = (await f.events(current)).filter(row => row.extractionTrialOutcome?.outcome === "refused").at(-1);
+        assert.deepEqual(row.extractionTrialReason, { v: 1, family: "admission", code: "busy" });
+      }
       assert.equal(f.sourceCalls.length, count + 1);
       unblock(); assert.equal((await first).json.sourceOk, true); await ready(merchant);
       assert.equal((await status(duplicate)).started, 1);
@@ -282,10 +299,13 @@ test("mounted concurrency, duplicate controllers, unknown delivery and interrupt
       await waitFor(async () => (await f.events(merchant)).some(row => row.extractionTrialOutcome?.outcome === "unknown_response"));
       unblock(); await ready(merchant);
       assert.equal((await status(merchant)).started, 2); assert.equal(f.sourceCalls.length, count + 1);
+      const lost = (await merchant.request("/v0/commerce-demand.json")).json.extractionTrial;
+      assert.deepEqual(lost.diagnostics.populations.unattributed.unknown_response, { known: 0, unknown: 1, byReason: {} });
       await merchant.stop(); merchant = await f.start({ store });
       assert.equal((await status(merchant)).started, 2); assert.equal(f.sourceCalls.length, count + 1);
       const view = (await merchant.request("/v0/commerce-demand.json")).json.extractionTrial;
       assert.equal(view.requestedWindowComplete, false); // new mount does not backdate old capture
+      assert.deepEqual(view.diagnostics.populations, {}, "this harness restart selects a fresh journal; no backfill");
     } finally { unblock(); req.destroy(); }
   });
   await t.test("process crash retains durable spend and abandoned lock; restart refuses ambiguous active work", async () => {
@@ -338,6 +358,7 @@ test("actual merchant restart retains old trial rows while current mount has no 
   const read = (await second.request("/v0/commerce-demand.json?days=1")).json.extractionTrial;
   assert.equal(f.sourceCalls.length, hops, "restart and projection perform no extraction");
   assert.deepEqual(read.populations, before.populations);
+  assert.deepEqual(read.diagnostics, before.diagnostics);
   assert.equal(read.populations.owner_monitor.admitted, 1);
   assert.equal(read.populations.owner_monitor.completed, 1);
   assert.equal(read.populations.owner_monitor.refused, 1);
@@ -363,4 +384,121 @@ test("actual merchant restart retains old trial rows while current mount has no 
   assert.equal((await status(second)).started, 2);
   assert.equal(f.sourceCalls.length, hops + 1);
   await second.stop();
+});
+
+test("pinned trial caller bytes and phase totals survive finite diagnostics for controlled source and refusal branches", async t => {
+  t.mock.timers.enable({ apis: ["Date"], now: NOW });
+  const f = await fixture(t);
+  // Load the exact pinned producer with only relative import resolution adapted
+  // to a data URL. Both mounts use the same extractor and offline-only transport.
+  const pinnedCommit = "d9e5cde379cf7798f473d0cc6bf2139c9ec857d9";
+  const pinnedSource = execFileSync("git", ["show", `${pinnedCommit}:extraction-trial.mjs`], { encoding: "utf8" })
+    .replaceAll('"express"', JSON.stringify(import.meta.resolve("express")))
+    .replaceAll('"./extract.mjs"', JSON.stringify(new URL("./extract.mjs", import.meta.url).href))
+    .replaceAll('"./extract-capture.mjs"', JSON.stringify(new URL("./extract-capture.mjs", import.meta.url).href));
+  const pinned = await import(`data:text/javascript;base64,${Buffer.from(pinnedSource).toString("base64")}`);
+  const secret = "sk_live_ROOT9572_HTTP_SECRET";
+  const previousFetch = globalThis.__SAMEDAYDESK_EXTRACT_FETCH__;
+  t.after(() => {
+    if (previousFetch === undefined) delete globalThis.__SAMEDAYDESK_EXTRACT_FETCH__;
+    else globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = previousFetch;
+  });
+  let fetches = 0;
+  globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = input => {
+    const url = new URL(input);
+    assert.equal(url.hostname, "diagnostic.fixture.example", "fixture must never use real transport");
+    fetches++;
+    const target = url.pathname.slice(1);
+    if (["403", "429", "500"].includes(target)) return Promise.resolve(new Response("<body>fixture</body>", { status: Number(target) }));
+    if (target === "ok" || target === "partial") return Promise.resolve(new Response(`<body>${target === "partial" ? "p".repeat(2000) : "fixture"}</body>`));
+    if (target === "redirect") return Promise.resolve(new Response(null, { status: 302 }));
+    if (target === "encoding") return Promise.resolve(new Response("fixture", { headers: { "content-encoding": "gzip" } }));
+    if (target === "response") return Promise.resolve({ status: 200, headers: new Headers(), body: null });
+    if (target === "timeout") throw new DOMException(secret, "AbortError");
+    if (target === "ssrf") throw Object.assign(new Error(secret), { code: "ssrf_blocked" });
+    if (target === "custom") throw Object.assign(new Error(secret), { code: secret });
+    if (target === "http-code") throw Object.assign(new Error(secret), { code: "http_403" });
+    if (target === "malformed") throw Object.assign(new Error(secret), { code: ["timeout"] });
+    if (target === "no-code") throw new Error(secret);
+    throw new Error("unconfigured offline fixture");
+  };
+  async function mounted(mount, name) {
+    const telemetry = createCommerceTelemetry({ dataDir: path.join(f.scratch, name), secret: "diagnostic-fixture-key" });
+    let availability = "enabled", started = 0;
+    const budget = {
+      async status() { return { availability }; },
+      async acquire() {
+        if (availability !== "enabled") throw Object.assign(new Error("fixture"), { code: `trial_${availability}` });
+        return { async spend() { started++; }, async release() {} };
+      },
+    };
+    const app = express(); mount(app, { budget, observe: telemetry.extractionTrialObserver() });
+    const server = createServer(app); server.listen(0, "127.0.0.1"); await once(server, "listening");
+    t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
+    return {
+      telemetry, availability(value) { availability = value; }, started: () => started,
+      async request({ target = "ok", method = "POST", raw, body } = {}) {
+        return new Promise((resolve, reject) => {
+          const req = httpRequest({ hostname: "127.0.0.1", port: server.address().port, path: ROUTE, method,
+            headers: { "content-type": "application/json" } }, res => {
+            const chunks = []; res.on("data", chunk => chunks.push(chunk));
+            res.on("end", () => resolve({ status: res.statusCode, headers: res.headers, text: Buffer.concat(chunks).toString() }));
+          });
+          req.on("error", reject);
+          req.end(raw ?? JSON.stringify(body ?? { url: `https://diagnostic.fixture.example/${target}` }));
+        });
+      },
+    };
+  }
+  const before = await mounted(pinned.mountExtractionTrial, "pinned");
+  const after = await mounted(mountExtractionTrial, "diagnostic");
+  const cases = [
+    ...["403", "429", "500"].map(target => ({ target, outcome: "failed", family: "source_http", code: target === "500" ? "http_5xx" : `http_${target}` })),
+    ...[["timeout", "timeout"], ["ssrf", "ssrf_blocked"], ["redirect", "redirect_error"],
+      ["encoding", "unsupported_encoding"], ["response", "invalid_response"]]
+      .map(([target, code]) => ({ target, outcome: "failed", family: "fetch", code })),
+    ...["custom", "http-code", "malformed", "no-code"].map(target => ({ target, outcome: "failed" })),
+    { target: "ok", outcome: "completed" }, { target: "partial", outcome: "partial" },
+    { method: "PUT", outcome: "refused", family: "admission", code: "method_not_allowed" },
+    { raw: "{", outcome: "refused", family: "admission", code: "invalid_trial_body" },
+    { body: { url: "file:///fixture" }, outcome: "refused", family: "admission", code: "invalid_trial_input" },
+    ...["disabled", "scheduled", "expired", "exhausted", "busy", "unavailable"].map(availability =>
+      ({ availability, outcome: "refused", family: "admission", code: availability })),
+  ];
+  for (const entry of cases) await t.test(entry.target || entry.code, async () => {
+    before.availability(entry.availability || "enabled"); after.availability(entry.availability || "enabled");
+    const fetchCount = fetches, starts = after.started();
+    const expected = await before.request(entry), actual = await after.request(entry);
+    assert.equal(actual.status, expected.status); assert.equal(actual.text, expected.text, "caller body bytes equal pinned producer");
+    for (const key of ["cache-control", "x-samedaydesk-trial", "content-type", "content-length", "etag", "allow"]) {
+      assert.equal(actual.headers[key], expected.headers[key], key);
+    }
+    unpaid(actual);
+    await after.telemetry.flush();
+    const rows = (await readFile(after.telemetry.paths.currentPath, "utf8")).trim().split("\n").map(JSON.parse);
+    const terminal = rows.at(-1);
+    assert.equal(terminal.extractionTrialOutcome.outcome, entry.outcome);
+    assert.deepEqual(terminal.extractionTrialReason,
+      entry.code ? { v: 1, family: entry.family, code: entry.code } : undefined);
+    if (entry.outcome === "refused") {
+      assert.equal(fetches, fetchCount, "refusal never fetches"); assert.equal(after.started(), starts, "refusal never spends");
+    } else assert.equal(after.started(), starts + 1);
+    assert.equal(after.started(), before.started());
+  });
+  const oldSummary = (await before.telemetry.snapshot()).extractionTrial;
+  const summary = (await after.telemetry.snapshot()).extractionTrial;
+  assert.deepEqual(summary.populations, oldSummary.populations, "all existing phase totals equal the pinned producer");
+  assert.deepEqual(summary.diagnostics.populations.unattributed.failed, { known: 8, unknown: 4, byReason: {
+    "source_http.http_403": 1, "source_http.http_429": 1, "source_http.http_5xx": 1,
+    "fetch.timeout": 1, "fetch.ssrf_blocked": 1, "fetch.redirect_error": 1,
+    "fetch.unsupported_encoding": 1, "fetch.invalid_response": 1,
+  } });
+  assert.equal(summary.diagnostics.populations.unattributed.refused.known, 9);
+  const raw = await readFile(after.telemetry.paths.currentPath, "utf8");
+  for (const marker of [secret, "diagnostic.fixture.example", "<body>"]) {
+    assert.ok(!raw.includes(marker)); assert.ok(!JSON.stringify(summary).includes(marker));
+  }
+  assert.equal(new Set(raw.trim().split("\n").map(line => JSON.parse(line).actor)).size, 1);
+  assert.equal(f.sourceCalls.length, 0, "no fixture fallback to another source");
+  t.diagnostic(`${cases.length} controlled branches: caller body/header bytes and phase totals equal ${pinnedCommit}`);
 });
