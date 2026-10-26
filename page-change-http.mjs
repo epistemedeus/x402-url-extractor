@@ -1,3 +1,4 @@
+import { pageChangeInputSchema, pageChangeRequestExamples } from "./page-change-input-contract.mjs";
 import { spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -246,11 +247,7 @@ export function pageChangeHttpOpenApiExample() {
             content: {
               "application/json": {
                 schema: pageChangeHttpInputSchema(),
-                example: {
-                  before: { mediaType: "application/json", body: { product: "samedaydesk-extract-batch", sources: [] } },
-                  after: { mediaType: "application/json", body: { product: "samedaydesk-extract-batch", sources: [] } },
-                  fields: ["title", "description"],
-                },
+                examples: pageChangeRequestExamples(),
               },
             },
           },
@@ -282,25 +279,7 @@ export function pageChangeHttpOpenApiExample() {
 }
 
 export function pageChangeHttpInputSchema() {
-  return {
-    type: "object",
-    additionalProperties: false,
-    required: ["before", "after", "fields"],
-    properties: {
-      before: { description: "Already delivered batch JSON object or {mediaType, body, observedAt} envelope. Not a filesystem path or URL." },
-      after: { description: "Already delivered batch JSON object or envelope." },
-      fields: {
-        type: "array",
-        minItems: 1,
-        maxItems: DEFAULT_LIMITS.maxFields,
-        uniqueItems: true,
-        items: { type: "string" },
-      },
-      clock: { type: "string", description: "Caller UTC clock accepted for compatibility only. HTTP comparison keeps freshness unknown because it does not verify observations." },
-      maxStaleMs: { type: "integer", minimum: 0, description: "Optional freshness horizon. Not a compute ceiling." },
-      allowFreshClaim: { type: "boolean", const: false, description: "This supplied-input HTTP route cannot attest freshness. True is rejected." },
-    },
-  };
+  return pageChangeInputSchema();
 }
 
 export function pageChangeHttpOutputSchema() {

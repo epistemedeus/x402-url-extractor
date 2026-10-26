@@ -249,6 +249,7 @@ import {
   validateExtractBatchRequest,
   ALL_FIELDS,
 } from "./extract-batch.mjs";
+import { pageChangeRequestExamples, pageChangeMcpInputSchema, pageChangeMcpDescription } from "./page-change-input-contract.mjs";
 import {
   PAGE_CHANGE_HTTP_PATH,
   executePageChangeComparison,
@@ -2206,7 +2207,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
         summary: "Free compare of two already-held extract-batch artifacts. charged is false. Not a paid SKU.",
         requestBody: {
           required: true,
-          content: { "application/json": { schema: pageChangeHttpInputSchema() } },
+          content: { "application/json": { schema: pageChangeHttpInputSchema(), examples: pageChangeRequestExamples() } },
         },
         responses: {
           "200": {
@@ -4475,13 +4476,9 @@ import("./mcp-server.mjs")
           free: true,
           method: "POST",
           route: PAGE_CHANGE_HTTP_PATH,
-          description: "Compare two already-held extract-batch JSON artifacts. charged is false. Not a paid SKU. Does not fetch, pay, or schedule a second observation.",
+          description: pageChangeMcpDescription(),
           price: "$0",
-          inputSchema: {
-            before: z.record(z.string(), z.any()).describe("Already delivered batch JSON object. Not a URL or filesystem path."),
-            after: z.record(z.string(), z.any()).describe("Already delivered batch JSON object. Not a URL or filesystem path."),
-            fields: z.array(z.string()).min(1).max(11).describe("Explicit field names to compare."),
-          },
+          inputSchema: pageChangeMcpInputSchema(),
           run: (args) => executePageChangeComparison(args),
           tags: ["page-change", "diff", "free"],
         }] : []),

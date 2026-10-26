@@ -1,3 +1,5 @@
+import { pageChangeMcpDescription } from "./page-change-input-contract.mjs";
+
 const TOOL_METADATA = Object.freeze({
   extract: {
     title: "Extract Web Page as Structured JSON",
@@ -5,7 +7,7 @@ const TOOL_METADATA = Object.freeze({
   },
   page_change: {
     title: "Compare Held Page Extracts",
-    description: "Compare two already-held extract-batch JSON artifacts on caller-named fields. This tool is free: charged is false, it does not fetch, and it does not accept payment. Use extract_batch when you still need a paid observation. Do not add a second paid diff.",
+    description: pageChangeMcpDescription(),
   },
   extract_batch: {
     title: "Extract Public URLs in Batch",
