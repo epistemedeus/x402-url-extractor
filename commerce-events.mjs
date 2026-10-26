@@ -1811,6 +1811,7 @@ function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, req
   const populations = {};
   const diagnostics = {};
   const operations = {};
+  const sources = {};
   const rows = events.filter(event => event.extractionTrialOutcome && eventTimestampMs(event) <= generatedAtMs
     && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs));
   for (const event of rows) {
@@ -1822,6 +1823,16 @@ function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, req
     const operation = normalizeExtractionTrialOperation(event.extractionTrialOperation) || "unknown";
     operations[label][operation] ||= Object.fromEntries([...TRIAL_OUTCOMES].map(key => [key, 0]));
     operations[label][operation][outcome]++;
+    sources[label] ||= {};
+    const sourceCounts = sources[label][operation] ||= { declared: {}, observed: {} };
+    // The canonical split reader validates relationships, not just labels.
+    // A missing/corrupt optional split never erases a valid technical phase.
+    const split = eventDiscoverySplitForSnapshot(event);
+    for (const dimension of ["declared", "observed"]) {
+      const source = (split.ok && split[dimension]) || "unknown";
+      sourceCounts[dimension][source] ||= Object.fromEntries([...TRIAL_OUTCOMES].map(key => [key, 0]));
+      sourceCounts[dimension][source][outcome]++;
+    }
     if (!["failed", "refused", "unknown_response"].includes(outcome)) continue;
     diagnostics[label] ||= {};
     const counts = diagnostics[label][outcome] ||= { known: 0, unknown: 0, byReason: {} };
@@ -1838,6 +1849,11 @@ function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, req
     operations: {
       populations: operations,
       policy: "Allowlisted mount-supplied operation on the same eligible phase rows. Missing or malformed labels stay unknown; no historical inference or caller join.",
+    },
+    sources: {
+      schemaVersion: "samedaydesk.extraction-trial-sources.v1",
+      populations: sources,
+      policy: "Declared and observed source phase counts use the same eligible retained rows, population cutoffs and operation labels as the trial totals. The two views overlap and must not be added. Missing, null or malformed source splits remain unknown; a null declaration does not prove absence, including historical rows whose producer did not capture declarations. No collapsed-source inference or historical backfill. New allowlisted declarations can prospectively classify anonymous requests as crawler, after internal and owner-monitor priority. Declarations and user-agent labels are unverified self-reports, not identity, authentication, requests, unique agents, usefulness, conversion, customers, payment or revenue attribution.",
     },
     diagnostics: {
       schemaVersion: "samedaydesk.extraction-trial-reasons.v1",
@@ -4072,8 +4088,13 @@ export function createCommerceTelemetry({
     extractionTrialCaptureStartedAt ||= new Date().toISOString();
     return function begin(req, res, trialOperation) {
       const startedAt = Date.now();
-      const source = classifyAgentDiscoverySource(headerValue(req.headers || {}, "user-agent"));
-      const originClass = commerceOriginClass(req, internalToken, source, false);
+      const headers = req.headers || {};
+      const sourceSplit = classifyCommerceDiscoverySourceSplit({
+        declaredHeader: classifyDeclaredAgentDiscoverySource(headerValue(headers, "x-samedaydesk-agent-source")),
+        receiptReferral: false,
+        observed: classifyAgentDiscoverySource(headerValue(headers, "user-agent")),
+      });
+      const originClass = commerceOriginClass(req, internalToken, sourceSplit.agentDiscoverySource, false);
       // Aggregate-only identity: deliberately independent of IP, UA and input.
       const actor = createHmac("sha256", secret).update("extraction-trial-aggregate").digest("hex").slice(0, 24);
       let outcome = "refused", reason = null, ended = false, admitted = false;
@@ -4081,8 +4102,7 @@ export function createCommerceTelemetry({
         const safeReason = normalizeExtractionTrialReason(phase, metadata);
         const event = {
           v: 3, id: randomUUID(), ts: new Date().toISOString(), actor, actorEpoch, originClass,
-          agentDiscoverySource: source, declaredAgentDiscoverySource: null,
-          observedAgentDiscoverySource: source, discoverySourceKind: source ? "observed_user_agent" : "none",
+          ...sourceSplit,
           method: req.method, route: "/trial/extract", matched: true, kind: "free", queryKeys: [],
           requestConstruction: "not_measured", requestConstructionRequiredKeyCount: 0,
           paymentPresent: false, paymentCredentialParsed: false, paymentProtocol: null,
