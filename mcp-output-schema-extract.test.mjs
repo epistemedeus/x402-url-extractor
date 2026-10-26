@@ -587,3 +587,41 @@ test("mounted read exports its actual schema and typed source refusal without gr
     assert.equal(output.error.code, "http_403");
   } finally { await mounted.close(); restore(); }
 });
+
+test("mounted read carries native table meaning, bounded omission and recovery in matching text/structuredContent", async () => {
+  const table = '<table><tr><th rowspan="2">Engine</th><th colspan="2">Support</th></tr><tr><th>Transpile</th><th>Reconcile</th></tr><tr><td>Alpha</td><td></td><td>Yes</td></tr></table>';
+  const restore = installExtractFetch({
+    "https://table.example/": () => htmlResponse(table, { url: "https://final.example/matrix" }),
+    "https://table-denied.example/": () => htmlResponse(table, { status: 403, url: "https://table-denied.example/" }),
+    "https://table-bad.example/": () => htmlResponse('<table><tr><td colspan="999">bad</td></tr></table>'),
+    "https://table-long.example/": () => htmlResponse('<p>' + 'x'.repeat(39980) + '</p>' + table),
+  });
+  const mounted = await startMountedExtract({ tools: [{ name: "read", description: "read fixture", price: "$0.005", inputSchema: { url: z.string() }, outputSchema: readMcpOutputSchema, run: args => readMarkdown(args.url) }] });
+  try {
+    for (const [i, url] of ['https://table.example/', 'https://table-denied.example/', 'https://table-bad.example/', 'https://table-long.example/', 'https://table.example/'].entries()) {
+      const call = { jsonrpc: '2.0', id: 100 + i * 2, method: 'tools/call', params: { name: 'read', arguments: { url } } };
+      const unpaid = await mounted.post(call);
+      assert.equal(unpaid.json.result.isError, true);
+      assert.equal('structuredContent' in unpaid.json.result, false);
+      const challenge = JSON.parse(unpaid.json.result.content[0].text);
+      const paid = await mounted.post({ ...call, id: call.id + 1, params: { ...call.params, _meta: { 'x402/payment': payment(challenge.accepts[0]) } } });
+      assert.equal(Boolean(paid.json.result.isError), false, JSON.stringify(paid.json));
+      const output = paid.json.result.structuredContent;
+      assertSchemaMatchesHandler(readMcpOutputSchema, output);
+      assert.deepEqual(JSON.parse(paid.json.result.content[0].text), output);
+      assert.equal(output.requestedUrl, url);
+      if (url.includes('-bad') || url.includes('-long')) {
+        assert.equal(output.truncated, true);
+        assert.equal(output.capture.textTruncated, true);
+        assert.doesNotMatch(output.markdown, /<table/);
+      } else {
+        assert.equal(output.markdown, table);
+        assert.equal(output.truncated, false);
+        assert.equal(output.sourceOk, !url.includes('-denied'));
+        assert.equal(output.error?.code || null, url.includes('-denied') ? 'http_403' : null);
+        assert.equal(output.capture.bodyBytes, Buffer.byteLength(table));
+        if (!url.includes('-denied')) assert.equal(output.finalUrl, 'https://final.example/matrix');
+      }
+    }
+  } finally { await mounted.close(); restore(); }
+});

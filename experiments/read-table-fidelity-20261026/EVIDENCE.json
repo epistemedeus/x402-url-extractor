@@ -1,0 +1,581 @@
+{
+  "outcome": "source correction ready for Root receiving; no deployment or independent adoption",
+  "recordedAt": "2026-10-26T12:28:35.871727+00:00",
+  "product": {
+    "origin": "https://github.com/epistemedeus/x402-url-extractor.git",
+    "base": "e862b261b450baef49a4064c4d76b819e291083d",
+    "branch": "codex/root9722-read-table-fidelity-20261026",
+    "productAgentsAbsentAtBase": true,
+    "requiredFrozenMembers": [
+      {
+        "path": "extract.mjs",
+        "blob": "23ade8bfa7e17aad801eed1d533393017dc7281b",
+        "sha256": "d8baf5882f1380211bdd82ee4d89383321131d7cdfc936bfc1c0f604a06b80c5",
+        "readInFull": true
+      },
+      {
+        "path": "extract-capture.mjs",
+        "blob": "287a7d61d9885fd52349205ebde92e0373d23ab7",
+        "sha256": "64c4c0422bd84cedb7168d0509b694d88ef1f8a694e7c5ecc48b18080493b0d5",
+        "readInFull": true
+      },
+      {
+        "path": "extract.review.test.mjs",
+        "blob": "584a03edc9adc1a6ffdf905c241bc1a44ef13b11",
+        "sha256": "061823635f38222dc65218bb7216ab2d360c2ca515f4014315a5d2b729ca6b11",
+        "readInFull": true
+      },
+      {
+        "path": "extract.http.test.mjs",
+        "blob": "e60ec11a9969568f0e7522ff06aa69c0c654be1d",
+        "sha256": "75db74ee84458b19d45a4a576d08d92fd3a3f526c4e6d9f4d072b06da28820a6",
+        "readInFull": true
+      },
+      {
+        "path": "mcp-output-schema-extract.test.mjs",
+        "blob": "82efe5fca9c0136f9b56b5b0a37650ad55ec2809",
+        "sha256": "957e71825abc42749b9d7d73737a33abee3a5d647bef9cd0afc89d2e57897ea4",
+        "readInFull": true
+      },
+      {
+        "path": "package.json",
+        "blob": "8877d8cb46515709612e9aecb15ff702302bf6b3",
+        "sha256": "37d61a7a5441945c72195823fe886516e0536216e17c8626819dea6dee4eef1f",
+        "readInFull": true
+      },
+      {
+        "path": "package-lock.json",
+        "blob": "001fa320adffe2dfb214e8651bcc379a2703c9b7",
+        "sha256": "212c78b62206723b04af693e8c828541953b97db92342cd8135268f854236be7",
+        "readInFull": true
+      }
+    ],
+    "followedRelevantSameSourceSeams": [
+      "extract-capture.mjs",
+      "extract-excerpt-budget.mjs",
+      "extract-batch-config.mjs",
+      "extract-batch-c1/url-guard.mjs",
+      "extract-batch-c1/public-fetch.mjs",
+      "extract-batch-c1/transport.mjs",
+      "mcp-server.mjs",
+      "server.js reader bindings"
+    ]
+  },
+  "operating": {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "e3b055200d099bcf0db71e624bc89fee10a23ff4",
+    "receiptSha256": "8dfaf7b04994ba14a8bfe9f6185e2e2ee4eafe9fbaff6f9cadf50aa1b72fce37",
+    "members": [
+      {
+        "role": "instructions",
+        "path": "AGENTS.md",
+        "bytes": 33778,
+        "sha256": "a22983060028472dab85265451d1f66522313a390622ef19db56401af15931a3",
+        "blob": "7296a6b1d24e589c6ff36d70017e66f201c7a25f",
+        "readInFull": true
+      },
+      {
+        "role": "state",
+        "path": "overview/STATE.md",
+        "bytes": 33102,
+        "sha256": "3e8521d3cdc373144d74f842ec0988fcd4a88bbd183cde25ce7c495b9e0bec02",
+        "blob": "55e5aac44858b54bbe2d05254d1c787bab8e9d95",
+        "readInFull": true
+      },
+      {
+        "role": "execution-plan",
+        "path": "overview/MACHINE-COMMERCE-EXECUTION-PLAN.md",
+        "bytes": 48940,
+        "sha256": "4047860b58f3603666de287cc5fb22daff6965b01afeb3af2ee43210feb5b5e4",
+        "blob": "aa7146c7517e1fac47420bc14f37269996d6e2e5",
+        "readInFull": true
+      },
+      {
+        "role": "assignment",
+        "path": "overview/remote-worker/assignments/ROOT9722-MERCHANT-READ-TABLE-FIDELITY.md",
+        "bytes": 5652,
+        "sha256": "a1bf8c1efdbc2567aed5de7ee65422e7b1ff862e6170ae643ca7fc293eaec265",
+        "blob": "9038434588cf7012d0416630ec0808fea73e382a",
+        "readInFull": true
+      }
+    ],
+    "scope": "Only supplied frozen operating inputs; no invented product AGENTS or other job ownership."
+  },
+  "baseline": {
+    "empty": {
+      "html": "<table><tr><th>Engine</th><th>Transpile</th><th>Reconcile</th></tr><tr><td>Alpha</td><td></td><td>Yes</td></tr><tr><td>Beta</td><td>No</td><td></td></tr></table>",
+      "output": {
+        "ok": true,
+        "requestedUrl": "https://matrix.example/",
+        "finalUrl": "https://matrix.example/",
+        "url": "https://matrix.example/",
+        "status": 200,
+        "sourceOk": true,
+        "error": null,
+        "title": "",
+        "markdown": "Engine Transpile Reconcile\n\nAlpha Yes\n\nBeta No",
+        "wordCount": 7,
+        "truncated": false,
+        "capture": {
+          "method": "http-get-no-javascript",
+          "javascriptExecuted": false,
+          "maxBodyBytes": 3000000,
+          "textExcerptLimitChars": null,
+          "markdownLimitChars": 40000,
+          "bodyBytes": 161,
+          "bodyTruncated": false,
+          "textTruncated": false,
+          "charset": "utf-8",
+          "charsetSource": "content-type"
+        },
+        "fetchedAt": "2026-10-26T12:08:32.960Z"
+      }
+    },
+    "spans": {
+      "html": "<table><tr><th rowspan=\"2\">Engine</th><th colspan=\"2\">Support</th></tr><tr><th>Transpile</th><th>Reconcile</th></tr><tr><td rowspan=\"2\">Alpha</td><td>Yes</td><td></td></tr><tr><td colspan=\"2\">Preview</td></tr></table>",
+      "output": {
+        "ok": true,
+        "requestedUrl": "https://matrix.example/",
+        "finalUrl": "https://matrix.example/",
+        "url": "https://matrix.example/",
+        "status": 200,
+        "sourceOk": true,
+        "error": null,
+        "title": "",
+        "markdown": "Engine Support\n\nTranspile Reconcile\n\nAlpha Yes\n\nPreview",
+        "wordCount": 7,
+        "truncated": false,
+        "capture": {
+          "method": "http-get-no-javascript",
+          "javascriptExecuted": false,
+          "maxBodyBytes": 3000000,
+          "textExcerptLimitChars": null,
+          "markdownLimitChars": 40000,
+          "bodyBytes": 217,
+          "bodyTruncated": false,
+          "textTruncated": false,
+          "charset": "utf-8",
+          "charsetSource": "content-type"
+        },
+        "fetchedAt": "2026-10-26T12:08:32.962Z"
+      }
+    }
+  },
+  "correction": {
+    "representation": "allowlisted native HTML in existing Markdown field; original spans retained, no expanded output grid",
+    "limits": {
+      "tables": 64,
+      "rows": 1024,
+      "physicalCells": 8192,
+      "columns": 128,
+      "maxSpan": 64,
+      "rowspanZero": "rest of current row group",
+      "checkedOccupiedPositions": 32768,
+      "depth": 128,
+      "parserEvents": 100000,
+      "inputCharsPerTable": 200000,
+      "serializedTableCharsTotal": 400000,
+      "processingMs": 250,
+      "sourceMaxBytes": 3000000,
+      "defaultTotalDeadlineMs": 12000,
+      "returnedMarkdownChars": 40000,
+      "checks": "Cooperative synchronous checks between parser events/chunks and conversion phases; total reader deadline is also checked after conversion."
+    },
+    "omission": "Explicit in-band marker plus truncated=true and capture.textTruncated=true; sourceOk/error continue to describe source HTTP status. A scan refusal omits all Markdown. Table crossing maxChars is omitted whole.",
+    "intentionalDifferences": [
+      "Native table HTML and character references replace flattened cell text.",
+      "Table links resolve against finalUrl; visible image alternatives are retained.",
+      "Markup outside tables uses the historical converter, with block spacing at table boundaries.",
+      "Direct invalid maxChars is rejected before fetching; valid integer range is 1..40000.",
+      "Word count uses visible table text, not HTML tag tokens."
+    ],
+    "schemaChanged": false,
+    "limitations": [
+      "HTML-stripping Markdown clients cannot render these tables; raw table semantics remain available to agents.",
+      "Strict explicit closing tags; nested/unsupported/malformed/overlapping tables omitted.",
+      "No CSS layout/visibility or JavaScript reconstruction.",
+      "Table budget overhead can omit a large table instead of retaining a partial prefix.",
+      "No real Lakebridge page qualification."
+    ]
+  },
+  "verification": {
+    "tests": [
+      {
+        "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 markdown-table.test.mjs extract.review.test.mjs extract.semantics.test.mjs extract.http.test.mjs mcp-output-schema-extract.test.mjs",
+        "exit": 0,
+        "log": "/home/ubuntu/root-sol-window100337/root9722-read-table-fidelity-20261026/focused-final-2.tap",
+        "sha256": "adb775a24292cf8cbe81bf39ada67713056966f93e357b094a89048581e92fe9",
+        "tests": 39,
+        "pass": 39,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      {
+        "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 extract-batch.test.mjs extract-batch.identity.test.mjs extract-batch.http.test.mjs extract-batch-commerce.mounted.test.mjs extract-batch-page-change.test.mjs extract-batch-record.test.mjs enrich.test.mjs mcp-payment-header.test.mjs mcp-output-schema.test.mjs mcp-output-schema-wave2.test.mjs mcp-output-schema-wave3.test.mjs",
+        "exit": 0,
+        "log": "/home/ubuntu/root-sol-window100337/root9722-read-table-fidelity-20261026/consumers-final.tap",
+        "sha256": "4aaab40a30ce4d80d26a841191be4a118c01db3a5728f241c6e985dc59c5c5cd",
+        "tests": 75,
+        "pass": 75,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      }
+    ],
+    "independentRender": {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node /home/ubuntu/root-sol-window100337/root9722-read-table-fidelity-20261026/verify-render.mjs",
+      "exit": 0,
+      "log": "/home/ubuntu/root-sol-window100337/root9722-read-table-fidelity-20261026/render-final.log",
+      "receipt": "/home/ubuntu/root-sol-window100337/root9722-read-table-fidelity-20261026/render.json",
+      "sha256": "598f769bd4db47199a39a3f858f478948f9438ecaa69f8f5831c18cfcc621b02",
+      "consumers": {
+        "markdown-it": "14.2.0 HTML enabled",
+        "parse5": "8.0.1"
+      },
+      "cases": [
+        "native block",
+        "list wrapper",
+        "link wrapper"
+      ],
+      "assertions": "cell text, literal Markdown punctuation, code, blank lines/newlines and Unicode survive independent Markdown -> HTML5 parsing"
+    },
+    "matrixRenderSemanticEquality": {
+      "empty": true,
+      "spans": true
+    },
+    "noTableFrozenReaderControls": [
+      {
+        "html": "plain text\n next",
+        "markdown": "plain text\nnext",
+        "equal": true
+      },
+      {
+        "html": "# Title\n\n| a | b |\n| --- | --- |\n| c | |",
+        "markdown": "# Title\n\n| a | b |\n| --- | --- |\n| c | |",
+        "equal": true
+      },
+      {
+        "html": "<p>A &amp; B <code>x</code></p>",
+        "markdown": "A & B x",
+        "equal": true
+      },
+      {
+        "html": "<h1>Title</h1><ul><li>A</li><li>B</li></ul><a href=\"/next\">next</a>",
+        "markdown": "# Title\n\n- A\n- B [next](/next)",
+        "equal": true
+      },
+      {
+        "html": "<p>before</p><script>\"<table>fake</table>\"</script><p>after</p>",
+        "markdown": "before\n\nafter",
+        "equal": true
+      },
+      {
+        "html": "<body><header>drop</header><article>stay</article></body>",
+        "markdown": "stay",
+        "equal": true
+      }
+    ],
+    "install": {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 npm ci --ignore-scripts --no-audit --no-fund",
+      "exit": 0,
+      "log": "/home/ubuntu/root-sol-window100337/root9722-read-table-fidelity-20261026/npm-ci-final.log"
+    },
+    "diffCheck": {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    "retainedFailures": [
+      {
+        "log": "/home/ubuntu/root-sol-window100337/root9722-read-table-fidelity-20261026/table-initial.tap",
+        "sha256": "5d18679f327076604fa5f400efecf8977bdfc6f27720ba213c313356e70ff3f6",
+        "exit": 1,
+        "finding": "Three assertion expectations corrected: canonical attribute order, historical list/link whitespace, and an overly broad diagnostic exclusion. No production behavior changed to satisfy those errors."
+      },
+      {
+        "log": "/home/ubuntu/root-sol-window100337/root9722-read-table-fidelity-20261026/render.log",
+        "sha256": "ccc6279dc743aeb4cddc8c7a4b713188a616171b77de48d4c927d01a59845b26",
+        "exit": 1,
+        "finding": "Independent rendered-code check found newline character references re-escaped while adding Markdown punctuation protection. Fixed using a single-pass text encoder; render-final.log and final focused tests pass."
+      }
+    ],
+    "scriptWiring": {
+      "scripts": [
+        "test",
+        "test:extract-batch"
+      ],
+      "newRegressionsIncluded": true,
+      "manifestDependenciesEqualLockRoot": true
+    }
+  },
+  "reuseComparison": {
+    "htmlparser2": {
+      "version": "12.0.0",
+      "license": "MIT",
+      "benefit": "Streaming parser callbacks/source offsets allow bounded selective table preservation without reformatting the full document.",
+      "url": "https://github.com/fb55/htmlparser2"
+    },
+    "turndownGfm": {
+      "turndown": "7.2.4 MIT",
+      "gfm": "1.0.2 MIT",
+      "spanFixtureOutput": "| Engine | Support |\n| --- | --- |\n| Transpile | Reconcile |\n| Alpha | Yes |  |\n| Preview |",
+      "finding": "Simple empties survive but spans are discarded, producing unequal logical row widths.",
+      "url": "https://github.com/mixmark-io/turndown-plugin-gfm/blob/master/src/tables.js"
+    },
+    "parse5": {
+      "version": "8.0.1",
+      "license": "MIT",
+      "role": "Independent HTML5 receiving; full tree builder not selected for streaming bound enforcement.",
+      "url": "https://github.com/inikulin/parse5"
+    }
+  },
+  "measurements": {
+    "latency": {
+      "small": {
+        "bodyBytes": 161,
+        "baseline": {
+          "samples": 50,
+          "p50Ms": 0.11581699999999273,
+          "p95Ms": 0.16059300000000576,
+          "maxMs": 0.20446999999998638
+        },
+        "corrected": {
+          "samples": 50,
+          "p50Ms": 0.3039609999999868,
+          "p95Ms": 0.4709310000000073,
+          "maxMs": 3.311456000000021
+        }
+      },
+      "medium": {
+        "bodyBytes": 14927,
+        "baseline": {
+          "samples": 50,
+          "p50Ms": 0.5074359999999842,
+          "p95Ms": 0.6564129999999864,
+          "maxMs": 0.996391999999986
+        },
+        "corrected": {
+          "samples": 50,
+          "p50Ms": 1.4993860000000154,
+          "p95Ms": 2.3226170000000366,
+          "maxMs": 2.9724410000000034
+        }
+      },
+      "malformed": {
+        "bodyBytes": 53,
+        "baseline": {
+          "samples": 50,
+          "p50Ms": 0.0708850000000325,
+          "p95Ms": 0.07382000000001199,
+          "maxMs": 0.09987200000000485
+        },
+        "corrected": {
+          "samples": 50,
+          "p50Ms": 0.13859200000001692,
+          "p95Ms": 0.22185899999999492,
+          "maxMs": 0.7357539999999858
+        }
+      },
+      "noTable": {
+        "bodyBytes": 150007,
+        "baseline": {
+          "samples": 50,
+          "p50Ms": 2.569966000000022,
+          "p95Ms": 3.945596000000023,
+          "maxMs": 4.692608000000007
+        },
+        "corrected": {
+          "samples": 50,
+          "p50Ms": 2.650602000000049,
+          "p95Ms": 3.789342999999917,
+          "maxMs": 3.8616670000000113
+        }
+      }
+    },
+    "latencyMethod": "50 warmed injected actual-reader samples per fixture/variant; no live network. Frozen baseline source differs only in relocated import specifiers for comparison execution.",
+    "packageAndImportOverhead": {
+      "imports": {
+        "baseline": [
+          {
+            "importMs": 64.30476100000001,
+            "rssBytes": 68005888,
+            "heapUsedBytes": 8933200,
+            "maxRSSKiB": 66412
+          },
+          {
+            "importMs": 69.889735,
+            "rssBytes": 68247552,
+            "heapUsedBytes": 8927896,
+            "maxRSSKiB": 66648
+          },
+          {
+            "importMs": 62.259179,
+            "rssBytes": 68325376,
+            "heapUsedBytes": 8934752,
+            "maxRSSKiB": 66724
+          },
+          {
+            "importMs": 62.96991,
+            "rssBytes": 68235264,
+            "heapUsedBytes": 8967336,
+            "maxRSSKiB": 66636
+          },
+          {
+            "importMs": 61.02561000000001,
+            "rssBytes": 68104192,
+            "heapUsedBytes": 8947280,
+            "maxRSSKiB": 66508
+          }
+        ],
+        "corrected": [
+          {
+            "importMs": 72.332948,
+            "rssBytes": 70283264,
+            "heapUsedBytes": 10373472,
+            "maxRSSKiB": 68636
+          },
+          {
+            "importMs": 71.21849,
+            "rssBytes": 70201344,
+            "heapUsedBytes": 10297160,
+            "maxRSSKiB": 68556
+          },
+          {
+            "importMs": 72.07274000000001,
+            "rssBytes": 70201344,
+            "heapUsedBytes": 10253712,
+            "maxRSSKiB": 68556
+          },
+          {
+            "importMs": 72.284702,
+            "rssBytes": 70311936,
+            "heapUsedBytes": 10298616,
+            "maxRSSKiB": 68664
+          },
+          {
+            "importMs": 71.69160500000001,
+            "rssBytes": 70283264,
+            "heapUsedBytes": 10359592,
+            "maxRSSKiB": 68636
+          }
+        ]
+      },
+      "addedPackages": [
+        {
+          "path": "node_modules/dom-serializer",
+          "version": "3.1.1",
+          "license": "MIT",
+          "integrity": "sha512-4MEa38/QexBob6gFNwu+EGdWvhJ1OKuNwdYY3Y3NyeWDQfnGeDYQUDfIRzWu5B5gsv03so2Uxd28YC6zrsx3Lw=="
+        },
+        {
+          "path": "node_modules/domelementtype",
+          "version": "3.0.0",
+          "license": "BSD-2-Clause",
+          "integrity": "sha512-umCQid3jKbDmVjx8jGaW7uUykm4DEUeyV21hPxNMo2nV955DhUThwqyOIDtreepP31hl84X7G5U9ZfsWvIB3Pg=="
+        },
+        {
+          "path": "node_modules/domhandler",
+          "version": "6.0.1",
+          "license": "BSD-2-Clause",
+          "integrity": "sha512-gYzvtM72ZtxQO0T048kd6HWSbbGCNOUwcnfQ01cqIJ4X2IYKFFHZ5mKvrQETcFXxsRObZulDaKmy//R7TPtsBg=="
+        },
+        {
+          "path": "node_modules/domutils",
+          "version": "4.0.2",
+          "license": "BSD-2-Clause",
+          "integrity": "sha512-qI4JLRKnSzqFqr7hAlS5xQDusBCjKSEG4t4+7aNrIQMHBcsC2TGEhuyABJdYkgSewL57PNLYEiibY2iPKhKpaA=="
+        },
+        {
+          "path": "node_modules/entities",
+          "version": "8.1.0",
+          "license": "BSD-2-Clause",
+          "integrity": "sha512-kxL7msIffSuh9aaFAMD7rxAIuTRMAHMeBtgHW2yUdWw732ZNh4MehkF2gdjvtdmikkaIP9bFDDJOPlsvm7avrA=="
+        },
+        {
+          "path": "node_modules/htmlparser2",
+          "version": "12.0.0",
+          "license": "MIT",
+          "integrity": "sha512-Tz7u1i95/g2x2jz81+x0FBVhBhY5aRTvD3tXXdFaljuNdzDLJ8UGNRrTcj2cgQvAg3iW/h77Fz15nLW0L0CrZw=="
+        }
+      ],
+      "existingLockedPackagesUnchanged": true,
+      "installedAddedBytes": 767484
+    },
+    "comparisonRuntime": {
+      "node": "v22.23.4",
+      "maxRSSKiB": 122560,
+      "heapUsedBytes": 28100848
+    },
+    "reviewerAmendmentCost": {
+      "outsideReviewerCost": null,
+      "outsideReviewPerformed": false,
+      "ownerSelfReview": [
+        "Visible table word counts, repeated-table atomic truncation, column-group bounds.",
+        "Newline-safe native blocks and literal Markdown punctuation in inline contexts; one failed independent render probe fixed.",
+        "Entity-encoded sentinel impersonation prevented with per-conversion opaque markers.",
+        "Invalid direct maxChars refusal before fetch."
+      ],
+      "cashModelCost": null,
+      "elapsedWholeJobCost": "Not measured; no revenue or profitability inference."
+    }
+  },
+  "authorizationAndActions": {
+    "totalReserveKiB": 2097152,
+    "modelChildren": 0,
+    "extraModelCalls": 0,
+    "nodeHeapMiB": 512,
+    "uvThreads": 1,
+    "ompThreads": 1,
+    "testFileConcurrency": 1,
+    "providerCapacityRefusalObserved": false,
+    "targetPageGets": 0,
+    "publicIssueOpenAttempts": 1,
+    "publicIssueResult": "web open cache miss; not retried",
+    "livePaidCalls": 0,
+    "trialPosts": 0,
+    "deployments": 0,
+    "prs": 0,
+    "externalMessages": 0,
+    "credentialOrFinancialActions": 0,
+    "otherJobsOwned": []
+  },
+  "changedSourceFiles": [
+    {
+      "path": "extract.mjs",
+      "sha256": "15f9550f4d82b478797c18181503ab5205232736d2bb8414ab546b8e21f15d42",
+      "blob": "1c648e930eb540ffeae347c6cb79ee0abcc7a56e"
+    },
+    {
+      "path": "markdown-table.mjs",
+      "sha256": "cec20b50a4efd91688ff22c4d28c176c3f538f080111af36f4bce2b5a55846ba",
+      "blob": "a7924a20f8fb62f1c0b8e16112680d749772b03a"
+    },
+    {
+      "path": "markdown-table.test.mjs",
+      "sha256": "9706510ec5527fd5546b1ec346ccfb953448f5d020cb065e09a04520bc3bc6c4",
+      "blob": "e93f2c69b3a1e2c509c8772f43c3ef0c8ad5edab"
+    },
+    {
+      "path": "extract.http.test.mjs",
+      "sha256": "dc9c28642827edc347a60f059e26146100b528d65e6a125f8441b82c6871bf87",
+      "blob": "ad97d0d709183c3a95bb4c695498c5a3e4b1b541"
+    },
+    {
+      "path": "mcp-output-schema-extract.test.mjs",
+      "sha256": "406a24696a4fecc5a7e398afd5ff1353c99636c00bc073568f1109a5c9bb208b",
+      "blob": "4e2ba6ae2aca699866a6c47b5a86adea1e153c80"
+    },
+    {
+      "path": "package.json",
+      "sha256": "22de3f184fefd7c1bb4f85d4a771893243831bbd36bbfecb84351221e54b5c44",
+      "blob": "1acb407b4b804c68fe31d30b427a06fdabd5c386"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "28d5a53db8e9107efb07be00b377a96e5afce9f897a9852c3915c293345dd42c",
+      "blob": "df5c1c4c932ca25c3a0fcf5f626255dcc49fb849"
+    }
+  ],
+  "fullLogsRoot": "/home/ubuntu/root-sol-window100337/root9722-read-table-fidelity-20261026",
+  "exportIdentity": "Final head/tree and branch push readback are in job-root EXPORT.json and the final worker response; versioned reports avoid self-referential commit IDs."
+}
