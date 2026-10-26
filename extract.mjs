@@ -1,10 +1,12 @@
 // extract.mjs — the paid service: URL -> clean structured data, in one reliable call.
-// Zero dependencies beyond Zod for the MCP success output contract. Value sold to AI
+// Shared guarded capture and bounded parsing for the MCP success output contract. Value sold to AI
 // agents on x402: hand it a messy URL, get back clean text + ALL structured data
 // (JSON-LD/OG/meta/headings/links) + AI-crawler signals, with redirects, timeouts, size
 // caps and errors handled. Saves agents the fetch+parse+guard work.
 
 import { z } from "zod";
+import { performance } from "node:perf_hooks";
+import { markdownWithTables } from "./markdown-table.mjs";
 import {
   EXTRACT_UA,
   EXTRACT_MAX_BODY_BYTES,
@@ -322,12 +324,18 @@ function htmlToMarkdown(html) {
 }
 
 export async function readMarkdown(rawUrl, maxChars = READ_MARKDOWN_MAX_CHARS) {
+  if (!Number.isSafeInteger(maxChars) || maxChars < 1 || maxChars > READ_MARKDOWN_MAX_CHARS) {
+    throw Object.assign(new RangeError(`maxChars must be an integer from 1 through ${READ_MARKDOWN_MAX_CHARS}`), { code: 'invalid_markdown_limit' });
+  }
+  const deadline = performance.now() + resolveExtractTimeoutMs(TIMEOUT_MS);
   const u = assertPublicHttpUrl(rawUrl);
   const fetched = await fetchWithGuards(u.href);
   const { res, html } = fetched;
   const title = clean((html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "");
-  let md = htmlToMarkdown(html);
-  const truncated = md.length > maxChars || fetched.bodyTruncated;
+  const converted = markdownWithTables(html, htmlToMarkdown, { baseUrl: res.url, maxChars, deadline });
+  if (performance.now() >= deadline) throw new DOMException('This operation was aborted', 'AbortError');
+  let md = converted.markdown;
+  const truncated = md.length > maxChars || fetched.bodyTruncated || converted.omitted;
   if (md.length > maxChars) md = md.slice(0, maxChars);
   const ids = identityUrls(u.href, res);
   const classified = classifyHttpStatus(res.status);
@@ -341,7 +349,7 @@ export async function readMarkdown(rawUrl, maxChars = READ_MARKDOWN_MAX_CHARS) {
     error: classified.error,
     title,
     markdown: md,
-    wordCount: md.split(/\s+/).filter(Boolean).length,
+    wordCount: converted.wordCount ?? md.split(/\s+/).filter(Boolean).length,
     truncated,
     capture: buildCapture({
       textExcerptLimitChars: null,

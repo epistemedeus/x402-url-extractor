@@ -16,6 +16,7 @@ const PAYER = `0x${"2".repeat(40)}`;
 const PAY_TO = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
 const NETWORK = "eip155:8453";
 const PRICE_ATOMIC = "5000";
+const TABLE_HTML = '<table><tr><th rowspan="2">Engine</th><th colspan="2">Support</th></tr><tr><th>Transpile</th><th>Reconcile</th></tr><tr><td>Alpha</td><td></td><td>Yes</td></tr><tr><td>Beta</td><td>No</td><td></td></tr></table>';
 
 function unusedPort() {
   return new Promise((resolve, reject) => {
@@ -76,6 +77,10 @@ globalThis.__SAMEDAYDESK_EXTRACT_TIMEOUT_MS__ = 50;
 globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = async (input, init) => {
   const url = String(typeof input === "string" || input instanceof URL ? input : input.url);
   const pages = {
+    "https://table.example/": { status: 200, url: "https://table.example/", body: ${JSON.stringify(TABLE_HTML)} },
+    "https://table-denied.example/": { status: 403, url: "https://table-denied.example/", body: ${JSON.stringify(TABLE_HTML)} },
+    "https://table-bad.example/": { status: 200, url: "https://table-bad.example/", body: "<table><tr><td rowspan='999'>bad</td></tr></table>" },
+    "https://table-long.example/": { status: 200, url: "https://table-long.example/", body: "<p>" + "a".repeat(39980) + "</p>" + ${JSON.stringify(TABLE_HTML)} },
     "https://ok.example/": { status: 200, url: "https://ok.example/", body: "<html><head><title>OK</title></head><body><p>hello</p></body></html>" },
     "https://empty.example/": { status: 200, url: "https://empty.example/", body: "" },
     "https://204.example/": { status: 204, url: "https://204.example/", body: "" },
@@ -284,6 +289,29 @@ test("paid extract and read preserve source HTTP semantics without a second paym
   assert.equal(readMissing.body.status, 404);
   assert.equal(readMissing.body.sourceOk, false);
 
-  assert.equal(facilitator.calls.verify, 11);
-  assert.equal(facilitator.calls.settle, 11);
+  const table = await paidGet(merchant.base, "/read", "https://table.example/");
+  assert.equal(table.paid.status, 200);
+  assert.equal(readMcpOutputSchema.safeParse(table.body).success, true);
+  assert.equal(table.body.markdown, TABLE_HTML);
+  assert.equal(table.body.wordCount, 8);
+  assert.equal(table.body.truncated, false);
+  assert.equal(table.body.capture.bodyBytes, Buffer.byteLength(TABLE_HTML));
+  const tableDenied = await paidGet(merchant.base, "/read", "https://table-denied.example/");
+  assert.equal(tableDenied.body.markdown, TABLE_HTML);
+  assert.equal(tableDenied.body.sourceOk, false);
+  assert.equal(tableDenied.body.error.code, "http_403");
+  const badTable = await paidGet(merchant.base, "/read", "https://table-bad.example/");
+  assert.match(badTable.body.markdown, /Table omitted:/);
+  assert.equal(badTable.body.truncated, true);
+  assert.equal(badTable.body.capture.textTruncated, true);
+  const longTable = await paidGet(merchant.base, "/read", "https://table-long.example/");
+  assert.equal(longTable.body.truncated, true);
+  assert.ok(longTable.body.markdown.length <= 40000);
+  assert.doesNotMatch(longTable.body.markdown, /<table/);
+  const recovered = await paidGet(merchant.base, "/read", "https://table.example/");
+  assert.equal(recovered.body.markdown, TABLE_HTML);
+  assert.equal(recovered.body.truncated, false);
+
+  assert.equal(facilitator.calls.verify, 16);
+  assert.equal(facilitator.calls.settle, 16);
 });
