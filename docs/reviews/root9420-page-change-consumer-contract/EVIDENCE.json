@@ -1,0 +1,219 @@
+{
+  "schema": "root9420.source-test-self-review.v1",
+  "product": {
+    "repository": "https://github.com/epistemedeus/x402-url-extractor.git",
+    "branch": "codex/root9420-page-change-consumer-contract-20261026",
+    "base": "a6978f989a3bc754421884a3d260be834a84c73a",
+    "baseTree": "f61457edcbe55ac8c4da4a64fcc76839e8dfcf94",
+    "testedSourceHead": "835dcbe01828da96dd3400b98434169d540bdd14",
+    "testedSourceTree": "7c4c994902534fdbaf948cc5ae2af62c8f29c61f",
+    "diffCommand": "git -c color.ui=false diff --binary --full-index a6978f989a3bc754421884a3d260be834a84c73a 835dcbe01828da96dd3400b98434169d540bdd14",
+    "diffBytes": 40300,
+    "diffSha256": "9e69614e41f3f3e794eb1e9552be24ff07fa4b82ea90a8211922146138c7329f",
+    "paths": [
+      "mcp-tool-metadata.mjs",
+      "page-change-http.mjs",
+      "page-change-http.mounted.test.mjs",
+      "page-change-input-contract.mjs",
+      "server.js",
+      "test/fixtures/page-change-consumer/original-safe-request.json"
+    ]
+  },
+  "operating": {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "88693b7a0f58914e3d297048160aa042ee9b53df",
+    "receiptSha256": "8b151e61b1e1195b588a061958aaafe8063ac8c22b65f83682e3918de2c4d1af",
+    "verifiedMembers": [
+      {
+        "role": "instructions",
+        "path": "AGENTS.md",
+        "blob": "7296a6b1d24e589c6ff36d70017e66f201c7a25f",
+        "bytes": 33778,
+        "sha256": "a22983060028472dab85265451d1f66522313a390622ef19db56401af15931a3"
+      },
+      {
+        "role": "state",
+        "path": "overview/STATE.md",
+        "blob": "9b24ccd1eb81095dfbe41a95108a6a3f35f41d78",
+        "bytes": 27682,
+        "sha256": "aaf9175fc5f1a6dbd1dfcbf66d3e19f31f32500a637ecd4fca50a9f97203f79c"
+      },
+      {
+        "role": "execution-plan",
+        "path": "overview/MACHINE-COMMERCE-EXECUTION-PLAN.md",
+        "blob": "0cc5d548ffca856fbeaa647eb0257038540f109d",
+        "bytes": 41900,
+        "sha256": "7212f1e4b16d4aff116886005d5ef70f0c2cb9ebd083232ad7e4e2dfaab524f4"
+      },
+      {
+        "role": "assignment",
+        "path": "overview/remote-worker/assignments/ROOT9420-PAGE-CHANGE-CONSUMER-CONTRACT.md",
+        "blob": "e6b10c9de827be53fbcebd63ac1090464c4ab8cb",
+        "bytes": 8342,
+        "sha256": "d358e1a09d7688cba17d0da3514667fdb0cf761131b13100704df54f62455bf4"
+      }
+    ]
+  },
+  "safeOperatingEvidence": {
+    "EVIDENCE.json": {
+      "blob": "e0dd8583b6996f417359423be906c67fe91c3e10",
+      "sha256": "1c97151eae13e21686bf52e926cb01644877955a308808938727d6ff570d30e6",
+      "bytes": 14394
+    },
+    "ROOT-RECEIVING.md": {
+      "blob": "4585df9f88c88aa8d5938d96ee790d328bf7ff14",
+      "sha256": "da564546eb29777212c9ea4deb15fcbe341d54960f0931d8503dc9143ae4ffc3",
+      "bytes": 4863
+    }
+  },
+  "frozenProductBuffers": {
+    "page-change-http.mjs": {
+      "blob": "2c0300945572ff4cf8d005b9b9fdaf76c4e72907",
+      "sha256": "c59c2ca94bf8df1e3c9a6bf57ad0ed68c8399de41ab699adb61013e7976d0262",
+      "bytes": 34537
+    },
+    "page-change-http.test.mjs": {
+      "blob": "2723d8a5c61273545a13856feca34588d3ea9424",
+      "sha256": "acb7efec30df5751d2eec234504e8949938bf6778535909f1760bf7cac3b1fc0",
+      "bytes": 15517
+    },
+    "page-change-http.mounted.test.mjs": {
+      "blob": "cc1754f36e364adad698a1730f257b3c336186cb",
+      "sha256": "440fbe0c2bdfbd67ec29bcaea5a4e9c5ada7f659cf910a6d410aa1cba3f71c39",
+      "bytes": 37157
+    },
+    "server.js": {
+      "blob": "4ad922d1f51d08501b0bb5a705436487a9b2b7ea",
+      "sha256": "e77b2ee250840fbaa53fc9fc399d62915330bc9f695f91d7588f9d8e7313143c",
+      "bytes": 270316
+    },
+    "extract-batch.mjs": {
+      "blob": "d5382c2d2e7ae703479f64d4116ad44103bc2c20",
+      "sha256": "bb09d16a91ef929e24c648d3fcf54a6bcb2f40c8acc67d52a9e0bf43a2515539",
+      "bytes": 33581
+    },
+    "extract-batch-config.mjs": {
+      "blob": "bf0bf17002c6a6e964b07ab5cd02812e73dd705a",
+      "sha256": "4ef4d63a5b379250620443fa19c0ba4fa2c0b2d6035b480cf9c0b224c3201728",
+      "bytes": 2995
+    },
+    "examples/customer-x402/src/batch-output.mjs": {
+      "blob": "a0e8bf1a4b25e714a11c126d821bb128d501c826",
+      "sha256": "00aa1168a63f0207dc7519b6be05f6e652cb271fb6e35a3f5473a557f2074093",
+      "bytes": 9367
+    },
+    "examples/customer-x402/src/constants.mjs": {
+      "blob": "8762fba0cf9128bd919f8c3c2f814294198f38b4",
+      "sha256": "dc81f67330f0b1f060ebcc0b3a42732ef5df023d1a704349a2d9869b7bd97e08",
+      "bytes": 4386
+    },
+    "examples/customer-x402/src/page-change/constants.mjs": {
+      "blob": "295be77168b22715e2c2f15f32e584e3b50552bd",
+      "sha256": "790f42e4e94d8a6ab042b1b430f4b76b6f498d2ff1f1f4f117f1713f48aa416e",
+      "bytes": 1680
+    },
+    "examples/customer-x402/src/page-change/parse-batch.mjs": {
+      "blob": "d06bdc80dcfe286e9d85ba95980548f693fa41cd",
+      "sha256": "437a4e41d98b9297cc3130e5e09d588468d291d42c5f1c7a9d6fa06ec2e83606",
+      "bytes": 5170
+    },
+    "examples/customer-x402/src/page-change/compare.mjs": {
+      "blob": "e91711b11a5e322b564e55f4e5614c67691873d6",
+      "sha256": "a99ae334dddab75b635f7d0ccff8b304a08b215fa8420621dc5fd9e14fa99b66",
+      "bytes": 17239
+    },
+    "examples/customer-x402/src/record/merchant-batch-schema.json": {
+      "blob": "b460db20e24fc85b36fad4aec9f871640e877ae2",
+      "sha256": "0adbeee2462d752d82998f12e8155634fea12bff82c13db771772a52d8ab1d14",
+      "bytes": 2963
+    },
+    "examples/customer-x402/fixtures/page-change/merchant/unchanged-before.json": {
+      "blob": "142d6f57e8297fb35d71799cf63278b59f15ab11",
+      "sha256": "3f2a70609bf38f973fe20161b3068556798bd43373d039874b19bf3365fb593d",
+      "bytes": 1711
+    },
+    "examples/customer-x402/fixtures/page-change/merchant/unchanged-after.json": {
+      "blob": "0f5b6cbf78859a6fb01b8f411e772230b63ed2d6",
+      "sha256": "28f7cd06efb62b861c023a9908acd13be1674a207577f36776a2775a58c501c5",
+      "bytes": 1711
+    },
+    "package.json": {
+      "blob": "8877d8cb46515709612e9aecb15ff702302bf6b3",
+      "sha256": "37d61a7a5441945c72195823fe886516e0536216e17c8626819dea6dee4eef1f",
+      "bytes": 11170
+    },
+    "package-lock.json": {
+      "blob": "001fa320adffe2dfb214e8651bcc379a2703c9b7",
+      "sha256": "212c78b62206723b04af693e8c828541953b97db92342cd8135268f854236be7",
+      "bytes": 123263
+    },
+    "LICENSE": {
+      "blob": "34e784554d75f424552ad2198708c8d99c5b4b67",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "bytes": 1068
+    }
+  },
+  "native": {
+    "operation": "root9420-page-change-consumer-contract-20261026",
+    "admittedModel": "gpt-6.1-sol",
+    "admittedEffort": "high",
+    "identityAuthority": "OWN-ADMISSION.json; NATIVE.json identifies pid 7228/startTime 120368. Final runtime collection belongs to Root.",
+    "modelParents": 1,
+    "modelChildrenSpawned": 0,
+    "totalReservationKiB": 2097152,
+    "nodeOldSpaceMiB": 512,
+    "uvThreads": 1,
+    "ompThreads": 1,
+    "testConcurrency": 1,
+    "guardChanges": false
+  },
+  "verification": {
+    "node": "v22.23.4",
+    "npm": "10.9.9",
+    "commands": [
+      {
+        "purpose": "dependency preparation",
+        "command": "NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 npm ci --ignore-scripts --no-audit --no-fund",
+        "exit": 0
+      },
+      {
+        "purpose": "expected baseline regression",
+        "command": "NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-name-pattern='cold consumer gets' page-change-http.mounted.test.mjs",
+        "exit": 1,
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      {
+        "purpose": "final focused suite",
+        "command": "NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 page-change-http.test.mjs page-change-http.mounted.test.mjs extract-batch-page-change.test.mjs page-change-xagent-package.test.mjs mcp-tool-metadata.test.mjs",
+        "exit": 0,
+        "tests": 88,
+        "pass": 86,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 2
+      },
+      {
+        "purpose": "existing preservation suite",
+        "command": "NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 extraction-trial-discovery.test.mjs extraction-trial.http.test.mjs idempotency-replay.test.mjs paywall-applicability.http.test.mjs",
+        "exit": 0,
+        "tests": 198,
+        "pass": 198,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    ],
+    "dependencyResult": "244 packages installed from unchanged lock, scripts disabled; no new dependency.",
+    "optionalSkips": "Two existing XAgent official-validator tests require an unsupplied XAGT_PLUGIN_ROOT checkout.",
+    "intermediateCorrections": "Exploratory runs exposed overwritten MCP metadata, a test validator draft mismatch, and preservation clock/port variance. These were corrected and the final suites rerun successfully. Raw logs remain private.",
+    "gitDiffCheckExit": 0,
+    "httpAdmissionExecutionMountSuffixSha256": "49b33fbd253a010450f79d9d6efde7f3b09bcb255b1f3a802e6f4ec9136dec34",
+    "unchangedOf17FrozenMembers": 14
+  },
+  "result": "Source-only repair; emitted HTTP/MCP cold consumers prove a title-only delta and unchanged control. No installed/configured RenX repair, adoption, freshness, charged/fresh evidence, revenue or account-retention claim.",
+  "confound": "The original prompt forbade target URLs, potentially excluding inert synthetic identity strings. The invalid request is not solely attributable to the model or contract. Untyped before/after and the incomplete empty example are separately verified at the source pin."
+}
