@@ -249,7 +249,7 @@ import {
   validateExtractBatchRequest,
   ALL_FIELDS,
 } from "./extract-batch.mjs";
-import { pageChangeRequestExamples, pageChangeMcpInputSchema, pageChangeMcpDescription } from "./page-change-input-contract.mjs";
+import { compactPageChangeOpenApi, pageChangeRequestExamples, pageChangeMcpInputSchema, pageChangeMcpDescription } from "./page-change-input-contract.mjs";
 import {
   PAGE_CHANGE_HTTP_PATH,
   executePageChangeComparison,
@@ -2231,7 +2231,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     }
   }
   validateOpenApiOperationIds(document);
-  return document;
+  return compactPageChangeOpenApi(document);
 };
 
 // Fail startup before the listener opens when any public OpenAPI operation

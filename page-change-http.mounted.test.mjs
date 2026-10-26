@@ -1,3 +1,4 @@
+import { dereferenceContract, assertEquivalentOpenApi, assertEquivalentTool } from "./test/page-change-contract-oracle.mjs";
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -82,21 +83,26 @@ async function stopChild(child) {
 
 async function startMerchant({ extraEnv = {}, startupTimeout = 20_000, dataDir: retainedDataDir = null, sourceBase = null } = {}) {
   const dataDir = retainedDataDir || await mkdtemp(path.join(tmpdir(), "page-change-http-"));
-  const facilitator = await startFakeFacilitator();
-  const port = await unusedPort();
   let codeDir = cwd;
   if (sourceBase) {
     codeDir = await mkdtemp(path.join(tmpdir(), "root9420-base-"));
     for (const entry of await readdir(cwd)) {
-      if ([".git", "server.js", "page-change-http.mjs", "mcp-tool-metadata.mjs"].includes(entry)) continue;
+      if ([".git", "server.js", "page-change-http.mjs", "mcp-tool-metadata.mjs", "page-change-input-contract.mjs"].includes(entry)) continue;
       await symlink(path.join(cwd, entry), path.join(codeDir, entry));
     }
-    for (const entry of ["server.js", "page-change-http.mjs", "mcp-tool-metadata.mjs"]) {
+    // The older pre-9420 preservation base has no shared contract module.
+    // Copy only actual Git members; never resolve a changed module via a symlink.
+    const members = spawnSync("git", ["ls-tree", "--name-only", sourceBase, "--",
+      "server.js", "page-change-http.mjs", "mcp-tool-metadata.mjs", "page-change-input-contract.mjs"], { cwd, encoding: "utf8" });
+    assert.equal(members.status, 0);
+    for (const entry of members.stdout.trim().split("\n")) {
       const result = spawnSync("git", ["show", `${sourceBase}:${entry}`], { cwd, maxBuffer: 2 * 1024 * 1024 });
       assert.equal(result.status, 0);
       await writeFile(path.join(codeDir, entry), result.stdout);
     }
   }
+  const facilitator = await startFakeFacilitator();
+  const port = await unusedPort();
   const child = spawn(process.execPath, ["server.js"], {
     cwd: codeDir,
     env: {
@@ -820,8 +826,9 @@ test("emitted merchant, envelope, legacy C1 and diagnostic examples work through
   assert.deepEqual(media[0], media[1]);
   assert.equal(Object.hasOwn(media[0], "example"), false, "OpenAPI example and examples are mutually exclusive");
   const ajv = new Ajv2020({ strict: false });
-  const validate = ajv.compile(media[0].schema);
-  const [merchantShape, c1Shape, envelopeShape] = media[0].schema.properties.before.anyOf;
+  const resolvedSchema = dereferenceContract(specs[0]).paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"].schema;
+  const validate = ajv.compile(resolvedSchema);
+  const [merchantShape, c1Shape, envelopeShape] = resolvedSchema.properties.before.anyOf;
   const validateMerchant = ajv.compile(merchantShape);
   const validateC1 = ajv.compile(c1Shape);
   const validateEnvelope = ajv.compile(envelopeShape);
@@ -910,6 +917,11 @@ test("exact source base preserves paid contracts, challenges, unrelated MCP tool
       const body = await response.json();
       // The only admitted change in root machine documents is this request contract.
       if (body.paths?.[PAGE_CHANGE_HTTP_PATH]) delete body.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody;
+      if (body.components?.schemas?.PageChangeArtifact) {
+        for (const name of ["PageChangeArtifact", "PageChangeMerchant", "PageChangeC1", "PageChangeRow"]) delete body.components.schemas[name];
+        if (!Object.keys(body.components.schemas).length) delete body.components.schemas;
+        if (!Object.keys(body.components).length) delete body.components;
+      }
       capture[route] = body;
     }
     const tools = (await mcpRpc(merchant.base, "tools/list")).result.tools;
@@ -986,4 +998,122 @@ test("contract callers retain malformed, depth, byte and freshness admission bou
   assertSyntheticReport((await postJson(merchant.base, extra)).json, "changed");
   const mcp = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: extra });
   assertSyntheticReport(JSON.parse(mcp.result.content[0].text), "changed");
+});
+
+test("ROOT9560 exact mounted byte qualification, local-ref negatives and example behavior oracle", { timeout: 60_000 }, async t => {
+  const scratch = await mkdtemp(path.join(tmpdir(), "root9560-oracle-"));
+  t.after(() => rm(scratch, { recursive: true, force: true }));
+  const clockHook = path.join(scratch, "clock.mjs");
+  await writeFile(clockHook, `const RealDate = Date;
+    globalThis.Date = class extends RealDate {
+      constructor(...args) { super(...(args.length ? args : [1792987200000])); }
+      static now() { return 1792987200000; }
+    };`);
+  const extraEnv = { PAGE_CHANGE_HTTP_ENABLED: "1", MPP_SECRET_KEY: "", EXTRACTION_TRIAL_ENABLED: "0",
+    NODE_OPTIONS: `--max-old-space-size=512 --import=${clockHook}` };
+  const routes = ["/openapi.json", "/recipes/page-change/openapi.json", "/mpp-openapi.json", "/swagger.json"];
+  async function capture(merchant) {
+    const documents = {};
+    for (const route of routes) {
+      const response = await fetch(merchant.base + route);
+      assert.equal(response.status, 200);
+      const raw = await response.text(), document = JSON.parse(raw);
+      assert.deepEqual(JSON.parse(JSON.stringify(document)), document);
+      assert.equal(raw, JSON.stringify(document), "HTTP serialization already compact: zero whitespace savings");
+      documents[route] = { raw, document };
+    }
+    await mcpRpc(merchant.base, "tools/list"); // Wait for the existing mount.
+    const response = await fetch(`${merchant.base}/mcp`, { method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 0, method: "tools/list", params: {} }) });
+    assert.equal(response.status, 200);
+    const mcpWire = await response.text();
+    const mcp = JSON.parse(mcpWire.startsWith("event:") ? mcpWire.split("data: ")[1].trim() : mcpWire);
+    const preserved = {};
+    for (const route of ["/", "/platforms", "/radar", "/platforms/methodology", "/alerts",
+      ...PLATFORM_HEALTH_CARDS.map(card => `/platforms/${card.platform_id}`), "/favicon.ico", "/favicon.svg",
+      "/llms.txt", "/api/actions", "/.well-known/extraction-trial", "/.well-known/paid-action-effects.json"]) {
+      const response = await fetch(merchant.base + route, { redirect: "manual", headers: { accept: "text/html" } });
+      preserved[route] = { status: response.status, raw: await response.text(),
+        type: response.headers.get("content-type"), location: response.headers.get("location") };
+    }
+    preserved.challenge = await new Promise((resolve, reject) => {
+      const req = httpRequest(`${merchant.base}/extract?url=https%3A%2F%2Fsynthetic.example.invalid%2F`, {
+        headers: { host: "agents.samedaydesk.com", "x-forwarded-proto": "https" },
+      }, res => {
+        assert.equal(res.statusCode, 402);
+        const chunks = []; res.on("data", chunk => chunks.push(chunk));
+        res.on("end", () => resolve({ raw: Buffer.concat(chunks).toString(),
+          offer: res.headers["payment-required"], mpp: res.headers["www-authenticate"] }));
+      }); req.on("error", reject); req.end();
+    });
+    return { documents, mcp, mcpWire, preserved };
+  }
+  const base = await startMerchant({ sourceBase: "d9e5cde379cf7798f473d0cc6bf2139c9ec857d9", extraEnv });
+  let baseline;
+  try { baseline = await capture(base); } finally { await base.close(); }
+  const merchant = await startMerchant({ extraEnv });
+  t.after(() => merchant.close());
+  const candidate = await capture(merchant);
+  assert.deepEqual(candidate.preserved, baseline.preserved, "raw human/assets, challenge, trial declaration and terms stay exact");
+  const measurements = {};
+  for (const route of routes) {
+    const before = baseline.documents[route], after = candidate.documents[route];
+    assertEquivalentOpenApi(before.document, after.document);
+    // Compile the REAL emitted document base; no test resolver is needed by AJV.
+    const ajv = new Ajv2020({ strict: false });
+    ajv.addSchema(after.document, "urn:root9560:openapi");
+    const validate = ajv.compile({ $ref: "urn:root9560:openapi#/paths/~1recipes~1page-change/post/requestBody/content/application~1json/schema" });
+    const media = after.document.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"];
+    for (const { value } of Object.values(media.examples)) assert.equal(validate(value), true, JSON.stringify(validate.errors));
+    measurements[route] = { baseline: Buffer.byteLength(before.raw), candidate: Buffer.byteLength(after.raw),
+      compactBaseline: Buffer.byteLength(JSON.stringify(before.document)), compactCandidate: Buffer.byteLength(JSON.stringify(after.document)),
+      baselineCharacters: before.raw.length, candidateCharacters: after.raw.length };
+  }
+  const beforeTools = baseline.mcp.result.tools, afterTools = candidate.mcp.result.tools;
+  assert.equal(afterTools.length, beforeTools.length);
+  for (let i = 0; i < beforeTools.length; i++) {
+    const before = beforeTools[i], after = afterTools[i];
+    // Every registered input compiles alone. No OpenAPI/other-tool definitions.
+    new Ajv({ strict: false, validateFormats: false }).compile(after.inputSchema);
+    if (before.name === "page_change") assertEquivalentTool(before, after);
+    else assert.deepEqual(after, before, "unrelated tool remains byte-equivalent");
+  }
+  const tool = afterTools.find(tool => tool.name === "page_change");
+  const baselineTool = beforeTools.find(tool => tool.name === "page_change");
+  measurements.page_change = { baseline: Buffer.byteLength(JSON.stringify(baselineTool)), candidate: Buffer.byteLength(JSON.stringify(tool)) };
+  measurements.toolsListWire = { baseline: Buffer.byteLength(baseline.mcpWire), candidate: Buffer.byteLength(candidate.mcpWire) };
+  t.diagnostic(JSON.stringify(measurements));
+  // Raw captures stay private and are optional for Root's exact readback.
+  if (process.env.ROOT9560_CAPTURE_DIR) {
+    await writeFile(path.join(process.env.ROOT9560_CAPTURE_DIR, "baseline.json"), JSON.stringify(baseline));
+    await writeFile(path.join(process.env.ROOT9560_CAPTURE_DIR, "candidate.json"), JSON.stringify(candidate));
+  }
+  const root = candidate.documents["/openapi.json"].document;
+  for (const [name, mutate, message] of [
+    ["unresolved", doc => { doc.components.schemas.PageChangeArtifact = { $ref: "#/absent" }; }, /unresolved reference/],
+    ["cycle", doc => { doc.components.schemas.PageChangeArtifact = { $ref: "#/components/schemas/PageChangeArtifact" }; }, /cyclic reference/],
+    ["wrong primitive target", doc => { doc.components.schemas.PageChangeArtifact = { $ref: "#/openapi" }; }, /wrong reference target/],
+    ["wrong schema target", doc => { doc.components.schemas.PageChangeArtifact = { $ref: "#/components/schemas/PageChangeRow" }; }, /deep-equal/],
+    ["external", doc => { doc.components.schemas.PageChangeArtifact = { $ref: "https://synthetic.example.invalid/schema" }; }, /non-local reference/],
+  ]) await t.test(name, () => {
+    const invalid = structuredClone(root); mutate(invalid);
+    assert.throws(() => assertEquivalentOpenApi(baseline.documents["/openapi.json"].document, invalid), message);
+  });
+  await t.test("schema-valid behaviorally wrong example is rejected", async () => {
+    const media = root.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"];
+    const request = structuredClone(media.examples.titleChanged.value);
+    request.after.sources[0].data.title = request.before.sources[0].data.title;
+    const validate = new Ajv({ strict: false }).compile(tool.inputSchema);
+    assert.equal(validate(request), true, "schema acceptance alone cannot establish the annotated behavior");
+    const changedDocument = structuredClone(root);
+    changedDocument.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"].examples.titleChanged.value = request;
+    assert.throws(() => assertEquivalentOpenApi(baseline.documents["/openapi.json"].document, changedDocument));
+    const http = await postJson(merchant.base, request);
+    const mcp = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: request });
+    for (const output of [http.json, JSON.parse(mcp.result.content[0].text)]) {
+      assertSyntheticReport(output, "unchanged");
+      assert.throws(() => assertSyntheticReport(output, "changed"), /unchanged/);
+    }
+  });
 });

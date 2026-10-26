@@ -134,22 +134,24 @@ export function pageChangeInputSchema() {
 // Narrow projection of the keywords used above and in the existing merchant
 // schema into the MCP SDK's required Zod shape. The JSON authority stays shared;
 // no parser/engine validation is replaced by this discovery projection.
-function mcpSchema(schema) {
+function mcpSchema(schema, cache) {
+  const key = JSON.stringify(schema);
+  if (cache.has(key)) return cache.get(key);
   let value;
-  if (schema.anyOf) value = z.union(schema.anyOf.map(mcpSchema));
-  else if (Array.isArray(schema.type)) value = z.union(schema.type.map(type => mcpSchema({ ...schema, type })));
+  if (schema.anyOf) value = z.union(schema.anyOf.map(child => mcpSchema(child, cache)));
+  else if (Array.isArray(schema.type)) value = z.union(schema.type.map(type => mcpSchema({ ...schema, type }, cache)));
   else if (Object.hasOwn(schema, "const")) value = z.literal(schema.const);
   else if (schema.enum) value = z.enum(schema.enum);
   else if (schema.type === "object") {
     const required = new Set(schema.required || []);
     const shape = Object.fromEntries(Object.entries(schema.properties || {}).map(([key, child]) => {
-      const item = mcpSchema(child);
+      const item = mcpSchema(child, cache);
       return [key, required.has(key) ? item : item.optional()];
     }));
     value = z.object(shape);
     value = schema.additionalProperties === false ? value.strict() : value.passthrough();
   } else if (schema.type === "array") {
-    value = z.array(mcpSchema(schema.items || {}));
+    value = z.array(mcpSchema(schema.items || {}, cache));
     if (schema.minItems !== undefined) value = value.min(schema.minItems);
     if (schema.maxItems !== undefined) value = value.max(schema.maxItems);
   } else if (schema.type === "string") {
@@ -163,13 +165,18 @@ function mcpSchema(schema) {
   else if (schema.type === "boolean") value = z.boolean();
   else if (schema.type === "null") value = z.null();
   else value = z.any();
-  return schema.description ? value.describe(schema.description) : value;
+  value = schema.description ? value.describe(schema.description) : value;
+  cache.set(key, value);
+  return value;
 }
 
 export function pageChangeMcpInputSchema() {
   const schema = pageChangeInputSchema();
+  // Reuse identical Zod nodes so the pinned SDK emits references rooted in this
+  // tool's own inputSchema. Runtime Zod validation and conversion stay SDK-owned.
+  const cache = new Map();
   return Object.fromEntries(Object.entries(schema.properties).map(([key, child]) => {
-    const value = mcpSchema(child);
+    const value = mcpSchema(child, cache);
     return [key, schema.required.includes(key) ? value : value.optional()];
   }));
 }
@@ -178,4 +185,35 @@ export function pageChangeMcpDescription() {
   return "Compare two already-held extract-batch JSON artifacts. charged is false. Not a paid SKU. Does not fetch, pay, or schedule a second observation. "
     + selectedFields + " " + syntheticNote + " Complete request example (title changes, description stays unchanged): "
     + JSON.stringify(pageChangeRequestExample());
+}
+
+// Apply only to the page-change request in its final OpenAPI document. References
+// are rooted in the actual emitted document, including when it is the merchant
+// root document. Examples remain complete inline values.
+export function compactPageChangeOpenApi(document) {
+  const schema = document.paths?.["/recipes/page-change"]?.post?.requestBody?.content?.["application/json"]?.schema;
+  if (!schema) return document;
+  const artifact = schema.properties.before;
+  const merchant = artifact.anyOf[0];
+  const c1 = artifact.anyOf[1];
+  const row = merchant.properties.sources.items;
+  const originals = { PageChangeArtifact: artifact, PageChangeMerchant: merchant, PageChangeC1: c1, PageChangeRow: row };
+  const keys = new Map(Object.entries(originals).map(([name, value]) => [JSON.stringify(value), name]));
+  function replace(value, defining = null) {
+    if (!value || typeof value !== "object") return value;
+    const name = keys.get(JSON.stringify(value));
+    if (name && name !== defining) return { $ref: `#/components/schemas/${name}` };
+    if (Array.isArray(value)) return value.map(child => replace(child));
+    return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, replace(child)]));
+  }
+  document.components ||= {};
+  document.components.schemas ||= {};
+  for (const name of Object.keys(originals)) {
+    if (Object.hasOwn(document.components.schemas, name)) throw new Error(`page_change_schema_collision:${name}`);
+  }
+  for (const [name, value] of Object.entries(originals)) document.components.schemas[name] = replace(value, name);
+  // Only schema structure is shared; annotations and every example stay exact.
+  schema.properties.before = replace(artifact);
+  schema.properties.after = replace(schema.properties.after);
+  return document;
 }
