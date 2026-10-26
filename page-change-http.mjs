@@ -1,4 +1,4 @@
-import { pageChangeInputSchema, pageChangeRequestExamples } from "./page-change-input-contract.mjs";
+import { compactPageChangeOpenApi, pageChangeInputSchema, pageChangeRequestExamples } from "./page-change-input-contract.mjs";
 import { spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -230,7 +230,7 @@ export function xagentVerification(env = process.env) {
 }
 
 export function pageChangeHttpOpenApiExample() {
-  return {
+  return compactPageChangeOpenApi({
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk page-change HTTP companion",
@@ -275,7 +275,7 @@ export function pageChangeHttpOpenApiExample() {
         },
       },
     },
-  };
+  });
 }
 
 export function pageChangeHttpInputSchema() {
