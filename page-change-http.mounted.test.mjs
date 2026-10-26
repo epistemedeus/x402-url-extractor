@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { link, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { link, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { createServer as createHttpServer, request as httpRequest } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
+import { PLATFORM_HEALTH_CARDS } from "./platform-health.mjs";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { PAGE_CHANGE_HTTP_PATH } from "./page-change-http.mjs";
@@ -77,12 +80,25 @@ async function stopChild(child) {
   });
 }
 
-async function startMerchant({ extraEnv = {}, startupTimeout = 20_000, dataDir: retainedDataDir = null } = {}) {
+async function startMerchant({ extraEnv = {}, startupTimeout = 20_000, dataDir: retainedDataDir = null, sourceBase = null } = {}) {
   const dataDir = retainedDataDir || await mkdtemp(path.join(tmpdir(), "page-change-http-"));
   const facilitator = await startFakeFacilitator();
   const port = await unusedPort();
+  let codeDir = cwd;
+  if (sourceBase) {
+    codeDir = await mkdtemp(path.join(tmpdir(), "root9420-base-"));
+    for (const entry of await readdir(cwd)) {
+      if ([".git", "server.js", "page-change-http.mjs", "mcp-tool-metadata.mjs"].includes(entry)) continue;
+      await symlink(path.join(cwd, entry), path.join(codeDir, entry));
+    }
+    for (const entry of ["server.js", "page-change-http.mjs", "mcp-tool-metadata.mjs"]) {
+      const result = spawnSync("git", ["show", `${sourceBase}:${entry}`], { cwd, maxBuffer: 2 * 1024 * 1024 });
+      assert.equal(result.status, 0);
+      await writeFile(path.join(codeDir, entry), result.stdout);
+    }
+  }
   const child = spawn(process.execPath, ["server.js"], {
-    cwd,
+    cwd: codeDir,
     env: {
       ...process.env,
       PORT: String(port),
@@ -130,6 +146,7 @@ async function startMerchant({ extraEnv = {}, startupTimeout = 20_000, dataDir: 
     await stopChild(child);
     await facilitator.close();
     await rm(dataDir, { recursive: true, force: true });
+    if (sourceBase) await rm(codeDir, { recursive: true, force: true });
     throw error;
   }
   child.stdout.on("data", chunk => { output = `${output}${chunk}`.slice(-40_000); });
@@ -143,6 +160,7 @@ async function startMerchant({ extraEnv = {}, startupTimeout = 20_000, dataDir: 
       await stopChild(child);
       await facilitator.close();
       if (!retainedDataDir) await rm(dataDir, { recursive: true, force: true });
+      if (sourceBase) await rm(codeDir, { recursive: true, force: true });
     },
   };
 }
@@ -707,4 +725,265 @@ test("canonical journal failure cannot change mounted HTTP or MCP free delivery"
     assert.equal(summary.freePageChange.transports[transport].currentCapture.coverage, "unmeasured");
     assert.equal(summary.freePageChange.transports[transport].observations, 0);
   }
+});
+
+test("cold consumer gets an exact title delta and unchanged control from emitted examples", { timeout: 60_000 }, async t => {
+  const merchant = await startEnabledMerchant(t);
+  for (const route of ["/recipes/page-change/openapi.json", "/openapi.json"]) {
+    const spec = await fetch(`${merchant.base}${route}`).then(r => r.json());
+    const media = spec.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"];
+    // This caller uses only the emitted request, without a fixture or comparator.
+    const input = structuredClone(media.examples?.titleChanged.value ?? media.example);
+    const changed = await postJson(merchant.base, input);
+    assert.equal(changed.response.status, 200);
+    assert.equal(changed.json.report.verdict, "changed", `${route}: published example must compare selected values`);
+    const report = changed.json.report;
+    assert.equal(changed.json.charged, false);
+    assert.equal(report.claims.complete, true);
+    assert.equal(report.claims.usefulOutputProven, true);
+    assert.equal(report.summary.matched, 1);
+    assert.equal(report.changes.length, 1);
+    assert.equal(report.changes[0].path, "/title");
+    assert.equal(report.changes[0].sourceKey, "https://synthetic.example.invalid/page");
+    assert.equal(report.changes[0].before, "Synthetic title before");
+    assert.equal(report.changes[0].after, "Synthetic title after");
+    assert.equal(report.freshness, "unknown");
+    assert.equal(report.claims.current, false);
+    assert.equal(report.claims.fresh, false);
+    input.after = structuredClone(input.before);
+    const unchanged = await postJson(merchant.base, input);
+    assert.equal(unchanged.json.report.verdict, "unchanged");
+    assert.equal(unchanged.json.report.claims.noChangeProven, true);
+    assert.deepEqual(unchanged.json.report.changes, []);
+  }
+});
+
+async function mcpRpc(base, method, params = {}) {
+  for (let n = 0; n < 100; n++) {
+    const response = await fetch(`${base}/mcp`, {
+      method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: n, method, params }),
+    });
+    if (response.status === 404) { await delay(30); continue; }
+    assert.equal(response.status, 200);
+    const wire = await response.text();
+    return JSON.parse(wire.startsWith("event:") ? wire.split("data: ")[1].trim() : wire);
+  }
+  throw new Error("MCP did not mount");
+}
+
+function assertSyntheticReport(output, verdict) {
+  assert.equal(output.ok, true);
+  assert.equal(output.charged, false);
+  const report = output.report;
+  assert.equal(report.verdict, verdict);
+  assert.equal(report.claims.complete, true);
+  assert.equal(report.claims.comparable, true);
+  assert.equal(report.claims.usefulOutputProven, true);
+  assert.equal(report.rows.matched.length, 1);
+  assert.equal(report.rows.matched[0].sourceKey, "https://synthetic.example.invalid/page");
+  assert.equal(report.freshness, "unknown");
+  assert.equal(report.claims.fresh, false);
+  assert.equal(report.claims.current, false);
+  if (verdict === "unchanged") assert.deepEqual(report.changes, []);
+  else {
+    assert.equal(report.changes.length, 1);
+    assert.equal(report.changes[0].path, "/title");
+    assert.equal(report.changes[0].sourceKey, "https://synthetic.example.invalid/page");
+    assert.equal(report.changes[0].before, "Synthetic title before");
+    assert.equal(report.changes[0].after, "Synthetic title after");
+  }
+}
+
+test("cold free MCP discovery constructs a title delta and unchanged control without fixtures", { timeout: 60_000 }, async t => {
+  const merchant = await startEnabledMerchant(t);
+  const listed = await mcpRpc(merchant.base, "tools/list");
+  const tool = listed.result.tools.find(tool => tool.name === "page_change");
+  assert.ok(tool.inputSchema.properties.before.anyOf.length >= 3);
+  const marker = "Complete request example (title changes, description stays unchanged): ";
+  assert.ok(tool.description.includes(marker), "complete example survives MCP metadata decoration");
+  const request = JSON.parse(tool.description.slice(tool.description.indexOf(marker) + marker.length));
+  const validate = new Ajv({ strict: false }).compile(tool.inputSchema);
+  assert.equal(validate(request), true, JSON.stringify(validate.errors));
+  const changed = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: request });
+  assert.notEqual(changed.result.isError, true);
+  assertSyntheticReport(JSON.parse(changed.result.content[0].text), "changed");
+  request.after = structuredClone(request.before);
+  const unchanged = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: request });
+  assertSyntheticReport(JSON.parse(unchanged.result.content[0].text), "unchanged");
+});
+
+test("emitted merchant, envelope, legacy C1 and diagnostic examples work through HTTP and free MCP", { timeout: 60_000 }, async t => {
+  const merchant = await startEnabledMerchant(t);
+  const specs = await Promise.all(["/openapi.json", "/recipes/page-change/openapi.json"].map(route => fetch(`${merchant.base}${route}`).then(r => r.json())));
+  const media = specs.map(spec => spec.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"]);
+  assert.deepEqual(media[0], media[1]);
+  assert.equal(Object.hasOwn(media[0], "example"), false, "OpenAPI example and examples are mutually exclusive");
+  const ajv = new Ajv2020({ strict: false });
+  const validate = ajv.compile(media[0].schema);
+  const [merchantShape, c1Shape, envelopeShape] = media[0].schema.properties.before.anyOf;
+  const validateMerchant = ajv.compile(merchantShape);
+  const validateC1 = ajv.compile(c1Shape);
+  const validateEnvelope = ajv.compile(envelopeShape);
+  for (const [name, entry] of Object.entries(media[0].examples)) await t.test(name, async () => {
+    assert.equal(validate(entry.value), true, JSON.stringify(validate.errors));
+    if (name !== "diagnostic") for (const side of ["before", "after"]) {
+      const validateShape = name === "legacyC1" ? validateC1 : name === "envelope" ? validateEnvelope : validateMerchant;
+      assert.equal(validateShape(entry.value[side]), true, JSON.stringify(validateShape.errors));
+    }
+    const http = await postJson(merchant.base, entry.value);
+    const mcp = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: entry.value });
+    assert.equal(http.response.status, 200);
+    assert.notEqual(mcp.result.isError, true);
+    const outputs = [http.json, JSON.parse(mcp.result.content[0].text)];
+    for (const output of outputs) {
+      if (name === "diagnostic") {
+        assert.equal(output.report.verdict, "incomparable");
+        assert.equal(output.report.claims.usefulOutputProven, false);
+      } else assertSyntheticReport(output, name === "unchanged" ? "unchanged" : "changed");
+    }
+  });
+});
+
+test("exact original safe consumer request and original public example remain diagnostic, separately", { timeout: 60_000 }, async t => {
+  const merchant = await startEnabledMerchant(t);
+  const safe = JSON.parse(await readFile(new URL("./test/fixtures/page-change-consumer/original-safe-request.json", import.meta.url), "utf8"));
+  assert.equal(safe.safeWireSha256, "1c97151eae13e21686bf52e926cb01644877955a308808938727d6ff570d30e6");
+  assert.match(safe.confound, /not solely attributable/);
+  for (const [name, input] of [["original public example", safe.originalPublicExample], ["exact safe consumer request", safe.request]]) await t.test(name, async () => {
+    const http = await postJson(merchant.base, input);
+    const mcp = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: input });
+    assert.equal(http.response.status, 200);
+    for (const output of [http.json, JSON.parse(mcp.result.content[0].text)]) {
+      assert.equal(output.charged, false);
+      assert.equal(output.report.verdict, "incomparable");
+      assert.equal(output.report.claims.usefulOutputProven, false);
+      assert.deepEqual(output.report.changes, []);
+      if (name === "exact safe consumer request") {
+        assert.deepEqual(output.report.claims, safe.expected.claims);
+        assert.deepEqual(output.report.coverageUnknown, safe.expected.coverageUnknown);
+        assert.equal(output.report.snapshot.verdict, "changed");
+        assert.equal(output.report.provenance.beforeSha256, safe.expectedArtifactHashes.before);
+        assert.equal(output.report.provenance.afterSha256, safe.expectedArtifactHashes.after);
+      } else assert.ok(output.report.coverageUnknown.some(row => row.code === "merchant_required_keys_missing"));
+    }
+  });
+});
+
+test("contract-derived negatives preserve strict comparison reports in HTTP and MCP", { timeout: 60_000 }, async t => {
+  // Independent mounts keep the normal 12/minute HTTP ceiling unchanged.
+  const cases = [
+    ["missing schema", input => { delete input.before.schemaVersion; }, report => assert.equal(report.verdict, "incomparable")],
+    ["wrong schema", input => { input.before.schemaVersion = "wrong"; }, report => assert.equal(report.verdict, "incomparable")],
+    ["missing top key", input => { delete input.before.accounting; }, report => assert.ok(report.coverageUnknown.some(row => row.code === "merchant_required_keys_missing"))],
+    ["missing row key", input => { delete input.before.sources[0].notes; }, report => { assert.equal(report.claims.complete, false); assert.ok(report.coverageUnknown.some(row => row.code === "merchant_source_keys_missing")); }],
+    ["missing source", input => { delete input.before.sources[0].source; }, report => { assert.equal(report.claims.complete, false); assert.ok(report.coverageUnknown.some(row => row.code === "source_identity_missing")); }],
+    ["different identity", input => { input.after.sources[0].source += "-other"; }, report => { assert.equal(report.verdict, "incomplete"); assert.equal(report.summary.matched, 0); assert.equal(report.summary.missing, 2); }],
+    ["missing selected field", input => { delete input.after.sources[0].data.title; }, report => { assert.equal(report.verdict, "incomplete"); assert.equal(report.claims.noChangeProven, false); assert.ok(report.coverageUnknown.some(row => row.field === "title")); }],
+    ["duplicate active sources", input => { input.after.sources.push(structuredClone(input.after.sources[0])); }, report => { assert.equal(report.verdict, "ambiguous"); assert.equal(report.summary.duplicates, 1); }],
+    ["partial row", input => { input.after.sources[0].status = "partial"; input.after.partial = true; }, report => { assert.equal(report.verdict, "changed"); assert.equal(report.summary.matched, 1); }],
+    ["failed row", input => { input.after.sources[0].status = "failure"; input.after.sources[0].data = null; }, report => { assert.equal(report.verdict, "incomplete"); assert.equal(report.summary.failed, 1); assert.equal(report.claims.usefulOutputProven, false); }],
+  ];
+  const merchant = await startEnabledMerchant(t);
+  const spec = await fetch(`${merchant.base}/recipes/page-change/openapi.json`).then(r => r.json());
+  const request = spec.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"].examples.titleChanged.value;
+  for (const [name, mutate, check] of cases) await t.test(name, async () => {
+    const input = structuredClone(request); mutate(input);
+    const http = await postJson(merchant.base, input);
+    const mcp = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: input });
+    assert.equal(http.response.status, 200);
+    assert.notEqual(mcp.result.isError, true);
+    for (const output of [http.json, JSON.parse(mcp.result.content[0].text)]) {
+      assert.equal(output.charged, false); check(output.report);
+      assert.equal(output.report.freshness, "unknown");
+      assert.equal(output.report.claims.fresh, false);
+    }
+  });
+});
+
+test("exact source base preserves paid contracts, challenges, unrelated MCP tools and emitted human assets", { timeout: 60_000 }, async t => {
+  async function capture(merchant) {
+    const capture = {};
+    for (const route of ["/openapi.json", "/mpp-openapi.json", "/swagger.json", "/api/actions", "/mcp"]) {
+      const response = await fetch(`${merchant.base}${route}`);
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      // The only admitted change in root machine documents is this request contract.
+      if (body.paths?.[PAGE_CHANGE_HTTP_PATH]) delete body.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody;
+      capture[route] = body;
+    }
+    const tools = (await mcpRpc(merchant.base, "tools/list")).result.tools;
+    const pageChange = tools.find(tool => tool.name === "page_change");
+    assert.ok(pageChange);
+    // Preserve the free tool's identity, payment metadata and output contract too.
+    delete pageChange.description; delete pageChange.inputSchema;
+    capture.tools = tools;
+    capture.challenge = await new Promise((resolve, reject) => {
+      const req = httpRequest(`${merchant.base}/extract?url=https%3A%2F%2Fexample.com%2F`, {
+        headers: { host: "agents.samedaydesk.com", "x-forwarded-proto": "https" },
+      }, res => {
+        assert.equal(res.statusCode, 402);
+        const chunks = [];
+        res.on("data", chunk => chunks.push(chunk));
+        res.on("end", () => resolve({ body: Buffer.concat(chunks).toString(),
+          offer: res.headers["payment-required"], mpp: res.headers["www-authenticate"] }));
+      });
+      req.on("error", reject); req.end();
+    });
+    capture.human = {};
+    for (const route of ["/", "/platforms", "/radar", "/platforms/methodology", "/alerts", ...PLATFORM_HEALTH_CARDS.map(card => `/platforms/${card.platform_id}`), "/favicon.ico", "/favicon.svg"]) {
+      const response = await fetch(`${merchant.base}${route}`, { headers: { accept: "text/html" }, redirect: "manual" });
+      capture.human[route] = { status: response.status, body: await response.text(), type: response.headers.get("content-type"), location: response.headers.get("location") };
+    }
+    return capture;
+  }
+  const scratch = await mkdtemp(path.join(tmpdir(), "root9420-clock-"));
+  t.after(() => rm(scratch, { recursive: true, force: true }));
+  const clockHook = path.join(scratch, "clock.mjs");
+  await writeFile(clockHook, `const RealDate = Date;
+    globalThis.Date = class extends RealDate {
+      constructor(...args) { super(...(args.length ? args : [1792987200000])); }
+      static now() { return 1792987200000; }
+    };`);
+  const extraEnv = { PAGE_CHANGE_HTTP_ENABLED: "1", MPP_SECRET_KEY: "", EXTRACTION_TRIAL_ENABLED: "0",
+    NODE_OPTIONS: `--max-old-space-size=512 --import=${clockHook}` };
+  const base = await startMerchant({ sourceBase: "a6978f989a3bc754421884a3d260be834a84c73a", extraEnv });
+  let expected;
+  try { expected = await capture(base); } finally { await base.close(); }
+  const amended = await startMerchant({ extraEnv });
+  try { assert.deepEqual(await capture(amended), expected); } finally { await amended.close(); }
+  assert.equal(Object.keys(expected.human).length, 12);
+});
+
+test("contract callers retain malformed, depth, byte and freshness admission bounds", { timeout: 60_000 }, async t => {
+  const merchant = await startEnabledMerchant(t);
+  const spec = await fetch(`${merchant.base}/recipes/page-change/openapi.json`).then(r => r.json());
+  const input = spec.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"].examples.titleChanged.value;
+  for (const [name, mutate, status, code] of [
+    ["depth", request => { let nested = {}; for (let n = 0; n < 20; n++) nested = { nested }; request.before.extra = nested; }, 400, "json_depth_limit"],
+    ["artifact bytes", request => { request.before.extra = "a".repeat(131072); }, 413, "payload_too_large"],
+    ["freshness", request => { request.allowFreshClaim = true; }, 400, "freshness_authority_required"],
+    ["duplicate fields", request => { request.fields = ["title", "title"]; }, 400, "invalid_page_change_input"],
+  ]) await t.test(name, async () => {
+    const request = structuredClone(input); mutate(request);
+    const http = await postJson(merchant.base, request);
+    assert.equal(http.response.status, status); assert.equal(http.json.code, code);
+    const mcp = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: request });
+    assert.equal(mcp.result.isError, true);
+  });
+  const malformedHttp = await postJson(merchant.base, "{");
+  assert.equal(malformedHttp.response.status, 400);
+  assert.equal(malformedHttp.json.code, "invalid_json");
+  const malformedMcp = await fetch(`${merchant.base}/mcp`, {
+    method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" }, body: "{",
+  });
+  assert.equal(malformedMcp.status, 400);
+  assert.equal((await malformedMcp.json()).error, "invalid_json");
+  const extra = structuredClone(input);
+  extra.clock = "2026-10-26T00:00:00Z"; extra.maxStaleMs = 1000000;
+  extra.before = { mediaType: "application/json", body: extra.before, observedAt: extra.clock };
+  extra.after = { mediaType: "application/json", body: extra.after, observedAt: extra.clock };
+  assertSyntheticReport((await postJson(merchant.base, extra)).json, "changed");
+  const mcp = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: extra });
+  assertSyntheticReport(JSON.parse(mcp.result.content[0].text), "changed");
 });

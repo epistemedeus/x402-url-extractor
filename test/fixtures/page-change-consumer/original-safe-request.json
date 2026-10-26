@@ -1,0 +1,103 @@
+{
+  "kind": "exact safe request and deterministic response projection; not a synthetic equivalent",
+  "safeWireSha256": "1c97151eae13e21686bf52e926cb01644877955a308808938727d6ff570d30e6",
+  "originalPublicExample": {
+    "before": {
+      "mediaType": "application/json",
+      "body": {
+        "product": "samedaydesk-extract-batch",
+        "sources": []
+      }
+    },
+    "after": {
+      "mediaType": "application/json",
+      "body": {
+        "product": "samedaydesk-extract-batch",
+        "sources": []
+      }
+    },
+    "fields": [
+      "title",
+      "description"
+    ]
+  },
+  "request": {
+    "before": {
+      "product": "samedaydesk-extract-batch",
+      "sources": [
+        {
+          "id": "synthetic-qa-001",
+          "title": "Synthetic title before",
+          "description": "Stable synthetic description"
+        }
+      ]
+    },
+    "after": {
+      "product": "samedaydesk-extract-batch",
+      "sources": [
+        {
+          "id": "synthetic-qa-001",
+          "title": "Synthetic title after",
+          "description": "Stable synthetic description"
+        }
+      ]
+    },
+    "fields": [
+      "title",
+      "description"
+    ]
+  },
+  "expected": {
+    "verdict": "incomparable",
+    "claims": {
+      "noChangeProven": false,
+      "contentUnchangedProven": false,
+      "comparable": false,
+      "complete": false,
+      "current": false,
+      "fresh": false,
+      "usefulOutputProven": false,
+      "paymentImpliesUsefulOutput": false
+    },
+    "coverageUnknown": [
+      {
+        "side": "before",
+        "code": "merchant_schema_mismatch"
+      },
+      {
+        "side": "before",
+        "code": "merchant_required_keys_missing"
+      },
+      {
+        "side": "before",
+        "code": "merchant_source_keys_missing"
+      },
+      {
+        "side": "before",
+        "code": "source_identity_missing"
+      },
+      {
+        "side": "after",
+        "code": "merchant_schema_mismatch"
+      },
+      {
+        "side": "after",
+        "code": "merchant_required_keys_missing"
+      },
+      {
+        "side": "after",
+        "code": "merchant_source_keys_missing"
+      },
+      {
+        "side": "after",
+        "code": "source_identity_missing"
+      }
+    ],
+    "changes": []
+  },
+  "confound": "Root's canary prompt forbade target URLs; this can be read as forbidding even synthetic source-identity URL strings, so the invalid artifact is not solely attributable to the published contract. Missing nested schemaVersion/required keys and empty example are separately source-qualified. No live URL fetching is needed for synthetic identity strings.",
+  "expectedArtifactHashes": {
+    "before": "4d3c8f6c08f4359444b53e175bfa88ded91270f2f9e9650bd03127e45739905d",
+    "after": "0803cc19a3da7baf9efe7d46ff6e7e37757e14b4e727df01feb5ca868e4a49b9"
+  }
+}
