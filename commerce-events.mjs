@@ -1,5 +1,5 @@
 import { constants as journalFs } from "node:fs";
-import { normalizeExtractionTrialReason } from "./extraction-trial-reason.mjs";
+import { normalizeExtractionTrialReason, normalizeExtractionTrialOperation } from "./extraction-trial-reason.mjs";
 import { authenticateJournalCut, isJournalCutRecord } from "./commerce-journal-cut-auth.mjs";
 import { admitCommerceJournal, drainJournalObservations, noteJournalRotation, noteJournalWrite, noteJournalFault, observeContinuationTransmission, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
 import {
@@ -1810,6 +1810,7 @@ function acceptsTrialOutcome(event) {
 function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, requestedWindowCoverage, externalCutoffMs, generatedAtMs }) {
   const populations = {};
   const diagnostics = {};
+  const operations = {};
   const rows = events.filter(event => event.extractionTrialOutcome && eventTimestampMs(event) <= generatedAtMs
     && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs));
   for (const event of rows) {
@@ -1817,6 +1818,10 @@ function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, req
     populations[label] ||= Object.fromEntries([...TRIAL_OUTCOMES].map(key => [key, 0]));
     populations[label][event.extractionTrialOutcome.outcome]++;
     const outcome = event.extractionTrialOutcome.outcome;
+    operations[label] ||= {};
+    const operation = normalizeExtractionTrialOperation(event.extractionTrialOperation) || "unknown";
+    operations[label][operation] ||= Object.fromEntries([...TRIAL_OUTCOMES].map(key => [key, 0]));
+    operations[label][operation][outcome]++;
     if (!["failed", "refused", "unknown_response"].includes(outcome)) continue;
     diagnostics[label] ||= {};
     const counts = diagnostics[label][outcome] ||= { known: 0, unknown: 0, byReason: {} };
@@ -1830,6 +1835,10 @@ function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, req
   }
   return {
     schemaVersion: "samedaydesk.extraction-trial-outcomes.v2", populations,
+    operations: {
+      populations: operations,
+      policy: "Allowlisted mount-supplied operation on the same eligible phase rows. Missing or malformed labels stay unknown; no historical inference or caller join.",
+    },
     diagnostics: {
       schemaVersion: "samedaydesk.extraction-trial-reasons.v1",
       scope: "eligible_failed_refused_unknown_response_rows", populations: diagnostics,
@@ -4061,7 +4070,7 @@ export function createCommerceTelemetry({
   let extractionTrialCaptureStartedAt = null;
   function extractionTrialObserver() {
     extractionTrialCaptureStartedAt ||= new Date().toISOString();
-    return function begin(req, res) {
+    return function begin(req, res, trialOperation) {
       const startedAt = Date.now();
       const source = classifyAgentDiscoverySource(headerValue(req.headers || {}, "user-agent"));
       const originClass = commerceOriginClass(req, internalToken, source, false);
@@ -4082,6 +4091,7 @@ export function createCommerceTelemetry({
           settlementAmountAtomic: null, settlementNetwork: null, settlementCurrency: null,
           status, result: "request", durationMs: Math.max(0, Date.now() - startedAt),
           extractionTrialOutcome: { v: 1, outcome: phase },
+          ...(normalizeExtractionTrialOperation(trialOperation) ? { extractionTrialOperation: trialOperation } : {}),
           ...(safeReason ? { extractionTrialReason: safeReason } : {}),
         };
         if (isCanonicalCommerceEvent(event)) enqueueExclusive(() => appendEvent(event)).catch(() => {});

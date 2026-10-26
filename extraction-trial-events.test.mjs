@@ -13,14 +13,37 @@ async function fixture(t, extra = {}) {
   t.after(() => rm(dataDir, { force: true, recursive: true }));
   return { dataDir, telemetry: createCommerceTelemetry({ dataDir, secret: "fixture-aggregate-key", ...extra }) };
 }
-function invocation(observer, { closed = false, headers = {}, status = 200, outcome = "completed", admitted = true, reason } = {}) {
+function invocation(observer, { closed = false, headers = {}, status = 200, outcome = "completed", admitted = true, reason, operation } = {}) {
   const response = new EventEmitter(); response.statusCode = status;
-  const note = observer({ method: "POST", path: "/trial/extract", headers, ip: "private-ip-marker", query: { "private-key-marker": "private-value-marker" } }, response);
+  const note = observer({ method: "POST", path: "/trial/extract", headers, ip: "private-ip-marker", query: { "private-key-marker": "private-value-marker" } }, response, operation);
   if (admitted) { note("admitted"); note("admitted"); }
   note(outcome, reason);
   response.emit(closed ? "close" : "finish"); response.emit("close"); response.emit("finish");
   note("failed"); // terminal observation cannot be amended later
 }
+
+test("bounded operation labels survive restart while old and malformed labels remain unknown", async t => {
+  const { telemetry, dataDir } = await fixture(t);
+  const observe = telemetry.extractionTrialObserver();
+  for (const operation of [undefined, "read", "extract", "private-operation-marker", ["read"], { operation: "read" }, "__proto__"]) invocation(observe, { operation });
+  await telemetry.flush();
+  const original = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.doesNotMatch(original, /private-operation-marker|__proto__/);
+  const rows = original.trim().split("\n").map(JSON.parse);
+  const forged = [null, "private-restored-marker", ["read"], { operation: "extract" }].map(extractionTrialOperation => ({ ...rows[1], id: randomUUID(), extractionTrialOperation }));
+  const bytes = original + forged.map(JSON.stringify).join("\n") + "\n";
+  await writeFile(telemetry.paths.currentPath, bytes);
+  const restored = createCommerceTelemetry({ dataDir });
+  const snapshot = await restored.snapshot();
+  assert.equal(snapshot.integrityStatus, "ok");
+  const view = snapshot.extractionTrial;
+  assert.equal(view.populations.unattributed.completed, 11);
+  assert.equal(view.operations.populations.unattributed.read.completed, 1);
+  assert.equal(view.operations.populations.unattributed.extract.completed, 1);
+  assert.equal(view.operations.populations.unattributed.unknown.completed, 9);
+  assert.doesNotMatch(JSON.stringify(view), /private-restored-marker/);
+  assert.equal(await readFile(telemetry.paths.currentPath, "utf8"), bytes);
+});
 
 test("trial retained-event reader rejects unknown, extended and contradictory phase metadata", async t => {
   const { telemetry } = await fixture(t);

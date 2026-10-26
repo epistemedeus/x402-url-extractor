@@ -8,6 +8,12 @@ const REFUSAL_CODES = new Set([
   "disabled", "scheduled", "expired", "exhausted", "busy", "unavailable",
 ]);
 
+// Optional operation is supplied by the mount, never inferred from callers or
+// historical route rows (whose canonical aggregate route remains unchanged).
+export function normalizeExtractionTrialOperation(value) {
+  return value === "extract" || value === "read" ? value : null;
+}
+
 export function normalizeExtractionTrialReason(outcome, value) {
   if (!value || typeof value !== "object" || Array.isArray(value)
     || Object.keys(value).sort().join(",") !== "code,family,v" || value.v !== 1) return null;

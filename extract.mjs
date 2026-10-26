@@ -324,12 +324,18 @@ function htmlToMarkdown(html) {
 }
 
 export async function readMarkdown(rawUrl, maxChars = READ_MARKDOWN_MAX_CHARS) {
+  return readMarkdownWithOptions(rawUrl, { maxChars });
+}
+
+// Internal caller-owned admission seam. The public two-argument reader and paid
+// callers keep their existing interface; requests cannot install a fetch hook.
+export async function readMarkdownWithOptions(rawUrl, { maxChars = READ_MARKDOWN_MAX_CHARS, beforeFetch } = {}) {
   if (!Number.isSafeInteger(maxChars) || maxChars < 1 || maxChars > READ_MARKDOWN_MAX_CHARS) {
     throw Object.assign(new RangeError(`maxChars must be an integer from 1 through ${READ_MARKDOWN_MAX_CHARS}`), { code: 'invalid_markdown_limit' });
   }
   const deadline = performance.now() + resolveExtractTimeoutMs(TIMEOUT_MS);
   const u = assertPublicHttpUrl(rawUrl);
-  const fetched = await fetchWithGuards(u.href);
+  const fetched = await fetchWithGuards(u.href, { beforeFetch });
   const { res, html } = fetched;
   const title = clean((html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "");
   const converted = markdownWithTables(html, htmlToMarkdown, { baseUrl: res.url, maxChars, deadline });

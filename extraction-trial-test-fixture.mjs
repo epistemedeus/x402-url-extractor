@@ -11,6 +11,7 @@ import { provisionExtractionTrial } from "./extraction-trial.mjs";
 export const ROOT = fileURLToPath(new URL("./", import.meta.url));
 export const BASE = "fb88d0b5cc6c6bfa5c65ad1b59cf025c77b7e0b8";
 export const NOW = Date.parse("2026-10-25T08:50:00.000Z");
+const READER_TABLE = '<table><tr><th rowspan="2">Engine</th><th colspan="2">Support</th></tr><tr><th>Transpile</th><th>Reconcile</th></tr><tr><td>Alpha</td><td></td><td>Yes<sup><a href="#fn1">1</a></sup></td></tr><tr><td colspan="3"><span id="fn1">Preview</span></td></tr></table>';
 export const authority = (overrides = {}) => ({ schema: "samedaydesk.extraction-trial-budget.v1", experimentId: "owner-fixture-only", startsAt: new Date(NOW - 1000).toISOString(), expiresAt: new Date(NOW + 86400_000).toISOString(), maxStarted: 20, ...overrides });
 export async function waitFor(fn, message = "condition", timeout = 5000) {
   const end = Date.now() + timeout;
@@ -33,8 +34,11 @@ export async function fixture(t) {
     if (req.url.startsWith("/redirect-private")) { res.writeHead(302, { location: "http://127.0.0.1/private-marker" }); return res.end(); }
     if (req.url.startsWith("/redirect-loop")) { res.writeHead(302, { location: "/redirect-loop" }); return res.end(); }
     if (req.url.startsWith("/redirect-ok")) { res.writeHead(302, { location: "/chosen-final" }); return res.end(); }
+    if (req.url.startsWith("/encoding")) { res.writeHead(200, { "content-encoding": "gzip" }); return res.end("unsupported fixture"); }
     const status = req.url.startsWith("/refused") ? 403 : req.url.startsWith("/error") ? 500 : 200;
     res.writeHead(status, { "content-type": "text/html; charset=utf-8" });
+    if (req.url.startsWith("/table-bad")) return res.end('<table><tr><td><table><tr><td>nested</td></tr></table></td></tr></table>');
+    if (req.url.startsWith("/table")) return res.end(READER_TABLE);
     if (req.url.startsWith("/oversize")) return res.end("<body>" + "x".repeat(3_000_001) + "</body>");
     if (req.url.startsWith("/excerpt")) return res.end("<body>" + "e".repeat(2000) + "</body>");
     return res.end(`<html lang="en"><head><title>Caller-selected page</title><meta name="description" content="Controlled caller page"></head><body><h1>Useful heading</h1><p>selected ${req.url}</p><a href="/next">next</a></body></html>`);

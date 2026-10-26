@@ -3,11 +3,12 @@ import { access, lstat, mkdir, open, readdir, rmdir } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import express from "express";
-import { assertPublicHttpUrl, extract } from "./extract.mjs";
-import { buildCapture, fetchFailureCode, parseTextExcerptLimit, EXTRACT_MAX_BODY_BYTES, EXTRACT_TIMEOUT_MS } from "./extract-capture.mjs";
+import { assertPublicHttpUrl, extract, readMarkdownWithOptions } from "./extract.mjs";
+import { buildCapture, fetchFailureCode, parseTextExcerptLimit, READ_MARKDOWN_MAX_CHARS, EXTRACT_MAX_BODY_BYTES, EXTRACT_TIMEOUT_MS } from "./extract-capture.mjs";
 import { trialFetchFailureReason, trialRefusalReason, trialSourceHttpReason } from "./extraction-trial-reason.mjs";
 
 export const EXTRACTION_TRIAL_PATH = "/trial/extract";
+export const READER_TRIAL_PATH = "/trial/read";
 export const EXTRACTION_TRIAL_DISCOVERY = "/.well-known/extraction-trial";
 const WEEK_MS = 7 * 86400_000;
 const SCHEMA = "samedaydesk.extraction-trial-budget.v1";
@@ -138,6 +139,13 @@ export function extractionTrialContract(status) {
     response: "Existing extract JSON. HTTP 200 can contain sourceOk=false or ok=false; inspect capture truncation. No payment or settlement receipt.",
     retry: "Do not automatically repeat after an unknown response; another request spends more allowance. Results are not retained for replay.",
     paidNextTask: { method: "GET", path: "/extract?url={encodedPublicUrl}", terms: "/.well-known/x402" },
+    reader: {
+      request: { method: "POST", path: READER_TRIAL_PATH, contentType: "application/json", body: { url: "https://example.com/", markdownLimitChars: READ_MARKDOWN_MAX_CHARS } },
+      markdownLimitChars: { optional: true, type: "integer", minimum: 1, maximum: READ_MARKDOWN_MAX_CHARS, default: READ_MARKDOWN_MAX_CHARS },
+      sharedBudget: "Read and extract share the same original authority, remaining hops, expiry and one concurrent operation. No separate reader allowance.",
+      response: "Existing readMarkdown JSON: inspect ok, sourceOk, status, error, markdown, truncated and capture. Bounded native HTML tables preserve blank cells, spans and links inside Markdown; unsupported tables are explicitly omitted with truncation. No JavaScript or completeness guarantee. HTTP 200 may report source or fetch failure. No payment or settlement receipt.",
+      paidNextTask: { method: "GET", path: "/read?url={encodedPublicUrl}", terms: "/.well-known/x402" },
+    },
   };
 }
 
@@ -147,8 +155,10 @@ export function mountExtractionTrial(app, { budget = createExtractionTrialBudget
     res.json(extractionTrialContract(await budget.status()));
   });
   const parser = express.json({ limit: 4096, strict: true, inflate: false });
-  app.all(EXTRACTION_TRIAL_PATH, (req, res) => {
-    const note = observe?.(req, res) || (() => {});
+  // One closure owns both mounts: same budget/store, clock and global lease.
+  for (const [route, operation] of [[EXTRACTION_TRIAL_PATH, "extract"], [READER_TRIAL_PATH, "read"]]) app.all(route, (req, res) => {
+    const reader = operation === "read";
+    const note = observe?.(req, res, operation) || (() => {});
     res.set("Cache-Control", "no-store");
     res.set("X-Samedaydesk-Trial", "walletless-first-use-v1");
     const refuse = (status, error, availability) => {
@@ -163,19 +173,23 @@ export function mountExtractionTrial(app, { budget = createExtractionTrialBudget
       let url, limit;
       try {
         if (Object.keys(req.query).length || !body || Array.isArray(body) || typeof body !== "object"
-          || Object.keys(body).some(key => !["url", "textExcerptLimitChars"].includes(key))
+          || Object.keys(body).some(key => !["url", reader ? "markdownLimitChars" : "textExcerptLimitChars"].includes(key))
           || typeof body.url !== "string" || body.url.length > 2048) throw failure("invalid_trial_input");
         url = assertPublicHttpUrl(body.url).href;
-        limit = parseTextExcerptLimit(body.textExcerptLimitChars);
+        const maxChars = body.markdownLimitChars === undefined ? READ_MARKDOWN_MAX_CHARS : body.markdownLimitChars;
+        limit = reader ? { ok: Number.isSafeInteger(maxChars) && maxChars >= 1 && maxChars <= READ_MARKDOWN_MAX_CHARS, value: maxChars }
+          : parseTextExcerptLimit(body.textExcerptLimitChars);
         if (!limit.ok) throw failure("invalid_trial_input");
       } catch { return refuse(400, "invalid_trial_input"); }
       let lease, admitted = false;
       try {
         lease = await budget.acquire();
-        const data = await extract(url, { textExcerptLimitChars: limit.value, beforeFetch: async () => {
+        const beforeFetch = async () => {
           await lease.spend();
           if (!admitted) { admitted = true; note("admitted"); }
-        } });
+        };
+        const data = reader ? await readMarkdownWithOptions(url, { maxChars: limit.value, beforeFetch })
+          : await extract(url, { textExcerptLimitChars: limit.value, beforeFetch });
         note(!data.sourceOk ? "failed" : data.capture.bodyTruncated || data.capture.textTruncated ? "partial" : "completed",
           trialSourceHttpReason(data));
         if (!res.destroyed) res.json(data);
@@ -188,8 +202,9 @@ export function mountExtractionTrial(app, { budget = createExtractionTrialBudget
         note("failed", trialFetchFailureReason(code));
         if (!res.destroyed) res.status(200).json({
           ok: false, url, requestedUrl: url, finalUrl: null, status: null, sourceOk: false,
-          error: { code, message: "Bounded trial extraction failed" },
-          capture: buildCapture({ textExcerptLimitChars: limit.value, bodyBytes: 0, charset: null, charsetSource: "default-utf-8" }),
+          error: { code, message: reader ? "Bounded trial read failed" : "Bounded trial extraction failed" },
+          capture: buildCapture({ textExcerptLimitChars: reader ? null : limit.value,
+            markdownLimitChars: reader ? limit.value : null, bodyBytes: 0, charset: null, charsetSource: "default-utf-8" }),
         });
       } finally { await lease?.release(); }
     });
