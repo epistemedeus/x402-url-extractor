@@ -11,7 +11,7 @@ const DAY = 86400000;
 const EXTERNAL = NOW - DAY + 3600000;
 const adapters = [
   { name: "trial", observe: t => t.extractionTrialObserver(), view: s => s.extractionTrial,
-    population: "unattributed", outcome: "completed" },
+    population: "unattributed", outcome: "failed", reason: { v: 1, family: "fetch", code: "timeout" } },
   ...["http", "mcp"].map(transport => ({
     name: transport, observe: t => t.freePageChangeObserver(transport),
     view: s => s.freePageChange.transports[transport], population: "external", outcome: "unchanged",
@@ -32,7 +32,7 @@ function emit(adapter, observe, population = "external") {
   const res = new EventEmitter(); res.statusCode = 200;
   const note = observe({ method: "POST", path: adapter.name === "trial" ? "/trial/extract" : "/recipes/page-change", headers: headers[population] }, res);
   if (adapter.name === "trial") note("admitted");
-  note(adapter.outcome);
+  note(adapter.outcome, adapter.reason);
   res.emit("finish");
 }
 function assertUnknown(view, captureCoverage = "prospective_process_only", journalStatus = "no_failure_observed") {
@@ -74,6 +74,12 @@ for (const adapter of adapters) {
     }
     if (adapter.name === "trial") {
       assert.equal(view.populations.unattributed.admitted, 3);
+      assert.deepEqual(view.diagnostics.populations.unattributed.failed,
+        { known: 3, unknown: 0, byReason: { "fetch.timeout": 3 } });
+      for (const population of ["internal", "owner_monitor", "crawler"]) {
+        assert.deepEqual(view.diagnostics.populations[population].failed,
+          { known: 5, unknown: 0, byReason: { "fetch.timeout": 5 } });
+      }
       assert.equal(view.independentUse, "unknown");
       assert.equal(view.laterPaidChoice, "unknown");
     } else {
@@ -88,6 +94,7 @@ for (const adapter of adapters) {
     t.mock.timers.setTime(NOW);
     const withFuture = adapter.view(await restarted.snapshot({ days: 1 }));
     assert.deepEqual(withFuture.populations, view.populations);
+    if (adapter.name === "trial") assert.deepEqual(withFuture.diagnostics, view.diagnostics);
     assertUnknown(withFuture);
     assert.ok((await readFile(telemetry.paths.currentPath, "utf8")).startsWith(original), "old rows and timestamps remain verbatim");
     for (const time of [NOW - DAY - 1, NOW - DAY, EXTERNAL - 1, EXTERNAL, NOW - 60000, NOW + 1]) {
@@ -102,6 +109,7 @@ for (const adapter of adapters) {
     assertUnknown(absent, "unmeasured");
     assert.equal(absent.currentCapture.startedAt, null);
     assert.deepEqual(absent.populations, {});
+    if (adapter.name === "trial") assert.deepEqual(absent.diagnostics.populations, {});
     const observe = adapter.observe(telemetry);
     assertUnknown(adapter.view(await telemetry.snapshot({ days: 1 })));
     for (let n = 0; n < 8; n++) emit(adapter, observe);
@@ -117,10 +125,12 @@ for (const adapter of adapters) {
     assert.ok(after.populations[adapter.population][adapter.outcome] < before.populations[adapter.population][adapter.outcome]);
     assert.ok(after.populations[adapter.population][adapter.outcome] < 8);
     assert.equal(await readFile(telemetry.paths.currentPath, "utf8"), remaining);
+    if (adapter.name === "trial") assert.equal(after.diagnostics.populations.unattributed.failed.known, after.populations.unattributed.failed);
     await appendFile(telemetry.paths.currentPath, "{torn-fixture-row\n");
     const corrupt = await restarted.snapshot({ days: 1 });
     assert.equal(corrupt.integrityStatus, "unusable_records_present");
     assert.deepEqual(adapter.view(corrupt).populations, after.populations);
+    if (adapter.name === "trial") assert.deepEqual(adapter.view(corrupt).diagnostics, after.diagnostics);
     assertUnknown(adapter.view(corrupt));
   });
 
@@ -142,12 +152,18 @@ for (const adapter of adapters) {
     const recoveredRead = adapter.view(await restarted.snapshot({ days: 1 }));
     assert.equal(recoveredRead.populations.owner_monitor[adapter.outcome], 1);
     assert.equal(recoveredRead.populations[adapter.population], undefined);
+    if (adapter.name === "trial") {
+      assert.deepEqual(recoveredRead.diagnostics.populations.owner_monitor.failed,
+        { known: 1, unknown: 0, byReason: { "fetch.timeout": 1 } });
+      assert.equal(recoveredRead.diagnostics.populations.unattributed, undefined);
+    }
     assertUnknown(recoveredRead, "unmeasured", "failure_observed");
     assert.equal(await readFile(telemetry.paths.currentPath, "utf8"), original);
     emit(adapter, observe);
     await assert.rejects(restarted.flush(), /unsafe commerce journal file/);
     const later = adapter.view(await restarted.snapshot({ days: 1 }));
     assert.equal(later.populations[adapter.population][adapter.outcome], 1);
+    if (adapter.name === "trial") assert.equal(later.diagnostics.populations.unattributed.failed.byReason["fetch.timeout"], 1);
     assertUnknown(later, "unmeasured", "failure_observed");
   });
 }
