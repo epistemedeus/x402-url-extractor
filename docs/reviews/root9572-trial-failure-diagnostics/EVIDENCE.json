@@ -1,0 +1,264 @@
+{
+  "schema": "root9572.trial-failure-diagnostics.fixture-evidence.v1",
+  "recordedAt": "2026-10-26T07:51:02.740321+00:00",
+  "scope": "Source and offline/loopback fixtures only; no installed/deployed behavior claim.",
+  "source": {
+    "origin": "https://github.com/epistemedeus/x402-url-extractor.git",
+    "branch": "codex/root9572-trial-failure-diagnostics-20261026",
+    "base": "d9e5cde379cf7798f473d0cc6bf2139c9ec857d9",
+    "baseTree": "07c318634e8926a3f12446a2c962b320c74efcc9",
+    "testedImplementationHead": "460992e922ab1626a324b939e0ddc3a4e9bb49ed",
+    "testedImplementationTree": "441256a30b8735450d48ddde5dd51f19fe42f218",
+    "exportNote": "The report-only descendant on this same branch carries these three reports; its exact export head is returned in the worker final response."
+  },
+  "publishedInputs": {
+    "operatingAndAssignmentCommit": "7912fd0244516a1d09760a53569788ae7de37ae0",
+    "assignmentBlob": "ecb3f8c74e35470752af9e12d330199cb3b59f73",
+    "receiptSha256": "fb5aab8e607c96990780ae40ce0b7888383aeca4b64078912f8072542c29ab97",
+    "evidence": {
+      "blob": "ba3151c3d9e637e4bac7e8b6794f99de205aefe3",
+      "bytes": 3386,
+      "sha256": "25aade9cc476fec6da8e0e0d573c6993932dbd8931490b7df53f82b5e348299d",
+      "verification": "Complete supplied appended bytes verified locally by SHA256 and Git blob hash; no evidence URL fetched."
+    },
+    "allOperatingReceiptMembersSha256Verified": true,
+    "requiredProductMembersReadAndBlobVerified": [
+      {
+        "path": "commerce-events.mjs",
+        "blob": "c2de687fb22871b6ae337fff7557c089c404796d",
+        "mode": "100644"
+      },
+      {
+        "path": "commerce-privacy-coverage.test.mjs",
+        "blob": "63bc2cd87a71771ad7bfb07ee1cffca3f1a2e321",
+        "mode": "100644"
+      },
+      {
+        "path": "commerce-refusal-evidence.test.mjs",
+        "blob": "95121908af7bded092c13c7c1244ae0ca0a35803",
+        "mode": "100644"
+      },
+      {
+        "path": "extract-batch-c1/public-fetch.mjs",
+        "blob": "8eadcd92ffb0dd04303dfabd268241847bc82da1",
+        "mode": "100644"
+      },
+      {
+        "path": "extract-batch-c1/url-guard.mjs",
+        "blob": "cd6f4a0a9ac1c2ead689075ce4550dc579ccb56b",
+        "mode": "100644"
+      },
+      {
+        "path": "extract-capture.mjs",
+        "blob": "287a7d61d9885fd52349205ebde92e0373d23ab7",
+        "mode": "100644"
+      },
+      {
+        "path": "extract.mjs",
+        "blob": "23ade8bfa7e17aad801eed1d533393017dc7281b",
+        "mode": "100644"
+      },
+      {
+        "path": "extraction-trial-events.test.mjs",
+        "blob": "4b05aa88dfc4509a163487f95fcd7b504d7d99b3",
+        "mode": "100644"
+      },
+      {
+        "path": "extraction-trial-test-fixture.mjs",
+        "blob": "289ac05f38b46ae3545dc74cd7027ed0966a66bf",
+        "mode": "100644"
+      },
+      {
+        "path": "extraction-trial.http.test.mjs",
+        "blob": "00a5327c1d3234521808e8d99259ca9aed18791d",
+        "mode": "100644"
+      },
+      {
+        "path": "extraction-trial.mjs",
+        "blob": "b67fda10ab00053fc9ac8922c51cc9ffff7780e8",
+        "mode": "100644"
+      },
+      {
+        "path": "package.json",
+        "blob": "8877d8cb46515709612e9aecb15ff702302bf6b3",
+        "mode": "100644"
+      },
+      {
+        "path": "server.js",
+        "blob": "86f711b212ac0fd2b1cb347299c3a856cbccedd2",
+        "mode": "100644"
+      },
+      {
+        "path": "trial-measurement-continuity.test.mjs",
+        "blob": "4c3a5cbaacb435cda2fb95248208c786d22acefc",
+        "mode": "100644"
+      },
+      {
+        "path": "package-lock.json",
+        "blob": "001fa320adffe2dfb214e8651bcc379a2703c9b7",
+        "mode": "100644"
+      },
+      {
+        "path": "LICENSE",
+        "blob": "34e784554d75f424552ad2198708c8d99c5b4b67",
+        "mode": "100644"
+      }
+    ]
+  },
+  "changedProductPaths": [
+    "commerce-events.mjs",
+    "extraction-trial.mjs",
+    "extraction-trial-reason.mjs",
+    "extraction-trial-events.test.mjs",
+    "extraction-trial.http.test.mjs",
+    "trial-measurement-continuity.test.mjs"
+  ],
+  "reasonSchema": {
+    "field": "extractionTrialReason",
+    "shape": {
+      "v": 1,
+      "family": "finite enum",
+      "code": "finite enum"
+    },
+    "failed": {
+      "source_http": [
+        "http_1xx",
+        "http_3xx",
+        "http_4xx",
+        "http_403",
+        "http_429",
+        "http_5xx"
+      ],
+      "fetch": [
+        "timeout",
+        "ssrf_blocked",
+        "redirect_error",
+        "unsupported_encoding",
+        "invalid_response"
+      ]
+    },
+    "refused": {
+      "admission": [
+        "method_not_allowed",
+        "invalid_trial_body",
+        "invalid_trial_input",
+        "disabled",
+        "scheduled",
+        "expired",
+        "exhausted",
+        "busy",
+        "unavailable"
+      ]
+    },
+    "projection": "extractionTrial.diagnostics.populations[existing population][failed/refused/unknown_response] = {known,unknown,byReason}; keys family.code",
+    "unknown": "Missing/malformed/extra-key/crossed reasons are unknown for eligible adverse phases. unknown_response always has no known reason. Positive/admitted phases do not acquire failure reasons. Other thrown codes, including generic fetch_error and mid-redirect budget errors, remain unknown."
+  },
+  "commands": [
+    {
+      "command": "NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 npm ci --ignore-scripts --no-audit --no-fund --offline",
+      "exit": 0,
+      "result": "244 packages from offline cache; package/lock unchanged"
+    },
+    {
+      "command": "NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 extraction-trial-events.test.mjs extraction-trial.http.test.mjs trial-measurement-continuity.test.mjs commerce-privacy-coverage.test.mjs commerce-refusal-evidence.test.mjs",
+      "runs": [
+        {
+          "stage": "pinned baseline",
+          "exit": 0,
+          "tests": 82,
+          "passed": 82
+        },
+        {
+          "stage": "first amended run",
+          "exit": 1,
+          "tests": 86,
+          "passed": 83,
+          "failed": 3,
+          "finding": "Two new fixture assumptions failed: fresh-journal restart assertion (also failing its parent test) and unresolved Express import in data URL loader. Corrected in tests; no implementation failure found."
+        },
+        {
+          "stage": "final full focused acceptance",
+          "exit": 0,
+          "tests": 109,
+          "passed": 109,
+          "failed": 0,
+          "durationMs": 33143.819137,
+          "tapSha256": "9664cad83c55287b1803243db9c504b051f4152e734233ee8808ca31059dbe2c"
+        }
+      ]
+    },
+    {
+      "command": "NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 extraction-trial-events.test.mjs trial-measurement-continuity.test.mjs",
+      "exit": 0,
+      "tests": 16,
+      "passed": 16
+    },
+    {
+      "command": "NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-name-pattern='pinned trial caller bytes|mounted concurrency' extraction-trial.http.test.mjs",
+      "exit": 0,
+      "tests": 29,
+      "passed": 29
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "measuredPreservation": {
+    "controlledPinnedProducerParityBranches": 23,
+    "callerBodyBytesAndSelectedHeadersEqual": true,
+    "phaseTotalsEqualPinnedProducer": true,
+    "controlledFailedReasons": {
+      "known": 8,
+      "unknown": 4
+    },
+    "controlledRefusalReasons": {
+      "known": 9,
+      "unknown": 0
+    },
+    "emittedHumanPagesRawEqual": 10,
+    "iconRedirectsPreserved": 2,
+    "combinedHumanEmissionSha256": "32a4d1a4962941b5cabdae2c370d88c7974ad9531f7cceed6f9c41ae487ef0ce",
+    "paidChallengeAndPaidDiscoveryPreserved": true,
+    "oldV1RowsBytePreserved": true,
+    "mixedRestoredRows": {
+      "phaseAndCoreTotalsUnchanged": true,
+      "malformedOptionalReasonsDoNotQuarantineValidPhase": true,
+      "secretMarkersAbsentFromProjection": true
+    },
+    "rotationAndRestartRetainSafeReasonCounts": true,
+    "windowEndAndExternalCutoffFiltersShared": true,
+    "writerFailureThenReadableFixtureStillUnknownCoverage": true,
+    "noDuplicateAdmittedOrTerminalCounts": true,
+    "noCallerJoinOrBackfill": true,
+    "elevenReadOnlyClosureMembersUnchanged": true,
+    "budgetProvisioningAndTrialContractSourceByteIdentical": true
+  },
+  "resources": {
+    "declaredModel": "gpt-6.1-sol",
+    "declaredEffort": "high",
+    "modelChildrenUsed": 0,
+    "declaredTotalReserveKiB": 2097152,
+    "testNodeHeapMiB": 512,
+    "UV_THREADPOOL_SIZE": 1,
+    "OMP_NUM_THREADS": 1,
+    "testConcurrency": 1
+  },
+  "historicalObservationPreserved": {
+    "originalLostBodyCause": "unknown",
+    "suppliedHistoricalStarted": 2,
+    "suppliedHistoricalRemaining": 18,
+    "originalExpiresAt": "2026-11-01T09:24:44.619Z",
+    "callerJoin": false,
+    "automaticRetry": false,
+    "newLiveTrialPost": false,
+    "grantRenewal": false
+  },
+  "limits": [
+    "No deployment or actual receiving performed.",
+    "No live source fetch, production read, account/auth/payment/wallet/signature/contact or additional model call.",
+    "Unattributed technical observations do not establish independent use, usefulness, demand or revenue.",
+    "ROOT9560 and all other jobs/stores untouched."
+  ],
+  "nextRootStep": "Receive this branch and its focused tests, integrate serially with the independent ROOT9560 branch; Root separately owns any release and actual receiving. Do not replay the historical trial."
+}
