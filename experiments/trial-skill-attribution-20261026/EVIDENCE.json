@@ -1,0 +1,267 @@
+{
+  "schema": "root9832.trial-skill-attribution.evidence.v1",
+  "createdAt": "2026-10-26T15:34:57.221918+00:00",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor.git",
+  "branch": "codex/root9832-trial-skill-attribution-20261026",
+  "worktree": "/home/ubuntu/ae14-work/root9832-trial-skill-attribution-20261026",
+  "base": "6517665410c4e1267d7c2a7ef8860abdeec8086c",
+  "sourceHead": "a41dfd5b692a065bc63f430f73238a41e2955352",
+  "sourceTree": "ac38305979d67e51c97b7c5bdb81614043dd15f0",
+  "exportNote": "The subsequent commit adds only these three reports. Resolve final export head/tree from the exact writer ref; final handback returns both. No merge or deployment.",
+  "fullChangedPaths": [
+    "commerce-events.mjs",
+    "commerce-traffic-provenance.test.mjs",
+    "extraction-trial-events.test.mjs",
+    "extraction-trial.http.test.mjs",
+    "trial-measurement-continuity.test.mjs",
+    "experiments/trial-skill-attribution-20261026/RESULT.md",
+    "experiments/trial-skill-attribution-20261026/EVIDENCE.json",
+    "experiments/trial-skill-attribution-20261026/WORKER-HANDBACK.md"
+  ],
+  "sourceDiff": {
+    "path": "/tmp/root9832-evidence/source.patch",
+    "bytes": 27639,
+    "sha256": "ff80508c4018643f123b26935a82d190555a180a8a233e62d063f1a9db86bfca"
+  },
+  "profile": {
+    "totalReserveKiB": 2097152,
+    "modelChildren": 0,
+    "nodeOldSpaceMiB": 512,
+    "UV_THREADPOOL_SIZE": 1,
+    "OMP_NUM_THREADS": 1,
+    "testConcurrency": 1,
+    "adjustments": [],
+    "modelProfile": "user-admitted native gpt-6.1-sol/high; no additional model invocation"
+  },
+  "operatingReceipt": {
+    "path": "/home/ubuntu/root-sol-window100337/root9832-trial-skill-attribution-20261026/inputs/RECEIPT.json",
+    "bytes": 2306,
+    "sha256": "c4c2cec9ef43f57cf629d0cb9dcda758b36d74a1ae8517d7494ea7b2600f94ee"
+  },
+  "operatingInputs": [
+    {
+      "role": "instructions",
+      "path": "AGENTS.md",
+      "repository": "https://github.com/epistemedeus/pilot.git",
+      "commit": "1c634c68cd38259a30e5f374f39661af83edd116",
+      "blob": "7296a6b1d24e589c6ff36d70017e66f201c7a25f",
+      "bytes": 33778,
+      "sha256": "a22983060028472dab85265451d1f66522313a390622ef19db56401af15931a3"
+    },
+    {
+      "role": "state",
+      "path": "overview/STATE.md",
+      "repository": "https://github.com/epistemedeus/pilot.git",
+      "commit": "1c634c68cd38259a30e5f374f39661af83edd116",
+      "blob": "835a00add4484bf1412eb7f05b433538bcf7f87b",
+      "bytes": 34583,
+      "sha256": "e10116574ddce85c287377d49667cf2a0c063d29af157f6db89fcaed94db9acd"
+    },
+    {
+      "role": "execution-plan",
+      "path": "overview/MACHINE-COMMERCE-EXECUTION-PLAN.md",
+      "repository": "https://github.com/epistemedeus/pilot.git",
+      "commit": "1c634c68cd38259a30e5f374f39661af83edd116",
+      "blob": "dc4d26f70b32ec326b0d8c8e066b183ef89bd1ab",
+      "bytes": 52132,
+      "sha256": "11d9c9e20da352f736ec2996f430a59ca6b2eafec1a1e3c92e700a2e1d9cdb09"
+    },
+    {
+      "role": "assignment",
+      "path": "overview/remote-worker/assignments/ROOT9832-TRIAL-SKILL-ATTRIBUTION.md",
+      "repository": "https://github.com/epistemedeus/pilot.git",
+      "commit": "1c634c68cd38259a30e5f374f39661af83edd116",
+      "blob": "54b359e66f3d08700bd604165cb6e81aa6de39de",
+      "bytes": 4975,
+      "sha256": "a197ff2a1bcaa1497a68788df469009aa6bec43f184cf3aa9bb56be9f4dc560d"
+    }
+  ],
+  "operatingInputVerification": "All four sizes and SHA256 hashes match; receipt SHA256 matches supplied c4c2cec9ef43f57cf629d0cb9dcda758b36d74a1ae8517d7494ea7b2600f94ee.",
+  "separatePilotReceiving": {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "1c634c68cd38259a30e5f374f39661af83edd116",
+    "delivery": "complete source-qualified text supplied in user brief; not assumed merchant paths",
+    "members": [
+      {
+        "path": "overview/research/phase-20261026/walletless-read-consumer/ROOT-RECEIVING.md",
+        "blob": "c758f368742ac58fa14e291d7b18a3dea6ad1bb2",
+        "sha256": "aa43bcfab622e212ef6513f6c8f61d10bd6839c427b739968b9cce84c9b012d7"
+      },
+      {
+        "path": "overview/research/phase-20261026/trial-failure-diagnostics/ROOT-RECEIVING.md",
+        "blob": "731a43b5b8572fa259dba9da6108b58bf3b3e49f",
+        "sha256": "fecb6de986cf7a896c590cdef9af9bb46fa4888582b449adbef2428ab5ee19d3"
+      },
+      {
+        "path": "overview/research/phase-20261025/trial-measurement-continuity/ROOT-RECEIVING.md",
+        "blob": "f8ddf652064373055396722d77406ff69fcf467b",
+        "sha256": "ef0389f3e69efc22321cd91d6367209bcf4639498be073a717ca39e8bcb04df0"
+      }
+    ]
+  },
+  "install": {
+    "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 npm ci --ignore-scripts --no-audit --no-fund",
+    "exit": 0,
+    "log": {
+      "path": "/tmp/root9832-evidence/npm-ci.log",
+      "bytes": 26,
+      "sha256": "4eb4bf266d24ced179e606c26bfdf970145041d11c9a9f28eeb9629e565dafae"
+    },
+    "node": "v22.23.4",
+    "packageAndLockUnchanged": true
+  },
+  "testRuns": [
+    {
+      "name": "baseline",
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 extraction-trial-events.test.mjs extraction-trial.http.test.mjs walletless-read.http.test.mjs extraction-trial-discovery.test.mjs trial-measurement-continuity.test.mjs",
+      "exit": 0,
+      "summary": {
+        "tests": 206,
+        "pass": 206,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "path": "/tmp/root9832-evidence/baseline.tap",
+        "bytes": 38411,
+        "sha256": "fb210ad0c6d5f05471ac8b2246c6d0912de6f97584c4e302a11a2b3bdead8968"
+      },
+      "qualification": "baseline exact base",
+      "repeatedCasesAreNotAdditionalUniqueCases": true
+    },
+    {
+      "name": "unit-first",
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 extraction-trial-events.test.mjs trial-measurement-continuity.test.mjs",
+      "exit": 0,
+      "summary": {
+        "tests": 19,
+        "pass": 19,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "path": "/tmp/root9832-evidence/unit-first.tap",
+        "bytes": 8663,
+        "sha256": "c0fb15058ff0a1a809ae11fb2c2e392d8bf33c3af8b5a7dd8fc8d0df45d1e1c2"
+      },
+      "qualification": "synthetic/injected/loopback fixtures and disposable stores",
+      "repeatedCasesAreNotAdditionalUniqueCases": true
+    },
+    {
+      "name": "focused-first",
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 extraction-trial-events.test.mjs extraction-trial.http.test.mjs walletless-read.http.test.mjs extraction-trial-discovery.test.mjs trial-measurement-continuity.test.mjs",
+      "exit": 0,
+      "summary": {
+        "tests": 210,
+        "pass": 210,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "path": "/tmp/root9832-evidence/focused-first.tap",
+        "bytes": 40556,
+        "sha256": "c42d0b10b4a18c6bdca8099cc51066ba95ad24d0c5977adfb397fcfdb405f54a"
+      },
+      "qualification": "synthetic/injected/loopback fixtures and disposable stores",
+      "repeatedCasesAreNotAdditionalUniqueCases": true
+    },
+    {
+      "name": "related-first",
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 commerce-events.test.mjs commerce-traffic-provenance.test.mjs commerce-privacy-coverage.test.mjs commerce-settlement-source-delivery.test.mjs discovery-contract.test.mjs discovery-method-parity.http.test.mjs runtime-source-attribution.http.test.mjs page-change-http.mounted.test.mjs mcp-typed-telemetry-producer.test.mjs mcp-typed-telemetry-producer.mounted.test.mjs",
+      "exit": 0,
+      "summary": {
+        "tests": 228,
+        "pass": 228,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "path": "/tmp/root9832-evidence/related-first.tap",
+        "bytes": 49304,
+        "sha256": "c2689e98bc242e6532801b8365fe45ceabd7fefab719fb2f0b7405b1cf8169b2"
+      },
+      "qualification": "not accepted as offline: pre-existing provenance test defaulted to public facilitator; exact external transport outcome unmeasured",
+      "repeatedCasesAreNotAdditionalUniqueCases": true
+    },
+    {
+      "name": "related-final",
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 commerce-events.test.mjs commerce-traffic-provenance.test.mjs commerce-privacy-coverage.test.mjs commerce-settlement-source-delivery.test.mjs discovery-contract.test.mjs discovery-method-parity.http.test.mjs runtime-source-attribution.http.test.mjs page-change-http.mounted.test.mjs mcp-typed-telemetry-producer.test.mjs mcp-typed-telemetry-producer.mounted.test.mjs",
+      "exit": 0,
+      "summary": {
+        "tests": 228,
+        "pass": 228,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "path": "/tmp/root9832-evidence/related-final.tap",
+        "bytes": 49307,
+        "sha256": "b45c1d29f20c6124a2e8e0f5dd2b5a209f86b80f475f4749460bd21302c25c9e"
+      },
+      "qualification": "synthetic/injected/loopback fixtures and disposable stores",
+      "repeatedCasesAreNotAdditionalUniqueCases": true
+    },
+    {
+      "name": "focused-final",
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 extraction-trial-events.test.mjs extraction-trial.http.test.mjs walletless-read.http.test.mjs extraction-trial-discovery.test.mjs trial-measurement-continuity.test.mjs",
+      "exit": 0,
+      "summary": {
+        "tests": 210,
+        "pass": 210,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": {
+        "path": "/tmp/root9832-evidence/focused-final.tap",
+        "bytes": 40564,
+        "sha256": "29ac61967aff656bae507cac46a9f483616dc7f0800c51b9c30a5b3bd09d0897"
+      },
+      "qualification": "synthetic/injected/loopback fixtures and disposable stores",
+      "repeatedCasesAreNotAdditionalUniqueCases": true
+    }
+  ],
+  "firstTestFailures": [],
+  "selfReview": {
+    "finding": "Existing commerce-traffic-provenance mounted test used the public default facilitator and tolerated unavailable challenge transport. First passing related run is retained but not qualified as offline. Actual public supported-GET outcome is unmeasured.",
+    "fix": "Pinned a synthetic loopback /supported fixture, asserted 402 and only GET /supported calls, and reran all related suites serially.",
+    "remainingProductFindings": [],
+    "diffCheck": {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  },
+  "toolingNotes": [
+    "Initial read probe used nonexistent server.mjs/read.mjs in wc, exit 1; corrected to owning server.js/extract.mjs. No product/test failure or source mutation."
+  ],
+  "coverage": [
+    "Actual read and extract mounts: declared, UA-only, disagreement, internal/owner priority, missing/unknown/oversized/combined header values, parser and method refusal, completed/partial/source failure/fetch failure/unknown response.",
+    "All existing declaration labels; canonical split validation; old missing and malformed split metadata; old counts, diagnostics, operation labels and exact stored bytes.",
+    "Exact admitted producer 65176654 restarted with its retained old trial rows: no retrospective declaration inference or rewriting.",
+    "Window start/end, future rows, external cutoff, unknown operation, rotation, current capture, retained continuity and shared trial authority/lease/hops/expiry/restart.",
+    "Existing machine discovery, paid challenge/MCP/replay/financial telemetry, free page change and emitted human/icon preservation tests."
+  ],
+  "boundary": {
+    "liveTrialPosts": 0,
+    "livePaidCalls": 0,
+    "credentialAccountGrantChanges": 0,
+    "mergeReleaseDeploy": false,
+    "otherJobOwnership": false,
+    "root9814Touched": false,
+    "newLedgerIdentityStoreDimensionDependencyServiceFramework": false,
+    "outsideUseUsefulnessCustomerRevenueClaim": false,
+    "rootInstalledReceiving": "pending; root owns independent receiving/merge/install and any explicitly chosen no-hop canary"
+  },
+  "meaning": "Declared and observed views overlap: phase counts cannot be added or treated as requests/unique agents/conversion. New anonymous declarations may prospectively enter crawler after owner/internal priority. Missing/null/malformed declarations remain unknown, never historical absence or caller/payment attribution."
+}

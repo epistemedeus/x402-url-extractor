@@ -502,3 +502,127 @@ test("pinned trial caller bytes and phase totals survive finite diagnostics for 
   assert.equal(f.sourceCalls.length, 0, "no fixture fallback to another source");
   t.diagnostic(`${cases.length} controlled branches: caller body/header bytes and phase totals equal ${pinnedCommit}`);
 });
+
+test("actual read/extract mounts retain bounded source splits before parsing and through every terminal phase", { timeout: 60000 }, async t => {
+  const f = await fixture(t), store = await f.store();
+  const merchant = await f.start({ store });
+  const declared = { "x-samedaydesk-agent-source": "agent-skills-v1" };
+  const disagree = { ...declared, "user-agent": "GPTBot" };
+  const internal = { ...disagree, "x-samedaydesk-internal": "owner-fixture-authority-".repeat(4) };
+  const owner = { ...declared, "user-agent": "SameDayDesk-owner-test" };
+  const cases = [
+    [declared, "crawler", "agent-skills", null],
+    [{ "user-agent": "GPTBot" }, "crawler", null, "openai-training"],
+    [disagree, "crawler", "agent-skills", "openai-training"],
+    [internal, "internal", "agent-skills", "openai-training"],
+    [owner, "owner_monitor", "agent-skills", null],
+    [{}, "external", null, null],
+    [{ "x-samedaydesk-agent-source": "private-source-marker" }, "external", null, null],
+    [{ "x-samedaydesk-agent-source": "agent-skills-v1" + "x".repeat(2000) }, "external", null, null],
+    [{ "x-samedaydesk-agent-source": "agent-skills-v1, agentcash-v1" }, "external", null, null],
+  ];
+  for (const operation of ["read", "extract"]) {
+    const route = `/trial/${operation}`;
+    for (const [headers, population, declaration, observed] of cases) {
+      const count = f.sourceCalls.length;
+      const response = await merchant.request(route, { headers });
+      assert.equal(response.status, 405); assert.equal(response.headers.allow, "POST"); unpaid(response);
+      const row = (await f.events(merchant)).filter(row => row.extractionTrialOutcome).at(-1);
+      assert.equal(row.extractionTrialOperation, operation);
+      assert.equal(row.extractionTrialOutcome.outcome, "refused");
+      assert.equal(row.originClass, population);
+      assert.equal(row.declaredAgentDiscoverySource, declaration);
+      assert.equal(row.observedAgentDiscoverySource, observed);
+      assert.deepEqual(row.extractionTrialReason, { v: 1, family: "admission", code: "method_not_allowed" });
+      assert.equal(f.sourceCalls.length, count);
+    }
+    for (const [headers] of cases.slice(0, 5)) {
+      const response = await merchant.request(route, { method: "POST", body: { url: f.url() }, headers });
+      assert.equal(response.json.sourceOk, true); unpaid(response); await ready(merchant);
+    }
+    const parser = await merchant.request(route, { method: "POST", raw: '{"private-body-marker":', headers: declared });
+    assert.equal(parser.status, 400); unpaid(parser);
+    const parserRow = (await f.events(merchant)).filter(row => row.extractionTrialOutcome).at(-1);
+    assert.equal(parserRow.declaredAgentDiscoverySource, "agent-skills");
+    assert.deepEqual(parserRow.extractionTrialReason, { v: 1, family: "admission", code: "invalid_trial_body" });
+    for (const [target, outcome, reason] of [
+      ["/excerpt", "partial", undefined],
+      ["/refused", "failed", { v: 1, family: "source_http", code: "http_403" }],
+      ["/invalid-response", "failed", { v: 1, family: "fetch", code: "invalid_response" }],
+    ]) {
+      const response = await merchant.request(route, { method: "POST", headers: declared,
+        body: { url: f.url(target), ...(target === "/excerpt" ? { [operation === "read" ? "markdownLimitChars" : "textExcerptLimitChars"]: 1 } : {}) } });
+      assert.equal(response.status, 200); unpaid(response); await ready(merchant);
+      const row = (await f.events(merchant)).filter(row => row.extractionTrialOutcome).at(-1);
+      assert.equal(row.extractionTrialOutcome.outcome, outcome);
+      assert.equal(row.declaredAgentDiscoverySource, "agent-skills");
+      assert.deepEqual(row.extractionTrialReason, reason);
+    }
+    const unblock = f.block(), count = f.sourceCalls.length, url = new URL(merchant.base);
+    const req = httpRequest({ hostname: url.hostname, port: url.port, path: route, method: "POST",
+      headers: { ...declared, "content-type": "application/json" } });
+    req.on("error", () => {});
+    req.end(JSON.stringify({ url: f.url("/gate-attribution") }));
+    try {
+      await waitFor(() => f.sourceCalls.length === count + 1);
+      req.destroy();
+      await waitFor(async () => (await f.events(merchant)).some(row => row.extractionTrialOperation === operation
+        && row.extractionTrialOutcome?.outcome === "unknown_response"));
+    } finally { req.destroy(); unblock(); }
+    await ready(merchant);
+    assert.equal(f.sourceCalls.length, count + 1, "no retry after lost response");
+  }
+  const view = (await merchant.request("/v0/commerce-demand.json")).json.extractionTrial;
+  for (const operation of ["read", "extract"]) {
+    const sources = view.sources.populations;
+    assert.deepEqual(sources.crawler[operation].declared["agent-skills"],
+      { admitted: 6, completed: 2, partial: 1, refused: 3, failed: 2, unknown_response: 1 });
+    assert.equal(sources.crawler[operation].observed["openai-training"].completed, 2);
+    assert.equal(sources.internal[operation].declared["agent-skills"].completed, 1);
+    assert.equal(sources.owner_monitor[operation].declared["agent-skills"].completed, 1);
+    assert.equal(sources.unattributed[operation].declared.unknown.refused, 4);
+    assert.deepEqual(view.diagnostics.populations.crawler.unknown_response, { known: 0, unknown: 2, byReason: {} });
+  }
+  const oldRows = (await f.events(merchant)).filter(row => row.extractionTrialOutcome);
+  assert.equal(new Set(oldRows.map(row => row.actor)).size, 1);
+  assert.doesNotMatch(JSON.stringify(oldRows), /private-source-marker|private-body-marker|caller.example|agent-skills-v1|CallerFixture/);
+  assert.equal((await status(merchant)).started, 18);
+  const dataDir = merchant.data;
+  await merchant.stop();
+  const restarted = await f.start({ store, dataDir, now: NOW + 60000 });
+  const restored = (await restarted.request("/v0/commerce-demand.json")).json.extractionTrial;
+  for (const key of ["populations", "sources", "operations", "diagnostics"]) assert.deepEqual(restored[key], view[key]);
+  assert.deepEqual((await f.events(restarted)).filter(row => row.extractionTrialOutcome), oldRows);
+  assert.equal(restored.retainedObservationContinuity, "unknown");
+  assert.equal(restored.requestedWindowComplete, false);
+  assert.ok(restored.captureStartedAt > view.captureStartedAt);
+  assert.equal((await status(restarted)).started, 18);
+  assert.equal(view.usefulness, "unknown"); assert.equal(view.independentUse, "unknown"); assert.equal(view.laterPaidChoice, "unknown");
+  assert.ok(f.calls.every(call => call === "GET /supported"));
+  await restarted.stop();
+});
+
+test("exact admitted producer rows retain unknown declarations after actual merchant restart", { timeout: 30000 }, async t => {
+  const f = await fixture(t), store = await f.store();
+  const first = await f.start({ store, sourceBase: "6517665410c4e1267d7c2a7ef8860abdeec8086c" });
+  const headers = { "x-samedaydesk-agent-source": "agent-skills-v1" };
+  for (const operation of ["read", "extract"]) {
+    assert.equal((await first.request(`/trial/${operation}`, { method: "POST", body: { url: f.url() }, headers })).json.sourceOk, true);
+    await ready(first);
+  }
+  const before = (await first.request("/v0/commerce-demand.json")).json.extractionTrial;
+  const oldRows = (await f.events(first)).filter(row => row.extractionTrialOutcome);
+  assert.equal(oldRows.length, 4);
+  assert.ok(oldRows.every(row => row.declaredAgentDiscoverySource === null && row.originClass === "external"));
+  await first.stop();
+  const second = await f.start({ store, dataDir: first.data, now: NOW + 60000 });
+  const after = (await second.request("/v0/commerce-demand.json")).json.extractionTrial;
+  for (const key of ["populations", "operations", "diagnostics"]) assert.deepEqual(after[key], before[key]);
+  for (const operation of ["read", "extract"]) {
+    assert.equal(after.sources.populations.unattributed[operation].declared.unknown.completed, 1);
+    assert.equal(after.sources.populations.unattributed[operation].declared["agent-skills"], undefined);
+  }
+  assert.deepEqual((await f.events(second)).filter(row => row.extractionTrialOutcome), oldRows);
+  assert.equal((await status(second)).started, 2); assert.equal(f.sourceCalls.length, 2);
+  await second.stop();
+});

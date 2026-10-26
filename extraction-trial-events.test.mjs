@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { createCommerceTelemetry } from "./commerce-events.mjs";
+import { createCommerceTelemetry, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { normalizeExtractionTrialReason, trialFetchFailureReason, trialRefusalReason, trialSourceHttpReason } from "./extraction-trial-reason.mjs";
 
 async function fixture(t, extra = {}) {
@@ -118,6 +118,7 @@ test("trial observations use existing rotation and retained counts never backdat
   const read = await restarted.snapshot();
   assert.deepEqual(read.extractionTrial.populations, current.extractionTrial.populations);
   assert.deepEqual(read.extractionTrial.diagnostics, current.extractionTrial.diagnostics);
+  assert.deepEqual(read.extractionTrial.sources, current.extractionTrial.sources);
   assert.ok(read.extractionTrial.diagnostics.populations.unattributed.failed.byReason["fetch.timeout"] > 0);
   assert.equal(read.extractionTrial.captureStartedAt, null); assert.equal(read.extractionTrial.currentCapture.coverage, "unmeasured");
   assert.equal(read.extractionTrial.requestedWindowComplete, false);
@@ -247,4 +248,88 @@ test("trial capture failure stays unmeasured and external baseline never promote
   await rm(brokenDir); await mkdir(brokenDir);
   const view = (await broken.snapshot()).extractionTrial;
   assert.equal(view.currentCapture.coverage, "unmeasured"); assert.equal(view.requestedWindowComplete, false);
+});
+
+test("trial sources retain every existing declaration and both source views across all phases and operations", async t => {
+  const { telemetry } = await fixture(t, { internalToken: "fixture-internal" });
+  const observe = telemetry.extractionTrialObserver();
+  for (const { value, source } of listDeclaredAgentDiscoverySources()) {
+    invocation(observe, { operation: "read", headers: { "x-samedaydesk-agent-source": ` ${value.toUpperCase()} ` } });
+    await telemetry.flush();
+    const rows = (await readFile(telemetry.paths.currentPath, "utf8")).trim().split("\n").map(JSON.parse);
+    assert.equal(rows.at(-1).declaredAgentDiscoverySource, source);
+    assert.equal(rows.at(-1).agentDiscoverySource, source);
+    assert.equal(rows.at(-1).originClass, "crawler");
+  }
+  const headers = { "x-samedaydesk-agent-source": "agent-skills-v1", "user-agent": "GPTBot" };
+  for (const operation of ["read", "extract", undefined]) {
+    for (const outcome of ["completed", "partial", "failed", "refused", "unknown_response"]) {
+      invocation(observe, { operation, headers, outcome, admitted: outcome !== "refused",
+        status: outcome === "refused" ? 400 : 200, closed: outcome === "unknown_response" });
+    }
+  }
+  for (const [population, extra] of [["owner_monitor", { "user-agent": "SameDayDesk-owner-test" }],
+    ["internal", { "x-samedaydesk-internal": "fixture-internal" }]]) {
+    invocation(observe, { operation: "read", headers: { ...headers, ...extra } });
+    const view = (await telemetry.snapshot()).extractionTrial;
+    assert.equal(view.populations[population].completed, 1);
+    assert.equal(view.sources.populations[population].read.declared["agent-skills"].completed, 1);
+  }
+  const view = (await telemetry.snapshot()).extractionTrial;
+  for (const operation of ["read", "extract", "unknown"]) {
+    const counts = view.sources.populations.crawler[operation];
+    for (const phase of ["admitted", "completed", "partial", "failed", "refused", "unknown_response"]) {
+      assert.equal(counts.observed["openai-training"][phase], phase === "admitted" ? 4 : 1);
+      assert.equal(counts.declared["agent-skills"][phase], (phase === "admitted" ? 4 : 1)
+        + (operation === "read" && ["admitted", "completed"].includes(phase) ? 1 : 0));
+    }
+  }
+  const rows = (await readFile(telemetry.paths.currentPath, "utf8")).trim().split("\n").map(JSON.parse);
+  assert.equal(new Set(rows.map(row => row.actor)).size, 1);
+  assert.ok(rows.every(row => row.paymentPresent === false && row.settlementReference === null && row.replayed === false));
+});
+
+test("restored missing and malformed source splits preserve phases, old totals and journal bytes without inference", async t => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-10-26T12:00:00.000Z") });
+  const { telemetry, dataDir } = await fixture(t);
+  invocation(telemetry.extractionTrialObserver(), { outcome: "failed", operation: "read", reason: trialFetchFailureReason("timeout") });
+  await telemetry.flush();
+  const original = await readFile(telemetry.paths.currentPath, "utf8");
+  const failed = JSON.parse(original.trim().split("\n").at(-1));
+  const fields = ["declaredAgentDiscoverySource", "observedAgentDiscoverySource", "discoverySourceKind"];
+  const legacy = { ...failed, id: randomUUID(), agentDiscoverySource: "agent-skills", originClass: "crawler" };
+  for (const key of fields) delete legacy[key];
+  const malformed = [
+    { declaredAgentDiscoverySource: "private-source-marker" },
+    { declaredAgentDiscoverySource: ["agent-skills"] },
+    { declaredAgentDiscoverySource: { source: "agent-skills" } },
+    { observedAgentDiscoverySource: "agent-skills" },
+    { declaredAgentDiscoverySource: "agent-skills", discoverySourceKind: "declared_header" }, // collapsed mismatch
+    { discoverySourceKind: "private-kind-marker" },
+    { discoverySourceKind: null },
+  ].map(extra => ({ ...failed, ...extra, id: randomUUID() }));
+  const partial = { ...failed, id: randomUUID() }; delete partial.declaredAgentDiscoverySource;
+  const rows = [legacy, partial, ...malformed];
+  const withoutSplits = original + rows.map(row => {
+    const copy = { ...row }; for (const key of fields) delete copy[key]; return JSON.stringify(copy);
+  }).join("\n") + "\n";
+  await writeFile(telemetry.paths.currentPath, withoutSplits);
+  const before = await createCommerceTelemetry({ dataDir }).snapshot();
+  const restored = original + rows.map(JSON.stringify).join("\n") + "\n";
+  await writeFile(telemetry.paths.currentPath, restored);
+  const snapshot = await createCommerceTelemetry({ dataDir }).snapshot();
+  const view = snapshot.extractionTrial;
+  assert.equal(snapshot.integrityStatus, "ok");
+  for (const key of ["byResult", "externalEvents", "retainedParseableEventCount", "integrityStatus"]) assert.deepEqual(snapshot[key], before[key], key);
+  const { sources: _oldSources, ...oldTrial } = before.extractionTrial;
+  const { sources, ...actualTrial } = view;
+  assert.deepEqual(actualTrial, oldTrial, "all existing trial fields are unchanged");
+  for (const population of ["unattributed", "crawler"]) {
+    const expected = population === "crawler" ? 1 : 2 + malformed.length;
+    for (const dimension of ["declared", "observed"]) assert.equal(sources.populations[population].read[dimension].unknown.failed, expected);
+  }
+  assert.equal(sources.populations.crawler.read.declared["agent-skills"], undefined, "legacy collapsed label cannot recover a declaration");
+  assert.doesNotMatch(JSON.stringify(view), /private-source-marker|private-kind-marker/);
+  assert.equal(await readFile(telemetry.paths.currentPath, "utf8"), restored);
+  assert.deepEqual((await readdir(dataDir)).sort(), ["commerce-events.ndjson"], "no new store");
 });

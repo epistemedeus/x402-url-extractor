@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer as createNetServer } from "node:net";
+import { createServer as createHttpServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -400,8 +401,16 @@ function unusedPort() {
   });
 }
 
-test("mounted commerce-demand keeps the same producer populations", async () => {
+test("mounted commerce-demand keeps the same producer populations", async t => {
   const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-traffic-provenance-mounted-"));
+  const calls = [];
+  const facilitator = createHttpServer((req, res) => {
+    calls.push(`${req.method} ${req.url}`);
+    res.writeHead(req.method === "GET" && req.url === "/supported" ? 200 : 500, { "content-type": "application/json" });
+    res.end(JSON.stringify({ kinds: [{ network: "eip155:8453", scheme: "exact", x402Version: 2 }], extensions: [], signers: {} }));
+  });
+  await new Promise(resolve => facilitator.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise(resolve => { facilitator.closeAllConnections(); facilitator.close(resolve); }));
   const port = await unusedPort();
   const child = spawn(process.execPath, ["server.js"], {
     cwd: path.dirname(fileURLToPath(import.meta.url)),
@@ -415,6 +424,8 @@ test("mounted commerce-demand keeps the same producer populations", async () => 
       COMMERCE_AGENT_DISCOVERY_SINCE: "2020-01-01T00:00:00.000Z",
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
       NETWORK: "eip155:8453",
+      FACILITATOR: "xpay",
+      FACILITATOR_URL: `http://127.0.0.1:${facilitator.address().port}`,
       MPP_SECRET_KEY: "",
       PUBLIC_URL: "https://agents.samedaydesk.com",
     },
@@ -452,12 +463,8 @@ test("mounted commerce-demand keeps the same producer populations", async () => 
     const reported = await hit("/openapi.json", { "user-agent": "SameDayDesk-Monitor/claimed-not-proven", "x-samedaydesk-internal": "spoofed-owner-token-not-the-real-one" });
     const verified = await hit("/openapi.json", { "user-agent": "curl/8.0", "x-samedaydesk-internal": TOKEN });
     const scanner = await hit("/.env", { "user-agent": "curl/8.0" });
-    let constructedStatus = null;
-    try {
-      constructedStatus = await hit("/extract?url=https%3A%2F%2Fexample.com", { "user-agent": "curl/8.0" });
-    } catch {
-      constructedStatus = "unavailable";
-    }
+    const constructedStatus = await hit("/extract?url=https%3A%2F%2Fexample.com", { "user-agent": "curl/8.0" });
+    assert.equal(constructedStatus, 402);
     const demandResponse = await fetch(`${base}/v0/commerce-demand.json?days=1`);
     const demandText = await demandResponse.text();
     assert.equal(demandResponse.status, 200, demandText.slice(0, 500));
@@ -488,6 +495,7 @@ test("mounted commerce-demand keeps the same producer populations", async () => 
     assert.equal(stored.some((row) => row.originClass === "external"), true);
     assert.equal(stored.some((row) => row.originClass === "scanner"), true);
     assert.equal(JSON.stringify({ unmarked, reported, verified, scanner, constructedStatus }).includes(TOKEN), false);
+    assert.ok(calls.length > 0 && calls.every(call => call === "GET /supported"));
   } finally {
     child.kill("SIGTERM");
     await new Promise((resolve) => {

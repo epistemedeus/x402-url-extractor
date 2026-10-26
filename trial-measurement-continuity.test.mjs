@@ -30,7 +30,9 @@ async function fixture(t, extra = {}) {
 }
 function emit(adapter, observe, population = "external") {
   const res = new EventEmitter(); res.statusCode = 200;
-  const note = observe({ method: "POST", path: adapter.name === "trial" ? "/trial/extract" : "/recipes/page-change", headers: headers[population] }, res);
+  const note = observe({ method: "POST", path: adapter.name === "trial" ? "/trial/extract" : "/recipes/page-change",
+    headers: { ...headers[population], ...(adapter.name === "trial" && population === "crawler"
+      ? { "x-samedaydesk-agent-source": "agent-skills-v1" } : {}) } }, res);
   if (adapter.name === "trial") note("admitted");
   note(adapter.outcome, adapter.reason);
   res.emit("finish");
@@ -74,6 +76,11 @@ for (const adapter of adapters) {
     }
     if (adapter.name === "trial") {
       assert.equal(view.populations.unattributed.admitted, 3);
+      for (const population of ["unattributed", "internal", "owner_monitor", "crawler"]) {
+        const source = view.sources.populations[population].unknown;
+        assert.deepEqual(source.declared[population === "crawler" ? "agent-skills" : "unknown"], view.populations[population]);
+        assert.deepEqual(source.observed[population === "crawler" ? "openai-training" : "unknown"], view.populations[population]);
+      }
       assert.deepEqual(view.diagnostics.populations.unattributed.failed,
         { known: 3, unknown: 0, byReason: { "fetch.timeout": 3 } });
       for (const population of ["internal", "owner_monitor", "crawler"]) {
@@ -94,7 +101,10 @@ for (const adapter of adapters) {
     t.mock.timers.setTime(NOW);
     const withFuture = adapter.view(await restarted.snapshot({ days: 1 }));
     assert.deepEqual(withFuture.populations, view.populations);
-    if (adapter.name === "trial") assert.deepEqual(withFuture.diagnostics, view.diagnostics);
+    if (adapter.name === "trial") {
+      assert.deepEqual(withFuture.diagnostics, view.diagnostics);
+      assert.deepEqual(withFuture.sources, view.sources);
+    }
     assertUnknown(withFuture);
     assert.ok((await readFile(telemetry.paths.currentPath, "utf8")).startsWith(original), "old rows and timestamps remain verbatim");
     for (const time of [NOW - DAY - 1, NOW - DAY, EXTERNAL - 1, EXTERNAL, NOW - 60000, NOW + 1]) {
