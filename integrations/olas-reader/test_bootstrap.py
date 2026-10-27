@@ -112,5 +112,24 @@ class BootstrapTests(unittest.TestCase):
             x.stage('work',lambda:x.run('recovery',[b.sys.executable,'-c','print("received")']))
             self.assertEqual(len(list((x.target/'logs').glob('*.json'))),2)
 
+    def test_installed_nested_files_refuse_drift_but_source_input_filter_is_explicit(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            (root/'original.mjs').write_bytes(b'original')
+            expected=b.source_files(root)
+            for relative in ('package/node_modules/shadow/index.mjs',
+                             'package/__pycache__/module.cpython-312.pyc',
+                             'package/.git/config'):
+                added=root/relative
+                added.parent.mkdir(parents=True,exist_ok=True)
+                added.write_bytes(b'new installed file')
+                with self.assertRaises(ValueError):
+                    b.verify_tree(root,expected)
+                self.assertIn(relative,b.source_files(root))
+                self.assertEqual(b.source_files(root,excluded_parts=b.SOURCE_INPUT_EXCLUSIONS),expected)
+                added.unlink()
+                b.verify_tree(root,expected)
+            self.assertEqual(b.source_files(root),expected)
+
 
 if __name__=='__main__':unittest.main()

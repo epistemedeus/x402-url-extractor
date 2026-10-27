@@ -21,6 +21,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parent
 SHA = lambda body: hashlib.sha256(body).hexdigest()
 PROFILES = ('strict-kv-3.17.5', 'server-lock-3.19.0')
+SOURCE_INPUT_EXCLUSIONS = ('node_modules', '__pycache__', '.git')
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -73,10 +74,11 @@ def verify_tree(root, expected):
         raise ValueError('materialized runtime drift: '+str(root))
 
 
-def source_files(root):
+def source_files(root, *, excluded_parts=()):
+    """Fingerprint every installed regular file; source-input omissions are explicit."""
     return {str(p.relative_to(root)): {'bytes': p.stat().st_size, 'sha256': SHA(p.read_bytes())}
             for p in sorted(root.rglob('*')) if p.is_file() and
-            not any(x in p.relative_to(root).parts for x in ['node_modules', '__pycache__', '.git'])}
+            not any(x in p.relative_to(root).parts for x in excluded_parts)}
 
 
 def safe_members(tar):
@@ -116,7 +118,8 @@ class Bootstrap:
     def __init__(self, target, profile, resume=False, source_repair=False):
         self.target, self.profile = target, profile
         preflight(target, profile)
-        identity = {'profile': profile, 'sourceFiles': source_files(ROOT)}
+        identity = {'profile': profile,
+                    'sourceFiles': source_files(ROOT, excluded_parts=SOURCE_INPUT_EXCLUSIONS)}
         if target.exists() and any(target.iterdir()):
             if not resume or not (target/'INPUT.json').is_file():
                 raise ValueError('nonempty target; explicit --resume with matching INPUT required')
@@ -192,7 +195,7 @@ class Bootstrap:
 
     def materialize(self):
         probe = self.target/'probe'
-        shutil.copytree(ROOT, probe, ignore=shutil.ignore_patterns('node_modules', '__pycache__'), dirs_exist_ok=True)
+        shutil.copytree(ROOT, probe, ignore=shutil.ignore_patterns(*SOURCE_INPUT_EXCLUSIONS), dirs_exist_ok=True)
         # Validate the unchanged seven-file reader plus original MIT notice.
         for row in json.loads((probe/'reader-core/SOURCES.json').read_text())['files']:
             if row['label'] == 'reader-package-lock.json':

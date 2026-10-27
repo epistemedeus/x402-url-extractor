@@ -87,7 +87,7 @@ inspect `sourceOk` or `error.outcome` when deciding what to do next.
 ## Acceptance and provenance
 
 `--replay` runs **18 cases: seven real runtime cases and eleven labelled source
-slice diagnostics**. The separate bootstrap suite has **nine controls**. The
+slice diagnostics**. The separate bootstrap suite has **ten controls**. The
 runtime tests fetch the immutable public synthetic fixture in `fixtures/PUBLIC.json`
 and retain full direct/runtime table and Unicode/truncation output pairs under
 `reader-runtime/results/whole-useful-output.json`. Capture clocks can differ.
@@ -125,5 +125,4 @@ and [npm notice inventory](notices/npm/SOURCES.json). Dependency wheels retain
 their own embedded licences; their hashes/versions are in `runtime-wheels.json`.
 The Python selection qualifies this executed import closure, not the complete
 all-ledger distribution, a vendor image or a live funded operator. Unused Solana
-is omitted. Upstream warnings remain visible. Publication alone establishes no
-outside customer, delivered paid request or revenue.
+is omitted. Upstream warnings remain visible.
