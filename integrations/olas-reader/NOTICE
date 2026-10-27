@@ -1,0 +1,26 @@
+Local Olas reader carrier
+
+Carrier adapter, bootstrap and acceptance harness:
+Copyright (c) 2026 Neomorphic LLC. MIT; see LICENSE.
+
+Unchanged seven-module reader and synthetic fixtures:
+Copyright (c) 2026 SameDayDesk. MIT; see reader-core/LICENSE and
+fixtures/MERCHANT-LICENSE. Public source identities: reader-core/SOURCES.json.
+
+Official Olas task execution runtime and registry components are obtained from
+public pinned sources at install time. Copyright notices in those files are
+retained unchanged, including Valory AG and Fetch.AI Limited notices, under
+Apache-2.0. See upstream/LICENSE, upstream/SOURCES.json and the runtime locks.
+No upstream implementation is modified or vendored in this carrier.
+
+Eight npm packages are installed from integrity-pinned official registry
+artifacts. Their complete original licence/notice files are in notices/npm/;
+SOURCES.json lists exact versions, artefact identities and notice hashes.
+MIT: @exodus/bytes, zod, htmlparser2, dom-serializer.
+BSD-2-Clause: domelementtype, domhandler, domutils, entities.
+
+Python and build dependencies are fetched as pinned official distributions,
+not included as binary payloads. Their original embedded licence notices remain
+in the caller-owned installation. Peewee is MIT and its original sdist LICENSE
+is received before its pure-Python build. This NOTICE does not relicense those
+dependencies or grant trademark rights.

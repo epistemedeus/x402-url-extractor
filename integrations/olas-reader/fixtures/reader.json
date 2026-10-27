@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "requestedUrl": "https://reader.example/table",
+  "finalUrl": "https://reader.example/table",
+  "url": "https://reader.example/table",
+  "status": 200,
+  "sourceOk": true,
+  "error": null,
+  "title": "Synthetic public reader fixture",
+  "markdown": "",
+  "wordCount": 0,
+  "truncated": false,
+  "capture": {
+    "method": "http-get-no-javascript",
+    "javascriptExecuted": false,
+    "maxBodyBytes": 3000000,
+    "textExcerptLimitChars": null,
+    "markdownLimitChars": 40000,
+    "bodyBytes": 400,
+    "bodyTruncated": false,
+    "textTruncated": false,
+    "charset": "utf-8",
+    "charsetSource": "content-type"
+  },
+  "fetchedAt": "2026-10-27T00:00:00.000Z"
+}

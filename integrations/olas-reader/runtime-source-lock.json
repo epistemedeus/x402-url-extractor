@@ -1,0 +1,173 @@
+{
+  "components": [
+    {
+      "kind": "skills",
+      "author": "valory",
+      "name": "task_execution",
+      "label": "task-archive",
+      "cid": "bafybeien4bl2tevynexkpaqzq24ozu2vw4zeurw4elfwhqvkbqh5swe7ta",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeien4bl2tevynexkpaqzq24ozu2vw4zeurw4elfwhqvkbqh5swe7ta/?format=tar",
+      "sha256": "aabf1338e0a2f3e29dc9109231d434e8d0f27f952ff4911a278e921cf5e46412",
+      "bytes": 1128448
+    },
+    {
+      "kind": "connections",
+      "author": "valory",
+      "name": "ipfs",
+      "cid": "bafybeidob3tcdebjbm4ovwqoz4v2egf7nvoui3hu5on4o3apfchr6rpwwa",
+      "label": "connections-ipfs",
+      "version": "0.1.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeidob3tcdebjbm4ovwqoz4v2egf7nvoui3hu5on4o3apfchr6rpwwa/?format=tar",
+      "sha256": "4f602fb3c45c8604843d878e98280ef27e56a546e09c52bbb7d2a2ec7b07e0dc",
+      "bytes": 47616
+    },
+    {
+      "kind": "connections",
+      "author": "valory",
+      "name": "kv_store",
+      "cid": "bafybeib2tvoui6kndvrd2gpvs55rizpjee7mqjtjsfbr6fdp5hxslh6gd4",
+      "label": "connections-kv_store",
+      "version": "0.1.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeib2tvoui6kndvrd2gpvs55rizpjee7mqjtjsfbr6fdp5hxslh6gd4/?format=tar",
+      "sha256": "9f18c75dfb5fc469d0098fe41d1c085fc8cbe6ae004f1a5282c2cc83a8be0f50",
+      "bytes": 61952
+    },
+    {
+      "kind": "connections",
+      "author": "valory",
+      "name": "ledger",
+      "cid": "bafybeicynh5l5f5f5jpx72qwzis7jvmxk5p4eqltk32uxbj2pgu2x4rqz4",
+      "label": "connections-ledger",
+      "version": "0.19.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeicynh5l5f5f5jpx72qwzis7jvmxk5p4eqltk32uxbj2pgu2x4rqz4/?format=tar",
+      "sha256": "9178111751429857906ce2f1c25d74d5bb57ccaa74c92588bdf4253b50477de4",
+      "bytes": 145408
+    },
+    {
+      "kind": "connections",
+      "author": "valory",
+      "name": "p2p_libp2p_client",
+      "cid": "bafybeielj3jso3wvrarp5n5rq7llpw4vgxybqiyensgjalb5ubfiawwhhu",
+      "label": "connections-p2p_libp2p_client",
+      "version": "0.1.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeielj3jso3wvrarp5n5rq7llpw4vgxybqiyensgjalb5ubfiawwhhu/?format=tar",
+      "sha256": "19c659ad7e6392c13a4d5bfed77dcb9730d9c9b637db7cba17f34f3e1586c15c",
+      "bytes": 37376
+    },
+    {
+      "kind": "contracts",
+      "author": "valory",
+      "name": "olas_mech",
+      "cid": "bafybeigwnetiwhhvcdjmda2nmd2n35alytq5ftf7qionibht2sfgsl3rpm",
+      "label": "contracts-olas_mech",
+      "version": "0.1.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeigwnetiwhhvcdjmda2nmd2n35alytq5ftf7qionibht2sfgsl3rpm/?format=tar",
+      "sha256": "739bb5c9df87b9bc0f7f518f673a8c6af582c9c178e690773046a97a84686894",
+      "bytes": 52736
+    },
+    {
+      "kind": "contracts",
+      "author": "valory",
+      "name": "mech_marketplace",
+      "cid": "bafybeigrcnjaycggulxyx2tsjub4ssjij66d7nfzsavo6gd54hm7beliiu",
+      "label": "contracts-mech_marketplace",
+      "version": "0.1.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeigrcnjaycggulxyx2tsjub4ssjij66d7nfzsavo6gd54hm7beliiu/?format=tar",
+      "sha256": "0c63a7559df7a776cb904e442c0f3ee51a4528e24237a150d39c429c3bd65452",
+      "bytes": 134656
+    },
+    {
+      "kind": "protocols",
+      "author": "open_aea",
+      "name": "signing",
+      "cid": "bafybeifsjmldwyki3beqyvdt5lzenrg6wyrqaar5plc5rpnvtc4zlentye",
+      "label": "protocols-signing",
+      "version": "1.0.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeifsjmldwyki3beqyvdt5lzenrg6wyrqaar5plc5rpnvtc4zlentye/?format=tar",
+      "sha256": "8005cd8ad4a235ff6ab416b754aff3baef7a388af8a1f0047a35c52547f7db55",
+      "bytes": 62464
+    },
+    {
+      "kind": "protocols",
+      "author": "valory",
+      "name": "acn_data_share",
+      "cid": "bafybeieqisfr6lhaaesq37lk7vyaxza2h6nucshksgyo2djqfyf2saqo4i",
+      "label": "protocols-acn_data_share",
+      "version": "0.1.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeieqisfr6lhaaesq37lk7vyaxza2h6nucshksgyo2djqfyf2saqo4i/?format=tar",
+      "sha256": "6b5a9e46fa8a7e32bfb70c8e0f85f78a038ec6a92158a9f3781e0753bb7da07b",
+      "bytes": 35328
+    },
+    {
+      "kind": "protocols",
+      "author": "valory",
+      "name": "contract_api",
+      "cid": "bafybeibld2xb5m7kyluiptkamp4nrt6oeomkohz7a3yppbv2oo7qw2e4la",
+      "label": "protocols-contract_api",
+      "version": "1.0.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeibld2xb5m7kyluiptkamp4nrt6oeomkohz7a3yppbv2oo7qw2e4la/?format=tar",
+      "sha256": "dfd0293d7eb40468fc17d9d4174c0174af50f2e3e9745657e3a39d9cbb40ccca",
+      "bytes": 99328
+    },
+    {
+      "kind": "protocols",
+      "author": "valory",
+      "name": "ipfs",
+      "cid": "bafybeibz5xqhxdbuvba7nuw2w6ardjermtcoqercopnypdplnaekf3joam",
+      "label": "protocols-ipfs",
+      "version": "0.1.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeibz5xqhxdbuvba7nuw2w6ardjermtcoqercopnypdplnaekf3joam/?format=tar",
+      "sha256": "25fa9fe651ea68cfd39fdba62ad43310f1d8b7883425627d249b63e3b8e65cba",
+      "bytes": 45568
+    },
+    {
+      "kind": "protocols",
+      "author": "valory",
+      "name": "ledger_api",
+      "cid": "bafybeiecq56phjfws36rgrefw6niyo4ezesloodsfis647mpm5ygqo4ysi",
+      "label": "protocols-ledger_api",
+      "version": "1.0.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeiecq56phjfws36rgrefw6niyo4ezesloodsfis647mpm5ygqo4ysi/?format=tar",
+      "sha256": "41c7ab8044a6e6304af7a51e13079309c250fdbacb9a244d3eda395cfe7369af",
+      "bytes": 130048
+    },
+    {
+      "kind": "protocols",
+      "author": "valory",
+      "name": "kv_store",
+      "cid": "bafybeidlfrgv5rc7m7kj3j6u6umogmpy5bgcdzqtnsy3v75wn3likvyt6m",
+      "label": "protocols-kv_store",
+      "version": "0.1.0",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeidlfrgv5rc7m7kj3j6u6umogmpy5bgcdzqtnsy3v75wn3likvyt6m/?format=tar",
+      "sha256": "ecc2a68bec3505fd043dc5716c18f3619113d909f6e60d17de764f1095b72597",
+      "bytes": 47616
+    },
+    {
+      "kind": "protocols",
+      "author": "valory",
+      "name": "acn",
+      "label": "protocols-acn",
+      "cid": "bafybeiea66z4k6cgcazxd6qzvnkllulyjzbnxufkoenge7qzh4qfogrvoa",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeiea66z4k6cgcazxd6qzvnkllulyjzbnxufkoenge7qzh4qfogrvoa/?format=tar",
+      "sha256": "7f84c2ee180f75d7b18135698e144099717ec3f70ec3edc452531fdc4fb9019b",
+      "bytes": 68096
+    }
+  ],
+  "individualFiles": [
+    {
+      "label": "abstract-utils",
+      "relative": "packages/valory/skills/abstract_round_abci/utils.py",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeifkxnvvgsldkb4rgejsoon2mvrmrnl7asy2nhenwss7hpwg3myflu/abstract_round_abci/utils.py",
+      "sha256": "8706af8fd8675811d127267e40e771425f8f309fc37ac26aa1b69b94251c21c9",
+      "bytes": 13442
+    },
+    {
+      "label": "abstract-init",
+      "relative": "packages/valory/skills/abstract_round_abci/__init__.py",
+      "url": "https://gateway.autonolas.tech/ipfs/bafybeifkxnvvgsldkb4rgejsoon2mvrmrnl7asy2nhenwss7hpwg3myflu/abstract_round_abci/__init__.py",
+      "sha256": "98eea2f76e8a68b6adb5197bb88c8b9836a6a62e82c0ee73b27331cfd2f67889",
+      "bytes": 1017
+    }
+  ],
+  "rootNamespaceFiles": "empty __init__.py packaging scaffolds; no replaced framework module"
+}

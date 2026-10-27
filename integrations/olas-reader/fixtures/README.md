@@ -1,0 +1,1 @@
+The local synthetic table and reader records are MIT, Copyright (c) 2026 SameDayDesk; see MERCHANT-LICENSE. PUBLIC.json pins the immutable anonymous HTTP fixture used by the real runtime tests. The fake reader models output only; it does not prove DNS, HTML parsing or source HTTP.

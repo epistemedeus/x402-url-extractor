@@ -1,0 +1,11 @@
+{
+  "name": "olas-pinned-reader-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@exodus/bytes": "1.16.0",
+    "zod": "3.25.76",
+    "htmlparser2": "12.0.0"
+  }
+}
