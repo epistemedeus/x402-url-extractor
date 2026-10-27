@@ -1,0 +1,12 @@
+name: public_page_reader
+author: pilot
+version: 0.0.0
+license: MIT
+type: custom
+aea_version: ">=2.0.0, <3.0.0"
+description: Local guarded reader runtime probe; no funded operator.
+fingerprint: {}
+dependencies: {}
+entry_point: public_page_reader.py
+callable: run
+params: {}

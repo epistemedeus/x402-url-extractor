@@ -1,0 +1,50 @@
+[
+  {
+    "label": "packaged-license",
+    "url": "https://raw.githubusercontent.com/valory-xyz/mech/9d1b0067b0fea31463d25778371d9ce72ecfafb3/LICENSE",
+    "bytes": 11357,
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  {
+    "label": "selected-skill",
+    "url": "https://gateway.autonolas.tech/ipfs/bafybeien4bl2tevynexkpaqzq24ozu2vw4zeurw4elfwhqvkbqh5swe7ta/task_execution/skill.yaml",
+    "bytes": 6688,
+    "sha256": "b7c218f81037782893f38e8d2917c5dbed1214d297f76aa427cf911d3945cb27"
+  },
+  {
+    "label": "selected-behaviours",
+    "url": "https://gateway.autonolas.tech/ipfs/bafybeien4bl2tevynexkpaqzq24ozu2vw4zeurw4elfwhqvkbqh5swe7ta/task_execution/behaviours.py",
+    "bytes": 132118,
+    "sha256": "eeda3d5311362bd09f2c303df501a5082ca6c40fb24db0f1ec6683cb2860a7b6"
+  },
+  {
+    "label": "selected-task",
+    "url": "https://gateway.autonolas.tech/ipfs/bafybeien4bl2tevynexkpaqzq24ozu2vw4zeurw4elfwhqvkbqh5swe7ta/task_execution/utils/task.py",
+    "bytes": 1311,
+    "sha256": "b62c4abb99943cdb986b63763217918f2bf09a43c83a838ae154e4c259671588"
+  },
+  {
+    "label": "selected-ipfs",
+    "url": "https://gateway.autonolas.tech/ipfs/bafybeien4bl2tevynexkpaqzq24ozu2vw4zeurw4elfwhqvkbqh5swe7ta/task_execution/utils/ipfs.py",
+    "bytes": 3748,
+    "sha256": "093b8e2f384c0ace4239aebc2afce3a3d410aae86a0038d5fd92175f09fae34f"
+  },
+  {
+    "label": "selected-local-cid",
+    "url": "https://gateway.autonolas.tech/ipfs/bafybeien4bl2tevynexkpaqzq24ozu2vw4zeurw4elfwhqvkbqh5swe7ta/task_execution/utils/local_cid.py",
+    "bytes": 6600,
+    "sha256": "8ad7f032a7711d76875ebb16819f3531f602f53d04d8ad68b7a45a519dcd3d73"
+  },
+  {
+    "label": "selected-apis",
+    "url": "https://gateway.autonolas.tech/ipfs/bafybeien4bl2tevynexkpaqzq24ozu2vw4zeurw4elfwhqvkbqh5swe7ta/task_execution/utils/apis.py",
+    "bytes": 2764,
+    "sha256": "f6044b333ef143c61f93a48a9600966060856688470b28ca4923173d20990876"
+  },
+  {
+    "label": "selected-benchmarks",
+    "url": "https://gateway.autonolas.tech/ipfs/bafybeien4bl2tevynexkpaqzq24ozu2vw4zeurw4elfwhqvkbqh5swe7ta/task_execution/utils/benchmarks.py",
+    "bytes": 6884,
+    "sha256": "31f093355099c028a2c587521190c031e0cb3f0e757ac1d75558e26a50ddcbbb"
+  }
+]
