@@ -343,7 +343,7 @@ export function validateMachineSurfaceParity({
 
   const expectedMcp = actionRoutes.map((action) => mcpToolNameForRoute(action.route)).sort();
   // Free recipes and the runtime recovery read are not priced actions.
-  const freeUnpaidMcpTools = new Set(["page_change", "careers_board_cold", "report_caller_result", "recover_paid_result"]);
+  const freeUnpaidMcpTools = new Set(["page_change", "careers_board_cold", "report_caller_result", "recover_paid_result", "trial_read"]);
   const actualMcp = [...new Set(mcpToolNames || [])].filter((name) => !freeUnpaidMcpTools.has(name)).sort();
   if (expectedMcp.join("\n") !== actualMcp.join("\n")) {
     fail("MCP tool names drifted from canonical paid actions");

@@ -14,6 +14,11 @@ export function normalizeExtractionTrialOperation(value) {
   return value === "extract" || value === "read" ? value : null;
 }
 
+// Protocol label only. Anything else is omitted so a caller string cannot enter the journal.
+export function normalizeExtractionTrialTransport(value) {
+  return value === "http" || value === "mcp" ? value : null;
+}
+
 export function normalizeExtractionTrialReason(outcome, value) {
   if (!value || typeof value !== "object" || Array.isArray(value)
     || Object.keys(value).sort().join(",") !== "code,family,v" || value.v !== 1) return null;

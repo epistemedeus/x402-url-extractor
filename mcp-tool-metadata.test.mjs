@@ -5,11 +5,11 @@ import { advertiseDeclaredHttpRoute, bindDeclaredHttpRoute, decorateMcpTool, lis
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  const freeNames = new Set(["page_change", "careers_board_cold", "report_caller_result"]);
+  const freeNames = new Set(["page_change", "careers_board_cold", "report_caller_result", "trial_read"]);
   const paid = metadata.filter((entry) => !freeNames.has(entry.name));
   const free = metadata.filter((entry) => freeNames.has(entry.name));
   assert.equal(paid.length, 25);
-  assert.equal(free.length, 3);
+  assert.equal(free.length, 4);
   assert.equal(new Set(metadata.map((entry) => entry.name)).size, metadata.length);
   assert.equal(new Set(metadata.map((entry) => entry.title)).size, metadata.length);
   for (const entry of paid) {
@@ -25,6 +25,12 @@ test("publishes unique action-oriented titles for every live MCP tool", () => {
   assert.match(free.find((entry) => entry.name === "report_caller_result").title, /^Report\b/);
   assert.match(free.find((entry) => entry.name === "report_caller_result").description, /charged is false/);
   assert.doesNotMatch(free.find((entry) => entry.name === "report_caller_result").description, /https?:\/\//);
+  const trialRead = free.find((entry) => entry.name === "trial_read");
+  assert.match(trialRead.title, /^Read Public Page Under Shared Trial$/);
+  assert.match(trialRead.description, /charged is false/);
+  assert.match(trialRead.description, /same original authority/);
+  assert.match(trialRead.description, /not idempotent or effect-free/);
+  assert.doesNotMatch(trialRead.description, /USDC|not mcp:\/\//);
 });
 
 test("makes each overlapping web and company tool chooseable without renaming it", () => {

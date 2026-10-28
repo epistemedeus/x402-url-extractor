@@ -3,9 +3,19 @@ import { access, lstat, mkdir, open, readdir, rmdir } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import express from "express";
-import { assertPublicHttpUrl, extract, readMarkdownWithOptions } from "./extract.mjs";
+import { z } from "zod";
+import { assertPublicHttpUrl, extract, readMarkdownWithOptions, readMcpOutputSchema } from "./extract.mjs";
 import { buildCapture, fetchFailureCode, parseTextExcerptLimit, READ_MARKDOWN_MAX_CHARS, EXTRACT_MAX_BODY_BYTES, EXTRACT_TIMEOUT_MS } from "./extract-capture.mjs";
 import { trialFetchFailureReason, trialRefusalReason, trialSourceHttpReason } from "./extraction-trial-reason.mjs";
+
+export const TRIAL_READ_MCP_TOOL = "trial_read";
+// Durable hop consumption is a side effect. These hints describe that; they do not admit.
+export const trialReadMcpAnnotations = Object.freeze({
+  readOnlyHint: false,
+  destructiveHint: false,
+  idempotentHint: false,
+  openWorldHint: true,
+});
 
 export const EXTRACTION_TRIAL_PATH = "/trial/extract";
 export const READER_TRIAL_PATH = "/trial/read";
@@ -149,6 +159,77 @@ export function extractionTrialContract(status) {
   };
 }
 
+export function trialReadMcpDescription() {
+  const reader = extractionTrialContract({}).reader;
+  const limit = reader.markdownLimitChars;
+  return [
+    "Read one public HTTP(S) page as bounded Markdown through the existing walletless trial.",
+    reader.sharedBudget,
+    `Optional markdownLimitChars is an integer from ${limit.minimum} through ${limit.maximum}; omitted calls use ${limit.default}.`,
+    "charged is false. This is not the paid `read` tool and it returns no payment or settlement receipt.",
+    `The paid next path stays ${reader.paidNextTask.method} ${reader.paidNextTask.path}.`,
+    "Each attempted DNS, HTTP, or redirect hop consumes one durable start before I/O. The call is not idempotent or effect-free; a retry spends another hop and does not refund a lost response.",
+    reader.response,
+  ].join(" ");
+}
+
+export function trialReadMcpInputSchema() {
+  const limit = extractionTrialContract({}).reader.markdownLimitChars;
+  return z.object({
+    url: z.string().min(1).max(2048).describe("Caller public http(s) URL. Private, loopback, and non-public hosts are refused."),
+    markdownLimitChars: z.number().int().min(limit.minimum).max(limit.maximum).optional()
+      .describe(`Optional Markdown character limit from ${limit.minimum} through ${limit.maximum}. Omitted calls use ${limit.default}.`),
+  }).strict();
+}
+
+export const trialReadMcpOutputSchema = readMcpOutputSchema.extend({
+  charged: z.literal(false),
+}).strict();
+
+// One admission and fetch path for HTTP /trial/read and the MCP trial reader.
+// Success and fetch-failure bodies stay free of a charged field; HTTP refusals already include it.
+export async function executeBoundedTrialRead({ budget, note = () => {}, rawUrl, markdownLimitChars } = {}) {
+  let url, limit;
+  try {
+    if (typeof rawUrl !== "string" || rawUrl.length > 2048) throw failure("invalid_trial_input");
+    url = assertPublicHttpUrl(rawUrl).href;
+    const maxChars = markdownLimitChars === undefined ? READ_MARKDOWN_MAX_CHARS : markdownLimitChars;
+    if (!Number.isSafeInteger(maxChars) || maxChars < 1 || maxChars > READ_MARKDOWN_MAX_CHARS) throw failure("invalid_trial_input");
+    limit = maxChars;
+  } catch {
+    note("refused", trialRefusalReason("invalid_trial_input"));
+    return { status: 400, body: { ok: false, charged: false, error: "invalid_trial_input" } };
+  }
+  let lease, admitted = false;
+  try {
+    lease = await budget.acquire();
+    const beforeFetch = async () => {
+      await lease.spend();
+      if (!admitted) { admitted = true; note("admitted"); }
+    };
+    const data = await readMarkdownWithOptions(url, { maxChars: limit, beforeFetch });
+    note(!data.sourceOk ? "failed" : data.capture.bodyTruncated || data.capture.textTruncated ? "partial" : "completed",
+      trialSourceHttpReason(data));
+    return { status: 200, body: data };
+  } catch (error) {
+    if (!admitted) {
+      const availability = (await budget.status()).availability;
+      note("refused", trialRefusalReason("trial_unavailable", availability));
+      return { status: 503, body: { ok: false, charged: false, error: "trial_unavailable", ...(availability ? { availability } : {}) } };
+    }
+    const code = fetchFailureCode(error);
+    note("failed", trialFetchFailureReason(code));
+    return {
+      status: 200,
+      body: {
+        ok: false, url, requestedUrl: url, finalUrl: null, status: null, sourceOk: false,
+        error: { code, message: "Bounded trial read failed" },
+        capture: buildCapture({ textExcerptLimitChars: null, markdownLimitChars: limit, bodyBytes: 0, charset: null, charsetSource: "default-utf-8" }),
+      },
+    };
+  } finally { await lease?.release(); }
+}
+
 export function mountExtractionTrial(app, { budget = createExtractionTrialBudget(), observe } = {}) {
   app.get(EXTRACTION_TRIAL_DISCOVERY, async (_req, res) => {
     res.set("Cache-Control", "no-store");
@@ -158,7 +239,7 @@ export function mountExtractionTrial(app, { budget = createExtractionTrialBudget
   // One closure owns both mounts: same budget/store, clock and global lease.
   for (const [route, operation] of [[EXTRACTION_TRIAL_PATH, "extract"], [READER_TRIAL_PATH, "read"]]) app.all(route, (req, res) => {
     const reader = operation === "read";
-    const note = observe?.(req, res, operation) || (() => {});
+    const note = observe?.(req, res, operation, "http") || (() => {});
     res.set("Cache-Control", "no-store");
     res.set("X-Samedaydesk-Trial", "walletless-first-use-v1");
     const refuse = (status, error, availability) => {
@@ -170,15 +251,22 @@ export function mountExtractionTrial(app, { budget = createExtractionTrialBudget
     parser(req, res, async error => {
       if (error) return refuse(error.type === "entity.too.large" ? 413 : 400, "invalid_trial_body");
       const body = req.body;
+      if (reader) {
+        if (Object.keys(req.query).length || !body || Array.isArray(body) || typeof body !== "object"
+          || Object.keys(body).some(key => key !== "url" && key !== "markdownLimitChars")) {
+          return refuse(400, "invalid_trial_input");
+        }
+        const outcome = await executeBoundedTrialRead({ budget, note, rawUrl: body.url, markdownLimitChars: body.markdownLimitChars });
+        if (!res.destroyed) res.status(outcome.status).json(outcome.body);
+        return;
+      }
       let url, limit;
       try {
         if (Object.keys(req.query).length || !body || Array.isArray(body) || typeof body !== "object"
-          || Object.keys(body).some(key => !["url", reader ? "markdownLimitChars" : "textExcerptLimitChars"].includes(key))
+          || Object.keys(body).some(key => !["url", "textExcerptLimitChars"].includes(key))
           || typeof body.url !== "string" || body.url.length > 2048) throw failure("invalid_trial_input");
         url = assertPublicHttpUrl(body.url).href;
-        const maxChars = body.markdownLimitChars === undefined ? READ_MARKDOWN_MAX_CHARS : body.markdownLimitChars;
-        limit = reader ? { ok: Number.isSafeInteger(maxChars) && maxChars >= 1 && maxChars <= READ_MARKDOWN_MAX_CHARS, value: maxChars }
-          : parseTextExcerptLimit(body.textExcerptLimitChars);
+        limit = parseTextExcerptLimit(body.textExcerptLimitChars);
         if (!limit.ok) throw failure("invalid_trial_input");
       } catch { return refuse(400, "invalid_trial_input"); }
       let lease, admitted = false;
@@ -188,8 +276,7 @@ export function mountExtractionTrial(app, { budget = createExtractionTrialBudget
           await lease.spend();
           if (!admitted) { admitted = true; note("admitted"); }
         };
-        const data = reader ? await readMarkdownWithOptions(url, { maxChars: limit.value, beforeFetch })
-          : await extract(url, { textExcerptLimitChars: limit.value, beforeFetch });
+        const data = await extract(url, { textExcerptLimitChars: limit.value, beforeFetch });
         note(!data.sourceOk ? "failed" : data.capture.bodyTruncated || data.capture.textTruncated ? "partial" : "completed",
           trialSourceHttpReason(data));
         if (!res.destroyed) res.json(data);
@@ -202,9 +289,8 @@ export function mountExtractionTrial(app, { budget = createExtractionTrialBudget
         note("failed", trialFetchFailureReason(code));
         if (!res.destroyed) res.status(200).json({
           ok: false, url, requestedUrl: url, finalUrl: null, status: null, sourceOk: false,
-          error: { code, message: reader ? "Bounded trial read failed" : "Bounded trial extraction failed" },
-          capture: buildCapture({ textExcerptLimitChars: reader ? null : limit.value,
-            markdownLimitChars: reader ? limit.value : null, bodyBytes: 0, charset: null, charsetSource: "default-utf-8" }),
+          error: { code, message: "Bounded trial extraction failed" },
+          capture: buildCapture({ textExcerptLimitChars: limit.value, markdownLimitChars: null, bodyBytes: 0, charset: null, charsetSource: "default-utf-8" }),
         });
       } finally { await lease?.release(); }
     });

@@ -241,7 +241,7 @@ test("fails when llms omits a canonical paid route, matching the 2026-08-20 snap
 test("free recover_paid_result is not a paid action and an unknown tool still drifts", () => {
   const current = surfaces();
   const withRecovery = surfaces({
-    mcpToolNames: [...current.mcpToolNames, "recover_paid_result", "page_change", "careers_board_cold", "report_caller_result"],
+    mcpToolNames: [...current.mcpToolNames, "recover_paid_result", "page_change", "careers_board_cold", "report_caller_result", "trial_read"],
   });
   const receipt = validateMachineSurfaceParity(withRecovery);
   assert.equal(receipt.ok, true);
@@ -274,13 +274,14 @@ test("fails when Circle is promoted onto a killed surface", () => {
 
 test("live MCP metadata still matches one tool per canonical route shape", () => {
   const names = listMcpToolMetadata().map((entry) => entry.name).sort();
-  const freeNames = new Set(["page_change", "careers_board_cold", "report_caller_result"]);
+  const freeNames = new Set(["page_change", "careers_board_cold", "report_caller_result", "trial_read"]);
   const paid = names.filter((name) => !freeNames.has(name));
   assert.equal(paid.length, 25);
   assert.ok(names.includes("page_change"));
   assert.ok(names.includes("careers_board"));
   assert.ok(names.includes("careers_board_cold"));
   assert.ok(names.includes("report_caller_result"));
+  assert.ok(names.includes("trial_read"));
   assert.ok(names.includes("extract_batch"));
   assert.ok(names.includes("lockfile_pin_delta"));
   assert.ok(names.includes("morpho_protection"));

@@ -1,5 +1,8 @@
 import { mountDeliveryJournalCoverage } from "./delivery-journal-coverage-http.mjs";
-import { mountExtractionTrial, EXTRACTION_TRIAL_DISCOVERY } from "./extraction-trial.mjs";
+import {
+  mountExtractionTrial, EXTRACTION_TRIAL_DISCOVERY, createExtractionTrialBudget, executeBoundedTrialRead,
+  TRIAL_READ_MCP_TOOL, trialReadMcpAnnotations, trialReadMcpDescription, trialReadMcpInputSchema, trialReadMcpOutputSchema,
+} from "./extraction-trial.mjs";
 import { registerCommerceRuntime } from "./commerce-journal-admission.mjs";
 // x402-merchant — a paid HTTP endpoint that charges AI agents in USDC and
 // settles directly to OUR OWN Base wallet.
@@ -588,7 +591,9 @@ const app = express();
 const commerceTelemetry = createCommerceTelemetry({
   writerProcessCount: parseCommerceWriterProcessCount(process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES),
 });
-mountExtractionTrial(app, { observe: commerceTelemetry.extractionTrialObserver() });
+const extractionTrialBudget = createExtractionTrialBudget();
+const observeExtractionTrial = commerceTelemetry.extractionTrialObserver();
+mountExtractionTrial(app, { budget: extractionTrialBudget, observe: observeExtractionTrial });
 // Railway terminates TLS before forwarding to Express. Trust exactly one proxy
 // hop so x402 payment requirements preserve the public https:// resource URL.
 app.set("trust proxy", 1);
@@ -1598,6 +1603,13 @@ app.get("/mcp", (_req, res) => {
         charged: false,
         channel: "mcp",
         optional: true,
+      },
+      {
+        name: TRIAL_READ_MCP_TOOL,
+        charged: false,
+        paymentRequired: false,
+        consumesSharedTrialAllowance: true,
+        discovery: extractionTrialDiscoveryUrl,
       },
     ],
     callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
@@ -4507,6 +4519,27 @@ import("./mcp-server.mjs")
           tags: ["feedback", "free"],
         },
         {
+          name: TRIAL_READ_MCP_TOOL,
+          free: true,
+          extractionTrialOperation: "read",
+          description: trialReadMcpDescription(),
+          price: "$0",
+          inputSchema: trialReadMcpInputSchema(),
+          outputSchema: trialReadMcpOutputSchema,
+          annotations: trialReadMcpAnnotations,
+          run: async (args, note = () => {}) => {
+            const outcome = await executeBoundedTrialRead({
+              budget: extractionTrialBudget,
+              note,
+              rawUrl: args?.url,
+              markdownLimitChars: args?.markdownLimitChars,
+            });
+            // charged is an MCP result fact. The HTTP trial body stays unchanged.
+            return { ...outcome.body, charged: false };
+          },
+          tags: ["web", "markdown", "trial", "free"],
+        },
+        {
           name: "careers_board",
           description: CAREERS_BOARD_DESCRIPTION,
           price: CAREERS_BOARD_PRICE_USD,
@@ -4628,6 +4661,7 @@ import("./mcp-server.mjs")
       nativeRecovery: { journal: idempotencyReplay, endpointUrl: `${PUBLIC_URL}/mcp`, tenantId: "public" },
       callerResultFeedbackKey: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
       commerceDataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
+      observeExtractionTrial,
     });
   })
   .then((r) => {

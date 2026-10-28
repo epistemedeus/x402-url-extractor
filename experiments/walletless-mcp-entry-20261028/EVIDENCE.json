@@ -1,0 +1,156 @@
+{
+  "schema": "root18700.source-evidence.v1",
+  "origin": "https://github.com/epistemedeus/x402-url-extractor.git",
+  "base": "ab694a6c567c664517bff6058b09877a605c0f60",
+  "baseTree": "212c510a9e30f71f9931b2ca1069765a965df776",
+  "branch": "codex/root18700-walletless-mcp-entry-20261028",
+  "implementationCommit": "75d38a1e609f3a687e7fa671d73b4d8e5c332838",
+  "implementationTree": "bf8e6fdd84a632a19cbf19391c136bfeca53a38d",
+  "reportCommit": "child of implementationCommit; exact tip is artifacts/SOURCE.json and launcher EXPORT.json",
+  "operatingPilot": "7ed9e3ec4b191dd79468fc764936c1d5a9a9d310",
+  "assignmentBlob": "6feedee0363b8fb28d132cd3a7cabf3744015f74",
+  "inputReceiptSha256": "bc7e0b7b68e2d7b5dfeff2d9ebca44a20ca8073ed046f110093ec2a2510af071",
+  "model": "grok-4.7",
+  "effort": "xhigh",
+  "host": "f7",
+  "hostAgent": "bc-f7dfebfa-f66a-5197-aa0c-e27e384063e6",
+  "session": "29ee7d7d-f64d-435a-b1cc-8a285ca24c3b",
+  "runId": "ae14-root18700-walletless-mcp-entry",
+  "tool": "trial_read",
+  "endpoint": "POST /mcp",
+  "executor": "executeBoundedTrialRead",
+  "sharedBudget": "createExtractionTrialBudget in server.js, passed to mountExtractionTrial and trial_read",
+  "changedPaths": [
+    "commerce-events.mjs",
+    "experiments/walletless-mcp-entry-20261028/EVIDENCE.json",
+    "experiments/walletless-mcp-entry-20261028/RESULT.md",
+    "experiments/walletless-mcp-entry-20261028/WORKER-HANDBACK.md",
+    "extraction-trial-discovery.test.mjs",
+    "extraction-trial-events.test.mjs",
+    "extraction-trial-reason.mjs",
+    "extraction-trial.mjs",
+    "machine-surface-parity.http.test.mjs",
+    "machine-surface-parity.mjs",
+    "machine-surface-parity.test.mjs",
+    "mcp-server.mjs",
+    "mcp-tool-metadata.mjs",
+    "mcp-tool-metadata.test.mjs",
+    "route-binding-inspect.mjs",
+    "server.js",
+    "walletless-mcp-entry.mounted.test.mjs"
+  ],
+  "resourceProfile": {
+    "declaredFootprintKiB": 2097152,
+    "modelChildren": 0,
+    "nodeHeapMiB": 512,
+    "UV_THREADPOOL_SIZE": 1,
+    "OMP_NUM_THREADS": 1,
+    "testConcurrency": 1
+  },
+  "commands": [
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit walletless-mcp-entry.mounted.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 8, "pass": 8, "fail": 0 },
+      "note": "final mounted run; earlier exits 1 are firstFailures"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit extraction-trial-events.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 11, "pass": 11, "fail": 0 }
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit mcp-tool-metadata.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 4, "pass": 4, "fail": 0 }
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit machine-surface-parity.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 14, "pass": 14, "fail": 0 }
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit trial-measurement-continuity.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 9, "pass": 9, "fail": 0 }
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit extraction-trial.http.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 81, "pass": 81, "fail": 0 },
+      "note": "includes pinned extract caller body bytes at d9e5cde379cf7798f473d0cc6bf2139c9ec857d9"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit walletless-read.http.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 18, "pass": 18, "fail": 0 }
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit extraction-trial-discovery.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 92, "pass": 92, "fail": 0 }
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit machine-surface-parity.http.test.mjs",
+      "exit": 1,
+      "counts": { "tests": 1, "pass": 0, "fail": 1 },
+      "note": "first failure: typed MCP outputSchema count 14 !== 13 before the expectation included trial_read"
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit discovery-method-parity.http.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 1, "pass": 1, "fail": 0 }
+    },
+    {
+      "command": "env NODE_OPTIONS=--max-old-space-size=512 UV_THREADPOOL_SIZE=1 OMP_NUM_THREADS=1 node --test --test-concurrency=1 --test-force-exit machine-surface-parity.http.test.mjs",
+      "exit": 0,
+      "counts": { "tests": 1, "pass": 1, "fail": 0 },
+      "note": "rerun after expecting 14 typed tools, with trial_read charged const false and idempotentHint false"
+    }
+  ],
+  "finalFocused": { "tests": 239, "pass": 239, "fail": 0 },
+  "firstFailures": [
+    {
+      "name": "mounted journal missing before any row",
+      "error": "ENOENT commerce-events.ndjson",
+      "fix": "trialRows treats a missing journal as zero rows"
+    },
+    {
+      "name": "duplicate registration",
+      "error": "registered MCP tool is not in the closed product map",
+      "fix": "the collision case registers two free trial_read tools; an unknown paid name is rejected earlier by the closed product map"
+    },
+    {
+      "name": "known-tool schema rejection",
+      "error": "Cannot read properties of undefined (reading 'code') at the -32602 assertion",
+      "fix": "SDK 1.30 returns an isError tool result for InvalidParams; unknown names stay JSON-RPC -32602"
+    },
+    {
+      "name": "source failure text parse",
+      "error": "Cannot read properties of undefined (reading 'content')",
+      "fix": "Client.callTool returns the result object, not the JSON-RPC envelope"
+    },
+    {
+      "name": "paid read challenge shape",
+      "error": "Cannot read properties of undefined (reading 'x402Version')",
+      "fix": "the existing paid output schema keeps the challenge in content text and omits structuredContent"
+    },
+    {
+      "name": "typed MCP count",
+      "error": "14 !== 13",
+      "fix": "trial_read is the additional tool with an output schema; the thirteen paid typed names remain"
+    }
+  ],
+  "notRun": [
+    "package.json test",
+    "unrelated whole-platform suites",
+    "public trial POST",
+    "paid API",
+    "production store read or write"
+  ],
+  "limitations": [
+    "No live customer trial call. Root owns any later bounded call.",
+    "Schema failures of a known tool are isError tool results, not JSON-RPC -32602, because that is the pinned SDK 1.30 tools/call behavior. They spend nothing and write no trial journal row.",
+    "Canonical EXIT, ENDED, STATUS, RUN.json, and EXPORT.json are written by the launcher when this process exits. This file does not invent them."
+  ]
+}

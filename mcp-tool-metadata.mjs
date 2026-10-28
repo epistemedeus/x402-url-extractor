@@ -1,4 +1,5 @@
 import { pageChangeMcpDescription } from "./page-change-input-contract.mjs";
+import { trialReadMcpDescription } from "./extraction-trial.mjs";
 
 const TOOL_METADATA = Object.freeze({
   extract: {
@@ -110,6 +111,10 @@ const TOOL_METADATA = Object.freeze({
   careers_board_cold: {
     title: "Return Acquired Careers Board Recipe",
     description: "Return the acquired cold careers-board recipe and its public tests. This tool is free: charged is false, it does not fetch a live board, and it does not accept payment. Use `careers_board` when you need one named-board observation. Direct free execution remains available.",
+  },
+  trial_read: {
+    title: "Read Public Page Under Shared Trial",
+    description: trialReadMcpDescription(),
   },
 });
 
