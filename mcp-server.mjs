@@ -49,6 +49,7 @@ import {
 const mcpTypedAttemptAls = new AsyncLocalStorage();
 const mcpHttpRequestAls = new AsyncLocalStorage();
 const mcpFreePageChangeAls = new AsyncLocalStorage();
+const mcpExtractionTrialAls = new AsyncLocalStorage();
 
 const MCP_PAYMENT_META_KEY = "x402/payment";
 const MAX_PAYMENT_SIGNATURE_HEADER_BYTES = 32 * 1024;
@@ -396,10 +397,21 @@ function classifyOutboundKind(message) {
   return "tool_result";
 }
 
+function mcpTrialNote(tool) {
+  if (!tool?.extractionTrialOperation) return () => {};
+  try {
+    const begin = mcpExtractionTrialAls.getStore()?.begin;
+    return typeof begin === "function" ? (begin() || (() => {})) : () => {};
+  } catch {
+    return () => {};
+  }
+}
+
 function freeUnpaidHandler(tool) {
   return async (args) => {
+    const note = mcpTrialNote(tool);
     try {
-      const value = await tool.run(args);
+      const value = await tool.run(args, note);
       if (tool.name === "page_change") {
         try { mcpFreePageChangeAls.getStore()?.(pageChangeServiceOutcome(value)); } catch { /* Optional measurement. */ }
       }
@@ -770,6 +782,7 @@ export async function mountMcp(app, {
   // Inject the existing HTTP replay journal. No second store or automatic
   // task backend is constructed by this optional native-result port.
   nativeRecovery = null,
+  observeExtractionTrial = null,
 } = {}) {
   const recoveryJournal = nativeRecovery?.journal;
   const recoveryScope = nativeRecovery ? {
@@ -927,6 +940,8 @@ export async function mountMcp(app, {
       description: tool.description,
       inputSchema: tool.inputSchema,
       outputSchema: tool.outputSchema,
+      ...(tool.annotations ? { annotations: tool.annotations } : {}),
+      extractionTrialOperation: tool.extractionTrialOperation,
       free: true,
       paymentMeta: { samedaydesk: { charged: false, paymentRequired: false } },
       handler: freeUnpaidHandler(tool),
@@ -972,6 +987,7 @@ export async function mountMcp(app, {
         description: t.description,
         inputSchema: guardedCall ? z.object(t.inputSchema).passthrough().catch({}) : t.inputSchema,
         outputSchema: t.outputSchema,
+        ...(t.annotations ? { annotations: t.annotations } : {}),
         _meta: { ...t.paymentMeta, ...operationMeta, ...(t.inputRefusalMeta || {}) },
       }, t.handler);
     }
@@ -1011,6 +1027,24 @@ export async function mountMcp(app, {
       && Object.hasOwn(req.body, "id") && req.body?.method === "tools/call" && req.body?.params?.name === "page_change"
       && catalogByName.get("page_change")?.free === true && typeof freePageChangeObserver === "function") {
       try { noteFreePageChange = freePageChangeObserver(req, res); } catch { /* Optional measurement. */ }
+    }
+    // Schema failures never call begin(), so they do not become trial journal rows.
+    let trialContext = null;
+    if (isJsonRpcObject(req.body) && req.body.jsonrpc === "2.0" && req.body?.method === "tools/call"
+      && typeof observeExtractionTrial === "function") {
+      const selected = prepared.find((tool) => tool.name === req.body?.params?.name && tool.extractionTrialOperation);
+      if (selected) {
+        let noted = null;
+        trialContext = {
+          begin() {
+            if (!noted) {
+              try { noted = observeExtractionTrial(req, res, selected.extractionTrialOperation, "mcp") || (() => {}); }
+              catch { noted = () => {}; }
+            }
+            return noted;
+          },
+        };
+      }
     }
     injectPaymentSignatureHeader(req);
     let requestAttribution = null;
@@ -1062,11 +1096,12 @@ export async function mountMcp(app, {
         }
       }
     };
+    const runWithTrial = () => mcpExtractionTrialAls.run(trialContext, run);
     if (created.attempt) {
-      await mcpHttpRequestAls.run(req, () => mcpTypedAttemptAls.run(created.attempt, run));
+      await mcpHttpRequestAls.run(req, () => mcpTypedAttemptAls.run(created.attempt, runWithTrial));
       return;
     }
-    await mcpFreePageChangeAls.run(noteFreePageChange, () => mcpHttpRequestAls.run(req, run));
+    await mcpFreePageChangeAls.run(noteFreePageChange, () => mcpHttpRequestAls.run(req, runWithTrial));
   });
 
   // Stateless server: no standalone GET (SSE) or DELETE (session teardown) support.

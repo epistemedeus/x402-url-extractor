@@ -1,5 +1,5 @@
 import { constants as journalFs } from "node:fs";
-import { normalizeExtractionTrialReason, normalizeExtractionTrialOperation } from "./extraction-trial-reason.mjs";
+import { normalizeExtractionTrialReason, normalizeExtractionTrialOperation, normalizeExtractionTrialTransport } from "./extraction-trial-reason.mjs";
 import { authenticateJournalCut, isJournalCutRecord } from "./commerce-journal-cut-auth.mjs";
 import { admitCommerceJournal, drainJournalObservations, noteJournalRotation, noteJournalWrite, noteJournalFault, observeContinuationTransmission, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
 import {
@@ -1794,7 +1794,13 @@ const TRIAL_OUTCOMES = new Set(["admitted", "completed", "partial", "refused", "
 
 function acceptsTrialOutcome(event) {
   if (!hasOwn(event, "extractionTrialOutcome")) return event.route !== "/trial/extract";
+  if (hasOwn(event, "extractionTrialTransport") && !normalizeExtractionTrialTransport(event.extractionTrialTransport)) return false;
   const value = event.extractionTrialOutcome;
+  const transport = normalizeExtractionTrialTransport(event.extractionTrialTransport);
+  // MCP tool refusals are JSON-RPC results on HTTP 200. HTTP and unlabeled rows stay status >= 400.
+  const refusedOk = value?.outcome !== "refused" || (transport === "mcp"
+    ? (event.status === 200 || event.status >= 400)
+    : event.status >= 400);
   return value && typeof value === "object" && !Array.isArray(value)
     && Object.keys(value).sort().join(",") === "outcome,v" && value.v === 1
     && TRIAL_OUTCOMES.has(value.outcome) && event.route === "/trial/extract"
@@ -1804,13 +1810,14 @@ function acceptsTrialOutcome(event) {
     && event.requestConstruction === "not_measured"
     && (value.outcome === "refused" || event.method === "POST")
     && (!["admitted", "completed", "partial", "failed"].includes(value.outcome) || event.status === 200)
-    && (value.outcome !== "refused" || event.status >= 400);
+    && refusedOk;
 }
 
 function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, requestedWindowCoverage, externalCutoffMs, generatedAtMs }) {
   const populations = {};
   const diagnostics = {};
   const operations = {};
+  const transports = {};
   const sources = {};
   const rows = events.filter(event => event.extractionTrialOutcome && eventTimestampMs(event) <= generatedAtMs
     && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs));
@@ -1823,6 +1830,10 @@ function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, req
     const operation = normalizeExtractionTrialOperation(event.extractionTrialOperation) || "unknown";
     operations[label][operation] ||= Object.fromEntries([...TRIAL_OUTCOMES].map(key => [key, 0]));
     operations[label][operation][outcome]++;
+    const transport = normalizeExtractionTrialTransport(event.extractionTrialTransport) || "unknown";
+    transports[label] ||= {};
+    transports[label][transport] ||= Object.fromEntries([...TRIAL_OUTCOMES].map(key => [key, 0]));
+    transports[label][transport][outcome]++;
     sources[label] ||= {};
     const sourceCounts = sources[label][operation] ||= { declared: {}, observed: {} };
     // The canonical split reader validates relationships, not just labels.
@@ -1849,6 +1860,10 @@ function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, req
     operations: {
       populations: operations,
       policy: "Allowlisted mount-supplied operation on the same eligible phase rows. Missing or malformed labels stay unknown; no historical inference or caller join.",
+    },
+    transports: {
+      populations: transports,
+      policy: "Allowlisted mount-supplied transport on the same eligible phase rows. Missing or malformed labels stay unknown. http and mcp name the calling protocol only. This view overlaps operation and population totals and must not be added to them. It is not caller identity, usefulness, or payment.",
     },
     sources: {
       schemaVersion: "samedaydesk.extraction-trial-sources.v1",
@@ -4086,7 +4101,8 @@ export function createCommerceTelemetry({
   let extractionTrialCaptureStartedAt = null;
   function extractionTrialObserver() {
     extractionTrialCaptureStartedAt ||= new Date().toISOString();
-    return function begin(req, res, trialOperation) {
+    return function begin(req, res, trialOperation, trialTransport) {
+      const transport = normalizeExtractionTrialTransport(trialTransport);
       const startedAt = Date.now();
       const headers = req.headers || {};
       const sourceSplit = classifyCommerceDiscoverySourceSplit({
@@ -4111,6 +4127,7 @@ export function createCommerceTelemetry({
           settlementAmountAtomic: null, settlementNetwork: null, settlementCurrency: null,
           status, result: "request", durationMs: Math.max(0, Date.now() - startedAt),
           extractionTrialOutcome: { v: 1, outcome: phase },
+          ...(transport ? { extractionTrialTransport: transport } : {}),
           ...(normalizeExtractionTrialOperation(trialOperation) ? { extractionTrialOperation: trialOperation } : {}),
           ...(safeReason ? { extractionTrialReason: safeReason } : {}),
         };

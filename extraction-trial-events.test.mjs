@@ -13,9 +13,9 @@ async function fixture(t, extra = {}) {
   t.after(() => rm(dataDir, { force: true, recursive: true }));
   return { dataDir, telemetry: createCommerceTelemetry({ dataDir, secret: "fixture-aggregate-key", ...extra }) };
 }
-function invocation(observer, { closed = false, headers = {}, status = 200, outcome = "completed", admitted = true, reason, operation } = {}) {
+function invocation(observer, { closed = false, headers = {}, status = 200, outcome = "completed", admitted = true, reason, operation, transport } = {}) {
   const response = new EventEmitter(); response.statusCode = status;
-  const note = observer({ method: "POST", path: "/trial/extract", headers, ip: "private-ip-marker", query: { "private-key-marker": "private-value-marker" } }, response, operation);
+  const note = observer({ method: "POST", path: "/trial/extract", headers, ip: "private-ip-marker", query: { "private-key-marker": "private-value-marker" } }, response, operation, transport);
   if (admitted) { note("admitted"); note("admitted"); }
   note(outcome, reason);
   response.emit(closed ? "close" : "finish"); response.emit("close"); response.emit("finish");
@@ -331,5 +331,33 @@ test("restored missing and malformed source splits preserve phases, old totals a
   assert.equal(sources.populations.crawler.read.declared["agent-skills"], undefined, "legacy collapsed label cannot recover a declaration");
   assert.doesNotMatch(JSON.stringify(view), /private-source-marker|private-kind-marker/);
   assert.equal(await readFile(telemetry.paths.currentPath, "utf8"), restored);
+  assert.deepEqual((await readdir(dataDir)).sort(), ["commerce-events.ndjson"], "no new store");
+});
+
+test("trial transport is an allowlisted protocol label and is not added to operation totals", async t => {
+  const { telemetry, dataDir } = await fixture(t);
+  const observe = telemetry.extractionTrialObserver();
+  invocation(observe, { operation: "read", transport: "http" });
+  invocation(observe, { operation: "read", transport: "mcp", outcome: "refused", admitted: false, status: 200 });
+  invocation(observe, { operation: "read", transport: "http", outcome: "refused", admitted: false, status: 200 });
+  invocation(observe, { operation: "read", transport: "private-transport-marker" });
+  await telemetry.flush();
+  const original = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.doesNotMatch(original, /private-transport-marker/);
+  const rows = original.trim().split("\n").map(JSON.parse);
+  assert.equal(rows.filter(row => row.extractionTrialTransport === "http" && row.extractionTrialOutcome.outcome === "completed").length, 1);
+  assert.equal(rows.filter(row => row.extractionTrialTransport === "mcp" && row.extractionTrialOutcome.outcome === "refused").length, 1);
+  assert.equal(rows.some(row => row.extractionTrialOutcome.outcome === "refused" && row.extractionTrialTransport === "http" && row.status === 200), false);
+  const forged = { ...rows.find(row => row.extractionTrialTransport === "mcp"), id: randomUUID(), extractionTrialTransport: "private-transport-marker" };
+  await writeFile(telemetry.paths.currentPath, `${original}${JSON.stringify(forged)}\n`);
+  const view = (await createCommerceTelemetry({ dataDir }).snapshot()).extractionTrial;
+  assert.equal(view.populations.unattributed.completed, 2);
+  assert.equal(view.operations.populations.unattributed.read.completed, 2);
+  assert.equal(view.populations.unattributed.refused, 1);
+  assert.equal(view.transports.populations.unattributed.http.completed, 1);
+  assert.equal(view.transports.populations.unattributed.mcp.refused, 1);
+  assert.equal(view.transports.populations.unattributed.unknown.completed, 1);
+  assert.equal(view.operations.populations.unattributed.read.completed, view.populations.unattributed.completed);
+  assert.doesNotMatch(JSON.stringify(view), /private-transport-marker/);
   assert.deepEqual((await readdir(dataDir)).sort(), ["commerce-events.ndjson"], "no new store");
 });

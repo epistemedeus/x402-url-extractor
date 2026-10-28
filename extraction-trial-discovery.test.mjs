@@ -159,11 +159,34 @@ test("exact admitted base preserves paid documents, challenges, MCP tools and al
       human[route] = { status: response.status, body: response.text, type: response.headers["content-type"], location: response.headers.location };
     }
     docs.human = human;
+    // trial_read is an additive MCP entry. Removing it restores the admitted tool order.
+    if (docs["/mcp"]?.freeTools) docs["/mcp"].freeTools = docs["/mcp"].freeTools.filter((tool) => tool.name !== "trial_read");
+    if (Array.isArray(docs.tools?.tools)) docs.tools.tools = docs.tools.tools.filter((tool) => tool.name !== "trial_read");
     return docs;
   }
   const base = await f.start({ sourceBase: BASE, enabled: false });
   const expected = await capture(base); await base.stop();
   const amended = await f.start({ enabled: false });
+  const listed = await tools(amended);
+  const trial = listed.tools.find((tool) => tool.name === "trial_read");
+  assert.ok(trial, "current MCP lists trial_read");
+  assert.equal(trial.annotations?.readOnlyHint, false);
+  assert.equal(trial.annotations?.idempotentHint, false);
+  assert.equal(trial.annotations?.destructiveHint, false);
+  assert.equal(trial.annotations?.openWorldHint, true);
+  assert.equal(trial._meta?.samedaydesk?.charged, false);
+  assert.equal(trial._meta?.samedaydesk?.paymentRequired, false);
+  assert.equal(trial._meta?.x402, undefined);
+  assert.equal(trial.inputSchema.additionalProperties, false);
+  assert.equal(trial.outputSchema.properties.charged.const, false);
+  assert.match(trial.description, /charged is false/);
+  assert.match(trial.description, /same original authority/);
+  const descriptor = await amended.request("/mcp");
+  const advertised = descriptor.json.freeTools.find((tool) => tool.name === "trial_read");
+  assert.equal(advertised.charged, false);
+  assert.equal(advertised.paymentRequired, false);
+  assert.equal(advertised.consumesSharedTrialAllowance, true);
+  assert.equal(advertised.discovery, descriptor.json.extractionTrial.discovery);
   const actual = await capture(amended);
   const fullActual = await capture(amended, false);
   for (const route of ["/openapi.json", "/mpp-openapi.json"]) await t.test(`official AgentCash parser ${route}`, async () => {

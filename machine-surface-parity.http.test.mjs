@@ -314,13 +314,17 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     "read",
   ];
   const typed = mcpTools.filter((tool) => tool.outputSchema);
-  assert.equal(typed.length, 13);
-  for (const name of PRIOR_TYPED_MCP.concat(NEW_TYPED_MCP)) {
+  // trial_read is the one free typed tool. The thirteen paid names stay typed.
+  assert.equal(typed.length, 14);
+  for (const name of PRIOR_TYPED_MCP.concat(NEW_TYPED_MCP, ["trial_read"])) {
     const tool = mcpTools.find((entry) => entry.name === name);
     assert.ok(tool, `missing MCP tool ${name}`);
     assert.equal(tool.outputSchema?.type, "object");
     assert.equal(tool.outputSchema.additionalProperties, false);
   }
+  const trialRead = mcpTools.find((entry) => entry.name === "trial_read");
+  assert.equal(trialRead.outputSchema.properties.charged.const, false);
+  assert.equal(trialRead.annotations?.idempotentHint, false);
 
   const paidPost200 = [
     ["/work/opportunity-preflight", "ok", "economics"],
