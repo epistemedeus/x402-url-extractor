@@ -1,0 +1,5 @@
+Receive the scoped PR on `codex/root18700-walletless-mcp-entry-20261028` against https://github.com/epistemedeus/x402-url-extractor.git at base `ab694a6c567c664517bff6058b09877a605c0f60`. Implementation commit `75d38a1e609f3a687e7fa671d73b4d8e5c332838`, tree `bf8e6fdd84a632a19cbf19391c136bfeca53a38d`. This report is the following commit. The pushed tip, including these three files, is in launcher `EXPORT.json` and `artifacts/SOURCE.json`.
+
+`POST /mcp` tool `trial_read` reads one caller public URL, with optional `markdownLimitChars` from 1 through 40000, through `executeBoundedTrialRead` and the existing trial budget. `charged` is false. There is no payment receipt. Paid `read` still challenges. `recover_paid_result` does not execute `trial_read`. HTTP and MCP share the 20-hop, one-concurrent allowance. Focused gates are 239 pass and 0 fail after the preserved first failures in EVIDENCE.json. No whole-platform suite and no live trial POST were run.
+
+Do not merge, deploy, or call the public trial from this handback. Root owns receiving, default merge, release, and any later bounded trial call. No production authority was opened.
