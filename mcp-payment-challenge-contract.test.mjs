@@ -333,12 +333,13 @@ test("registered schemas keep an ordinary payment challenge readable by the offi
 
     const validError = await pay("careers_board");
     assert.equal(validError.paid?.isError, true);
-    assert.deepEqual(validError.paid.structuredContent, CAREERS_ERROR);
+    assert.equal(validError.paid.structuredContent, undefined);
+    assert.deepEqual(JSON.parse(validError.paid.content[0].text), { ok: false, error: "tool_execution_failed" });
 
     const invalidError = await pay("read");
     assert.equal(invalidError.paid?.isError, true);
     assert.equal(invalidError.paid.structuredContent, undefined);
-    assert.deepEqual(JSON.parse(invalidError.paid.content[0].text), INVALID_ERROR);
+    assert.deepEqual(JSON.parse(invalidError.paid.content[0].text), { ok: false, error: "tool_execution_failed" });
     // The successful preflight settles once. The schema-valid and schema-invalid
     // error results are not additional settlements.
     assert.equal(calls.settle, 1);

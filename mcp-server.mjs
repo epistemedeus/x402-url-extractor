@@ -28,6 +28,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { x402ResourceServer } from "@x402/core/server";
+import { PaymentRequiredV2Schema, NetworkSchemaV2 } from "@x402/core/schemas";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { MCP_PAYMENT_RESPONSE_META_KEY, createPaymentWrapper } from "@x402/mcp";
 import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery.mjs";
@@ -48,6 +49,7 @@ import {
 import { zod3StandardSchema } from "./mcp-zod3-json-schema.mjs";
 
 const mcpTypedAttemptAls = new AsyncLocalStorage();
+const nativePaymentAuthorityAls = new AsyncLocalStorage();
 const mcpHttpRequestAls = new AsyncLocalStorage();
 const mcpFreePageChangeAls = new AsyncLocalStorage();
 const mcpExtractionTrialAls = new AsyncLocalStorage();
@@ -200,7 +202,7 @@ export function authoritativeSettlementSuccess(proof) {
     && proof.success === true
     && typeof proof.transaction === "string"
     && typeof proof.network === "string"
-    && proof.network.length > 0;
+    && NetworkSchemaV2.safeParse(proof.network).success;
 }
 
 function parsedContentObject(result) {
@@ -215,38 +217,35 @@ function parsedContentObject(result) {
   }
 }
 
-function safeErrorObject(body) {
-  if (!body || typeof body !== "object" || Array.isArray(body)) return false;
-  if (isPaymentRequiredBody(body)) return true;
-  if (body.ok === true || body.success === true) return false;
-  return body.ok === false || body.success === false || body.isError === true || typeof body.error === "string";
-}
-
-function carriesProtectedPaidBody(result) {
-  const bodies = [result?.structuredContent, parsedContentObject(result)];
-  return bodies.some((body) => body && typeof body === "object" && !Array.isArray(body) && !safeErrorObject(body));
-}
-
+// The HTTP bridge receives only the configured loopback route, whose payment
+// middleware owns admission. An explicit failure still must not deliver a body.
 export function withholdExplicitFalseSettlement(result) {
-  if (!result || typeof result !== "object" || Array.isArray(result) || result.isError === true) return result;
   const proof = settlementProof(result);
-  if (!proof || proof.success !== false) return result;
-  return explicitFalseHold();
+  return proof?.success === false ? explicitFalseHold() : result;
 }
 
-export function withholdUnprovenNativeSettlement(result) {
-  if (!result || typeof result !== "object" || Array.isArray(result)) return result;
-  if (isTypedPaymentRequiredResult(result)) return result;
-  const proof = settlementProof(result);
-  // The native wrapper settles only a non-error handler result, and that
-  // returned object is the facilitator SettleResponse. An isError result left
-  // the wrapper before settle, so a proof on it is not facilitator authority.
-  if (result.isError === true) {
-    if (!carriesProtectedPaidBody(result)) return result;
-    return unprovenHold();
+function canonicalToolFailure() {
+  return { isError: true, content: [{ type: "text", text: JSON.stringify({
+    ok: false, error: "tool_execution_failed",
+  }) }], _meta: {} };
+}
+
+// Never infer authority from arbitrary content, isError, or caller metadata.
+// Production passes a private per-call record filled by the real handler and
+// the official resource-server settlement hook. Without it, hold the body.
+export function withholdUnprovenNativeSettlement(result, authority = null) {
+  if (!authority) return unprovenHold();
+  const proof = authority.settlement;
+  // Official skipHandler/replay hooks can still settle successfully without
+  // invoking the handler. Actual settlement authority takes precedence.
+  if (authoritativeSettlementSuccess(proof) && proof.network === authority.network) return result;
+  if (proof?.success === false) return explicitFalseHold();
+  if (authority.handlerFailed === true) return canonicalToolFailure();
+  if (authority.handlerInvoked === false && !authority.settlementAttempted) {
+    const challenge = PaymentRequiredV2Schema.parse(authority.challenge);
+    return { isError: true, content: [{ type: "text", text: JSON.stringify(challenge) }],
+      structuredContent: challenge };
   }
-  if (authoritativeSettlementSuccess(proof)) return result;
-  if (proof && proof.success === false) return explicitFalseHold();
   return unprovenHold();
 }
 
@@ -945,6 +944,17 @@ async function prepareMerchantMcp({
     await configureResourceServer(resourceServer);
   }
   if (typedEnabled) registerOfficialLifecycleHooks(resourceServer);
+  resourceServer.onAfterSettle((context) => {
+    const authority = nativePaymentAuthorityAls.getStore();
+    if (authority) { authority.settlement = context?.result; authority.settlementAttempted = true; }
+    return undefined;
+  });
+
+  resourceServer.onSettleFailure(() => {
+    const authority = nativePaymentAuthorityAls.getStore();
+    if (authority) authority.settlementAttempted = true;
+    return undefined;
+  });
 
   // Pre-build the paid wrapper for each tool ONCE (buildPaymentRequirements is async).
   const prepared = [];
@@ -980,16 +990,34 @@ async function prepareMerchantMcp({
     // paid(handler) -> MCP tool callback (args, extra) that verifies payment (from
     // extra._meta), runs the handler, then settles. We catch handler errors and return
     // a structured ok:false so a paid call never yields an opaque failure.
-    const settled = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl)
-      : paid(typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t));
-    // Native priced calls use the SettleResponse contract. The HTTP route owns
-    // its own admission and delivery; this bridge withholds only an explicit
-    // boolean false copied from that route's payment-response.
-    const inner = async (args, extra) => (
-      t.paidHttp
-        ? withholdExplicitFalseSettlement(await settled(args, extra))
-        : withholdUnprovenNativeSettlement(await settled(args, extra))
-    );
+    const nativeHandler = typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t);
+    const trackedHandler = async (...args) => {
+      const authority = nativePaymentAuthorityAls.getStore();
+      if (authority) authority.handlerInvoked = true;
+      try {
+        const value = await nativeHandler(...args);
+        if (authority) authority.handlerFailed = value?.isError === true;
+        return value;
+      } catch (error) {
+        if (authority) authority.handlerFailed = true;
+        throw error;
+      }
+    };
+    const settled = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl) : paid(trackedHandler);
+    // This challenge is constructed from this tool's validated public offer,
+    // never copied from a handler result or request-supplied challenge shape.
+    const nativeChallenge = PaymentRequiredV2Schema.parse({ x402Version: 2,
+      resource: { url: resourceForTool(t.name), description: t.description, mimeType: "application/json" },
+      accepts });
+    const inner = async (args, extra) => {
+      if (t.paidHttp) return withholdExplicitFalseSettlement(await settled(args, extra));
+      const authority = { handlerInvoked: false, handlerFailed: false,
+        settlement: null, settlementAttempted: false, network, challenge: nativeChallenge };
+      return nativePaymentAuthorityAls.run(authority, async () => {
+        try { return withholdUnprovenNativeSettlement(await settled(args, extra), authority); }
+        catch { return withholdUnprovenNativeSettlement(undefined, authority); }
+      });
+    };
     const recoverable = nativeRecovery && !t.paidHttp ? async (args, extra) => {
       const request = mcpHttpRequestAls.getStore();
       return recoveryJournal.runMcpTool({ name: t.name,
