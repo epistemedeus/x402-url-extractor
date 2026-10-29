@@ -10,4 +10,8 @@ The axios pin is exact `1.20.0`. Applicability stays separate: this merchant and
 
 A future tool schema that `mcp-zod3-json-schema.mjs` cannot project fails the MCP mount at startup. `server.js` already logs `/mcp mount FAILED` and leaves the other HTTP routes up. The current catalog compiled during startup smoke.
 
-A `settle()` that returns `{ success: false }` without throwing still follows the existing wrapper and is attached as `x402/payment-response` on the handler result. The refusal covered here is a thrown `settle()`.
+Boolean facilitator `success: false` is withheld before delivery. A thrown `settle()` stays the existing `isError` challenge. A settle object with no boolean `success` stays an unknown outcome and can still carry the handler body. That is not a paid success, and this amendment does not add a new authority for it.
+
+The Python case imports `mcp` 2.3.0. This run used `/tmp/oct29-mcp-py-site` on `PYTHONPATH`. A machine without that package fails that one test at import.
+
+H64202's recorded `settle-returned-false` cases stay the original reproduction. Do not edit that harness to treat the paid table as acceptable.
