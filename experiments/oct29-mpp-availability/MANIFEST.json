@@ -1,0 +1,361 @@
+{
+  "schema": "h64330.artifact-inventory.v1",
+  "sourceInventory": "evidence/source-inventory.json",
+  "members": [
+    {
+      "path": "a2a-storefront.mjs",
+      "bytes": 5554,
+      "sha256": "9cbea108d74b555e9e490c9e65442ad90f08ab17dcd06c1aa793f23b9c65d5d2"
+    },
+    {
+      "path": "construction-surface.mjs",
+      "bytes": 6550,
+      "sha256": "2cc79819331691911929f20f6a144491a893f1e9f36cc235bb470ae554215a5c"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/INPUTS.json",
+      "bytes": 1264,
+      "sha256": "1a4c981b8ee8f65150a859df6ca0574382837162a65554e4069e03778aa18283"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/RESULT.md",
+      "bytes": 7387,
+      "sha256": "eccb9cf313d61ba887eef282ab0ff45856502c22e4093b73e7d173d530e601e1"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/accept.mjs",
+      "bytes": 6454,
+      "sha256": "dacf91e51505e3fbc3091c05e0279492ed783f293e7a064c2b546b1f687b91ff"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/acceptance-command.log",
+      "bytes": 140,
+      "sha256": "4b275383e3ed518fbfd8784323aaa0444a690456c22a5c03171eb09eb650b2af"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/auditor-checkout.log",
+      "bytes": 73,
+      "sha256": "5a025060f55d448e06711231a18c266ce88acbbac2be137368e16d739312b324"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/auditor-clone.log",
+      "bytes": 51,
+      "sha256": "f40cf9828a1d7241b9f5304c5b37176d7d21f7a3c795df8ada93c5744d8e6a20"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/auditor-install.log",
+      "bytes": 25,
+      "sha256": "4717b9deacedfbacef4722a74af68933803d5e3133bebc24dd73412d4f78d10a"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/auditor-tree.txt.gz",
+      "bytes": 1050,
+      "sha256": "5a82c808ff7d3899ccb679328157f1f0da314c474ffd4de70f946b14e0efe726"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/availability.patch",
+      "bytes": 34380,
+      "sha256": "c6964378b9391d8c74e579bde6e3ecbf51fa74958937fb52dec600ec958feb48"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/base-install.log",
+      "bytes": 26,
+      "sha256": "d5f75b10779b704c6de9aabc14b129d6e93bd3b675c563c0da2044482ac785a0"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/base-tree.txt.gz",
+      "bytes": 70844,
+      "sha256": "c89ab68756c0894e7349b4bea3bd84b7ccce088e04b4377e4cd19b57684164eb"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/baseline.log",
+      "bytes": 42,
+      "sha256": "4e04ce94c484b64c11529cf252feb6c8b4b4c0198686cb4960b43864a7ba081f"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/candidate-install.log",
+      "bytes": 26,
+      "sha256": "d5f75b10779b704c6de9aabc14b129d6e93bd3b675c563c0da2044482ac785a0"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/candidate-regressions.tap",
+      "bytes": 14831,
+      "sha256": "d510b47727e506c75f30176e795c0a2a29816a52dcc78114efd9f5fe06eee574"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/candidate-source-tree.txt.gz",
+      "bytes": 72781,
+      "sha256": "e1640ad5c921b508c624bfb972bb4d7fb74429bea2f2d5f33a87078bd0d13808"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/candidate.log",
+      "bytes": 149,
+      "sha256": "78e63899ebf59bf0af5f1678ab127f39ee42dcdc8c1b9c9bdd7980c3cb8d22bf"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/BASELINE.txt",
+      "bytes": 68,
+      "sha256": "4687c678ba19483f6a634213bf747fbb2077fad677dfb929b4b048a8d51754bf"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/acceptance.json",
+      "bytes": 3626,
+      "sha256": "c7ae4160d9659cc4da64c790de0865c97fb137fa9c7e9928a23c2b3d200b7168"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/action-local-refusal.json",
+      "bytes": 117,
+      "sha256": "3dfe53dc7eaa9e4e854195279b422087080902eaf1bdb0c6cf5c50f47f94d706"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/disabled-again-audit.json",
+      "bytes": 5116,
+      "sha256": "2a5295331cbc5fd861588b223e2cacc1176aa8b7270a176996d51173f80adfbf"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/disabled-again.json.gz",
+      "bytes": 390055,
+      "sha256": "d1b299dfe62536ea2309be26f6a2d17a66cd007b0bbd5b46f4df7738b6d177bb"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/disabled-audit.json",
+      "bytes": 5116,
+      "sha256": "d3cd3b2c00ad0376d95da712f12450c616da43d10c1d217c8dd75dbdde815c4a"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/disabled.json.gz",
+      "bytes": 390032,
+      "sha256": "cfda3565f67cbfab2ad426bfe4a56121c9fc7fd04f6adc3ba9fbd3fc0b8b58c7"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/enabled-audit.json",
+      "bytes": 5450,
+      "sha256": "f6f4b3e4e793966f848af25fe7578fb27da2b59932224e0724900c6d4a8bb7be"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/enabled.json.gz",
+      "bytes": 439964,
+      "sha256": "8aa6afabde0519b3756b301fbeb1268f5a0c848aa95daa002b6360a3160664fd"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/facilitator.json",
+      "bytes": 226,
+      "sha256": "c90152a6ff4b06a10dba894d039b12f763f4e3004f933cc237bfde0e98020d18"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/optional-routes-and-circle-off-audit.json",
+      "bytes": 5450,
+      "sha256": "a1348e8932b9833e3f57648826a2868f2487a978754b85a08b754b19a1ab8892"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/optional-routes-and-circle-off.json.gz",
+      "bytes": 390253,
+      "sha256": "a631761edd9ba04fade23926400d7feec474359d920df72715a69db202183599"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-evidence/startup-refusal.txt",
+      "bytes": 1514,
+      "sha256": "bc0d170bbdb2aa26a789028679c99b8fa371f9637b2dea2ec26beccbb1c9ad13"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-install.log",
+      "bytes": 26,
+      "sha256": "563c680096845d0b9130a1fdabc10e76f1eaab16d86a7eaacaf35d7fc73f88bb"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-regressions.tap",
+      "bytes": 14829,
+      "sha256": "5156366dcc2816cba8af2a4998ad75e0789d5164eea9dcaf4da780350ee2531e"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined-source-tree.txt.gz",
+      "bytes": 73049,
+      "sha256": "b88de1301c593a531090ef9f582c9c34c7055047bd23bc63488a3424c58a0577"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/combined.log",
+      "bytes": 149,
+      "sha256": "78e63899ebf59bf0af5f1678ab127f39ee42dcdc8c1b9c9bdd7980c3cb8d22bf"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/commands.json",
+      "bytes": 10364,
+      "sha256": "c3826d303b359e3dc143675881edd085355d3e026302cbe15715a1b48e93ff05"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/acceptance.json",
+      "bytes": 3651,
+      "sha256": "58acce2750c1e31c4e4af15769c647b9f653979751aacbfade13144dfebbd9c2"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/action-local-refusal.json",
+      "bytes": 117,
+      "sha256": "3dfe53dc7eaa9e4e854195279b422087080902eaf1bdb0c6cf5c50f47f94d706"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/baseline-audit.json",
+      "bytes": 5158,
+      "sha256": "c370430b3eeed4655d33b8ed7eb8c0059fa5e95a2d57dc2e7b6aba05aadbed57"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/baseline-facilitator.json",
+      "bytes": 94,
+      "sha256": "5556c1fa291ff60c2dc950789cc0ad42b389509f59045b2012209844dbcfc1e3"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/baseline.json.gz",
+      "bytes": 403908,
+      "sha256": "71ccb41dee3f89e503f19ef6ae9ad3bb38e06a68ba9ba5a8c80ef90051bfc094"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/disabled-again-audit.json",
+      "bytes": 5116,
+      "sha256": "190aeda5715a4a01b3a8adb4a2a4205d8ca2ac5d8e3be01917326e542929f6e6"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/disabled-again.json.gz",
+      "bytes": 359161,
+      "sha256": "ca20f0d899937c12fbe2acac2a7be18f9c7a4b5c2cedc65f9396a64819643d78"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/disabled-audit.json",
+      "bytes": 5116,
+      "sha256": "de8307c2d7ea73982588598b521abe3d5983b05b8045c387082a9c86b2ae394d"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/disabled.json.gz",
+      "bytes": 359149,
+      "sha256": "78a6ad80a53aaba62fe9b12f99c092991324e8b264b006bdaee840ab436281a9"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/enabled-audit.json",
+      "bytes": 5450,
+      "sha256": "fa672f05ae23440ef720785f1836833d0ca83a4e33f51dcbee5d8ae27407381c"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/enabled.json.gz",
+      "bytes": 409109,
+      "sha256": "e8fa73f94445eaf6d69d24d4dfc9534dcb7398da9694bd50bc14ad7bc0c97b4d"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/facilitator.json",
+      "bytes": 226,
+      "sha256": "c90152a6ff4b06a10dba894d039b12f763f4e3004f933cc237bfde0e98020d18"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/optional-routes-and-circle-off-audit.json",
+      "bytes": 5450,
+      "sha256": "5013de226723c2eef40ec309bdb1a39d39c7cf9baef4cc9e69e24568589c90bb"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/optional-routes-and-circle-off.json.gz",
+      "bytes": 360704,
+      "sha256": "9d0f4fe94264746fa0f9246fbd9e01b4dbd4ccf2f2537137403412775fbe803e"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/evidence/startup-refusal.txt",
+      "bytes": 1639,
+      "sha256": "33a7650b8062c7e7b829e5786990bb70611e4f7c61a708e0d4c22c6af9bcf4e9"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/maintenance-consumer.tap",
+      "bytes": 1172,
+      "sha256": "7b2fe1b2b4f4814d6fdbab8aa33557240e7f09acd4bfa527f30d0aca3ac17606"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/maintenance-fetch.log",
+      "bytes": 132,
+      "sha256": "7a013c3b4f731a29979e87e6b418066892a5fa80d8b02dabdb7c0370b0eb9f31"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/maintenance-tree.txt.gz",
+      "bytes": 71107,
+      "sha256": "63cc18c0febb9c0c495e78b08a289a64a140730ac01124025c24814fead5b5ea"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/original-failures.json",
+      "bytes": 2709,
+      "sha256": "da43553b56e7f8f99d88c3f7f5ce0cd8c6b6bff857e78e458ba153eeaf9992dc"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/originals/baseline-configured.log.gz",
+      "bytes": 421,
+      "sha256": "922571cec3f130ccdaa44ae12c21b5bc7c5e8e3375d37226653958b108ec6356"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/originals/baseline-retry.log.gz",
+      "bytes": 421,
+      "sha256": "922571cec3f130ccdaa44ae12c21b5bc7c5e8e3375d37226653958b108ec6356"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/originals/baseline.log.gz",
+      "bytes": 563,
+      "sha256": "f1fbe44b4114d12d5b2d6f462156f8a12890a8c110e7913db8cdf2ff7cc014a9"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/originals/candidate-expanded.log.gz",
+      "bytes": 9570,
+      "sha256": "b4fe50f9ceedcd3e9f6daad15d7b26f0bb7a62a337e410c0577ed4f890271a29"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/evidence/source-inventory.json",
+      "bytes": 3844,
+      "sha256": "0d0e608214b09511e445ef28ea21ca56d2c0ece9a59bab5d3871e5c9d61171a1"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/lab.mjs",
+      "bytes": 22420,
+      "sha256": "335f48b0c2960410b592851b3229142d19fe6c4065f0201b7538857daa32fe32"
+    },
+    {
+      "path": "experiments/oct29-mpp-availability/regressions.mjs",
+      "bytes": 1880,
+      "sha256": "6f139c1df6647e1e244fb2e3b6405a70cc5998f7ce626ea321ba9d12f7ac6534"
+    },
+    {
+      "path": "machine-surface-parity.http.test.mjs",
+      "bytes": 20173,
+      "sha256": "eb306291558f95e6784f997878945bb8063774c841226c8e1508e8862bd6b2d5"
+    },
+    {
+      "path": "machine-surface-parity.mjs",
+      "bytes": 18433,
+      "sha256": "c1ff91b86c57bddc4b0fd6a11807dd5abb128fdd85140937c691f22664b374a5"
+    },
+    {
+      "path": "mpp-dual-stack.mjs",
+      "bytes": 7854,
+      "sha256": "6c1edea1198cb241af4f98d7f9747387df284177d44741253e885647fd63a4da"
+    },
+    {
+      "path": "operation-identity.mjs",
+      "bytes": 8233,
+      "sha256": "f0e8cb5fb22475980dbc5e025cd8632a1a6e58f3d592985ac8609f155a9ef5ee"
+    },
+    {
+      "path": "payment-availability.test.mjs",
+      "bytes": 2991,
+      "sha256": "6d9518532dc8b19b25af171994ca644bb17a6cf843b00ad31271feb8de565c21"
+    },
+    {
+      "path": "server.js",
+      "bytes": 273435,
+      "sha256": "de6c758ee780f76253f118688e374bade4078e7ebef12a4d0eeaddccb6c08330"
+    },
+    {
+      "path": "skill-contract.mjs",
+      "bytes": 7148,
+      "sha256": "1bdcc9d85a3b4f54bf7f065a3ff92fea6698c24eb037a4074a90df105d8dc84a"
+    },
+    {
+      "path": "solana-agent-registration.mjs",
+      "bytes": 3850,
+      "sha256": "74eeff0753d4bd33469cead68e9b8bec5fd7764a5d179c6d08b49012909961a4"
+    },
+    {
+      "path": "solana-agent-registration.test.mjs",
+      "bytes": 3553,
+      "sha256": "8849ea357aea62cf3455e7f8cc252ec32336040096b579086ec5ba677ea4c962"
+    }
+  ]
+}

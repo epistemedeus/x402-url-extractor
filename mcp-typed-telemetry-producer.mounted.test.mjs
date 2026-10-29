@@ -1481,3 +1481,23 @@ for (const method of ["flush", "shutdown"]) {
     assert.equal(instance.calls.external, 0);
   });
 }
+
+test("wrapper skipHandler is not delivery authority when settlement is unknown", { timeout: 20_000 }, async () => {
+  const secret = "review-private-replay";
+  for (const settle of [() => ({}), () => { throw new Error("transport-unknown"); }]) {
+    const enabled = await startMounted({ typedEnabled: true, facilitator: { settle },
+      configureResourceServer(resourceServer) {
+        resourceServer.onAfterVerify(() => ({ skipHandler: true, response: { body: { ok: true, secret } } }));
+      } });
+    try {
+      const { accepts } = await unpaidAccepts(enabled.origin, "enrich", "domain", "example.invalid", 1910);
+      const response = await postMcp(enabled.origin, paidCall(1911, "enrich", "domain", "example.invalid", accepts));
+      assert.equal(JSON.stringify(response.json).includes(secret), false);
+      assert.equal(response.json.result.isError, true);
+      assert.equal(JSON.parse(response.json.result.content[0].text).error, "settlement_unproven");
+      assert.equal(enabled.calls.handler.enrich || 0, 0);
+      assert.equal(enabled.calls.verify, 1);
+      assert.equal(enabled.calls.settle, 1);
+    } finally { await enabled.close(); }
+  }
+});

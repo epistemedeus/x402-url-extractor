@@ -1,0 +1,35 @@
+TAP version 13
+# Subtest: production mount opts into 2026-07-28 without replacing the legacy handler
+ok 1 - production mount opts into 2026-07-28 without replacing the legacy handler
+  ---
+  duration_ms: 2.350146
+  ...
+# Subtest: legacy, automatic, and pinned clients share one merchant on the modern opt-in
+ok 2 - legacy, automatic, and pinned clients share one merchant on the modern opt-in
+  ---
+  duration_ms: 171.116221
+  ...
+# Subtest: legacy default keeps old callers and rejects an explicit modern pin
+ok 3 - legacy default keeps old callers and rejects an explicit modern pin
+  ---
+  duration_ms: 45.742767
+  ...
+# Subtest: unsupported era, malformed metadata, and identity confusion stay on the modern path
+ok 4 - unsupported era, malformed metadata, and identity confusion stay on the modern path
+  ---
+  duration_ms: 14.240603
+  ...
+# Subtest: explicit stdio opt-in discovers, calls the free tool, and challenges the paid tool
+ok 5 - explicit stdio opt-in discovers, calls the free tool, and challenges the paid tool
+  ---
+  duration_ms: 1743.18577
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2894.929724

@@ -1,0 +1,112 @@
+{
+  "schema": "h64201.joined-acceptance.v1",
+  "head": "44b1894a8b6f005b46d0133e3478f34c23be3fb4",
+  "headTree": "57ace04b2719005a4004bf0824a8677f87c542fa",
+  "merge": "adcf0afc5421b669d0377a53e9312712c0829e86",
+  "mergeParents": [
+    "3da72788305b3529704b8e99f2abbce06d15fb75",
+    "ab5bf51b60c7fa6e2d3587fcac23b26f00872b65"
+  ],
+  "base": "a1dc09bb076b823fb3492ea79fa10f8602ed01a5",
+  "baseTree": "3bfe0b80bb5ca7645c4085a4a65cd84d095a53bc",
+  "maintenance": "3da72788305b3529704b8e99f2abbce06d15fb75",
+  "maintenanceTree": "334bd4ca4116d9fa0b05817d74daa5add91fdeaa",
+  "availability": "ab5bf51b60c7fa6e2d3587fcac23b26f00872b65",
+  "availabilityTree": "03b9b252e45b3faf6a1a662b5e6607ccdd016ae8",
+  "auditor": "ef519956505b195454aa670230b0936258b451fb",
+  "auditorTree": "2bd034d102fff1a2d76f99a6ca8ead889163c7b9",
+  "locks": {
+    "base": "28d5a53db8e9107efb07be00b377a96e5afce9f897a9852c3915c293345dd42c",
+    "maintenance": "6b0841b16cdf16d80908d69c93a694ae8d7b6d1af70df5156656703c67af172c",
+    "joined": "6b0841b16cdf16d80908d69c93a694ae8d7b6d1af70df5156656703c67af172c",
+    "joinedInstall": "6b0841b16cdf16d80908d69c93a694ae8d7b6d1af70df5156656703c67af172c",
+    "auditor": "cd7532a45f3e879391ec2d6121991dcbd7308e29d31114df31bb26c087e8a3bd"
+  },
+  "lockDecision": "joined lock equals maintenance 3da727; a1dc lock is recorded and is not the pass condition",
+  "historicalOverlayDecidesThisCandidate": false,
+  "baselineCaptureSha256": "71ccb41dee3f89e503f19ef6ae9ad3bb38e06a68ba9ba5a8c80ef90051bfc094",
+  "baselineCapture": "experiments/oct29-mpp-availability/evidence/evidence/baseline.json.gz",
+  "transport": "loopback HTTP with canonical Host and x-forwarded-proto https; not a lab TLS session",
+  "sourceFiles": [
+    {
+      "file": "server.js",
+      "sha256": "ccb3c60a3f9ed6ed1477a043f75656144cd9347a71c6bc31962ce7397b2193c3"
+    },
+    {
+      "file": "mcp-server.mjs",
+      "sha256": "4cfd161896c0a546304c1eed5875a25bae69ad14fe207fbe222d7956fb09172d"
+    },
+    {
+      "file": "package.json",
+      "sha256": "f8acf75f87487123477d1bf62af150078e48e945055b043b7eb85a7b972ee509"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "6b0841b16cdf16d80908d69c93a694ae8d7b6d1af70df5156656703c67af172c"
+    },
+    {
+      "file": "operation-identity.mjs",
+      "sha256": "f0e8cb5fb22475980dbc5e025cd8632a1a6e58f3d592985ac8609f155a9ef5ee"
+    },
+    {
+      "file": "mpp-dual-stack.mjs",
+      "sha256": "6c1edea1198cb241af4f98d7f9747387df284177d44741253e885647fd63a4da"
+    },
+    {
+      "file": "construction-surface.mjs",
+      "sha256": "2cc79819331691911929f20f6a144491a893f1e9f36cc235bb470ae554215a5c"
+    },
+    {
+      "file": "a2a-storefront.mjs",
+      "sha256": "9cbea108d74b555e9e490c9e65442ad90f08ab17dcd06c1aa793f23b9c65d5d2"
+    },
+    {
+      "file": "machine-surface-parity.mjs",
+      "sha256": "c1ff91b86c57bddc4b0fd6a11807dd5abb128fdd85140937c691f22664b374a5"
+    },
+    {
+      "file": "skill-contract.mjs",
+      "sha256": "1bdcc9d85a3b4f54bf7f065a3ff92fea6698c24eb037a4074a90df105d8dc84a"
+    },
+    {
+      "file": "solana-agent-registration.mjs",
+      "sha256": "74eeff0753d4bd33469cead68e9b8bec5fd7764a5d179c6d08b49012909961a4"
+    },
+    {
+      "file": "payment-availability.test.mjs",
+      "sha256": "6d9518532dc8b19b25af171994ca644bb17a6cf843b00ad31271feb8de565c21"
+    },
+    {
+      "file": "experiments/oct29-mpp-availability/lab.mjs",
+      "sha256": "335f48b0c2960410b592851b3229142d19fe6c4065f0201b7538857daa32fe32"
+    },
+    {
+      "file": "experiments/oct29-mpp-availability/accept.mjs",
+      "sha256": "d0cfca939816ca270bef9abea55ec36275261276af1909219118fdee7aa3312e"
+    },
+    {
+      "file": "experiments/oct29-merchant-compatibility/merchant-compatibility.test.mjs",
+      "sha256": "8d8b5ea3ff53b159c1f451677fc998f0c48d8bd0b7fbc1e642d0ef978dc7d8c3"
+    }
+  ],
+  "installed": {
+    "node": "v22.23.4",
+    "axios": "1.20.0",
+    "sdk": "1.30.0",
+    "server": "2.4.0",
+    "client": "2.4.0",
+    "pythonSite": "/tmp/oct29-mcp-py-site"
+  },
+  "originalFailures": {
+    "paidBodyReleasedAt": "2e197da2a3e994417af818e8641fab5bd7079e01",
+    "falseSettlementFix": "bdea3f75dfbea51fe10e1f617a2dc758ed124030",
+    "h64202Pilot": "dbe233339e155a857d624a12c117f4d59a8bbcf9",
+    "h64202CandidateJoinBlob": "ea2d06360932c430ea32b22391cf291fced1618a",
+    "h64330HistoricalAccept": "ab5bf51b60c7fa6e2d3587fcac23b26f00872b65",
+    "immutable": true
+  },
+  "node": "v22.23.4",
+  "serial": true,
+  "borrowedDependencyTree": false,
+  "humanPages": 10
+}

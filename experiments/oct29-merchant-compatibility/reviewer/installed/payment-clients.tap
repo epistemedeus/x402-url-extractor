@@ -1,0 +1,136 @@
+TAP version 13
+# Subtest: installed axios is the patched 1.20.0 pin, separate from HTTP/2 applicability
+ok 1 - installed axios is the patched 1.20.0 pin, separate from HTTP/2 applicability
+  ---
+  duration_ms: 1.040745
+  type: 'test'
+  ...
+# Subtest: axios 1.20.0 honors a rejecting lookup on loopback HTTP/2 and HTTP/1
+ok 2 - axios 1.20.0 honors a rejecting lookup on loopback HTTP/2 and HTTP/1
+  ---
+  duration_ms: 1026.313239
+  type: 'test'
+  ...
+# Subtest: production mount opts into 2026-07-28 without replacing the legacy handler
+ok 3 - production mount opts into 2026-07-28 without replacing the legacy handler
+  ---
+  duration_ms: 3.002373
+  type: 'test'
+  ...
+# Subtest: payment header injection does not create a modern envelope claim
+ok 4 - payment header injection does not create a modern envelope claim
+  ---
+  duration_ms: 7.172604
+  type: 'test'
+  ...
+# Subtest: legacy, automatic, and pinned clients share one merchant on the modern opt-in
+ok 5 - legacy, automatic, and pinned clients share one merchant on the modern opt-in
+  ---
+  duration_ms: 173.535407
+  type: 'test'
+  ...
+# Subtest: legacy default keeps old callers and rejects an explicit modern pin
+ok 6 - legacy default keeps old callers and rejects an explicit modern pin
+  ---
+  duration_ms: 52.500439
+  type: 'test'
+  ...
+# Subtest: unsupported era, malformed metadata, and identity confusion stay on the modern path
+ok 7 - unsupported era, malformed metadata, and identity confusion stay on the modern path
+  ---
+  duration_ms: 14.548036
+  type: 'test'
+  ...
+# Subtest: failed verify and settlement refusal do not invent a second payment
+ok 8 - failed verify and settlement refusal do not invent a second payment
+  ---
+  duration_ms: 28.232283
+  type: 'test'
+  ...
+# Subtest: native gate follows the SettleResponse contract
+ok 9 - native gate follows the SettleResponse contract
+  ---
+  duration_ms: 0.525284
+  type: 'test'
+  ...
+# Subtest: explicit false settlement withholds paid output on modern and legacy mounts
+ok 10 - explicit false settlement withholds paid output on modern and legacy mounts
+  ---
+  duration_ms: 47.121229
+  type: 'test'
+  ...
+# Subtest: ambiguous settlement stays unknown and a false settlement is not recoverable
+ok 11 - ambiguous settlement stays unknown and a false settlement is not recoverable
+  ---
+  duration_ms: 122.330595
+  type: 'test'
+  ...
+# Subtest: unknown settlement stays quarantined and a new nonce is a new operation
+ok 12 - unknown settlement stays quarantined and a new nonce is a new operation
+  ---
+  duration_ms: 68.762304
+  type: 'test'
+  ...
+# Subtest: python client sees withheld false settlement on both mounts
+ok 13 - python client sees withheld false settlement on both mounts
+  ---
+  duration_ms: 1146.698043
+  type: 'test'
+  ...
+# Subtest: priced native shapes withhold unproven bodies and keep a contract success
+ok 14 - priced native shapes withhold unproven bodies and keep a contract success
+  ---
+  duration_ms: 235.737221
+  type: 'test'
+  ...
+# Subtest: python client withholds unproven settlement on both mounts
+ok 15 - python client withholds unproven settlement on both mounts
+  ---
+  duration_ms: 1148.828409
+  type: 'test'
+  ...
+# Subtest: paidHttp explicit false is withheld and the route-owned body is not
+ok 16 - paidHttp explicit false is withheld and the route-owned body is not
+  ---
+  duration_ms: 23.874221
+  type: 'test'
+  ...
+# Subtest: lost response recovers the same operation and a new nonce is a new operation
+ok 17 - lost response recovers the same operation and a new nonce is a new operation
+  ---
+  duration_ms: 37.982118
+  type: 'test'
+  ...
+# Subtest: explicit stdio opt-in discovers, calls the free tool, and challenges the paid tool
+ok 18 - explicit stdio opt-in discovers, calls the free tool, and challenges the paid tool
+  ---
+  duration_ms: 1354.840766
+  type: 'test'
+  ...
+# Subtest: Python handler-error shapes are projected without protected content
+ok 19 - Python handler-error shapes are projected without protected content
+  ---
+  duration_ms: 6831.762431
+  type: 'test'
+  ...
+# Subtest: merchant output schemas project to JSON Schema and keep Zod 3 validation
+ok 20 - merchant output schemas project to JSON Schema and keep Zod 3 validation
+  ---
+  duration_ms: 563.211267
+  type: 'test'
+  ...
+# Subtest: raw shapes, defaults, strict objects, and discriminated unions stay distinct
+ok 21 - raw shapes, defaults, strict objects, and discriminated unions stay distinct
+  ---
+  duration_ms: 0.852433
+  type: 'test'
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13858.942019

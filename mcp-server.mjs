@@ -28,8 +28,9 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { x402ResourceServer } from "@x402/core/server";
+import { PaymentRequiredV2Schema, NetworkSchemaV2 } from "@x402/core/schemas";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
-import { createPaymentWrapper } from "@x402/mcp";
+import { MCP_PAYMENT_RESPONSE_META_KEY, createPaymentWrapper } from "@x402/mcp";
 import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery.mjs";
 import { attachMcpCallerResultFeedback, callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
@@ -45,8 +46,10 @@ import {
   productSkuForTool,
   resourceForTool,
 } from "./mcp-typed-telemetry-producer.mjs";
+import { zod3StandardSchema } from "./mcp-zod3-json-schema.mjs";
 
 const mcpTypedAttemptAls = new AsyncLocalStorage();
+const nativePaymentAuthorityAls = new AsyncLocalStorage();
 const mcpHttpRequestAls = new AsyncLocalStorage();
 const mcpFreePageChangeAls = new AsyncLocalStorage();
 const mcpExtractionTrialAls = new AsyncLocalStorage();
@@ -150,6 +153,116 @@ function isPaymentRequiredBody(body) {
     && !Array.isArray(body)
     && Number.isInteger(body.x402Version)
     && Array.isArray(body.accepts);
+}
+
+// SettleResponse from @x402/core@2.16.0 requires boolean success, a string
+// transaction, and a network. Only that success object authorizes delivery of
+// a priced native handler body. Boolean false is a known failure. Any other
+// facilitator object is unproven. Neither hold invents a charge, a rollback,
+// or a no-effect, and the unproven hold does not claim success:false.
+function explicitFalseHold() {
+  return {
+    isError: true,
+    content: [{
+      type: "text",
+      text: JSON.stringify({
+        ok: false,
+        error: "settlement_unsuccessful",
+        settlementSuccess: false,
+      }),
+    }],
+    _meta: {
+      [MCP_PAYMENT_RESPONSE_META_KEY]: { success: false },
+    },
+  };
+}
+
+function unprovenHold() {
+  return {
+    isError: true,
+    content: [{
+      type: "text",
+      text: JSON.stringify({
+        ok: false,
+        error: "settlement_unproven",
+      }),
+    }],
+    _meta: {},
+  };
+}
+
+function settlementProof(result) {
+  const proof = result?._meta?.[MCP_PAYMENT_RESPONSE_META_KEY];
+  if (!proof || typeof proof !== "object" || Array.isArray(proof)) return null;
+  return proof;
+}
+
+export function authoritativeSettlementSuccess(proof) {
+  return Boolean(proof)
+    && proof.success === true
+    && typeof proof.transaction === "string"
+    && typeof proof.network === "string"
+    && NetworkSchemaV2.safeParse(proof.network).success;
+}
+
+function parsedContentObject(result) {
+  const text = result?.content?.[0]?.text;
+  if (typeof text !== "string" || text.length === 0 || text[0] !== "{") return null;
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+// The HTTP bridge receives only the configured loopback route, whose payment
+// middleware owns admission. An explicit failure still must not deliver a body.
+export function withholdExplicitFalseSettlement(result) {
+  const proof = settlementProof(result);
+  return proof?.success === false ? explicitFalseHold() : result;
+}
+
+function canonicalToolFailure() {
+  return { isError: true, content: [{ type: "text", text: JSON.stringify({
+    ok: false, error: "tool_execution_failed",
+  }) }], _meta: {} };
+}
+
+// Never infer authority from arbitrary content, isError, or caller metadata.
+// Production passes a private per-call record filled by the real handler and
+// the official resource-server settlement hook. Without it, hold the body.
+export function withholdUnprovenNativeSettlement(result, authority = null) {
+  if (!authority) return unprovenHold();
+  const proof = authority.settlement;
+  // Official skipHandler/replay hooks can still settle successfully without
+  // invoking the handler. Actual settlement authority takes precedence.
+  if (authoritativeSettlementSuccess(proof) && proof.network === authority.network) return result;
+  if (proof?.success === false) return explicitFalseHold();
+  if (authority.handlerFailed === true) return canonicalToolFailure();
+  if (authority.handlerInvoked === false && !authority.settlementAttempted) {
+    const challenge = PaymentRequiredV2Schema.parse(authority.challenge);
+    return { isError: true, content: [{ type: "text", text: JSON.stringify(challenge) }],
+      structuredContent: challenge };
+  }
+  return unprovenHold();
+}
+
+function deliveredSettlementHold(result) {
+  const body = parsedContentObject(result);
+  if (body?.error === "settlement_unsuccessful" || body?.error === "settlement_unproven") return body.error;
+  return null;
+}
+
+function noteDeliveredApplicationError(attempt, result) {
+  if (!attempt || result?.isError !== true) return;
+  // A withheld settlement is not an application failure. Boolean false stays
+  // failed. An unproven hold stays unknown.
+  if (deliveredSettlementHold(result)) return;
+  const proof = settlementProof(result);
+  if (proof && proof.success === false) return;
+  attempt.overrideFinalApplicationError();
 }
 
 // Official Client.callTool validates structuredContent against outputSchema even when
@@ -677,7 +790,7 @@ function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "",
       const kind = classifyOutboundKind(message);
       if (kind === "tool_result") {
         try {
-          if (message.result?.isError === true) attempt.overrideFinalApplicationError();
+          noteDeliveredApplicationError(attempt, message.result);
           if (prepared?.delivery) attempt.noteToolDelivery(prepared.delivery);
         } catch {
           // Delivery capture must not change the MCP response.
@@ -766,7 +879,7 @@ function advertisedToolDescription(tool) {
  * @param {Array<{name:string,title?:string,description:string,price:string,inputSchema:Record<string,z.ZodTypeAny>,run:(args:any)=>Promise<any>,tags?:string[]}>} cfg.tools
  * @returns {Promise<{toolCount:number}>}
  */
-export async function mountMcp(app, {
+async function prepareMerchantMcp({
   facilitatorClient,
   network,
   payTo,
@@ -831,6 +944,17 @@ export async function mountMcp(app, {
     await configureResourceServer(resourceServer);
   }
   if (typedEnabled) registerOfficialLifecycleHooks(resourceServer);
+  resourceServer.onAfterSettle((context) => {
+    const authority = nativePaymentAuthorityAls.getStore();
+    if (authority) { authority.settlement = context?.result; authority.settlementAttempted = true; }
+    return undefined;
+  });
+
+  resourceServer.onSettleFailure(() => {
+    const authority = nativePaymentAuthorityAls.getStore();
+    if (authority) authority.settlementAttempted = true;
+    return undefined;
+  });
 
   // Pre-build the paid wrapper for each tool ONCE (buildPaymentRequirements is async).
   const prepared = [];
@@ -866,8 +990,34 @@ export async function mountMcp(app, {
     // paid(handler) -> MCP tool callback (args, extra) that verifies payment (from
     // extra._meta), runs the handler, then settles. We catch handler errors and return
     // a structured ok:false so a paid call never yields an opaque failure.
-    const inner = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl)
-      : paid(typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t));
+    const nativeHandler = typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t);
+    const trackedHandler = async (...args) => {
+      const authority = nativePaymentAuthorityAls.getStore();
+      if (authority) authority.handlerInvoked = true;
+      try {
+        const value = await nativeHandler(...args);
+        if (authority) authority.handlerFailed = value?.isError === true;
+        return value;
+      } catch (error) {
+        if (authority) authority.handlerFailed = true;
+        throw error;
+      }
+    };
+    const settled = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl) : paid(trackedHandler);
+    // This challenge is constructed from this tool's validated public offer,
+    // never copied from a handler result or request-supplied challenge shape.
+    const nativeChallenge = PaymentRequiredV2Schema.parse({ x402Version: 2,
+      resource: { url: resourceForTool(t.name), description: t.description, mimeType: "application/json" },
+      accepts });
+    const inner = async (args, extra) => {
+      if (t.paidHttp) return withholdExplicitFalseSettlement(await settled(args, extra));
+      const authority = { handlerInvoked: false, handlerFailed: false,
+        settlement: null, settlementAttempted: false, network, challenge: nativeChallenge };
+      return nativePaymentAuthorityAls.run(authority, async () => {
+        try { return withholdUnprovenNativeSettlement(await settled(args, extra), authority); }
+        catch { return withholdUnprovenNativeSettlement(undefined, authority); }
+      });
+    };
     const recoverable = nativeRecovery && !t.paidHttp ? async (args, extra) => {
       const request = mcpHttpRequestAls.getStore();
       return recoveryJournal.runMcpTool({ name: t.name,
@@ -965,6 +1115,144 @@ export async function mountMcp(app, {
       },
       binding: null,
     });
+  }
+
+  return {
+    prepared,
+    catalogByName,
+    serverInfo,
+    typedEnabled,
+    typedLifecycle,
+    onAppend,
+    typedTelemetry,
+    streamableHttpOptions,
+    callerResultFeedbackKey,
+    commerceDataDir,
+    createFreePageChangeObserver,
+    observeExtractionTrial,
+  };
+}
+
+function operationMetaFor(tool) {
+  const operationMeta = tool.operationIdentity
+    ? { samedaydesk: { operation: tool.operationIdentity } }
+    : {};
+  if (tool.recoveryProfile) operationMeta.samedaydesk = {
+    ...operationMeta.samedaydesk, recovery: tool.recoveryProfile,
+  };
+  return operationMeta;
+}
+
+async function loadModernSdk() {
+  const [serverMod, nodeMod] = await Promise.all([
+    import("@modelcontextprotocol/server"),
+    import("@modelcontextprotocol/node"),
+  ]);
+  return {
+    McpServer: serverMod.McpServer,
+    fromJsonSchema: serverMod.fromJsonSchema,
+    createMcpHandler: serverMod.createMcpHandler,
+    isLegacyRequest: serverMod.isLegacyRequest,
+    toNodeHandler: nodeMod.toNodeHandler,
+    toWebRequest: nodeMod.toWebRequest,
+  };
+}
+
+function compileModernCatalog(prepared, fromJsonSchema) {
+  const looseInput = fromJsonSchema({ type: "object", properties: {}, additionalProperties: true });
+  return prepared.map((tool) => ({
+    tool,
+    looseInput,
+    input: zod3StandardSchema(tool.inputSchema || {}),
+    output: tool.outputSchema ? zod3StandardSchema(tool.outputSchema) : undefined,
+  }));
+}
+
+function buildModernServer(sdk, serverInfo, compiled, seal) {
+  const body = mcpHttpRequestAls.getStore()?.body;
+  const server = new sdk.McpServer(serverInfo);
+  for (const entry of compiled) {
+    const tool = entry.tool;
+    const guardedCall = tool.guardedHttpInput && body?.jsonrpc === "2.0"
+      && body?.method === "tools/call" && body?.params?.name === tool.name;
+    server.registerTool(tool.name, {
+      title: tool.title,
+      description: tool.description,
+      inputSchema: guardedCall ? entry.looseInput : entry.input,
+      ...(entry.output ? { outputSchema: entry.output } : {}),
+      ...(tool.annotations ? { annotations: tool.annotations } : {}),
+      _meta: { ...tool.paymentMeta, ...operationMetaFor(tool), ...(tool.inputRefusalMeta || {}) },
+    }, (args, ctx) => invokeModernTool(tool, args, ctx, seal));
+  }
+  return server;
+}
+
+async function invokeModernTool(tool, args, ctx, seal) {
+  const extra = {
+    _meta: ctx?.mcpReq?._meta,
+    requestId: ctx?.mcpReq?.id,
+  };
+  const attempt = mcpTypedAttemptAls.getStore();
+  const result = await tool.handler(args, extra);
+  if (!attempt) return result;
+  const message = { jsonrpc: "2.0", id: extra.requestId ?? null, result };
+  let sealed = null;
+  try {
+    sealed = sealToolResultForSend(message, attempt, seal.callerResultFeedbackKey);
+  } catch {
+    sealed = null;
+  }
+  try {
+    noteDeliveredApplicationError(attempt, result);
+    if (sealed?.delivery) attempt.noteToolDelivery(sealed.delivery);
+  } catch {
+    // Delivery capture must not change the MCP response.
+  }
+  if (sealed?.reference) {
+    noteEstablishedContinuation(
+      seal.commerceDataDir,
+      sealed.reference,
+      sealed.attached === true ? "transmitted" : "not_transmitted",
+    );
+  }
+  attempt.finalize({
+    responseId: extra.requestId ?? null,
+    kind: classifyOutboundKind(message),
+  });
+  return result;
+}
+
+export async function mountMcp(app, cfg = {}) {
+  const preparedState = await prepareMerchantMcp(cfg);
+  const {
+    prepared,
+    catalogByName,
+    serverInfo,
+    typedEnabled,
+    typedLifecycle,
+    onAppend,
+    typedTelemetry,
+    streamableHttpOptions,
+    callerResultFeedbackKey,
+    commerceDataDir,
+    createFreePageChangeObserver,
+    observeExtractionTrial,
+  } = preparedState;
+  const modernProtocol = cfg.modernProtocol === true;
+  let modernRuntime = null;
+  if (modernProtocol) {
+    const sdk = await loadModernSdk();
+    const compiled = compileModernCatalog(prepared, sdk.fromJsonSchema);
+    const seal = { callerResultFeedbackKey, commerceDataDir };
+    const handler = sdk.createMcpHandler(
+      () => buildModernServer(sdk, serverInfo, compiled, seal),
+      { legacy: "reject" },
+    );
+    modernRuntime = {
+      isLegacyRequest: sdk.isLegacyRequest,
+      toWebRequest: sdk.toWebRequest,
+      nodeHandler: sdk.toNodeHandler(handler),
+    };
   }
 
   // A fresh MCP server per request (stateless mode requires server+transport per call).
@@ -1078,14 +1366,35 @@ export async function mountMcp(app, {
       res.set("Cache-Control", "no-store");
       return res.status(200).json(unknownTool);
     }
-    const server = makeServer(req.body);
-    const transport = new StreamableHTTPServerTransport(transportOptions);
-    if (created.attempt) decorateTransportSend(transport, created.attempt, callerResultFeedbackKey, commerceDataDir);
-    res.on("close", () => {
-      try { transport.close(); } catch { /* noop */ }
-      try { server.close?.(); } catch { /* noop */ }
-    });
+    let useModern = false;
+    if (modernRuntime) {
+      const webRequest = await modernRuntime.toWebRequest(req, req.body);
+      useModern = (await modernRuntime.isLegacyRequest(webRequest, req.body)) !== true;
+    }
     const run = async () => {
+      if (useModern) {
+        try {
+          await modernRuntime.nodeHandler(req, res, req.body);
+        } catch (e) {
+          created.attempt?.noteTransportError();
+          if (!res.headersSent) {
+            res.status(500).json({ jsonrpc: "2.0", error: { code: -32603, message: String(e?.message || e) }, id: null });
+          }
+        } finally {
+          created.attempt?.finalize({
+            responseId: isJsonRpcObject(req.body) && Object.hasOwn(req.body, "id") ? req.body.id : null,
+            kind: "transport_error",
+          });
+        }
+        return;
+      }
+      const server = makeServer(req.body);
+      const transport = new StreamableHTTPServerTransport(transportOptions);
+      if (created.attempt) decorateTransportSend(transport, created.attempt, callerResultFeedbackKey, commerceDataDir);
+      res.on("close", () => {
+        try { transport.close(); } catch { /* noop */ }
+        try { server.close?.(); } catch { /* noop */ }
+      });
       try {
         await server.connect(transport);
         await transport.handleRequest(req, res, req.body);
@@ -1113,6 +1422,7 @@ export async function mountMcp(app, {
   const mountResult = {
     toolCount: prepared.filter((tool) => tool.free !== true).length,
     freeToolCount: prepared.filter((tool) => tool.free === true).length,
+    modernProtocol: modernProtocol ? "2026-07-28" : false,
     catalog: Object.freeze(Object.fromEntries(
       [...catalogByName.entries()].map(([name, entry]) => [name, entry.binding]),
     )),
@@ -1147,6 +1457,18 @@ export function mcpCallArguments(fallback) {
   const raw = request?.body?.params?.arguments;
   if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw;
   return fallback && typeof fallback === "object" && !Array.isArray(fallback) ? fallback : {};
+}
+
+export async function serveExplicitModernStdio(cfg = {}) {
+  const preparedState = await prepareMerchantMcp(cfg);
+  const sdk = await loadModernSdk();
+  const { serveStdio } = await import("@modelcontextprotocol/server/stdio");
+  const compiled = compileModernCatalog(preparedState.prepared, sdk.fromJsonSchema);
+  const seal = {
+    callerResultFeedbackKey: preparedState.callerResultFeedbackKey,
+    commerceDataDir: preparedState.commerceDataDir,
+  };
+  return serveStdio(() => buildModernServer(sdk, preparedState.serverInfo, compiled, seal));
 }
 
 export { mcpTypedAttemptAls, productSkuForTool, resourceForTool };

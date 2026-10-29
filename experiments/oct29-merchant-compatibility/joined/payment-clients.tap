@@ -1,0 +1,106 @@
+TAP version 13
+# Subtest: installed axios is the patched 1.20.0 pin, separate from HTTP/2 applicability
+ok 1 - installed axios is the patched 1.20.0 pin, separate from HTTP/2 applicability
+  ---
+  duration_ms: 1.318524
+  type: 'test'
+  ...
+# Subtest: axios 1.20.0 honors a rejecting lookup on loopback HTTP/2 and HTTP/1
+ok 2 - axios 1.20.0 honors a rejecting lookup on loopback HTTP/2 and HTTP/1
+  ---
+  duration_ms: 1031.120721
+  type: 'test'
+  ...
+# Subtest: production mount opts into 2026-07-28 without replacing the legacy handler
+ok 3 - production mount opts into 2026-07-28 without replacing the legacy handler
+  ---
+  duration_ms: 3.260244
+  type: 'test'
+  ...
+# Subtest: payment header injection does not create a modern envelope claim
+ok 4 - payment header injection does not create a modern envelope claim
+  ---
+  duration_ms: 6.26808
+  type: 'test'
+  ...
+# Subtest: legacy, automatic, and pinned clients share one merchant on the modern opt-in
+ok 5 - legacy, automatic, and pinned clients share one merchant on the modern opt-in
+  ---
+  duration_ms: 210.651729
+  type: 'test'
+  ...
+# Subtest: legacy default keeps old callers and rejects an explicit modern pin
+ok 6 - legacy default keeps old callers and rejects an explicit modern pin
+  ---
+  duration_ms: 65.364645
+  type: 'test'
+  ...
+# Subtest: unsupported era, malformed metadata, and identity confusion stay on the modern path
+ok 7 - unsupported era, malformed metadata, and identity confusion stay on the modern path
+  ---
+  duration_ms: 24.032104
+  type: 'test'
+  ...
+# Subtest: failed verify and settlement refusal do not invent a second payment
+ok 8 - failed verify and settlement refusal do not invent a second payment
+  ---
+  duration_ms: 32.287914
+  type: 'test'
+  ...
+# Subtest: direct shared boundary withholds only an explicit false settlement
+ok 9 - direct shared boundary withholds only an explicit false settlement
+  ---
+  duration_ms: 0.235299
+  type: 'test'
+  ...
+# Subtest: explicit false settlement withholds paid output on modern and legacy mounts
+ok 10 - explicit false settlement withholds paid output on modern and legacy mounts
+  ---
+  duration_ms: 47.078554
+  type: 'test'
+  ...
+# Subtest: ambiguous settlement stays unknown and a false settlement is not recoverable
+ok 11 - ambiguous settlement stays unknown and a false settlement is not recoverable
+  ---
+  duration_ms: 134.318208
+  type: 'test'
+  ...
+# Subtest: python client sees withheld false settlement on both mounts
+ok 12 - python client sees withheld false settlement on both mounts
+  ---
+  duration_ms: 1520.132225
+  type: 'test'
+  ...
+# Subtest: lost response recovers the same operation and a new nonce is a new operation
+ok 13 - lost response recovers the same operation and a new nonce is a new operation
+  ---
+  duration_ms: 53.891921
+  type: 'test'
+  ...
+# Subtest: explicit stdio opt-in discovers, calls the free tool, and challenges the paid tool
+ok 14 - explicit stdio opt-in discovers, calls the free tool, and challenges the paid tool
+  ---
+  duration_ms: 1800.102067
+  type: 'test'
+  ...
+# Subtest: merchant output schemas project to JSON Schema and keep Zod 3 validation
+ok 15 - merchant output schemas project to JSON Schema and keep Zod 3 validation
+  ---
+  duration_ms: 728.98584
+  type: 'test'
+  ...
+# Subtest: raw shapes, defaults, strict objects, and discriminated unions stay distinct
+ok 16 - raw shapes, defaults, strict objects, and discriminated unions stay distinct
+  ---
+  duration_ms: 0.901868
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6736.773619

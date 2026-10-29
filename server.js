@@ -53,9 +53,8 @@ import {
 } from "./machine-surface-parity.mjs";
 import { CALLER_RESULT_CLIENT_ENTRY } from "./caller-result-client-entry.mjs";
 import {
-  billingBasisForRoute,
-  operationIdForRoute,
   operationIdentity,
+  operationIdentityFromAction,
   supportedRailsForRoute,
 } from "./operation-identity.mjs";
 import { assertCdpResourceDescriptionCompatibility } from "./x402-resource-compat.mjs";
@@ -1269,11 +1268,17 @@ const mppDualStack = createMppDualStack({
   secretKey: process.env.MPP_SECRET_KEY,
 });
 
-const agentCashPaymentInfoFor = (resource) => ({
-  operation: operationIdentity({
-    route: new URL(resource.url).pathname,
-    priceAtomic: resource.amount,
-  }),
+const resourceIdentityFor = (resource, method = resource.method || "GET") => {
+  const route = new URL(resource.url).pathname;
+  return operationIdentity({ route, priceAtomic: resource.amount,
+    supportedRails: supportedRailsForRoute(route, { method, mpp: mppDualStack }) });
+};
+const availablePaymentProtocols = () => [...new Set(RESOURCES.flatMap(
+  (resource) => resourceIdentityFor(resource).supportedRails,
+))];
+
+const agentCashPaymentInfoFor = (resource, method) => ({
+  operation: resourceIdentityFor(resource, method),
   price: {
     amount: atomicUsdcToDisplay(resource.amount),
     currency: "USD",
@@ -1287,14 +1292,14 @@ const agentCashPaymentInfoFor = (resource) => ({
         scheme: "exact",
       },
     },
-    {
+    ...(resourceIdentityFor(resource, method).supportedRails.includes("mpp") ? [{
       mpp: {
         currency: USDC_ASSET,
         intent: "charge",
         method: "evm",
         network: NETWORK,
       },
-    },
+    }] : []),
   ],
 });
 
@@ -1314,11 +1319,8 @@ const circleGatewayPaymentInfo = () => ({
   }],
 });
 
-const mppPaymentInfoFor = (resource) => ({
-  operation: operationIdentity({
-    route: new URL(resource.url).pathname,
-    priceAtomic: resource.amount,
-  }),
+const mppPaymentInfoFor = (resource, method) => ({
+  operation: resourceIdentityFor(resource, method),
   offers: [
     {
       amount: resource.amount,
@@ -1358,8 +1360,9 @@ const machineActionCatalog = () => ({
   schema: "samedaydesk.machine-actions.v2",
   service: "SameDayDesk machine commerce gateway",
   network: NETWORK,
-  settlement: "x402 exact or MPP evm/charge USDC on Base",
-  paymentProtocols: ["x402", "mpp"],
+  settlement: availablePaymentProtocols().includes("mpp")
+    ? "x402 exact or MPP evm/charge USDC on Base" : "x402 exact USDC on Base",
+  paymentProtocols: availablePaymentProtocols(),
   alternateAccess: circleGateway.enabled ? {
     serviceName: CIRCLE_GATEWAY_RESOURCE.serviceName,
     tags: CIRCLE_GATEWAY_RESOURCE.tags,
@@ -1380,7 +1383,7 @@ const machineActionCatalog = () => ({
   payTo: PAY_TO,
   acquisition: {
     directCallRequired: true,
-    note: "This free catalog is discovery only. Call the selected action URL directly and satisfy its live x402 or MPP challenge; no marketplace proxy can stand in for the route-bound payment credential.",
+    note: "This free catalog is discovery only. Call the selected action URL directly and satisfy one of its currently advertised payment challenges; no marketplace proxy can stand in for the route-bound payment credential.",
     declaredSourceHeader: {
       header: "X-SameDayDesk-Agent-Source",
       allowedValues: DECLARED_AGENT_SOURCE_VALUES,
@@ -1393,6 +1396,7 @@ const machineActionCatalog = () => ({
     const response = getDiscoveryOutputContract(`${method} ${route}`);
     const request = getDiscoveryRequestContract(`${method} ${route}`);
     const serviceMetadata = bazaarResourceMetadataFor(route);
+    const identity = resourceIdentityFor(resource, method);
     return {
       name: route.replace(/^\//, "").replaceAll("/", "_"),
       method,
@@ -1401,10 +1405,10 @@ const machineActionCatalog = () => ({
       description: resource.description,
       priceAtomicUsdc: resource.amount,
       priceUsdc: Number(resource.amount) / 1e6,
-      id: operationIdForRoute(route),
-      billingBasis: billingBasisForRoute(route),
-      supportedRails: supportedRailsForRoute(route),
-      paymentProtocols: supportedRailsForRoute(route),
+      id: identity.id,
+      billingBasis: identity.billingBasis,
+      supportedRails: identity.supportedRails,
+      paymentProtocols: [...identity.supportedRails],
       mimeType: resource.mimeType,
       ...serviceMetadata,
       request: projectDiscoveryRequest(resource.url, method, request),
@@ -1619,7 +1623,7 @@ app.get("/mcp", (_req, res) => {
       ordinaryHttpJsonMaxBytes: ORDINARY_HTTP_JSON_MAX_BYTES,
       overLimit: { httpStatus: 200, code: -32600, message: "mcp_json_rpc_too_large" },
     },
-    payment: "x402 USDC on Base per paid MCP tool call; page_change is free and HTTP actions also accept native MPP",
+    payment: `x402 USDC on Base per paid MCP tool call; page_change is free${availablePaymentProtocols().includes("mpp") ? " and eligible HTTP actions also accept native MPP" : ""}`,
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
     purchaseEvidence: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
@@ -1819,9 +1823,9 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     info: {
       title: "SameDayDesk machine commerce gateway",
       version: SERVICE_VERSION,
-      description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, payment preflight and settlement proof, wallet context, and Morpho decision evidence. Pay per call through Base x402 or native MPP, with a Circle Gateway Nanopayments path for gasless batched USDC.",
+      description: `Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, payment preflight and settlement proof, wallet context, and Morpho decision evidence. Pay per call through ${availablePaymentProtocols().includes("mpp") ? "Base x402 or native MPP on eligible operations" : "Base x402"}${circleGateway.enabled ? ", with a Circle Gateway Nanopayments path for gasless batched USDC" : ""}.`,
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
-      "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
+      "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the currently advertised HTTP 402 offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
     },
     "x-service-info": {
       categories: ["agentic-payments", "machine-commerce", "data", "defi"],
@@ -1869,7 +1873,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/.well-known/agent-payment-policy-service-deployment.pem": { get: { summary: "Ed25519 public key whose raw 32-byte value is the ERC-8004 operational Solana wallet.", responses: { "200": { description: "PEM-encoded Ed25519 public key" } } } },
       "/schemas/wallet-policy-conformance-v1.json": { get: { summary: "Free canonical case matrix and JSON Schemas for the wallet-policy conformance product.", responses: { "200": { description: "Versioned credential-free wallet-policy conformance contract" } } } },
       "/schemas/stateful-wallet-policy-conformance-v1.json": { get: { summary: "Free canonical stateful case matrix and JSON Schemas for cumulative wallet-policy conformance.", responses: { "200": { description: "Versioned credential-free stateful wallet-policy conformance contract" } } } },
-      "/a2a/message:send": { post: { summary: "Return the exact-price x402 and MPP action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
+      "/a2a/message:send": { post: { summary: "Return the exact-price currently available action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/work/opportunity-preflight": { get: { summary: RESOURCES[11].description, parameters: [{ name: "platform", in: "query", required: false, schema: { type: "string", example: "taskmarket" } }, { name: "rewardUsd", in: "query", required: true, schema: { type: "number", exclusiveMinimum: 0 } }, { name: "hours", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "hourlyCostUsd", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "computeUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "mandatorySpendUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "reusableValueUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "selectionProbabilityPct", in: "query", required: false, schema: { type: "number", minimum: 0, maximum: 100 } }, { name: "competition", in: "query", required: false, schema: { type: "integer", minimum: 0, default: 0 } }, { name: "slots", in: "query", required: false, schema: { type: "integer", minimum: 1, default: 1 } }, { name: "agentAccess", in: "query", required: false, schema: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" } }, { name: "acceptance", in: "query", required: false, schema: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" } }, { name: "settlement", in: "query", required: false, schema: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" } }], responses: { "200": { description: "deterministic opportunity economics and evidence preflight" }, "400": { description: "invalid required input, charged nothing" }, "402": { description: `payment required (x402, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` } } } },
       "/distribution/agent-discoverability-audit": { get: { summary: RESOURCES[12].description, parameters: [{ name: "origin", in: "query", required: true, description: "Public HTTPS origin of the machine service, with no path or query.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } }, { name: "intent", in: "query", required: true, description: "Brand-blind capability description used as the registry query.", schema: { type: "string", minLength: 20, maxLength: 500, example: "extract a public web page into structured JSON metadata headings links and JSON-LD" } }, { name: "route", in: "query", required: false, description: "Expected exact path whose presence should be checked.", schema: { type: "string", pattern: "^/[^?#]*$", example: "/extract" } }, { name: "method", in: "query", required: false, description: "Exact seller method for the optional Coinbase materialization audit. runtimeUrl remains GET-only.", schema: { type: "string", enum: ["GET", "POST"], default: "GET" } }, { name: "runtimeUrl", in: "query", required: false, description: "Optional exact same-origin HTTPS GET URL whose unpaid x402 or MPP offer supplies the runtime price reference. Requires route and an exactly matching pathname. Uses pinned public DNS, reads headers only, follows no redirect, and sends no credential or payment.", schema: { type: "string", format: "uri", maxLength: 2048, example: "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com" } }, { name: "payTo", in: "query", required: false, description: "Optional EVM settlement address used to identify aliased service origins.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }, { name: "expectedPriceUsd", in: "query", required: false, description: "Optional exact route price expected by the caller, with at most six fractional digits. Requires route. A coherent runtimeUrl offer takes precedence and any caller-to-runtime drift is reported.", schema: { type: "number", minimum: 0, maximum: 1000000, multipleOf: 0.000001, example: 0.005 } }, { name: "surfaceAudit", in: "query", required: false, description: "Set true to inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route after payment. Uses pinned public DNS, no redirects, a five-second timeout, and a 512-KiB cap per document.", schema: { type: "boolean", default: false } }, { name: "materializationAudit", in: "query", required: false, description: "Set true with route and method to distinguish Coinbase seller ineligibility from provider acceptance without exact-resource Bazaar materialization. Uses no credential, signature, or payment; Coinbase may make one unpaid request to the seller using the requested method.", schema: { type: "boolean", default: false } }], responses: { "200": { description: "brand-blind point-in-time discovery ranks, coverage, route presence, runtime-derived or caller-labeled catalog-price drift, optional owned-surface coverage, optional Coinbase materialization state, and method limits" }, "400": { description: "invalid or branded input, charged nothing" }, "402": { description: `payment required (x402, ${AGENT_DISCOVERABILITY_AUDIT_PRICE} USDC base)` } } } },
@@ -2241,6 +2245,27 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     for (const operation of Object.values(pathItem)) {
       if (!operation["x-payment-info"]) operation.security = [];
     }
+  }
+  // A paid operation in the MPP profile is itself an MPP declaration, even
+  // without offers. Omit unavailable operations rather than leaving a selectable
+  // x402-only entry in that profile. Free discovery remains present.
+  for (const [route, pathItem] of Object.entries(document.paths)) {
+    const resource = RESOURCES.find((entry) => new URL(entry.url).pathname === route);
+    if (!resource) continue;
+    for (const [method, operation] of Object.entries(pathItem)) {
+      if (!operation?.["x-payment-info"]) continue;
+      const identity = resourceIdentityFor(resource, method);
+      if (profile === "mpp" && !identity.supportedRails.includes("mpp")) {
+        delete pathItem[method];
+        continue;
+      }
+      operation["x-payment-info"] = profile === "mpp"
+        ? mppPaymentInfoFor(resource, method) : agentCashPaymentInfoFor(resource, method);
+      if (!identity.supportedRails.includes("mpp") && operation.responses?.["402"]?.description) {
+        operation.responses["402"].description = operation.responses["402"].description.replace("x402 or MPP", "x402");
+      }
+    }
+    if (Object.keys(pathItem).length === 0) delete document.paths[route];
   }
   validateOpenApiOperationIds(document);
   return compactPageChangeOpenApi(document);
@@ -4448,6 +4473,7 @@ app.get("/", (req, res) => {
     extractionTrial: { discovery: EXTRACTION_TRIAL_DISCOVERY },
     machineCommerce: {
       ...gateway.machineCommerce,
+      paymentProtocols: [...catalog.paymentProtocols, ...(circleGateway.enabled ? ["circle-gateway-x402"] : [])],
       callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
     },
     paidRoutes: buildRootPaidRoutes({
@@ -4629,7 +4655,7 @@ import("./mcp-server.mjs")
         const action = machineActions.find((entry) => mcpToolNameForRoute(entry.route) === tool.name);
         if (!action) throw new Error(`MCP tool ${tool.name} has no catalog operation`);
         const bound = bindDeclaredHttpRoute(tool, action);
-        return { ...bound, operationIdentity: operationIdentity({ route: action.route, priceAtomic: action.priceAtomicUsdc }) };
+        return { ...bound, operationIdentity: operationIdentityFromAction(action) };
       });
     if (routeBindingInspectOnly) {
       const report = buildRouteBindingReport({
@@ -4644,6 +4670,9 @@ import("./mcp-server.mjs")
       process.exit(report.ok ? 0 : 1);
     }
     return mountMcp(app, {
+      // Current clients may pin 2026-07-28. Claim-less requests, including
+      // initialize, stay on the existing v1 handler, verifier, and recovery.
+      modernProtocol: true,
       httpBaseUrl: `http://127.0.0.1:${PORT}`,
       facilitatorClient,
       network: NETWORK,

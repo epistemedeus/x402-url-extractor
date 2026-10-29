@@ -1,0 +1,402 @@
+[
+  {
+    "cmd": "git",
+    "args": [
+      "fetch",
+      "--no-tags",
+      "origin",
+      "2e197da2a3e994417af818e8641fab5bd7079e01"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:42.504Z",
+    "endedAt": "2026-10-29T19:27:42.519Z",
+    "exit": 0,
+    "signal": null,
+    "log": "maintenance-fetch.log"
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "archive",
+      "a1dc09bb076b823fb3492ea79fa10f8602ed01a5"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:42.519Z",
+    "endedAt": "2026-10-29T19:27:42.620Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "tar",
+    "args": [
+      "-x",
+      "-C",
+      "/tmp/h64330-final-accept/base"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:42.620Z",
+    "endedAt": "2026-10-29T19:27:42.694Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "archive",
+      "2e197da2a3e994417af818e8641fab5bd7079e01"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:42.695Z",
+    "endedAt": "2026-10-29T19:27:42.779Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "tar",
+    "args": [
+      "-x",
+      "-C",
+      "/tmp/h64330-final-accept/combined"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:42.779Z",
+    "endedAt": "2026-10-29T19:27:42.842Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "clone",
+      "--no-checkout",
+      "--filter=blob:none",
+      "https://github.com/epistemedeus/agent-payment-integrity.git",
+      "/tmp/h64330-final-accept/auditor"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:42.842Z",
+    "endedAt": "2026-10-29T19:27:43.070Z",
+    "exit": 0,
+    "signal": null,
+    "log": "auditor-clone.log"
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "checkout",
+      "--detach",
+      "ef519956505b195454aa670230b0936258b451fb"
+    ],
+    "cwd": "/tmp/h64330-final-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:43.070Z",
+    "endedAt": "2026-10-29T19:27:43.241Z",
+    "exit": 0,
+    "signal": null,
+    "log": "auditor-checkout.log"
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "diff",
+      "--binary",
+      "a1dc09bb076b823fb3492ea79fa10f8602ed01a5",
+      "--",
+      "server.js",
+      "operation-identity.mjs",
+      "mpp-dual-stack.mjs",
+      "construction-surface.mjs",
+      "a2a-storefront.mjs",
+      "machine-surface-parity.mjs",
+      "skill-contract.mjs",
+      "solana-agent-registration.mjs",
+      "payment-availability.test.mjs",
+      "machine-surface-parity.http.test.mjs",
+      "solana-agent-registration.test.mjs"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:43.241Z",
+    "endedAt": "2026-10-29T19:27:43.248Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "apply",
+      "-"
+    ],
+    "cwd": "/tmp/h64330-final-accept/combined",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:43.248Z",
+    "endedAt": "2026-10-29T19:27:43.252Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "npm",
+    "args": [
+      "ci",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "--omit=dev"
+    ],
+    "cwd": "/tmp/h64330-final-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:43.254Z",
+    "endedAt": "2026-10-29T19:27:45.861Z",
+    "exit": 0,
+    "signal": null,
+    "log": "auditor-install.log"
+  },
+  {
+    "cmd": "npm",
+    "args": [
+      "ci",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "cwd": "/tmp/h64330-final-accept/base",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:45.862Z",
+    "endedAt": "2026-10-29T19:27:50.061Z",
+    "exit": 0,
+    "signal": null,
+    "log": "base-install.log"
+  },
+  {
+    "cmd": "npm",
+    "args": [
+      "ci",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:50.061Z",
+    "endedAt": "2026-10-29T19:27:54.598Z",
+    "exit": 0,
+    "signal": null,
+    "log": "candidate-install.log"
+  },
+  {
+    "cmd": "npm",
+    "args": [
+      "ci",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "cwd": "/tmp/h64330-final-accept/combined",
+    "env": {},
+    "startedAt": "2026-10-29T19:27:54.598Z",
+    "endedAt": "2026-10-29T19:27:59.086Z",
+    "exit": 0,
+    "signal": null,
+    "log": "combined-install.log"
+  },
+  {
+    "cmd": "/exec-daemon/node",
+    "args": [
+      "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029/experiments/oct29-mpp-availability/lab.mjs",
+      "--baseline"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {
+      "AUDITOR_ROOT": "/tmp/h64330-final-accept/auditor",
+      "LAB_OUT": "/tmp/h64330-final-accept/evidence",
+      "MERCHANT_ROOT": "/tmp/h64330-final-accept/base"
+    },
+    "startedAt": "2026-10-29T19:27:59.086Z",
+    "endedAt": "2026-10-29T19:28:02.318Z",
+    "exit": 0,
+    "signal": null,
+    "log": "baseline.log"
+  },
+  {
+    "cmd": "/exec-daemon/node",
+    "args": [
+      "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029/experiments/oct29-mpp-availability/lab.mjs"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {
+      "AUDITOR_ROOT": "/tmp/h64330-final-accept/auditor",
+      "LAB_OUT": "/tmp/h64330-final-accept/evidence"
+    },
+    "startedAt": "2026-10-29T19:28:02.318Z",
+    "endedAt": "2026-10-29T19:28:12.447Z",
+    "exit": 0,
+    "signal": null,
+    "log": "candidate.log"
+  },
+  {
+    "cmd": "/exec-daemon/node",
+    "args": [
+      "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029/experiments/oct29-mpp-availability/lab.mjs"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {
+      "AUDITOR_ROOT": "/tmp/h64330-final-accept/auditor",
+      "MERCHANT_ROOT": "/tmp/h64330-final-accept/combined",
+      "LAB_OUT": "/tmp/h64330-final-accept/combined-evidence",
+      "LAB_MODERN": "1"
+    },
+    "startedAt": "2026-10-29T19:28:12.449Z",
+    "endedAt": "2026-10-29T19:28:23.676Z",
+    "exit": 0,
+    "signal": null,
+    "log": "combined.log"
+  },
+  {
+    "cmd": "/exec-daemon/node",
+    "args": [
+      "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029/experiments/oct29-mpp-availability/regressions.mjs"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:28:23.676Z",
+    "endedAt": "2026-10-29T19:28:39.800Z",
+    "exit": 0,
+    "signal": null,
+    "log": "candidate-regressions.tap"
+  },
+  {
+    "cmd": "/exec-daemon/node",
+    "args": [
+      "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029/experiments/oct29-mpp-availability/regressions.mjs"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {
+      "MERCHANT_ROOT": "/tmp/h64330-final-accept/combined"
+    },
+    "startedAt": "2026-10-29T19:28:39.801Z",
+    "endedAt": "2026-10-29T19:28:57.219Z",
+    "exit": 0,
+    "signal": null,
+    "log": "combined-regressions.tap"
+  },
+  {
+    "cmd": "/exec-daemon/node",
+    "args": [
+      "--test",
+      "--test-concurrency=1",
+      "--test-name-pattern=production mount|legacy, automatic|legacy default|unsupported era|explicit stdio",
+      "experiments/oct29-merchant-compatibility/merchant-compatibility.test.mjs"
+    ],
+    "cwd": "/tmp/h64330-final-accept/combined",
+    "env": {},
+    "startedAt": "2026-10-29T19:28:57.220Z",
+    "endedAt": "2026-10-29T19:29:00.153Z",
+    "exit": 0,
+    "signal": null,
+    "log": "maintenance-consumer.tap"
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "diff",
+      "--exit-code",
+      "--",
+      "integrity.mjs",
+      "package.json",
+      "package-lock.json"
+    ],
+    "cwd": "/tmp/h64330-final-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T19:29:00.153Z",
+    "endedAt": "2026-10-29T19:29:00.157Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "a1dc09bb076b823fb3492ea79fa10f8602ed01a5^{tree}"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:29:00.159Z",
+    "endedAt": "2026-10-29T19:29:00.161Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "2e197da2a3e994417af818e8641fab5bd7079e01^{tree}"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:29:00.161Z",
+    "endedAt": "2026-10-29T19:29:00.163Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "HEAD^{tree}"
+    ],
+    "cwd": "/tmp/h64330-final-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T19:29:00.163Z",
+    "endedAt": "2026-10-29T19:29:00.165Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "ls-tree",
+      "-rl",
+      "a1dc09bb076b823fb3492ea79fa10f8602ed01a5"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:29:00.167Z",
+    "endedAt": "2026-10-29T19:29:00.177Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "ls-tree",
+      "-rl",
+      "2e197da2a3e994417af818e8641fab5bd7079e01"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/root64330-mpp-availability-20261029",
+    "env": {},
+    "startedAt": "2026-10-29T19:29:00.183Z",
+    "endedAt": "2026-10-29T19:29:00.188Z",
+    "exit": 0,
+    "signal": null
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "ls-tree",
+      "-rl",
+      "ef519956505b195454aa670230b0936258b451fb"
+    ],
+    "cwd": "/tmp/h64330-final-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T19:29:00.192Z",
+    "endedAt": "2026-10-29T19:29:00.194Z",
+    "exit": 0,
+    "signal": null
+  }
+]

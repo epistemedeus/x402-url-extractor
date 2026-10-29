@@ -1,0 +1,14 @@
+{
+  "calls": [
+    "GET /supported",
+    "GET /supported",
+    "GET /supported",
+    "GET /supported",
+    "GET /supported",
+    "GET /supported",
+    "GET /supported",
+    "GET /supported"
+  ],
+  "verify": 0,
+  "settle": 0
+}

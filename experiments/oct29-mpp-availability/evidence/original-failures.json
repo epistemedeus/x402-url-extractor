@@ -1,0 +1,40 @@
+{
+  "baseline.log": {
+    "command": "AUDITOR_ROOT=/tmp/h64330-inputs/auditor node experiments/oct29-mpp-availability/lab.mjs --baseline",
+    "exit": 1,
+    "reason": "Disposable payee differed from the checked-in public deployment statement. Startup correctly refused. Lab retained the public payee; no statement/signing change.",
+    "rawSha256": "d58dc224fe8cf419144bf151db9df1ab4e3ca43d3739a5d0d121b93ed2627163",
+    "log": "originals/baseline.log.gz"
+  },
+  "baseline-retry.log": {
+    "command": "AUDITOR_ROOT=/tmp/h64330-inputs/auditor node experiments/oct29-mpp-availability/lab.mjs --baseline",
+    "exit": 1,
+    "reason": "The local HTTP origin did not bind the advertised HTTPS x402 resource URL.",
+    "rawSha256": "8b92315985aafb11eda8ef572f513874cc47c35fcbf2eb2eea99096dc15fb11e",
+    "log": "originals/baseline-retry.log.gz"
+  },
+  "baseline-configured.log": {
+    "command": "AUDITOR_ROOT=/tmp/h64330-inputs/auditor node experiments/oct29-mpp-availability/lab.mjs --baseline",
+    "exit": 1,
+    "reason": "Node fetch did not preserve the requested Host override. Replaced lab transport with node:http and retained forwarded HTTPS; x402 binding then validated without changing handler responses.",
+    "rawSha256": "8b92315985aafb11eda8ef572f513874cc47c35fcbf2eb2eea99096dc15fb11e",
+    "log": "originals/baseline-configured.log.gz"
+  },
+  "candidate-expanded.log": {
+    "command": "AUDITOR_ROOT=/tmp/h64330-inputs/auditor node experiments/oct29-mpp-availability/lab.mjs",
+    "exit": 1,
+    "reason": "Cross-process wallet-policy example evaluatedAt clocks differed. Economic, authority, schemas and human comparisons now exclude only that observation clock.",
+    "rawSha256": "1f31b86a91395a64cb8e97813ee521c08bf2b7c3cc2147498ac2591004b732c2",
+    "log": "originals/candidate-expanded.log.gz"
+  },
+  "seeded-replay-route": {
+    "command": "AUDITOR_ROOT=/tmp/h64330-inputs/auditor MERCHANT_ROOT=/tmp/h64330-inputs/merchant-base node experiments/oct29-mpp-availability/lab.mjs --baseline",
+    "exit": 0,
+    "reason": "Inspection of the preliminary capture showed the selected audit route is outside the existing DEFAULT_PAID_ROUTES replay set. The recovery fixture moved to the existing /extract recovery contract. No replay route/kernel was added or changed; this does not claim recovery for the selected audit route."
+  },
+  "time-wrapper": {
+    "command": "ACCEPTANCE_DIR=/tmp/h64330-final-accept /usr/bin/time -v -o /tmp/h64330-accept-time.txt node experiments/oct29-mpp-availability/accept.mjs",
+    "exit": 127,
+    "reason": "/usr/bin/time is not installed. No acceptance code ran in that invocation. The same acceptance command without the optional time wrapper passed."
+  }
+}
