@@ -1,0 +1,29 @@
+{
+  "schema": "h64221.poppy-reader.inventory.v1",
+  "scope": "experiments/poppy-reader",
+  "branch": "codex/root64221-heavy-window-20261029",
+  "productBase": "a1dc09bb076b823fb3492ea79fa10f8602ed01a5",
+  "protocolPin": "3e9bada9ec8f66777b43e429d49574131dc2f67e",
+  "h64220Head": "e874829825e55e3cc93785843fd05b7d09ed1eb2",
+  "files": [
+    {"path": "experiments/poppy-reader/CONTRACT.md", "role": "adapter contract and verifier port", "sha256": "ba1a29c5740a902701611fab9d570f65392e9d6d095c294443e397e34a251e9f"},
+    {"path": "experiments/poppy-reader/README.md", "role": "how to run the isolated tests", "sha256": "5a0666887ed286d572d58a615c389d91309912986bb39528e0ddc498c88d3d65"},
+    {"path": "experiments/poppy-reader/RESULT.md", "role": "outcome, evidence, and interoperability decision", "sha256": "d267c55e45f0a5b1d41f3272c051efe14b38366eda09667179522f19a62083d5"},
+    {"path": "experiments/poppy-reader/NEXT.md", "role": "follow-up for Root after H64220 exports a verifier", "sha256": "8b9341e646ca3b037231b0755aca883c934aaa5d2b0ccb3de8e51e7fd0adfc92"},
+    {"path": "experiments/poppy-reader/src/constants.mjs", "role": "lab origin, issuer, merchant price defaults, route paths", "sha256": "e76264b849a6c7d61628eed427b1844e710e33834b0ca642b63b588de25fa642"},
+    {"path": "experiments/poppy-reader/src/session-port.mjs", "role": "verifier port and htm/htu/aud binding", "sha256": "e4188b550ed14b6a96066116c313ff68ef6e98b385992ba41e390f5b564d0c0d"},
+    {"path": "experiments/poppy-reader/src/boundary-fixture.mjs", "role": "labelled non-crypto session stand-in", "sha256": "3c062381f6269982e3711d28a504298107a3231be38e7aa2ed9b431ebef62c09"},
+    {"path": "experiments/poppy-reader/src/core-binding.mjs", "role": "fetch and load only a declared H64220 export", "sha256": "e3ea6be14cd2420bc69d82d9e1135d463ce96b7e04d6f8a1ebe0153aa0ed8bb3"},
+    {"path": "experiments/poppy-reader/src/discovery.mjs", "role": "draft 0.3 poppy, protected resource, OpenAPI, excluded task", "sha256": "56293680c06bf4f6b5514ab3847e9a33a067501f521327f6e63325c8f91e790f"},
+    {"path": "experiments/poppy-reader/src/unpaid-challenge.mjs", "role": "existing unpaid x402 read challenge without verify or settle", "sha256": "33a97ed72453908dbdd7324929f2ef3fa769fc6a9df2ea27b447a1cc39c96c03"},
+    {"path": "experiments/poppy-reader/src/adapter.mjs", "role": "optional Express adapter over executeBoundedTrialRead", "sha256": "efb7e3797b4e19c2bef46e4fd61f9e4a9c31adecbaca9a8c994efbc34bf1afac"},
+    {"path": "experiments/poppy-reader/src/compare.mjs", "role": "reader field projection and challenge term decode", "sha256": "3f1b24aacfb8ae7045682ea8e4a878cd56cb1b3d0e7bdc21def66da8cd6ccef1"},
+    {"path": "experiments/poppy-reader/src/decision.mjs", "role": "interoperability decision from a fetched assessment", "sha256": "38570a2fc2d29aae6a3fad2ccc409d709e46026e63821efb751b4200e84e32c2"},
+    {"path": "experiments/poppy-reader/test/support.mjs", "role": "loopback HTTP helpers", "sha256": "1559a766899ab050b53f06c80dd7895400c79578c06816f35391fb206eef6cc6"},
+    {"path": "experiments/poppy-reader/test/discovery.test.mjs", "role": "official validator, schema checks, scope guard", "sha256": "e14f6f52c373f56d1069b4964638dee3b288cfcf967f18da30ce5a79b2449c52"},
+    {"path": "experiments/poppy-reader/test/session-boundary.test.mjs", "role": "fixture label, other target, host ignored", "sha256": "8be51c56b1ac7eab062d756636a5f6081e965603a731bfcafdc55de019bf12ff"},
+    {"path": "experiments/poppy-reader/test/core-binding.test.mjs", "role": "local manifest versus fetched H64220 head", "sha256": "43343d9f27f2376342beb4694cd39244dff648b9feed90d013c504f265951141"},
+    {"path": "experiments/poppy-reader/test/comparison.test.mjs", "role": "same task on HTTP, MCP, and the optional route", "sha256": "611eb26b799fb9fb621d291522041b712b6f8bf4e28b3a9df921f3c0dd76d783"},
+    {"path": "experiments/poppy-reader/INVENTORY.json", "role": "this file list", "sha256": null}
+  ]
+}
