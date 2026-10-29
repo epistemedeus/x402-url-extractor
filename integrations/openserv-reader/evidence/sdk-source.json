@@ -1,0 +1,14 @@
+{
+  "version": "2.4.1",
+  "gitHead": "28b3b2a2651139099f8d41cfc1e2a8b57d54c6ee",
+  "repository": {
+    "url": "git+https://github.com/openserv-labs/sdk.git",
+    "type": "git"
+  },
+  "tarball": "https://registry.npmjs.org/@openserv-labs/sdk/-/sdk-2.4.1.tgz",
+  "integrity": "sha512-tDnj9ZhpVkJTSwv742l0uvNdo0WO4mYasuqdUVsSQOo4rGmnYv1dWRXpTwlmBHW4tfA2Fo8ExHXcD3nBdWM6kQ==",
+  "integrityMatched": true,
+  "tarballSha256": "721f47d5b1298c1b58476131f19bfe3132e0bbc1250c8917f55fc40fa4657f3c",
+  "sourceArchiveSha256": "0734a8a7836839bdc2f075c942aac83f79017b37148b23c382013330a9908d05",
+  "receivedAt": "2026-10-29T11:07:09.380Z"
+}

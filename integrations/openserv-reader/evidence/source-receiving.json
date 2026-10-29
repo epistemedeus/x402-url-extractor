@@ -1,0 +1,47 @@
+[
+  {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "74c62fc253db141f526709ce0820b3191a723a46",
+    "path": "overview/research/phase-20261027/openserv-native-offer/RESULT.md",
+    "blob": "1d1a9ce24d8bb89e6c96356316210ca43e2e23e0",
+    "bytes": 17970,
+    "sha256": "0f9c39b73d5998daec6ecb9911cb185a758fc877f9786f845c038e7c61c292f8",
+    "fullBytesReceived": true
+  },
+  {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "74c62fc253db141f526709ce0820b3191a723a46",
+    "path": "overview/research/phase-20261027/openserv-native-offer/EVIDENCE.json",
+    "blob": "e698c8ef76676fadcad03568a0a9805e4832d786",
+    "bytes": 44919,
+    "sha256": "f27fb9a51d0baaf2cfae691b1508191e05bee23be15123829bf74347e31ef7f1",
+    "fullBytesReceived": true
+  },
+  {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "74c62fc253db141f526709ce0820b3191a723a46",
+    "path": "overview/research/phase-20261027/openserv-native-offer/WORKER-HANDBACK.md",
+    "blob": "927d5ba42073a4b31283b9a839ff82a403538811",
+    "bytes": 5478,
+    "sha256": "d26185a5cce1cc37f6fa36b15c3c9b8b33a9253e569aa169f4787986bd842884",
+    "fullBytesReceived": true
+  },
+  {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "91717e29eb3d91dab574096fdf15746ddb6ad247",
+    "path": "overview/research/phase-20261027/openserv-native-offer/ROOT-RECEIVING.md",
+    "blob": "4dbe6371705ff42773cc258cfee61784a0937378",
+    "bytes": 10424,
+    "sha256": "48a1accf3726a063e40b96cc5d1c71d8f283c102b295e6d2385232c435134552",
+    "fullBytesReceived": true
+  },
+  {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "91717e29eb3d91dab574096fdf15746ddb6ad247",
+    "path": "overview/research/phase-20261027/olas-public-carrier/ROOT-RECEIVING.md",
+    "blob": "34c41df29b5bbd37e29917946be1f6502dddacd6",
+    "bytes": 11290,
+    "sha256": "01ea9625f2924dd7093e7ffcf661186dd7f6ad371c16dff424d40196701eb550",
+    "fullBytesReceived": true
+  }
+]

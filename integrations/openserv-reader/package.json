@@ -1,0 +1,20 @@
+{
+  "name": "openserv-offline-reader-proof",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22.12.0 || >=24.0.0"
+  },
+  "scripts": {
+    "materialize": "node materialize.mjs",
+    "test": "node receive.mjs"
+  },
+  "dependencies": {
+    "@exodus/bytes": "1.16.0",
+    "zod": "3.25.76",
+    "htmlparser2": "12.0.0",
+    "@openserv-labs/sdk": "2.4.1",
+    "openai": "5.5.0"
+  }
+}

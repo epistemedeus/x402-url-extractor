@@ -1,0 +1,42 @@
+{
+  "operating": {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "91717e29eb3d91dab574096fdf15746ddb6ad247",
+    "account": "epistemedeus"
+  },
+  "product": {
+    "repository": "https://github.com/epistemedeus/x402-url-extractor.git",
+    "commit": "7c03b0b511c5e84a3d2dc856b4ae6d527e5bead7"
+  },
+  "receiptSha256": "1b87a2aec88d4290de3e9151baf5f043c2ca62fe80d7d1d8153089c7f138140a",
+  "members": [
+    {
+      "role": "instructions",
+      "blob": "8c02250380d8cfbdff2e4546527308f9dccefa77",
+      "bytes": 34522,
+      "sha256": "b362013824fd20f425e1c6d5823680707952db4dbc9c39819eb84b6912fb59bb",
+      "verified": true
+    },
+    {
+      "role": "state",
+      "blob": "919a49b44568bbcf30bbb0a1be971b89a9c8d95e",
+      "bytes": 61895,
+      "sha256": "c9f5de07e0387b0a41cdce4d85712cef3c7ebf4fc4adf2a969b5c9064b7e1f5f",
+      "verified": true
+    },
+    {
+      "role": "execution-plan",
+      "blob": "fd53133bc0d81653e1e4c573f3576fe57dcbc7e0",
+      "bytes": 85947,
+      "sha256": "04b6f443638dd037885b54c796b4a1749943e19fd5f517b36e2dddc621d57835",
+      "verified": true
+    },
+    {
+      "role": "assignment",
+      "blob": "5a0f4d5e554c7849c6e6c797aa68c31bd86d9524",
+      "bytes": 7561,
+      "sha256": "8e027f7e4803a5344df82a1ee3d69d69c9b691fbc9dce858a500f923aa27579b",
+      "verified": true
+    }
+  ]
+}

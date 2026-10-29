@@ -1,0 +1,160 @@
+integrations/openserv-reader/evidence/first-run.log:79: trailing whitespace.
++    
+integrations/openserv-reader/evidence/first-run.log:82: trailing whitespace.
++    
+integrations/openserv-reader/notices/npm/@modelcontextprotocol__sdk__debug/LICENSE:20: new blank line at EOF.
+integrations/openserv-reader/notices/npm/@modelcontextprotocol__sdk__iconv-lite/LICENSE:21: new blank line at EOF.
+integrations/openserv-reader/notices/npm/agent-base__debug/LICENSE:20: new blank line at EOF.
+integrations/openserv-reader/notices/npm/ajv/LICENSE:22: new blank line at EOF.
+integrations/openserv-reader/notices/npm/atomic-sleep/LICENSE:22: new blank line at EOF.
+integrations/openserv-reader/notices/npm/cookie-signature/Readme.md:19: trailing whitespace.
++## License 
+integrations/openserv-reader/notices/npm/cookie/LICENSE:24: new blank line at EOF.
+integrations/openserv-reader/notices/npm/debug/LICENSE:5: trailing whitespace.
++Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
+integrations/openserv-reader/notices/npm/debug/LICENSE:6: trailing whitespace.
++and associated documentation files (the 'Software'), to deal in the Software without restriction, 
+integrations/openserv-reader/notices/npm/debug/LICENSE:7: trailing whitespace.
++including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+integrations/openserv-reader/notices/npm/debug/LICENSE:11: trailing whitespace.
++The above copyright notice and this permission notice shall be included in all copies or substantial 
+integrations/openserv-reader/notices/npm/debug/LICENSE:14: trailing whitespace.
++THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT 
+integrations/openserv-reader/notices/npm/debug/LICENSE:15: trailing whitespace.
++LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+integrations/openserv-reader/notices/npm/debug/LICENSE:16: trailing whitespace.
++IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+integrations/openserv-reader/notices/npm/debug/LICENSE:17: trailing whitespace.
++WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+integrations/openserv-reader/notices/npm/debug/LICENSE:19: new blank line at EOF.
+integrations/openserv-reader/notices/npm/express-rate-limit__debug/LICENSE:20: new blank line at EOF.
+integrations/openserv-reader/notices/npm/fast-safe-stringify/LICENSE:5: trailing whitespace.
++Copyright (c) 2018 David Mark Clements, Matteo Collina & Ruben Bridgewater 
+integrations/openserv-reader/notices/npm/function-bind/LICENSE:20: new blank line at EOF.
+integrations/openserv-reader/notices/npm/help-me/LICENSE:22: new blank line at EOF.
+integrations/openserv-reader/notices/npm/htmlparser2/LICENSE:8: trailing whitespace.
++ 
+integrations/openserv-reader/notices/npm/htmlparser2/LICENSE:11: trailing whitespace.
++ 
+integrations/openserv-reader/notices/npm/https-proxy-agent__debug/LICENSE:20: new blank line at EOF.
+integrations/openserv-reader/notices/npm/iconv-lite/LICENSE:21: new blank line at EOF.
+integrations/openserv-reader/notices/npm/inherits/LICENSE:16: new blank line at EOF.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:1: trailing whitespace.
++BSD 2-Clause License
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:2: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:3: trailing whitespace.
++Original source code is copyright (c) 2019-2025 Remy Rylan
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:4: trailing whitespace.
++<https://github.com/RemyRylan>
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:5: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:6: trailing whitespace.
++All JSON Schema documentation and descriptions are copyright (c):
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:7: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:8: trailing whitespace.
++2009 [draft-0] IETF Trust <https://www.ietf.org/>, Kris Zyp <kris@sitepen.com>,
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:9: trailing whitespace.
++and SitePen (USA) <https://www.sitepen.com/>.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:10: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:11: trailing whitespace.
++2009 [draft-1] IETF Trust <https://www.ietf.org/>, Kris Zyp <kris@sitepen.com>,
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:12: trailing whitespace.
++and SitePen (USA) <https://www.sitepen.com/>.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:13: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:14: trailing whitespace.
++2010 [draft-2] IETF Trust <https://www.ietf.org/>, Kris Zyp <kris@sitepen.com>,
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:15: trailing whitespace.
++and SitePen (USA) <https://www.sitepen.com/>.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:16: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:17: trailing whitespace.
++2010 [draft-3] IETF Trust <https://www.ietf.org/>, Kris Zyp <kris@sitepen.com>,
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:18: trailing whitespace.
++Gary Court <gary.court@gmail.com>, and SitePen (USA) <https://www.sitepen.com/>.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:19: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:20: trailing whitespace.
++2013 [draft-4] IETF Trust <https://www.ietf.org/>), Francis Galiegue
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:21: trailing whitespace.
++<fgaliegue@gmail.com>, Kris Zyp <kris@sitepen.com>, Gary Court
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:22: trailing whitespace.
++<gary.court@gmail.com>, and SitePen (USA) <https://www.sitepen.com/>.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:23: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:24: trailing whitespace.
++2018 [draft-7] IETF Trust <https://www.ietf.org/>, Austin Wright <aaa@bzfx.net>,
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:25: trailing whitespace.
++Henry Andrews <henry@cloudflare.com>, Geraint Luff <luffgd@gmail.com>, and
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:26: trailing whitespace.
++Cloudflare, Inc. <https://www.cloudflare.com/>.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:27: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:28: trailing whitespace.
++2019 [draft-2019-09] IETF Trust <https://www.ietf.org/>, Austin Wright
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:29: trailing whitespace.
++<aaa@bzfx.net>, Henry Andrews <andrews_henry@yahoo.com>, Ben Hutton
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:30: trailing whitespace.
++<bh7@sanger.ac.uk>, and Greg Dennis <gregsdennis@yahoo.com>.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:31: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:32: trailing whitespace.
++2020 [draft-2020-12] IETF Trust <https://www.ietf.org/>, Austin Wright
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:33: trailing whitespace.
++<aaa@bzfx.net>, Henry Andrews <andrews_henry@yahoo.com>, Ben Hutton
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:34: trailing whitespace.
++<ben@jsonschema.dev>, and Greg Dennis <gregsdennis@yahoo.com>.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:35: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:36: trailing whitespace.
++All rights reserved.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:37: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:38: trailing whitespace.
++Redistribution and use in source and binary forms, with or without modification,
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:39: trailing whitespace.
++are permitted provided that the following conditions are met:
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:40: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:41: trailing whitespace.
++1. Redistributions of source code must retain the above copyright notice, this
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:42: trailing whitespace.
++   list of conditions and the following disclaimer.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:43: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:44: trailing whitespace.
++2. Redistributions in binary form must reproduce the above copyright notice,
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:45: trailing whitespace.
++   this list of conditions and the following disclaimer in the documentation
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:46: trailing whitespace.
++   and/or other materials provided with the distribution.
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:47: trailing whitespace.
++
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:48: trailing whitespace.
++THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:49: trailing whitespace.
++ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:50: trailing whitespace.
++WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:51: trailing whitespace.
++DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:52: trailing whitespace.
++ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:53: trailing whitespace.
++(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:54: trailing whitespace.
++LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:55: trailing whitespace.
++ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:56: trailing whitespace.
++(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+integrations/openserv-reader/notices/npm/json-schema-typed/LICENSE.md:57: trailing whitespace.
++SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+integrations/openserv-reader/notices/npm/methods/LICENSE:24: new blank line at EOF.
+integrations/openserv-reader/notices/npm/pkce-challenge/LICENSE:3: trailing whitespace.
++Copyright (c) 2019 
+integrations/openserv-reader/notices/npm/raw-body__iconv-lite/LICENSE:21: new blank line at EOF.
+integrations/openserv-reader/notices/npm/router__debug/LICENSE:20: new blank line at EOF.
