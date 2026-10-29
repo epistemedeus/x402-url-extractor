@@ -1,0 +1,23 @@
+// Paths relative to experiments/repeat-outcome-service/.
+export const REQUIRED_FILES = Object.freeze([
+  "README.md",
+  "RESEARCH.md",
+  "RESULT.md",
+  "NEXT.md",
+  "INVENTORY.md",
+  "src/osv-pin.mjs",
+  "src/reader-claim.mjs",
+  "src/batch-envelope.mjs",
+  "src/maintain.mjs",
+  "src/scenarios.mjs",
+  "src/recommendation.mjs",
+  "src/required-files.mjs",
+  "bin/run-outcome.mjs",
+  "test/outcome.test.mjs",
+  "fixtures/manifest.json",
+  "fixtures/osv-query-axios-1.19.0.json",
+  "fixtures/osv-query-axios-1.20.0.json",
+  "fixtures/github-advisory-GHSA-3pq3-5fj3-cg6v.html",
+  "fixtures/laboratory/false-clear.html",
+  "fixtures/laboratory/error-page-says-clear.html",
+]);

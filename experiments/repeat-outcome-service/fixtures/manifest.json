@@ -1,0 +1,81 @@
+{
+  "schema": "h64003.repeat-outcome.fixtures.v0",
+  "pin": { "ecosystem": "npm", "name": "axios", "version": "1.19.0" },
+  "merchantPin": {
+    "file": "package.json",
+    "field": "overrides.axios",
+    "value": "1.19.0",
+    "base": "a1dc09bb076b823fb3492ea79fa10f8602ed01a5"
+  },
+  "retrieval": {
+    "axios1190": {
+      "role": "direct-structured-feed",
+      "method": "POST",
+      "url": "https://api.osv.dev/v1/query",
+      "request": { "package": { "name": "axios", "ecosystem": "npm" }, "version": "1.19.0" },
+      "status": 200,
+      "httpDate": "Thu, 29 Oct 2026 14:24:45 GMT",
+      "contentType": "application/json",
+      "note": "Primary capture. Tests replay this body. They do not call the network."
+    },
+    "axios1200": {
+      "role": "direct-structured-feed-fix-boundary",
+      "method": "POST",
+      "url": "https://api.osv.dev/v1/query",
+      "request": { "package": { "name": "axios", "ecosystem": "npm" }, "version": "1.20.0" },
+      "status": 200,
+      "body": {},
+      "note": "Same route, retrieved in the same session after the 1.19.0 query. The stored body is the two-byte object {}. HTTP date was not saved on that call, so this file is the response body only."
+    },
+    "githubAdvisory": {
+      "role": "reader-page",
+      "method": "GET",
+      "url": "https://github.com/advisories/GHSA-3pq3-5fj3-cg6v",
+      "status": 200,
+      "httpDate": "Thu, 29 Oct 2026 14:25:01 GMT",
+      "contentType": "text/html; charset=utf-8",
+      "etag": "W/\"a755e473db5c7c47ef489be88bd1b938\"",
+      "userAgent": "Mozilla/5.0 (compatible; SameDayDeskExtractor/1.0; +https://samedaydesk.com)",
+      "storedSetCookie": false,
+      "note": "Response body only. The Set-Cookie header was not stored."
+    },
+    "osvSchema": {
+      "role": "evaluation-rule",
+      "url": "https://raw.githubusercontent.com/ossf/osv-schema/main/docs/schema.md",
+      "section": "Evaluation / IsVulnerable",
+      "note": "The direct parser implements that pseudocode for SEMVER. GIT ranges stay unknown. The schema page was read to implement the algorithm and is not vendored."
+    }
+  },
+  "files": [
+    {
+      "path": "osv-query-axios-1.19.0.json",
+      "class": "primary-capture",
+      "sha256": "65a41517ecca882308101698453ec0757712909ff6c1f933998dcf17788e27c5",
+      "bytes": 124047
+    },
+    {
+      "path": "osv-query-axios-1.20.0.json",
+      "class": "primary-capture",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "bytes": 2
+    },
+    {
+      "path": "github-advisory-GHSA-3pq3-5fj3-cg6v.html",
+      "class": "primary-capture",
+      "sha256": "c8fb1b479f8ac28ee579dfb14b772deca3c9b80f9a1f930ea68d15f914908b0e",
+      "bytes": 166933
+    },
+    {
+      "path": "laboratory/false-clear.html",
+      "class": "laboratory-mutation",
+      "sha256": "fe0fec3f911205df68996200815fddcebb201a328b19d4584ce2683ef6793dd7",
+      "bytes": 483
+    },
+    {
+      "path": "laboratory/error-page-says-clear.html",
+      "class": "laboratory-mutation",
+      "sha256": "98c51db9c52e8827e109d730c6ec9a00c12dac011a39d02e75d5090a6aaca302",
+      "bytes": 313
+    }
+  ]
+}
