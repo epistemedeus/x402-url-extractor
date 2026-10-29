@@ -4644,6 +4644,9 @@ import("./mcp-server.mjs")
       process.exit(report.ok ? 0 : 1);
     }
     return mountMcp(app, {
+      // Current clients may pin 2026-07-28. Claim-less requests, including
+      // initialize, stay on the existing v1 handler, verifier, and recovery.
+      modernProtocol: true,
       httpBaseUrl: `http://127.0.0.1:${PORT}`,
       facilitatorClient,
       network: NETWORK,

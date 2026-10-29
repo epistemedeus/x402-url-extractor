@@ -45,6 +45,7 @@ import {
   productSkuForTool,
   resourceForTool,
 } from "./mcp-typed-telemetry-producer.mjs";
+import { zod3StandardSchema } from "./mcp-zod3-json-schema.mjs";
 
 const mcpTypedAttemptAls = new AsyncLocalStorage();
 const mcpHttpRequestAls = new AsyncLocalStorage();
@@ -766,7 +767,7 @@ function advertisedToolDescription(tool) {
  * @param {Array<{name:string,title?:string,description:string,price:string,inputSchema:Record<string,z.ZodTypeAny>,run:(args:any)=>Promise<any>,tags?:string[]}>} cfg.tools
  * @returns {Promise<{toolCount:number}>}
  */
-export async function mountMcp(app, {
+async function prepareMerchantMcp({
   facilitatorClient,
   network,
   payTo,
@@ -967,6 +968,144 @@ export async function mountMcp(app, {
     });
   }
 
+  return {
+    prepared,
+    catalogByName,
+    serverInfo,
+    typedEnabled,
+    typedLifecycle,
+    onAppend,
+    typedTelemetry,
+    streamableHttpOptions,
+    callerResultFeedbackKey,
+    commerceDataDir,
+    createFreePageChangeObserver,
+    observeExtractionTrial,
+  };
+}
+
+function operationMetaFor(tool) {
+  const operationMeta = tool.operationIdentity
+    ? { samedaydesk: { operation: tool.operationIdentity } }
+    : {};
+  if (tool.recoveryProfile) operationMeta.samedaydesk = {
+    ...operationMeta.samedaydesk, recovery: tool.recoveryProfile,
+  };
+  return operationMeta;
+}
+
+async function loadModernSdk() {
+  const [serverMod, nodeMod] = await Promise.all([
+    import("@modelcontextprotocol/server"),
+    import("@modelcontextprotocol/node"),
+  ]);
+  return {
+    McpServer: serverMod.McpServer,
+    fromJsonSchema: serverMod.fromJsonSchema,
+    createMcpHandler: serverMod.createMcpHandler,
+    isLegacyRequest: serverMod.isLegacyRequest,
+    toNodeHandler: nodeMod.toNodeHandler,
+    toWebRequest: nodeMod.toWebRequest,
+  };
+}
+
+function compileModernCatalog(prepared, fromJsonSchema) {
+  const looseInput = fromJsonSchema({ type: "object", properties: {}, additionalProperties: true });
+  return prepared.map((tool) => ({
+    tool,
+    looseInput,
+    input: zod3StandardSchema(tool.inputSchema || {}),
+    output: tool.outputSchema ? zod3StandardSchema(tool.outputSchema) : undefined,
+  }));
+}
+
+function buildModernServer(sdk, serverInfo, compiled, seal) {
+  const body = mcpHttpRequestAls.getStore()?.body;
+  const server = new sdk.McpServer(serverInfo);
+  for (const entry of compiled) {
+    const tool = entry.tool;
+    const guardedCall = tool.guardedHttpInput && body?.jsonrpc === "2.0"
+      && body?.method === "tools/call" && body?.params?.name === tool.name;
+    server.registerTool(tool.name, {
+      title: tool.title,
+      description: tool.description,
+      inputSchema: guardedCall ? entry.looseInput : entry.input,
+      ...(entry.output ? { outputSchema: entry.output } : {}),
+      ...(tool.annotations ? { annotations: tool.annotations } : {}),
+      _meta: { ...tool.paymentMeta, ...operationMetaFor(tool), ...(tool.inputRefusalMeta || {}) },
+    }, (args, ctx) => invokeModernTool(tool, args, ctx, seal));
+  }
+  return server;
+}
+
+async function invokeModernTool(tool, args, ctx, seal) {
+  const extra = {
+    _meta: ctx?.mcpReq?._meta,
+    requestId: ctx?.mcpReq?.id,
+  };
+  const attempt = mcpTypedAttemptAls.getStore();
+  const result = await tool.handler(args, extra);
+  if (!attempt) return result;
+  const message = { jsonrpc: "2.0", id: extra.requestId ?? null, result };
+  let sealed = null;
+  try {
+    sealed = sealToolResultForSend(message, attempt, seal.callerResultFeedbackKey);
+  } catch {
+    sealed = null;
+  }
+  try {
+    if (result?.isError === true) attempt.overrideFinalApplicationError();
+    if (sealed?.delivery) attempt.noteToolDelivery(sealed.delivery);
+  } catch {
+    // Delivery capture must not change the MCP response.
+  }
+  if (sealed?.reference) {
+    noteEstablishedContinuation(
+      seal.commerceDataDir,
+      sealed.reference,
+      sealed.attached === true ? "transmitted" : "not_transmitted",
+    );
+  }
+  attempt.finalize({
+    responseId: extra.requestId ?? null,
+    kind: classifyOutboundKind(message),
+  });
+  return result;
+}
+
+export async function mountMcp(app, cfg = {}) {
+  const preparedState = await prepareMerchantMcp(cfg);
+  const {
+    prepared,
+    catalogByName,
+    serverInfo,
+    typedEnabled,
+    typedLifecycle,
+    onAppend,
+    typedTelemetry,
+    streamableHttpOptions,
+    callerResultFeedbackKey,
+    commerceDataDir,
+    createFreePageChangeObserver,
+    observeExtractionTrial,
+  } = preparedState;
+  const modernProtocol = cfg.modernProtocol === true;
+  let modernRuntime = null;
+  if (modernProtocol) {
+    const sdk = await loadModernSdk();
+    const compiled = compileModernCatalog(prepared, sdk.fromJsonSchema);
+    const seal = { callerResultFeedbackKey, commerceDataDir };
+    const handler = sdk.createMcpHandler(
+      () => buildModernServer(sdk, serverInfo, compiled, seal),
+      { legacy: "reject" },
+    );
+    modernRuntime = {
+      isLegacyRequest: sdk.isLegacyRequest,
+      toWebRequest: sdk.toWebRequest,
+      nodeHandler: sdk.toNodeHandler(handler),
+    };
+  }
+
   // A fresh MCP server per request (stateless mode requires server+transport per call).
   const makeServer = (requestBody) => {
     const server = new McpServer(serverInfo);
@@ -1078,14 +1217,35 @@ export async function mountMcp(app, {
       res.set("Cache-Control", "no-store");
       return res.status(200).json(unknownTool);
     }
-    const server = makeServer(req.body);
-    const transport = new StreamableHTTPServerTransport(transportOptions);
-    if (created.attempt) decorateTransportSend(transport, created.attempt, callerResultFeedbackKey, commerceDataDir);
-    res.on("close", () => {
-      try { transport.close(); } catch { /* noop */ }
-      try { server.close?.(); } catch { /* noop */ }
-    });
+    let useModern = false;
+    if (modernRuntime) {
+      const webRequest = await modernRuntime.toWebRequest(req, req.body);
+      useModern = (await modernRuntime.isLegacyRequest(webRequest, req.body)) !== true;
+    }
     const run = async () => {
+      if (useModern) {
+        try {
+          await modernRuntime.nodeHandler(req, res, req.body);
+        } catch (e) {
+          created.attempt?.noteTransportError();
+          if (!res.headersSent) {
+            res.status(500).json({ jsonrpc: "2.0", error: { code: -32603, message: String(e?.message || e) }, id: null });
+          }
+        } finally {
+          created.attempt?.finalize({
+            responseId: isJsonRpcObject(req.body) && Object.hasOwn(req.body, "id") ? req.body.id : null,
+            kind: "transport_error",
+          });
+        }
+        return;
+      }
+      const server = makeServer(req.body);
+      const transport = new StreamableHTTPServerTransport(transportOptions);
+      if (created.attempt) decorateTransportSend(transport, created.attempt, callerResultFeedbackKey, commerceDataDir);
+      res.on("close", () => {
+        try { transport.close(); } catch { /* noop */ }
+        try { server.close?.(); } catch { /* noop */ }
+      });
       try {
         await server.connect(transport);
         await transport.handleRequest(req, res, req.body);
@@ -1113,6 +1273,7 @@ export async function mountMcp(app, {
   const mountResult = {
     toolCount: prepared.filter((tool) => tool.free !== true).length,
     freeToolCount: prepared.filter((tool) => tool.free === true).length,
+    modernProtocol: modernProtocol ? "2026-07-28" : false,
     catalog: Object.freeze(Object.fromEntries(
       [...catalogByName.entries()].map(([name, entry]) => [name, entry.binding]),
     )),
@@ -1147,6 +1308,18 @@ export function mcpCallArguments(fallback) {
   const raw = request?.body?.params?.arguments;
   if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw;
   return fallback && typeof fallback === "object" && !Array.isArray(fallback) ? fallback : {};
+}
+
+export async function serveExplicitModernStdio(cfg = {}) {
+  const preparedState = await prepareMerchantMcp(cfg);
+  const sdk = await loadModernSdk();
+  const { serveStdio } = await import("@modelcontextprotocol/server/stdio");
+  const compiled = compileModernCatalog(preparedState.prepared, sdk.fromJsonSchema);
+  const seal = {
+    callerResultFeedbackKey: preparedState.callerResultFeedbackKey,
+    commerceDataDir: preparedState.commerceDataDir,
+  };
+  return serveStdio(() => buildModernServer(sdk, preparedState.serverInfo, compiled, seal));
 }
 
 export { mcpTypedAttemptAls, productSkuForTool, resourceForTool };
