@@ -1,0 +1,178 @@
+{
+  "schemaVersion": "agent-payment-integrity.audit.v5",
+  "checkedAt": "2026-10-29T20:45:16.309Z",
+  "origin": "https://agents.samedaydesk.com",
+  "versions": {
+    "x402": "1.23.55",
+    "mpp": "1.23.55"
+  },
+  "selection": {
+    "route": "/distribution/agent-surface-budget-audit",
+    "method": "GET",
+    "requiredPaths": [],
+    "maxRoutes": 64,
+    "availableRouteCount": 21
+  },
+  "routeCount": 1,
+  "validRoutes": 1,
+  "invalidRoutes": 0,
+  "ok": true,
+  "machineBuyable": true,
+  "routes": [
+    {
+      "method": "GET",
+      "route": "/distribution/agent-surface-budget-audit",
+      "status": 402,
+      "queryKeys": [
+        "origin"
+      ],
+      "valid": true,
+      "runtimeChallengeVerified": true,
+      "probe": {
+        "attempted": true,
+        "reason": null
+      },
+      "findings": [],
+      "protocols": [
+        "mpp",
+        "x402"
+      ],
+      "economics": {
+        "x402": {
+          "amountAtomic": "10000",
+          "asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "network": "eip155:8453",
+          "recipient": "0x8904df3de6dfee6a7c8cc38619d2f17806213cee",
+          "decimals": null,
+          "method": "x402",
+          "intent": "exact",
+          "scheme": "exact"
+        },
+        "mpp": {
+          "amountAtomic": "10000",
+          "asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "network": "eip155:8453",
+          "recipient": "0x8904df3de6dfee6a7c8cc38619d2f17806213cee",
+          "decimals": 6,
+          "method": "evm",
+          "intent": "charge",
+          "scheme": null
+        }
+      },
+      "discovery": {
+        "bazaar": {
+          "present": true,
+          "valid": true
+        }
+      },
+      "responseContract": {
+        "schemaVersion": "agent-payment-policy.response-contract-report.v2",
+        "evaluatedAt": "2026-10-29T20:45:16.289Z",
+        "source": "seller_openapi",
+        "request": {
+          "method": "GET",
+          "origin": "https://agents.samedaydesk.com",
+          "path": "/distribution/agent-surface-budget-audit"
+        },
+        "response": {
+          "status": 200,
+          "mediaType": "application/json"
+        },
+        "decision": "admissible",
+        "schemaDigest": "sha256:0ab373cf2f505ca5641e708fe6b1ad4a6b122d97b42308fcb864a7acfd26633f",
+        "requiredFields": [
+          "actions",
+          "boundary",
+          "checkedAt",
+          "decision",
+          "mcp",
+          "ok",
+          "openapi",
+          "product",
+          "request",
+          "version"
+        ],
+        "requiredPaths": [
+          "actions",
+          "boundary",
+          "checkedAt",
+          "decision",
+          "mcp",
+          "ok",
+          "openapi",
+          "product",
+          "request",
+          "version"
+        ],
+        "exampleStatus": "structurally_consistent",
+        "unsupportedKeywords": [],
+        "structuralProblems": [],
+        "nextAction": "eligible_for_separate_value_authorization_and_live_post_payment_validation",
+        "boundary": {
+          "sellerDeclarationAuthenticated": false,
+          "runtimeResponseVerified": false,
+          "schemaRetained": false,
+          "exampleRetained": false,
+          "queryValuesRetained": false,
+          "credentialsAccepted": false,
+          "networkAccessed": false,
+          "walletAccessed": false,
+          "paymentAuthorized": false,
+          "paymentSigned": false,
+          "paymentSent": false,
+          "statement": "Seller-declared schema evidence is advisory until the paid runtime response is validated against the independently authorized output contract."
+        }
+      },
+      "repairPlan": {
+        "mode": "advisory_openapi_repair",
+        "requiredPaths": [],
+        "guaranteedPaths": [],
+        "actions": [],
+        "complete": true,
+        "boundary": {
+          "schemaMutationApplied": false,
+          "propertyTypesInferred": false,
+          "sellerRuntimeVerified": false,
+          "statement": "Apply only after the seller confirms each property's real runtime type and semantics, then rerun integrity CI."
+        }
+      },
+      "purchaseEvidence": {
+        "status": "verified",
+        "source": "runtime_402",
+        "relation": "https://github.com/epistemedeus/agent-payment-policy#purchase-evidence",
+        "manifestUrl": "https://agents.samedaydesk.com/.well-known/agent-payment-evidence.json",
+        "manifestDigest": "sha256:d76c6e6c2e85bc091f31599bb8a1adc2a66ac246381b8ea75a71f964d041a7e1",
+        "serviceVersion": "1.23.55",
+        "responseSchemaDigest": "sha256:0ab373cf2f505ca5641e708fe6b1ad4a6b122d97b42308fcb864a7acfd26633f",
+        "requiredPaths": [
+          "actions",
+          "boundary",
+          "checkedAt",
+          "decision",
+          "mcp",
+          "ok",
+          "openapi",
+          "product",
+          "request",
+          "version"
+        ],
+        "declaration": "seller_declared"
+      }
+    }
+  ],
+  "safety": {
+    "credentialsUsed": false,
+    "paymentSigned": false,
+    "paymentSent": false,
+    "redirectsAllowed": false,
+    "dnsPinned": true,
+    "rawPaymentHeadersRetained": false,
+    "opaqueStateRetained": false,
+    "queryValuesRetained": false
+  },
+  "policy": {
+    "requireBazaar": false,
+    "requirePurchaseEvidence": true
+  },
+  "boundary": "Unpaid point-in-time contract integrity only. No claim about settlement, paid delivery, catalog indexing, identity, or future availability."
+}

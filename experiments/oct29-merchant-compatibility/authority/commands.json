@@ -1,0 +1,376 @@
+[
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:01.998Z",
+    "endedAt": "2026-10-29T20:45:02.000Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "HEAD^{tree}"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:02.000Z",
+    "endedAt": "2026-10-29T20:45:02.002Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "show",
+      "3da72788305b3529704b8e99f2abbce06d15fb75:package-lock.json"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:02.002Z",
+    "endedAt": "2026-10-29T20:45:02.004Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "show",
+      "a1dc09bb076b823fb3492ea79fa10f8602ed01a5:package-lock.json"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:02.004Z",
+    "endedAt": "2026-10-29T20:45:02.007Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "archive",
+      "HEAD"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:02.008Z",
+    "endedAt": "2026-10-29T20:45:02.105Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "tar",
+    "args": [
+      "-x",
+      "-C",
+      "/tmp/h64201-authority-accept/joined"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:02.106Z",
+    "endedAt": "2026-10-29T20:45:02.158Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "clone",
+      "--no-checkout",
+      "--filter=blob:none",
+      "https://github.com/epistemedeus/agent-payment-integrity.git",
+      "/tmp/h64201-authority-accept/auditor"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:02.162Z",
+    "endedAt": "2026-10-29T20:45:02.369Z",
+    "exit": 0,
+    "signal": null,
+    "log": "auditor-clone.log",
+    "timeout": 300000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "checkout",
+      "--detach",
+      "ef519956505b195454aa670230b0936258b451fb"
+    ],
+    "cwd": "/tmp/h64201-authority-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:02.369Z",
+    "endedAt": "2026-10-29T20:45:02.521Z",
+    "exit": 0,
+    "signal": null,
+    "log": "auditor-checkout.log",
+    "timeout": 180000
+  },
+  {
+    "cmd": "npm",
+    "args": [
+      "ci",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "cwd": "/tmp/h64201-authority-accept/joined",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:02.521Z",
+    "endedAt": "2026-10-29T20:45:05.894Z",
+    "exit": 0,
+    "signal": null,
+    "log": "joined-install.log",
+    "timeout": 600000
+  },
+  {
+    "cmd": "npm",
+    "args": [
+      "ci",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "--omit=dev"
+    ],
+    "cwd": "/tmp/h64201-authority-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:05.894Z",
+    "endedAt": "2026-10-29T20:45:07.719Z",
+    "exit": 0,
+    "signal": null,
+    "log": "auditor-install.log",
+    "timeout": 600000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "diff",
+      "--exit-code",
+      "--",
+      "integrity.mjs",
+      "package.json",
+      "package-lock.json"
+    ],
+    "cwd": "/tmp/h64201-authority-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:07.719Z",
+    "endedAt": "2026-10-29T20:45:07.722Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "/exec-daemon/node",
+    "args": [
+      "/tmp/h64201-authority-accept/joined/experiments/oct29-mpp-availability/lab.mjs"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {
+      "AUDITOR_ROOT": "/tmp/h64201-authority-accept/auditor",
+      "MERCHANT_ROOT": "/tmp/h64201-authority-accept/joined",
+      "LAB_OUT": "/tmp/h64201-authority-accept/evidence",
+      "LAB_MODERN": "1"
+    },
+    "startedAt": "2026-10-29T20:45:07.725Z",
+    "endedAt": "2026-10-29T20:45:17.094Z",
+    "exit": 0,
+    "signal": null,
+    "log": "joined-lab.log",
+    "timeout": 600000
+  },
+  {
+    "cmd": "/exec-daemon/node",
+    "args": [
+      "/tmp/h64201-authority-accept/joined/experiments/oct29-mpp-availability/regressions.mjs"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {
+      "MERCHANT_ROOT": "/tmp/h64201-authority-accept/joined"
+    },
+    "startedAt": "2026-10-29T20:45:17.094Z",
+    "endedAt": "2026-10-29T20:45:31.896Z",
+    "exit": 0,
+    "signal": null,
+    "log": "joined-regressions.tap",
+    "timeout": 600000
+  },
+  {
+    "cmd": "/exec-daemon/node",
+    "args": [
+      "--test",
+      "--test-concurrency=1",
+      "experiments/oct29-merchant-compatibility/axios-transport.test.mjs",
+      "experiments/oct29-merchant-compatibility/schema-catalog.test.mjs",
+      "experiments/oct29-merchant-compatibility/merchant-compatibility.test.mjs"
+    ],
+    "cwd": "/tmp/h64201-authority-accept/joined",
+    "env": {
+      "H64201_PYTHONPATH": "/tmp/oct29-mcp-py-site"
+    },
+    "startedAt": "2026-10-29T20:45:31.896Z",
+    "endedAt": "2026-10-29T20:45:38.651Z",
+    "exit": 0,
+    "signal": null,
+    "log": "payment-clients.tap",
+    "timeout": 600000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "log",
+      "--merges",
+      "-1",
+      "--format=%H"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.654Z",
+    "endedAt": "2026-10-29T20:45:38.656Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "adcf0afc5421b669d0377a53e9312712c0829e86^1",
+      "adcf0afc5421b669d0377a53e9312712c0829e86^2"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.656Z",
+    "endedAt": "2026-10-29T20:45:38.658Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "a1dc09bb076b823fb3492ea79fa10f8602ed01a5^{tree}"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.659Z",
+    "endedAt": "2026-10-29T20:45:38.660Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "3da72788305b3529704b8e99f2abbce06d15fb75^{tree}"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.661Z",
+    "endedAt": "2026-10-29T20:45:38.662Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "ab5bf51b60c7fa6e2d3587fcac23b26f00872b65^{tree}"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.662Z",
+    "endedAt": "2026-10-29T20:45:38.664Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "rev-parse",
+      "HEAD^{tree}"
+    ],
+    "cwd": "/tmp/h64201-authority-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.664Z",
+    "endedAt": "2026-10-29T20:45:38.666Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "ls-tree",
+      "-rl",
+      "a1dc09bb076b823fb3492ea79fa10f8602ed01a5"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.668Z",
+    "endedAt": "2026-10-29T20:45:38.673Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "ls-tree",
+      "-rl",
+      "3da72788305b3529704b8e99f2abbce06d15fb75"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.678Z",
+    "endedAt": "2026-10-29T20:45:38.683Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "ls-tree",
+      "-rl",
+      "HEAD"
+    ],
+    "cwd": "/home/ubuntu/ae14-work/h64201",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.686Z",
+    "endedAt": "2026-10-29T20:45:38.692Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  },
+  {
+    "cmd": "git",
+    "args": [
+      "ls-tree",
+      "-rl",
+      "ef519956505b195454aa670230b0936258b451fb"
+    ],
+    "cwd": "/tmp/h64201-authority-accept/auditor",
+    "env": {},
+    "startedAt": "2026-10-29T20:45:38.696Z",
+    "endedAt": "2026-10-29T20:45:38.698Z",
+    "exit": 0,
+    "signal": null,
+    "timeout": 180000
+  }
+]
