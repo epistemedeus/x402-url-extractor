@@ -339,7 +339,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
       assert.equal(schema.required.includes(field), true, `POST ${path} 200 omitted required ${field}`);
     }
     const mppSchema = mppOpenapi.paths[path]?.post?.responses?.["200"]?.content?.["application/json"]?.schema;
-    assert.deepEqual(mppSchema?.required, schema.required);
+    assert.equal(mppSchema, undefined, "disabled MPP must not declare paid POSTs");
   }
 
   const bazaarRoutes = [
@@ -363,7 +363,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const mppGetSchema = mppOpenapi.paths["/work/opportunity-preflight"]?.get?.responses?.["200"]?.content?.["application/json"]?.schema;
   assert.equal(catalogAction?.method, "GET");
   assert.equal(getSchema?.additionalProperties, false);
-  assert.equal(mppGetSchema?.additionalProperties, false);
+  assert.equal(mppGetSchema, undefined, "disabled MPP must not declare paid GETs");
   assert.equal(catalogSchema?.additionalProperties, false);
   assert.deepEqual(catalogSchema.required, postSchema.required);
   assert.deepEqual(getSchema.required, postSchema.required);

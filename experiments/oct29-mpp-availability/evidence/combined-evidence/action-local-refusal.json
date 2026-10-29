@@ -1,0 +1,5 @@
+{
+  "exit": 1,
+  "stdout": "",
+  "stderr": "agent-payment-integrity action failed: origin address is not public\n"
+}

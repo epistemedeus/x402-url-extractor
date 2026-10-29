@@ -1,0 +1,23 @@
+{
+  "schema": "h64330.inputs.v1",
+  "merchant": "epistemedeus/x402-url-extractor@a1dc09bb076b823fb3492ea79fa10f8602ed01a5",
+  "branch": "codex/root64330-mpp-availability-20261029",
+  "operating": "epistemedeus/pilot@7b2a3ad985589a73b9cce56acfffeb43b818607b",
+  "receiving": "overview/self-evaluations/2026-10-29-scalable-demand/B-INSTALLED-RECEIVING-1835.md",
+  "consumer": "epistemedeus/pilot@1e3fc15233311aae2b23c6428ad9a6cd1eefbeb8:experiments/oct29-scale-b/action-contract-release/",
+  "auditor": "epistemedeus/agent-payment-integrity@ef519956505b195454aa670230b0936258b451fb",
+  "maintenanceReadOnly": "epistemedeus/x402-url-extractor@2e197da2a3e994417af818e8641fab5bd7079e01",
+  "operatingReceiptSha256": "5bd4806862da7df832c5b018efbb3e6a070703b41e689eabb8aecccbc4fbca96",
+  "admission": {
+    "model": "gpt-6.1-sol",
+    "effort": "xhigh",
+    "provider": "cursor",
+    "host": "bc-ebf954ca-4f11-4b86-8e48-7d95b46371a2",
+    "bootId": "44c41f22-64a1-4f5f-921b-e4cbcdf95331",
+    "jobKiB": 2097152,
+    "checkpointBy": "2026-10-29T20:00:00.000Z",
+    "requiredUntil": "2026-10-29T20:15:00.000Z",
+    "nativeChildren": 0
+  },
+  "boundary": "source and disposable installed lab only; MPP remains off in production; no credential access, merge or deployment"
+}

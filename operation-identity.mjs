@@ -21,27 +21,41 @@ export function billingBasisForRoute(route) {
   return route === BATCH_ROUTE ? BILLING_PER_BOUNDED_ATTEMPT : BILLING_PER_CALL;
 }
 
-export function supportedRailsForRoute(route) {
+// Implemented capability is independent of a configured merchant's availability.
+export function implementedRailsForRoute(route) {
   return route === LOCKFILE_ROUTE ? ["x402"] : ["x402", "mpp"];
 }
 
-export function operationIdentity({ route, priceAtomic } = {}) {
+// Fail closed when no runtime is supplied. The runtime owns exact method/path
+// eligibility; a secret's presence alone is not evidence of a usable route.
+export function supportedRailsForRoute(route, { method = "GET", mpp } = {}) {
+  return implementedRailsForRoute(route).filter((rail) => rail === "x402"
+    || (mpp?.enabled === true && mpp.supportsRoute?.(method, route) === true));
+}
+
+export function operationIdentity({ route, priceAtomic, supportedRails = supportedRailsForRoute(route) } = {}) {
   const id = operationIdForRoute(route);
   const price = String(priceAtomic ?? "");
   if (!/^[1-9][0-9]*$/.test(price)) {
     throw new Error(`operation identity requires an atomic price for ${route || id}`);
   }
+  if (!Array.isArray(supportedRails) || !supportedRails.length
+    || new Set(supportedRails).size !== supportedRails.length
+    || supportedRails.some((rail) => !implementedRailsForRoute(route).includes(rail))) {
+    throw new Error(`operation identity requires valid available rails for ${route}`);
+  }
   return {
     id,
     price,
     billingBasis: billingBasisForRoute(route),
-    supportedRails: supportedRailsForRoute(route),
+    supportedRails: [...supportedRails],
   };
 }
 
 export function operationIdentityFromAction(action) {
   return operationIdentity({
     route: action?.route,
+    supportedRails: action?.supportedRails ?? action?.paymentProtocols,
     priceAtomic: action?.priceAtomicUsdc ?? action?.price ?? action?.amount,
   });
 }

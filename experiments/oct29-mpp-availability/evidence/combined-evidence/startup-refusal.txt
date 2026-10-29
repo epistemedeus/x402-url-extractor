@@ -1,0 +1,19 @@
+startup 1: unknown format "uri" ignored in schema at path "#/properties/input/properties/queryParams/properties/url"
+unknown format "uri" ignored in schema at path "#/properties/input/properties/queryParams/properties/url"
+unknown format "date-time" ignored in schema at path "#/properties/output/properties/example/properties/checkedAt"
+unknown format "date-time" ignored in schema at path "#/properties/output/properties/example/properties/checkedAt"
+file:///tmp/h64330-final-accept/combined/node_modules/mppx/dist/server/Mppx.js:350
+    throw new Error(`Secret key must be at least ${minimumSecretKeyBytes} bytes. Generate one with \`${secretKeyGenerationCommand}\` and set MPP_SECRET_KEY or pass it to Mppx.create().`);
+          ^
+
+Error: Secret key must be at least 32 bytes. Generate one with `openssl rand -base64 32` and set MPP_SECRET_KEY or pass it to Mppx.create().
+    at assertSecretKey (file:///tmp/h64330-final-accept/combined/node_modules/mppx/dist/server/Mppx.js:350:11)
+    at Module.create (file:///tmp/h64330-final-accept/combined/node_modules/mppx/dist/server/Mppx.js:59:5)
+    at createMppDualStack (file:///tmp/h64330-final-accept/combined/mpp-dual-stack.mjs:150:21)
+    at file:///tmp/h64330-final-accept/combined/server.js:1238:22
+    at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:578:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+
+Node.js v22.14.0
+

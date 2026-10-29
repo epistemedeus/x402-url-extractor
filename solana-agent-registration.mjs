@@ -34,17 +34,18 @@ export function buildSolanaAgentRegistration({ publicUrl, agentAsset, actions = 
     throw new Error("paid action routes must be unique");
   }
 
+  const mppAvailable = actions.some((action) => action.paymentProtocols?.includes("mpp"));
   return {
     type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
     name: "SameDayDesk Machine Commerce",
-    description: "Machine-paid APIs for web extraction to structured JSON and Markdown, GitHub repository security scans, Schema.org JSON-LD generation, company and Base wallet enrichment, AI-search audits, Morpho borrower position, protection, market underwriting and PreLiquidation replay, agent-work economics, cross-registry discoverability, and x402/MPP payment-offer preflight. MCP, A2A, OpenAPI, x402 and MPP settle USDC on Base and Solana.",
+    description: "Machine-paid APIs for web extraction to structured JSON and Markdown, GitHub repository security scans, Schema.org JSON-LD generation, company and Base wallet enrichment, AI-search audits, Morpho borrower position, protection, market underwriting and PreLiquidation replay, agent-work economics, cross-registry discoverability, and x402/MPP payment-offer preflight. MCP, A2A and OpenAPI expose the currently available Base payment paths.",
     services: [
       { name: "MCP", endpoint: `${origin}/mcp` },
       { name: "A2A", endpoint: `${origin}/.well-known/agent-card.json` },
       { name: "OpenAPI", endpoint: `${origin}/openapi.json` },
       { name: "SKILL", endpoint: `${origin}/skill.md` },
       { name: "x402", endpoint: `${origin}/.well-known/x402` },
-      { name: "MPP", endpoint: `${origin}/mpp-openapi.json` },
+      ...(mppAvailable ? [{ name: "MPP", endpoint: `${origin}/mpp-openapi.json` }] : []),
       { name: "ServiceDeployment", endpoint: `${origin}${SERVICE_DEPLOYMENT_PATH}` },
       { name: "ServiceDeploymentKey", endpoint: `${origin}${SERVICE_DEPLOYMENT_KEY_PATH}` },
       { name: "x402-solana", endpoint: `${SOLANA_PAID_ORIGIN}/.well-known/x402` },

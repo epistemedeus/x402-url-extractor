@@ -130,6 +130,7 @@ export function createMppDualStack({
   if (!secretKey) {
     return {
       enabled: false,
+      supportsRoute: () => false,
       reason: "MPP_SECRET_KEY is not configured",
       realm,
       routeCount: routeMap.size,
@@ -225,6 +226,7 @@ export function createMppDualStack({
   return {
     authorize,
     enabled: true,
+    supportsRoute: (method, path) => routeMap.has(`${String(method).toUpperCase()} ${path}`),
     middleware,
     realm,
     routeCount: routeMap.size,
