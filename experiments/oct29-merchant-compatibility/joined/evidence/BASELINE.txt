@@ -1,0 +1,3 @@
+baseline capture sha256 71ccb41dee3f89e503f19ef6ae9ad3bb38e06a68ba9ba5a8c80ef90051bfc094
+source experiments/oct29-mpp-availability/evidence/evidence/baseline.json.gz
+byte copy used as LAB_OUT/baseline.json.gz during the joined run; the historical file was not rewritten
