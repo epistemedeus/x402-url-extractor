@@ -153,14 +153,12 @@ function isPaymentRequiredBody(body) {
     && Array.isArray(body.accepts);
 }
 
-// The facilitator object is the only settlement signal. A returned
-// {success:false} used to ride out on the handler body. Drop that body before
-// replay retention or client delivery. Do not invent a rollback, a no-effect,
-// or a receipt from caller-supplied fields.
-export function withholdExplicitFalseSettlement(result) {
-  if (!result || typeof result !== "object" || Array.isArray(result) || result.isError === true) return result;
-  const proof = result._meta?.[MCP_PAYMENT_RESPONSE_META_KEY];
-  if (!proof || typeof proof !== "object" || Array.isArray(proof) || proof.success !== false) return result;
+// SettleResponse from @x402/core@2.16.0 requires boolean success, a string
+// transaction, and a network. Only that success object authorizes delivery of
+// a priced native handler body. Boolean false is a known failure. Any other
+// facilitator object is unproven. Neither hold invents a charge, a rollback,
+// or a no-effect, and the unproven hold does not claim success:false.
+function explicitFalseHold() {
   return {
     isError: true,
     content: [{
@@ -177,12 +175,94 @@ export function withholdExplicitFalseSettlement(result) {
   };
 }
 
+function unprovenHold() {
+  return {
+    isError: true,
+    content: [{
+      type: "text",
+      text: JSON.stringify({
+        ok: false,
+        error: "settlement_unproven",
+      }),
+    }],
+    _meta: {},
+  };
+}
+
+function settlementProof(result) {
+  const proof = result?._meta?.[MCP_PAYMENT_RESPONSE_META_KEY];
+  if (!proof || typeof proof !== "object" || Array.isArray(proof)) return null;
+  return proof;
+}
+
+export function authoritativeSettlementSuccess(proof) {
+  return Boolean(proof)
+    && proof.success === true
+    && typeof proof.transaction === "string"
+    && typeof proof.network === "string"
+    && proof.network.length > 0;
+}
+
+function parsedContentObject(result) {
+  const text = result?.content?.[0]?.text;
+  if (typeof text !== "string" || text.length === 0 || text[0] !== "{") return null;
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function safeErrorObject(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return false;
+  if (isPaymentRequiredBody(body)) return true;
+  if (body.ok === true || body.success === true) return false;
+  return body.ok === false || body.success === false || body.isError === true || typeof body.error === "string";
+}
+
+function carriesProtectedPaidBody(result) {
+  const bodies = [result?.structuredContent, parsedContentObject(result)];
+  return bodies.some((body) => body && typeof body === "object" && !Array.isArray(body) && !safeErrorObject(body));
+}
+
+export function withholdExplicitFalseSettlement(result) {
+  if (!result || typeof result !== "object" || Array.isArray(result) || result.isError === true) return result;
+  const proof = settlementProof(result);
+  if (!proof || proof.success !== false) return result;
+  return explicitFalseHold();
+}
+
+export function withholdUnprovenNativeSettlement(result) {
+  if (!result || typeof result !== "object" || Array.isArray(result)) return result;
+  if (isTypedPaymentRequiredResult(result)) return result;
+  const proof = settlementProof(result);
+  // The native wrapper settles only a non-error handler result, and that
+  // returned object is the facilitator SettleResponse. An isError result left
+  // the wrapper before settle, so a proof on it is not facilitator authority.
+  if (result.isError === true) {
+    if (!carriesProtectedPaidBody(result)) return result;
+    return unprovenHold();
+  }
+  if (authoritativeSettlementSuccess(proof)) return result;
+  if (proof && proof.success === false) return explicitFalseHold();
+  return unprovenHold();
+}
+
+function deliveredSettlementHold(result) {
+  const body = parsedContentObject(result);
+  if (body?.error === "settlement_unsuccessful" || body?.error === "settlement_unproven") return body.error;
+  return null;
+}
+
 function noteDeliveredApplicationError(attempt, result) {
   if (!attempt || result?.isError !== true) return;
-  const proof = result._meta?.[MCP_PAYMENT_RESPONSE_META_KEY];
-  // Settlement already failed after a completed handler. Keep that
-  // classification instead of rewriting the handler as an application error.
-  if (proof && typeof proof === "object" && !Array.isArray(proof) && proof.success === false) return;
+  // A withheld settlement is not an application failure. Boolean false stays
+  // failed. An unproven hold stays unknown.
+  if (deliveredSettlementHold(result)) return;
+  const proof = settlementProof(result);
+  if (proof && proof.success === false) return;
   attempt.overrideFinalApplicationError();
 }
 
@@ -902,9 +982,14 @@ async function prepareMerchantMcp({
     // a structured ok:false so a paid call never yields an opaque failure.
     const settled = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl)
       : paid(typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t));
-    // Both eras use this callback. Explicit false settlement is removed before
-    // the replay journal retains a result and before a client receives it.
-    const inner = async (args, extra) => withholdExplicitFalseSettlement(await settled(args, extra));
+    // Native priced calls use the SettleResponse contract. The HTTP route owns
+    // its own admission and delivery; this bridge withholds only an explicit
+    // boolean false copied from that route's payment-response.
+    const inner = async (args, extra) => (
+      t.paidHttp
+        ? withholdExplicitFalseSettlement(await settled(args, extra))
+        : withholdUnprovenNativeSettlement(await settled(args, extra))
+    );
     const recoverable = nativeRecovery && !t.paidHttp ? async (args, extra) => {
       const request = mcpHttpRequestAls.getStore();
       return recoveryJournal.runMcpTool({ name: t.name,

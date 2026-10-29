@@ -23,7 +23,7 @@ import {
 } from "@modelcontextprotocol/server";
 import { toWebRequest } from "@modelcontextprotocol/node";
 import { createIdempotencyReplay } from "../../idempotency-replay.mjs";
-import { injectPaymentSignatureHeader, mountMcp, withholdExplicitFalseSettlement } from "../../mcp-server.mjs";
+import { injectPaymentSignatureHeader, mountMcp, withholdExplicitFalseSettlement, withholdUnprovenNativeSettlement } from "../../mcp-server.mjs";
 
 const NETWORK = "eip155:84532";
 const PAY_TO = `0x${"22".repeat(20)}`;
@@ -54,10 +54,29 @@ function tools(calls) {
         ok: z.literal(true),
         note: z.string().min(1),
       }).strict(),
+      returnMcpResult: true,
       run: async (args) => {
         calls.handler += 1;
         calls.sequence.push("handler");
-        return { ok: true, note: args.note };
+        calls.notes.push(args.note);
+        if (args.note === "iserror-paid") {
+          return {
+            isError: true,
+            content: [{ type: "text", text: JSON.stringify({ ok: true, note: "iserror-paid" }) }],
+            structuredContent: { ok: true, note: "iserror-paid" },
+            _meta: { "x402/payment-response": null },
+          };
+        }
+        if (args.note === "safe-error") {
+          return {
+            isError: true,
+            content: [{ type: "text", text: JSON.stringify({ ok: false, error: "safe_handler", charged: false }) }],
+          };
+        }
+        return {
+          content: [{ type: "text", text: JSON.stringify({ ok: true, note: args.note }) }],
+          structuredContent: { ok: true, note: args.note },
+        };
       },
     },
   ];
@@ -95,7 +114,7 @@ function closeServer(server) {
 }
 
 async function startMerchant(t, { modern = true, policy = {}, recovery = false, typed = false } = {}) {
-  const calls = { verify: 0, settle: 0, handler: 0, sequence: [] };
+  const calls = { verify: 0, settle: 0, handler: 0, sequence: [], notes: [] };
   const events = [];
   const app = express();
   let dataDir = null;
@@ -439,7 +458,7 @@ test("failed verify and settlement refusal do not invent a second payment", asyn
   );
 });
 
-test("direct shared boundary withholds only an explicit false settlement", () => {
+test("native gate follows the SettleResponse contract", () => {
   const paid = {
     content: [{ type: "text", text: JSON.stringify({ ok: true, note: "secret-table", markdown: "<table>Engine</table>" }) }],
     structuredContent: { ok: true, note: "secret-table" },
@@ -453,7 +472,7 @@ test("direct shared boundary withholds only an explicit false settlement", () =>
       "samedaydesk/caller-receipt": { success: true },
     },
   };
-  const withheld = withholdExplicitFalseSettlement(paid);
+  const withheld = withholdUnprovenNativeSettlement(paid);
   assert.equal(withheld.isError, true);
   assert.equal(JSON.stringify(withheld).includes("secret-table"), false);
   assert.equal(JSON.stringify(withheld).includes("Engine"), false);
@@ -463,33 +482,70 @@ test("direct shared boundary withholds only an explicit false settlement", () =>
   assert.equal(withheld._meta["samedaydesk/caller-receipt"], undefined);
   assert.equal(JSON.parse(withheld.content[0].text).error, "settlement_unsuccessful");
   assert.equal(JSON.parse(withheld.content[0].text).charged, undefined);
+  assert.equal(JSON.parse(withheld.content[0].text).settlementSuccess, false);
 
+  const tx = `0x${"33".repeat(32)}`;
   const settled = {
-    content: [{ type: "text", text: "kept-note" }],
+    content: [{ type: "text", text: JSON.stringify({ ok: true, note: "kept-note" }) }],
     structuredContent: { ok: true, note: "kept-note" },
-    _meta: { "x402/payment-response": { success: true, transaction: `0x${"33".repeat(32)}` } },
+    _meta: { "x402/payment-response": { success: true, transaction: tx, network: NETWORK } },
   };
-  assert.equal(withholdExplicitFalseSettlement(settled), settled);
+  assert.equal(withholdUnprovenNativeSettlement(settled), settled);
 
-  const ambiguous = {
-    content: [{ type: "text", text: "ambiguous-body" }],
-    _meta: { "x402/payment-response": { transaction: "", network: NETWORK } },
-  };
-  assert.equal(withholdExplicitFalseSettlement(ambiguous), ambiguous);
-  const worded = {
-    content: [{ type: "text", text: "worded-body" }],
-    _meta: { "x402/payment-response": { success: "false" } },
-  };
-  assert.equal(withholdExplicitFalseSettlement(worded), worded);
+  const shapes = [
+    ["missing", undefined],
+    ["empty", {}],
+    ["malformed", []],
+    ["missing-success", { transaction: "", network: NETWORK }],
+    ["worded-false", { success: "false", transaction: "", network: NETWORK }],
+    ["worded-true", { success: "true", transaction: tx, network: NETWORK }],
+    ["null-success", { success: null, transaction: tx, network: NETWORK }],
+    ["success-without-network", { success: true, transaction: tx }],
+  ];
+  for (const [label, proof] of shapes) {
+    const body = {
+      content: [{ type: "text", text: JSON.stringify({ ok: true, note: label }) }],
+      structuredContent: { ok: true, note: label },
+      _meta: { "x402/payment-response": proof, "samedaydesk/caller-receipt": { success: true } },
+    };
+    const held = withholdUnprovenNativeSettlement(body);
+    assert.equal(held.isError, true, label);
+    assert.equal(JSON.stringify(held).includes(label), false, label);
+    assert.equal(JSON.parse(held.content[0].text).error, "settlement_unproven", label);
+    assert.equal(JSON.parse(held.content[0].text).charged, undefined, label);
+    assert.equal(held._meta["x402/payment-response"], undefined, label);
+    assert.notEqual(JSON.parse(held.content[0].text).settlementSuccess, false, label);
+  }
 
-  const thrown = { isError: true, content: [{ type: "text", text: "Payment settlement failed: boom" }] };
-  assert.equal(withholdExplicitFalseSettlement(thrown), thrown);
-  const handlerError = {
+  const challenge = {
     isError: true,
-    content: [{ type: "text", text: "handler-said" }],
-    _meta: { "x402/payment-response": { success: false } },
+    content: [{ type: "text", text: JSON.stringify({ x402Version: 2, accepts: [{ payTo: PAY_TO }] }) }],
+    structuredContent: { x402Version: 2, accepts: [{ payTo: PAY_TO }] },
   };
-  assert.equal(withholdExplicitFalseSettlement(handlerError), handlerError);
+  assert.equal(withholdUnprovenNativeSettlement(challenge), challenge);
+  const safeError = {
+    isError: true,
+    content: [{ type: "text", text: JSON.stringify({ ok: false, error: "safe_handler", charged: false }) }],
+  };
+  assert.equal(withholdUnprovenNativeSettlement(safeError), safeError);
+  const leaked = {
+    isError: true,
+    content: [{ type: "text", text: JSON.stringify({ ok: true, note: "leaked-note" }) }],
+    structuredContent: { ok: true, note: "leaked-note" },
+    _meta: { "x402/payment-response": null },
+  };
+  const stripped = withholdUnprovenNativeSettlement(leaked);
+  assert.equal(JSON.stringify(stripped).includes("leaked-note"), false);
+  assert.equal(JSON.parse(stripped.content[0].text).error, "settlement_unproven");
+  assert.equal(stripped._meta["x402/payment-response"], undefined);
+
+  const httpFalse = withholdExplicitFalseSettlement(paid);
+  assert.equal(JSON.parse(httpFalse.content[0].text).error, "settlement_unsuccessful");
+  const httpOwned = {
+    content: [{ type: "text", text: JSON.stringify({ ok: true, note: "http-owned" }) }],
+    _meta: { "samedaydesk/http": { status: 200 } },
+  };
+  assert.equal(withholdExplicitFalseSettlement(httpOwned), httpOwned);
 });
 
 function assertFalseSettlementWithheld(result, secret) {
@@ -566,14 +622,22 @@ test("ambiguous settlement stays unknown and a false settlement is not recoverab
   const unknownResult = await modernClient.client.callTool({
     name: "enrich",
     arguments: { note: "ambiguous-note" },
-    _meta: { "x402/payment": paymentFor("enrich", modernAccepted) },
+    _meta: {
+      "x402/payment": paymentFor("enrich", modernAccepted),
+      "x402/payment-response": { success: true, transaction: `0x${"77".repeat(32)}`, network: NETWORK },
+    },
   });
-  assert.notEqual(unknownResult._meta?.["x402/payment-response"]?.success, true);
-  assert.equal(JSON.parse(unknownResult.content?.[0]?.text || "{}").error, undefined);
+  assert.equal(unknownResult.isError, true);
+  assert.equal(unknownResult.structuredContent, undefined);
+  assert.equal(JSON.parse(unknownResult.content[0].text).error, "settlement_unproven");
+  assert.equal(JSON.stringify(unknownResult).includes("ambiguous-note"), false);
+  assert.equal(unknownResult._meta?.["x402/payment-response"], undefined);
   await ambiguous.mount.typedTelemetryLifecycle.flush({ timeoutMs: 1000 });
   assert.equal(ambiguous.events[0].result, "telemetry_incomplete");
   assert.equal(ambiguous.events[0].settlementState, "unknown");
+  assert.equal(ambiguous.events[0].handlerInvoked, true);
   assert.notEqual(ambiguous.events[0].result, "paid_success");
+  assert.notEqual(ambiguous.events[0].result, "settlement_failure");
 
   const legacyUnknown = await startMerchant(t, {
     modern: false,
@@ -583,13 +647,17 @@ test("ambiguous settlement stays unknown and a false settlement is not recoverab
   const legacyClient = await connectLegacy(legacyUnknown.origin, "unknown-legacy");
   t.after(() => legacyClient.client.close());
   const legacyAccepted = (await legacyClient.client.listTools()).tools.find((tool) => tool.name === "enrich")._meta.x402.accepts[0];
-  await legacyClient.client.callTool({
+  const legacyUnknownResult = await legacyClient.client.callTool({
     name: "enrich",
     arguments: { note: "ambiguous-legacy" },
     _meta: { "x402/payment": paymentFor("enrich", legacyAccepted) },
   });
+  assert.equal(JSON.parse(legacyUnknownResult.content[0].text).error, "settlement_unproven");
+  assert.equal(JSON.stringify(legacyUnknownResult).includes("ambiguous-legacy"), false);
+  assert.equal(legacyUnknownResult._meta?.["x402/payment-response"]?.success, undefined);
   await legacyUnknown.mount.typedTelemetryLifecycle.flush({ timeoutMs: 1000 });
   assert.equal(legacyUnknown.events[0].settlementState, "unknown");
+  assert.equal(legacyUnknown.events[0].handlerInvoked, true);
   assert.notEqual(legacyUnknown.events[0].result, "paid_success");
 
   for (const modern of [true, false]) {
@@ -642,6 +710,74 @@ test("ambiguous settlement stays unknown and a false settlement is not recoverab
       _meta: { "x402/payment": fresh },
     });
     assertFalseSettlementWithheld(again, "fresh-false");
+    assert.notEqual(fresh.payload.authorization.nonce, payment.payload.authorization.nonce);
+    assert.deepEqual(
+      { verify: merchant.calls.verify, settle: merchant.calls.settle, handler: merchant.calls.handler },
+      { verify: 2, settle: 2, handler: 2 },
+    );
+  }
+});
+
+test("unknown settlement stays quarantined and a new nonce is a new operation", async (t) => {
+  for (const modern of [true, false]) {
+    const merchant = await startMerchant(t, {
+      modern,
+      recovery: true,
+      policy: { settle: () => ({ transaction: "", network: NETWORK }) },
+    });
+    const connected = modern
+      ? await connectModern(merchant.origin, { pin: "2026-07-28" }, "unknown-recover-modern")
+      : await connectLegacy(merchant.origin, "unknown-recover-legacy");
+    t.after(() => connected.client.close());
+    const accepted = (await connected.client.listTools()).tools.find((tool) => tool.name === "enrich")._meta.x402.accepts[0];
+    const payment = paymentFor("enrich", accepted);
+    const secret = modern ? "unknown-modern-secret" : "unknown-legacy-secret";
+    const first = await connected.client.callTool({
+      name: "enrich",
+      arguments: { note: secret },
+      _meta: {
+        "x402/payment": payment,
+        "x402/payment-response": { success: true, transaction: `0x${"88".repeat(32)}`, network: NETWORK },
+      },
+    });
+    assert.equal(JSON.parse(first.content[0].text).error, "settlement_unproven");
+    assert.equal(JSON.parse(first.content[0].text).charged, undefined);
+    assert.equal(JSON.parse(first.content[0].text).settlementSuccess, undefined);
+    assert.equal(first._meta?.["x402/payment-response"], undefined);
+    assert.equal(JSON.stringify(first).includes(secret), false);
+    const replay = await connected.client.callTool({
+      name: "enrich",
+      arguments: { note: secret },
+      _meta: { "x402/payment": payment },
+    });
+    assert.equal(JSON.stringify(replay).includes(secret), false);
+    assert.equal(JSON.parse(replay.content[0].text).error, "payment_execution_in_flight_or_unknown");
+    assert.equal(merchant.calls.handler, 1);
+    assert.equal(merchant.calls.settle, 1);
+    assert.equal(merchant.calls.verify, 1);
+    const conflict = await connected.client.callTool({
+      name: "enrich",
+      arguments: { note: "changed-unknown" },
+      _meta: { "x402/payment": payment },
+    });
+    assert.equal(conflict.isError, true);
+    assert.equal(JSON.stringify(conflict).includes(secret), false);
+    assert.equal(merchant.calls.handler, 1);
+    const recovered = await connected.client.callTool({
+      name: "recover_paid_result",
+      arguments: { name: "enrich", arguments: { note: secret } },
+      _meta: { "x402/payment": payment },
+    });
+    assert.equal(JSON.stringify(recovered).includes(secret), false);
+    assert.equal(recovered.structuredContent?.note, undefined);
+    const fresh = paymentFor("enrich", accepted);
+    const again = await connected.client.callTool({
+      name: "enrich",
+      arguments: { note: "fresh-unknown" },
+      _meta: { "x402/payment": fresh },
+    });
+    assert.equal(JSON.parse(again.content[0].text).error, "settlement_unproven");
+    assert.equal(JSON.stringify(again).includes("fresh-unknown"), false);
     assert.notEqual(fresh.payload.authorization.nonce, payment.payload.authorization.nonce);
     assert.deepEqual(
       { verify: merchant.calls.verify, settle: merchant.calls.settle, handler: merchant.calls.handler },
@@ -709,6 +845,215 @@ test("python client sees withheld false settlement on both mounts", async (t) =>
       { verify: 1, settle: 1, handler: 1 },
     );
   }
+});
+
+test("priced native shapes withhold unproven bodies and keep a contract success", async (t) => {
+  const tx = `0x${"33".repeat(32)}`;
+  for (const modern of [true, false]) {
+    const merchant = await startMerchant(t, {
+      modern,
+      typed: true,
+      policy: {
+        settle: () => {
+          const note = merchant.calls.notes.at(-1);
+          if (note === "missing") return undefined;
+          if (note === "empty") return {};
+          if (note === "malformed") return ["nope"];
+          if (note === "worded") return { success: "false", transaction: "", network: NETWORK };
+          if (note === "numeric") return { success: 1, transaction: tx, network: NETWORK };
+          if (note === "kept") return { success: true, transaction: tx, network: NETWORK };
+          return { transaction: "", network: NETWORK };
+        },
+      },
+    });
+    const connectors = modern
+      ? [
+        ["pin", await connectModern(merchant.origin, { pin: "2026-07-28" }, "shape-pin")],
+        ["sdk130", await connectLegacy(merchant.origin, "shape-legacy-on-modern")],
+      ]
+      : [
+        ["sdk130", await connectLegacy(merchant.origin, "shape-legacy")],
+        ["auto", await connectModern(merchant.origin, "auto", "shape-auto")],
+      ];
+    for (const [label, connected] of connectors) t.after(() => connected.client.close());
+    for (const [label, connected] of connectors) {
+      const accepted = (await connected.client.listTools()).tools.find((tool) => tool.name === "enrich")._meta.x402.accepts[0];
+      const pay = (note) => ({
+        "x402/payment": paymentFor("enrich", accepted),
+        "x402/payment-response": { success: true, transaction: tx, network: NETWORK },
+      });
+      for (const note of ["missing", "empty", "malformed", "worded", "numeric", "absent-success"]) {
+        const before = merchant.calls.handler;
+        const result = await connected.client.callTool({
+          name: "enrich",
+          arguments: { note },
+          _meta: pay(note),
+        });
+        assert.equal(result.isError, true, `${label}:${note}`);
+        assert.equal(JSON.stringify(result).includes(note), false, `${label}:${note}`);
+        assert.equal(JSON.parse(result.content[0].text).error, "settlement_unproven", `${label}:${note}`);
+        assert.equal(JSON.parse(result.content[0].text).charged, undefined, `${label}:${note}`);
+        assert.equal(result._meta?.["x402/payment-response"]?.success, undefined, `${label}:${note}`);
+        assert.equal(merchant.calls.handler, before + 1, `${label}:${note}`);
+      }
+      const kept = await connected.client.callTool({
+        name: "enrich",
+        arguments: { note: "kept" },
+        _meta: pay("kept"),
+      });
+      assert.equal(kept.isError, undefined, label);
+      assert.equal(kept.structuredContent.note, "kept", label);
+      assert.equal(kept._meta["x402/payment-response"].success, true, label);
+      const leaked = await connected.client.callTool({
+        name: "enrich",
+        arguments: { note: "iserror-paid" },
+        _meta: pay("iserror-paid"),
+      });
+      assert.equal(JSON.stringify(leaked).includes("iserror-paid"), false, label);
+      assert.equal(JSON.parse(leaked.content[0].text).error, "settlement_unproven", label);
+      const safe = await connected.client.callTool({
+        name: "enrich",
+        arguments: { note: "safe-error" },
+        _meta: pay("safe-error"),
+      });
+      const safeBody = JSON.parse(safe.content[0].text);
+      assert.equal(safeBody.error, "safe_handler", label);
+      assert.equal(safeBody.charged, false, label);
+    }
+    await merchant.mount.typedTelemetryLifecycle.flush({ timeoutMs: 1000 });
+    assert.ok(merchant.events.some((event) => event.settlementState === "unknown" && event.result === "telemetry_incomplete"));
+    assert.ok(merchant.events.some((event) => event.result === "paid_success" || event.settlementState === "succeeded"));
+  }
+});
+
+test("python client withholds unproven settlement on both mounts", async (t) => {
+  for (const [modern, mode] of [[true, "pin"], [false, "legacy"]]) {
+    const merchant = await startMerchant(t, {
+      modern,
+      policy: { settle: () => ({ transaction: "", network: NETWORK }) },
+    });
+    const connected = modern
+      ? await connectModern(merchant.origin, { pin: "2026-07-28" })
+      : await connectLegacy(merchant.origin);
+    t.after(() => connected.client.close());
+    const accepted = (await connected.client.listTools()).tools.find((tool) => tool.name === "enrich")._meta.x402.accepts[0];
+    const secret = modern ? "py-unproven-modern" : "py-unproven-legacy";
+    const report = await runPython([
+      "--url", `${merchant.origin}/mcp`,
+      "--mode", mode,
+      "--note", secret,
+      "--meta", JSON.stringify({
+        "x402/payment": paymentFor("enrich", accepted),
+        "x402/payment-response": { success: true, transaction: `0x${"66".repeat(32)}`, network: NETWORK },
+      }),
+    ]);
+    assert.equal(report.error, null);
+    assert.equal(report.isError, true);
+    assert.equal(JSON.stringify(report).includes(secret), false);
+    assert.equal(report.parsed.error, "settlement_unproven");
+    assert.equal(report.parsed.charged, undefined);
+    assert.equal(report.parsed.settlementSuccess, undefined);
+    assert.equal(report.paymentSuccess, null);
+    assert.deepEqual(
+      { verify: merchant.calls.verify, settle: merchant.calls.settle, handler: merchant.calls.handler },
+      { verify: 1, settle: 1, handler: 1 },
+    );
+  }
+});
+
+test("paidHttp explicit false is withheld and the route-owned body is not", async (t) => {
+  const modes = [];
+  const httpServer = createServer(async (req, res) => {
+    const chunks = [];
+    for await (const part of req) chunks.push(part);
+    const body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+    modes.push(body.url);
+    const secret = `http-${body.url}`;
+    if (String(body.url).endsWith("/false")) {
+      const proof = Buffer.from(JSON.stringify({
+        success: false, transaction: "", network: NETWORK, payer: PAYER,
+      })).toString("base64");
+      res.writeHead(200, { "content-type": "application/json", "payment-response": proof });
+      res.end(JSON.stringify({ ok: true, secret }));
+      return;
+    }
+    if (String(body.url).endsWith("/owned")) {
+      const proof = Buffer.from(JSON.stringify({
+        success: true, transaction: `0x${"ab".repeat(32)}`, network: NETWORK,
+      })).toString("base64");
+      res.writeHead(200, { "content-type": "application/json", "payment-response": proof });
+      res.end(JSON.stringify({ ok: true, secret }));
+      return;
+    }
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({ ok: true, secret: "http-route-body" }));
+  });
+  const port = await listen(httpServer);
+  t.after(() => closeServer(httpServer));
+  const app = express();
+  const mount = await mountMcp(app, {
+    httpBaseUrl: `http://127.0.0.1:${port}`,
+    facilitatorClient: facilitatorFor({ verify: 0, settle: 0, handler: 0, sequence: [], notes: [] }),
+    network: NETWORK,
+    payTo: PAY_TO,
+    serverInfo: { name: "merchant-modern-test", version: "1.23.55" },
+    modernProtocol: true,
+    tools: [{
+      name: "extract_batch",
+      description: "synthetic paid HTTP batch",
+      price: "$0.03",
+      inputSchema: { url: z.string().min(1).max(80) },
+      paidHttp: {
+        method: "POST",
+        path: "/extract/batch",
+        resourceUrl: "https://agents.samedaydesk.com/extract/batch",
+        maxRequestBytes: 16 * 1024,
+        maxResponseBytes: 160 * 1024,
+      },
+      run: async () => ({ ok: true, secret: "native-run-must-not-be-used" }),
+    }],
+  });
+  const server = app.listen(0, "127.0.0.1");
+  const mcpPort = await new Promise((resolve, reject) => {
+    server.once("listening", () => resolve(server.address().port));
+    server.once("error", reject);
+  });
+  t.after(() => closeServer(server));
+  const origin = `http://127.0.0.1:${mcpPort}`;
+  const client = await connectModern(origin, { pin: "2026-07-28" }, "http-bridge");
+  t.after(() => client.client.close());
+  const payment = {
+    x402Version: 2,
+    resource: { url: "https://agents.samedaydesk.com/extract/batch" },
+    accepted: { scheme: "exact", network: NETWORK, payTo: PAY_TO },
+    payload: { signature: "0xabc", authorization: { from: PAYER } },
+  };
+  const owned = await client.client.callTool({
+    name: "extract_batch",
+    arguments: { url: "https://example.com/owned" },
+    _meta: { "x402/payment": payment },
+  });
+  assert.equal(JSON.parse(owned.content[0].text).secret, "http-https://example.com/owned");
+  const denied = await client.client.callTool({
+    name: "extract_batch",
+    arguments: { url: "https://example.com/false" },
+    _meta: { "x402/payment": payment },
+  });
+  assert.equal(JSON.stringify(denied).includes("http-https://example.com/false"), false);
+  assert.equal(JSON.parse(denied.content[0].text).error, "settlement_unsuccessful");
+  assert.equal(denied._meta["x402/payment-response"].success, false);
+  const routeOwned = await client.client.callTool({
+    name: "extract_batch",
+    arguments: { url: "https://example.com/plain" },
+    _meta: { "x402/payment": payment },
+  });
+  assert.equal(JSON.parse(routeOwned.content[0].text).secret, "http-route-body");
+  assert.equal(mount.modernProtocol, "2026-07-28");
+  assert.deepEqual(modes, [
+    "https://example.com/owned",
+    "https://example.com/false",
+    "https://example.com/plain",
+  ]);
 });
 
 test("lost response recovers the same operation and a new nonce is a new operation", async (t) => {
