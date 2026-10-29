@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -22,7 +23,7 @@ import {
 } from "@modelcontextprotocol/server";
 import { toWebRequest } from "@modelcontextprotocol/node";
 import { createIdempotencyReplay } from "../../idempotency-replay.mjs";
-import { injectPaymentSignatureHeader, mountMcp } from "../../mcp-server.mjs";
+import { injectPaymentSignatureHeader, mountMcp, withholdExplicitFalseSettlement } from "../../mcp-server.mjs";
 
 const NETWORK = "eip155:84532";
 const PAY_TO = `0x${"22".repeat(20)}`;
@@ -93,8 +94,9 @@ function closeServer(server) {
   return new Promise((resolve) => server.close(() => resolve()));
 }
 
-async function startMerchant(t, { modern = true, policy = {}, recovery = false } = {}) {
+async function startMerchant(t, { modern = true, policy = {}, recovery = false, typed = false } = {}) {
   const calls = { verify: 0, settle: 0, handler: 0, sequence: [] };
+  const events = [];
   const app = express();
   let dataDir = null;
   let nativeRecovery = null;
@@ -114,6 +116,12 @@ async function startMerchant(t, { modern = true, policy = {}, recovery = false }
     modernProtocol: modern,
     tools: tools(calls),
     ...(nativeRecovery ? { nativeRecovery } : {}),
+    ...(typed ? {
+      typedTelemetry: {
+        enabled: true,
+        onAppend: (decision) => { events.push(decision); },
+      },
+    } : {}),
   });
   const server = app.listen(0, "127.0.0.1");
   const port = await new Promise((resolve, reject) => {
@@ -125,7 +133,7 @@ async function startMerchant(t, { modern = true, policy = {}, recovery = false }
     await closeServer(server);
     if (dataDir) await rm(dataDir, { recursive: true, force: true });
   });
-  return { origin, calls, mount };
+  return { origin, calls, mount, events };
 }
 
 function challengeOf(result) {
@@ -422,11 +430,285 @@ test("failed verify and settlement refusal do not invent a second payment", asyn
     _meta: { "x402/payment": paymentFor("enrich", accepts) },
   });
   assert.equal(settled.isError, true);
+  assert.equal(settled.structuredContent?.note, undefined);
   assert.equal(settled._meta?.["x402/payment-response"]?.success, undefined);
+  assert.equal(settled.content[0].text.includes("\"note\":\"refuse\""), false);
   assert.deepEqual(
     { verify: refused.calls.verify, settle: refused.calls.settle, handler: refused.calls.handler },
     { verify: 1, settle: 1, handler: 1 },
   );
+});
+
+test("direct shared boundary withholds only an explicit false settlement", () => {
+  const paid = {
+    content: [{ type: "text", text: JSON.stringify({ ok: true, note: "secret-table", markdown: "<table>Engine</table>" }) }],
+    structuredContent: { ok: true, note: "secret-table" },
+    _meta: {
+      "x402/payment-response": {
+        success: false,
+        transaction: `0x${"44".repeat(32)}`,
+        errorReason: "synthetic_settle_false",
+        payer: PAYER,
+      },
+      "samedaydesk/caller-receipt": { success: true },
+    },
+  };
+  const withheld = withholdExplicitFalseSettlement(paid);
+  assert.equal(withheld.isError, true);
+  assert.equal(JSON.stringify(withheld).includes("secret-table"), false);
+  assert.equal(JSON.stringify(withheld).includes("Engine"), false);
+  assert.equal(JSON.stringify(withheld).includes(PAYER), false);
+  assert.equal(withheld._meta["x402/payment-response"].success, false);
+  assert.equal(withheld._meta["x402/payment-response"].transaction, undefined);
+  assert.equal(withheld._meta["samedaydesk/caller-receipt"], undefined);
+  assert.equal(JSON.parse(withheld.content[0].text).error, "settlement_unsuccessful");
+  assert.equal(JSON.parse(withheld.content[0].text).charged, undefined);
+
+  const settled = {
+    content: [{ type: "text", text: "kept-note" }],
+    structuredContent: { ok: true, note: "kept-note" },
+    _meta: { "x402/payment-response": { success: true, transaction: `0x${"33".repeat(32)}` } },
+  };
+  assert.equal(withholdExplicitFalseSettlement(settled), settled);
+
+  const ambiguous = {
+    content: [{ type: "text", text: "ambiguous-body" }],
+    _meta: { "x402/payment-response": { transaction: "", network: NETWORK } },
+  };
+  assert.equal(withholdExplicitFalseSettlement(ambiguous), ambiguous);
+  const worded = {
+    content: [{ type: "text", text: "worded-body" }],
+    _meta: { "x402/payment-response": { success: "false" } },
+  };
+  assert.equal(withholdExplicitFalseSettlement(worded), worded);
+
+  const thrown = { isError: true, content: [{ type: "text", text: "Payment settlement failed: boom" }] };
+  assert.equal(withholdExplicitFalseSettlement(thrown), thrown);
+  const handlerError = {
+    isError: true,
+    content: [{ type: "text", text: "handler-said" }],
+    _meta: { "x402/payment-response": { success: false } },
+  };
+  assert.equal(withholdExplicitFalseSettlement(handlerError), handlerError);
+});
+
+function assertFalseSettlementWithheld(result, secret) {
+  assert.equal(result.isError, true);
+  const encoded = JSON.stringify(result);
+  assert.equal(encoded.includes(secret), false);
+  assert.equal(encoded.includes("<table"), false);
+  const body = JSON.parse(result.content[0].text);
+  assert.equal(body.ok, false);
+  assert.equal(body.error, "settlement_unsuccessful");
+  assert.equal(body.settlementSuccess, false);
+  assert.equal(body.charged, undefined);
+  assert.equal(result.structuredContent, undefined);
+  assert.equal(result._meta["x402/payment-response"].success, false);
+  assert.equal(result._meta["x402/payment-response"].transaction, undefined);
+  assert.notEqual(result._meta["x402/payment-response"].success, true);
+}
+
+test("explicit false settlement withholds paid output on modern and legacy mounts", async (t) => {
+  for (const modern of [true, false]) {
+    const merchant = await startMerchant(t, {
+      modern,
+      typed: true,
+      policy: {
+        settle: () => ({
+          success: false,
+          errorReason: "synthetic_settle_false",
+          transaction: `0x${"44".repeat(32)}`,
+          network: NETWORK,
+        }),
+      },
+    });
+    const connected = modern
+      ? await connectModern(merchant.origin, { pin: "2026-07-28" }, "false-modern")
+      : await connectLegacy(merchant.origin, "false-legacy");
+    t.after(() => connected.client.close());
+    const accepted = (await connected.client.listTools()).tools.find((tool) => tool.name === "enrich")._meta.x402.accepts[0];
+    const secret = modern ? "modern-paid-secret" : "legacy-paid-secret";
+    const result = await connected.client.callTool({
+      name: "enrich",
+      arguments: { note: secret },
+      _meta: {
+        "x402/payment": paymentFor("enrich", accepted),
+        "x402/payment-response": { success: true, transaction: `0x${"55".repeat(32)}` },
+      },
+    });
+    assertFalseSettlementWithheld(result, secret);
+    assert.deepEqual(merchant.calls.sequence, ["verify", "handler", "settle"]);
+    assert.deepEqual(
+      { verify: merchant.calls.verify, settle: merchant.calls.settle, handler: merchant.calls.handler },
+      { verify: 1, settle: 1, handler: 1 },
+    );
+    await merchant.mount.typedTelemetryLifecycle.flush({ timeoutMs: 1000 });
+    assert.equal(merchant.events.length, 1);
+    assert.equal(merchant.events[0].result, "settlement_failure");
+    assert.equal(merchant.events[0].reason, "typed_settlement_failure");
+    assert.equal(merchant.events[0].handlerInvoked, true);
+    assert.equal(merchant.events[0].applicationOutcome, "success");
+    assert.equal(merchant.events[0].settlementState, "failed");
+    assert.notEqual(merchant.events[0].result, "paid_success");
+    assert.equal(JSON.stringify(merchant.events[0]).includes(secret), false);
+  }
+});
+
+test("ambiguous settlement stays unknown and a false settlement is not recoverable", async (t) => {
+  const ambiguous = await startMerchant(t, {
+    modern: true,
+    typed: true,
+    policy: { settle: () => ({ transaction: "", network: NETWORK }) },
+  });
+  const modernClient = await connectModern(ambiguous.origin, { pin: "2026-07-28" }, "unknown-modern");
+  t.after(() => modernClient.client.close());
+  const modernAccepted = (await modernClient.client.listTools()).tools.find((tool) => tool.name === "enrich")._meta.x402.accepts[0];
+  const unknownResult = await modernClient.client.callTool({
+    name: "enrich",
+    arguments: { note: "ambiguous-note" },
+    _meta: { "x402/payment": paymentFor("enrich", modernAccepted) },
+  });
+  assert.notEqual(unknownResult._meta?.["x402/payment-response"]?.success, true);
+  assert.equal(JSON.parse(unknownResult.content?.[0]?.text || "{}").error, undefined);
+  await ambiguous.mount.typedTelemetryLifecycle.flush({ timeoutMs: 1000 });
+  assert.equal(ambiguous.events[0].result, "telemetry_incomplete");
+  assert.equal(ambiguous.events[0].settlementState, "unknown");
+  assert.notEqual(ambiguous.events[0].result, "paid_success");
+
+  const legacyUnknown = await startMerchant(t, {
+    modern: false,
+    typed: true,
+    policy: { settle: () => ({ transaction: "", network: NETWORK }) },
+  });
+  const legacyClient = await connectLegacy(legacyUnknown.origin, "unknown-legacy");
+  t.after(() => legacyClient.client.close());
+  const legacyAccepted = (await legacyClient.client.listTools()).tools.find((tool) => tool.name === "enrich")._meta.x402.accepts[0];
+  await legacyClient.client.callTool({
+    name: "enrich",
+    arguments: { note: "ambiguous-legacy" },
+    _meta: { "x402/payment": paymentFor("enrich", legacyAccepted) },
+  });
+  await legacyUnknown.mount.typedTelemetryLifecycle.flush({ timeoutMs: 1000 });
+  assert.equal(legacyUnknown.events[0].settlementState, "unknown");
+  assert.notEqual(legacyUnknown.events[0].result, "paid_success");
+
+  for (const modern of [true, false]) {
+    const merchant = await startMerchant(t, {
+      modern,
+      recovery: true,
+      policy: { settle: () => ({ success: false, errorReason: "synthetic_settle_false", transaction: "", network: NETWORK }) },
+    });
+    const connected = modern
+      ? await connectModern(merchant.origin, { pin: "2026-07-28" }, "recover-false-modern")
+      : await connectLegacy(merchant.origin, "recover-false-legacy");
+    t.after(() => connected.client.close());
+    const accepted = (await connected.client.listTools()).tools.find((tool) => tool.name === "enrich")._meta.x402.accepts[0];
+    const payment = paymentFor("enrich", accepted);
+    const secret = modern ? "recover-modern-secret" : "recover-legacy-secret";
+    const first = await connected.client.callTool({
+      name: "enrich",
+      arguments: { note: secret },
+      _meta: { "x402/payment": payment },
+    });
+    assertFalseSettlementWithheld(first, secret);
+    const replay = await connected.client.callTool({
+      name: "enrich",
+      arguments: { note: secret },
+      _meta: { "x402/payment": payment },
+    });
+    assert.equal(JSON.stringify(replay).includes(secret), false);
+    assert.equal(merchant.calls.handler, 1);
+    assert.equal(merchant.calls.settle, 1);
+    const conflict = await connected.client.callTool({
+      name: "enrich",
+      arguments: { note: "changed-args" },
+      _meta: { "x402/payment": payment },
+    });
+    assert.equal(conflict.isError, true);
+    assert.equal(JSON.stringify(conflict).includes(secret), false);
+    assert.equal(merchant.calls.handler, 1);
+    const recovered = await connected.client.callTool({
+      name: "recover_paid_result",
+      arguments: { name: "enrich", arguments: { note: secret } },
+      _meta: { "x402/payment": payment },
+    });
+    assert.equal(recovered.isError, true);
+    assert.equal(JSON.stringify(recovered).includes(secret), false);
+    assert.notEqual(recovered.structuredContent?.note, secret);
+    const fresh = paymentFor("enrich", accepted);
+    const again = await connected.client.callTool({
+      name: "enrich",
+      arguments: { note: "fresh-false" },
+      _meta: { "x402/payment": fresh },
+    });
+    assertFalseSettlementWithheld(again, "fresh-false");
+    assert.notEqual(fresh.payload.authorization.nonce, payment.payload.authorization.nonce);
+    assert.deepEqual(
+      { verify: merchant.calls.verify, settle: merchant.calls.settle, handler: merchant.calls.handler },
+      { verify: 2, settle: 2, handler: 2 },
+    );
+  }
+});
+
+function runPython(args) {
+  const python = process.env.H64201_PYTHON || "python3";
+  const script = path.join(root, "experiments/oct29-merchant-compatibility/python-false-settlement.py");
+  const pythonPath = [process.env.H64201_PYTHONPATH, "/tmp/oct29-mcp-py-site", process.env.PYTHONPATH]
+    .filter(Boolean)
+    .join(":");
+  return new Promise((resolve, reject) => {
+    const child = spawn(python, [script, ...args], {
+      cwd: root,
+      env: { ...process.env, PYTHONPATH: pythonPath },
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`python client exit ${code}: ${stderr.slice(-800)} ${stdout.slice(-400)}`));
+        return;
+      }
+      resolve(JSON.parse(stdout));
+    });
+  });
+}
+
+test("python client sees withheld false settlement on both mounts", async (t) => {
+  for (const [modern, mode] of [[true, "pin"], [false, "legacy"]]) {
+    const merchant = await startMerchant(t, {
+      modern,
+      policy: { settle: () => ({ success: false, errorReason: "synthetic_settle_false", transaction: "", network: NETWORK }) },
+    });
+    const connected = modern
+      ? await connectModern(merchant.origin, { pin: "2026-07-28" })
+      : await connectLegacy(merchant.origin);
+    t.after(() => connected.client.close());
+    const accepted = (await connected.client.listTools()).tools.find((tool) => tool.name === "enrich")._meta.x402.accepts[0];
+    const payment = paymentFor("enrich", accepted);
+    const secret = modern ? "py-modern-secret" : "py-legacy-secret";
+    const report = await runPython([
+      "--url", `${merchant.origin}/mcp`,
+      "--mode", mode,
+      "--note", secret,
+      "--meta", JSON.stringify({
+        "x402/payment": payment,
+        "x402/payment-response": { success: true, transaction: `0x${"66".repeat(32)}` },
+      }),
+    ]);
+    assert.equal(report.error, null);
+    assert.equal(report.isError, true);
+    assert.equal(JSON.stringify(report).includes(secret), false);
+    assert.equal(report.parsed.error, "settlement_unsuccessful");
+    assert.equal(report.parsed.settlementSuccess, false);
+    assert.equal(report.paymentSuccess, false);
+    assert.deepEqual(
+      { verify: merchant.calls.verify, settle: merchant.calls.settle, handler: merchant.calls.handler },
+      { verify: 1, settle: 1, handler: 1 },
+    );
+  }
 });
 
 test("lost response recovers the same operation and a new nonce is a new operation", async (t) => {

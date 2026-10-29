@@ -29,7 +29,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { x402ResourceServer } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
-import { createPaymentWrapper } from "@x402/mcp";
+import { MCP_PAYMENT_RESPONSE_META_KEY, createPaymentWrapper } from "@x402/mcp";
 import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery.mjs";
 import { attachMcpCallerResultFeedback, callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
@@ -151,6 +151,39 @@ function isPaymentRequiredBody(body) {
     && !Array.isArray(body)
     && Number.isInteger(body.x402Version)
     && Array.isArray(body.accepts);
+}
+
+// The facilitator object is the only settlement signal. A returned
+// {success:false} used to ride out on the handler body. Drop that body before
+// replay retention or client delivery. Do not invent a rollback, a no-effect,
+// or a receipt from caller-supplied fields.
+export function withholdExplicitFalseSettlement(result) {
+  if (!result || typeof result !== "object" || Array.isArray(result) || result.isError === true) return result;
+  const proof = result._meta?.[MCP_PAYMENT_RESPONSE_META_KEY];
+  if (!proof || typeof proof !== "object" || Array.isArray(proof) || proof.success !== false) return result;
+  return {
+    isError: true,
+    content: [{
+      type: "text",
+      text: JSON.stringify({
+        ok: false,
+        error: "settlement_unsuccessful",
+        settlementSuccess: false,
+      }),
+    }],
+    _meta: {
+      [MCP_PAYMENT_RESPONSE_META_KEY]: { success: false },
+    },
+  };
+}
+
+function noteDeliveredApplicationError(attempt, result) {
+  if (!attempt || result?.isError !== true) return;
+  const proof = result._meta?.[MCP_PAYMENT_RESPONSE_META_KEY];
+  // Settlement already failed after a completed handler. Keep that
+  // classification instead of rewriting the handler as an application error.
+  if (proof && typeof proof === "object" && !Array.isArray(proof) && proof.success === false) return;
+  attempt.overrideFinalApplicationError();
 }
 
 // Official Client.callTool validates structuredContent against outputSchema even when
@@ -678,7 +711,7 @@ function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "",
       const kind = classifyOutboundKind(message);
       if (kind === "tool_result") {
         try {
-          if (message.result?.isError === true) attempt.overrideFinalApplicationError();
+          noteDeliveredApplicationError(attempt, message.result);
           if (prepared?.delivery) attempt.noteToolDelivery(prepared.delivery);
         } catch {
           // Delivery capture must not change the MCP response.
@@ -867,8 +900,11 @@ async function prepareMerchantMcp({
     // paid(handler) -> MCP tool callback (args, extra) that verifies payment (from
     // extra._meta), runs the handler, then settles. We catch handler errors and return
     // a structured ok:false so a paid call never yields an opaque failure.
-    const inner = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl)
+    const settled = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl)
       : paid(typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t));
+    // Both eras use this callback. Explicit false settlement is removed before
+    // the replay journal retains a result and before a client receives it.
+    const inner = async (args, extra) => withholdExplicitFalseSettlement(await settled(args, extra));
     const recoverable = nativeRecovery && !t.paidHttp ? async (args, extra) => {
       const request = mcpHttpRequestAls.getStore();
       return recoveryJournal.runMcpTool({ name: t.name,
@@ -1054,7 +1090,7 @@ async function invokeModernTool(tool, args, ctx, seal) {
     sealed = null;
   }
   try {
-    if (result?.isError === true) attempt.overrideFinalApplicationError();
+    noteDeliveredApplicationError(attempt, result);
     if (sealed?.delivery) attempt.noteToolDelivery(sealed.delivery);
   } catch {
     // Delivery capture must not change the MCP response.
