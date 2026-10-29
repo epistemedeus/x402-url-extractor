@@ -1,0 +1,270 @@
+TAP version 13
+# Subtest: ordinary cold CLI retrieves the same whole outcome after lost response and provider/client process restart
+ok 1 - ordinary cold CLI retrieves the same whole outcome after lost response and provider/client process restart
+  ---
+  duration_ms: 1822.893486
+  type: 'test'
+  ...
+# {"coldRecovery":true,"synthetic":true,"settle":1,"usefulAcceptance":"unknown","paidLiveCalls":0}
+# Subtest: a completed ordinary cold client consumes its local output when the provider is unavailable
+ok 2 - a completed ordinary cold client consumes its local output when the provider is unavailable
+  ---
+  duration_ms: 969.358874
+  type: 'test'
+  ...
+# Subtest: an ordinary process interrupted during the current asynchronous receipt task resumes its retained partial output
+ok 3 - an ordinary process interrupted during the current asynchronous receipt task resumes its retained partial output
+  ---
+  duration_ms: 3010.879617
+  type: 'test'
+  ...
+# Subtest: cold recovery consumes current useful refusal, valid empty and partial results without a paid retry
+ok 4 - cold recovery consumes current useful refusal, valid empty and partial results without a paid retry
+  ---
+  duration_ms: 5043.887072
+  type: 'test'
+  ...
+# Subtest: wrong tenant/endpoint/input/quote/recipient/credential refuse at the actual lookup with no new effects
+ok 5 - wrong tenant/endpoint/input/quote/recipient/credential refuse at the actual lookup with no new effects
+  ---
+  duration_ms: 2640.996337
+  type: 'test'
+  ...
+# Subtest: provider quote changes preserve retrieval of the original purchase without adopting new terms
+ok 6 - provider quote changes preserve retrieval of the original purchase without adopting new terms
+  ---
+  duration_ms: 1695.179976
+  type: 'test'
+  ...
+# Subtest: unknown payment survives restart and reconciliation reads never create another paid request
+ok 7 - unknown payment survives restart and reconciliation reads never create another paid request
+  ---
+  duration_ms: 1678.6089
+  type: 'test'
+  ...
+# Subtest: revoked/expired grants and widened budgets refuse in a fresh ordinary process before lookup
+ok 8 - revoked/expired grants and widened budgets refuse in a fresh ordinary process before lookup
+  ---
+  duration_ms: 1223.949464
+  type: 'test'
+  ...
+# Subtest: fresh feature-source consumer keeps recovery outside the frozen feedback archive
+ok 9 - fresh feature-source consumer keeps recovery outside the frozen feedback archive
+  ---
+  duration_ms: 2837.319741
+  type: 'test'
+  ...
+# {"install":"feature-source copy of caller-result-client/src/mcp-recovery.mjs and bin/recover-mcp.mjs, then npm ci of the existing caller lock","publishedArchiveCanary":false,"archive":"caller-result-client/export/public/bytes/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz","archiveSha256":"3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b","archiveContainsRecovery":false,"merchantCheckoutPresent":false,"secondPaidVerify":false,"secondPaidSettle":false}
+# Subtest: M01 unpaid exact registered call is one challenge
+ok 10 - M01 unpaid exact registered call is one challenge
+  ---
+  duration_ms: 62.045785
+  type: 'test'
+  ...
+# Subtest: M02 verified handler success plus settlement success is paid_success
+ok 11 - M02 verified handler success plus settlement success is paid_success
+  ---
+  duration_ms: 30.184419
+  type: 'test'
+  ...
+# Subtest: M03 handler isError:true is application_failure never paid_success
+ok 12 - M03 handler isError:true is application_failure never paid_success
+  ---
+  duration_ms: 25.16446
+  type: 'test'
+  ...
+# Subtest: M04 handler throw is application_failure and retains no error text
+ok 13 - M04 handler throw is application_failure and retains no error text
+  ---
+  duration_ms: 27.665003
+  type: 'test'
+  ...
+# Subtest: M05 verifier rejection is challenge never paid_success
+ok 14 - M05 verifier rejection is challenge never paid_success
+  ---
+  duration_ms: 23.435939
+  type: 'test'
+  ...
+# Subtest: M06 settlement failed and unknown never paid_success
+ok 15 - M06 settlement failed and unknown never paid_success
+  ---
+  duration_ms: 45.793073
+  type: 'test'
+  ...
+# Subtest: M07 no-ID notification with forged payment never paid_success
+ok 16 - M07 no-ID notification with forged payment never paid_success
+  ---
+  duration_ms: 23.226102
+  type: 'test'
+  ...
+# Subtest: M08 numeric and string IDs bind exactly; type mismatch drops
+ok 17 - M08 numeric and string IDs bind exactly; type mismatch drops
+  ---
+  duration_ms: 27.065544
+  type: 'test'
+  ...
+# Subtest: M09 absent wrong unsafe and null IDs never succeed
+ok 18 - M09 absent wrong unsafe and null IDs never succeed
+  ---
+  duration_ms: 0.430918
+  type: 'test'
+  ...
+# Subtest: M10 each tool SKU resource credential-offer and settlement-offer mismatch drops
+ok 19 - M10 each tool SKU resource credential-offer and settlement-offer mismatch drops
+  ---
+  duration_ms: 12.64526
+  type: 'test'
+  ...
+# Subtest: M11 explicit wrapper replay path is replay_success never paid_success
+ok 20 - M11 explicit wrapper replay path is replay_success never paid_success
+  ---
+  duration_ms: 22.032668
+  type: 'test'
+  ...
+# Subtest: M12 JSON and SSE write boundaries yield identical typed results
+ok 21 - M12 JSON and SSE write boundaries yield identical typed results
+  ---
+  duration_ms: 112.435698
+  type: 'test'
+  ...
+# Subtest: M13 finish close and second finalize append at most once
+ok 22 - M13 finish close and second finalize append at most once
+  ---
+  duration_ms: 22.931725
+  type: 'test'
+  ...
+# Subtest: M14 32 interleaved requests with repeated IDs do not cross-wire
+ok 23 - M14 32 interleaved requests with repeated IDs do not cross-wire
+  ---
+  duration_ms: 118.949617
+  type: 'test'
+  ...
+# Subtest: M15 append throw reject and blocked promise keep response invariance
+ok 24 - M15 append throw reject and blocked promise keep response invariance
+  ---
+  duration_ms: 28.04714
+  type: 'test'
+  ...
+# Subtest: M16 initialize list ping malformed and unknown method emit zero economic events
+ok 25 - M16 initialize list ping malformed and unknown method emit zero economic events
+  ---
+  duration_ms: 26.277573
+  type: 'test'
+  ...
+# Subtest: M17 representative free and paid HTTP routes stay isolated
+ok 26 - M17 representative free and paid HTTP routes stay isolated
+  ---
+  duration_ms: 8.208718
+  type: 'test'
+  ...
+# Subtest: MCP POST declared-source headers are not retained by typed events or the HTTP writer
+ok 27 - MCP POST declared-source headers are not retained by typed events or the HTTP writer
+  ---
+  duration_ms: 8.360882
+  type: 'test'
+  ...
+# Subtest: M18 package and privacy scan excludes assignment fixtures and raw markers
+ok 28 - M18 package and privacy scan excludes assignment fixtures and raw markers
+  ---
+  duration_ms: 23.894455
+  type: 'test'
+  ...
+# Subtest: hook-enabled and hook-disabled control-flow receipt stays invariant
+ok 29 - hook-enabled and hook-disabled control-flow receipt stays invariant
+  ---
+  duration_ms: 22.672166
+  type: 'test'
+  ...
+# Subtest: final MCP output-schema failure after settlement is application_failure
+ok 30 - final MCP output-schema failure after settlement is application_failure
+  ---
+  duration_ms: 6.732585
+  type: 'test'
+  ...
+# Subtest: SDK input validation before the paid wrapper is not a payment challenge
+ok 31 - SDK input validation before the paid wrapper is not a payment challenge
+  ---
+  duration_ms: 3.788089
+  type: 'test'
+  ...
+# Subtest: synchronous append stall does not delay the HTTP response
+ok 32 - synchronous append stall does not delay the HTTP response
+  ---
+  duration_ms: 531.413556
+  type: 'test'
+  ...
+# Subtest: typed append uses canonical v4 ledger and production mount has no response observer
+ok 33 - typed append uses canonical v4 ledger and production mount has no response observer
+  ---
+  duration_ms: 16.579155
+  type: 'test'
+  ...
+# Subtest: M01 unpaid absent-credential challenge persists on the canonical ledger
+ok 34 - M01 unpaid absent-credential challenge persists on the canonical ledger
+  ---
+  duration_ms: 8.82397
+  type: 'test'
+  ...
+# Subtest: M01a authenticated validation marker joins the exact mounted challenge without raw retention
+ok 35 - M01a authenticated validation marker joins the exact mounted challenge without raw retention
+  ---
+  duration_ms: 6.220668
+  type: 'test'
+  ...
+# Subtest: M05 rejected-credential challenge persists on the canonical ledger
+ok 36 - M05 rejected-credential challenge persists on the canonical ledger
+  ---
+  duration_ms: 10.085292
+  type: 'test'
+  ...
+# Subtest: first callback is detached from the request stack
+ok 37 - first callback is detached from the request stack
+  ---
+  duration_ms: 233.43904
+  type: 'test'
+  ...
+# Subtest: lifecycle does not mutate Array.prototype during a callback
+ok 38 - lifecycle does not mutate Array.prototype during a callback
+  ---
+  duration_ms: 12.721322
+  type: 'test'
+  ...
+# Subtest: callback data stays isolated from lifecycle-owned queue
+ok 39 - callback data stays isolated from lifecycle-owned queue
+  ---
+  duration_ms: 14.157882
+  type: 'test'
+  ...
+# Subtest: hostile then-getter callback result is one contained append failure
+ok 40 - hostile then-getter callback result is one contained append failure
+  ---
+  duration_ms: 23.32231
+  type: 'test'
+  ...
+# Subtest: mounted MCP flush shares its deadline with continuation work
+ok 41 - mounted MCP flush shares its deadline with continuation work
+  ---
+  duration_ms: 59.090103
+  type: 'test'
+  ...
+# Subtest: mounted MCP shutdown shares its deadline with continuation work
+ok 42 - mounted MCP shutdown shares its deadline with continuation work
+  ---
+  duration_ms: 28.261377
+  type: 'test'
+  ...
+# Subtest: wrapper skipHandler is not delivery authority when settlement is unknown
+ok 43 - wrapper skipHandler is not delivery authority when settlement is unknown
+  ---
+  duration_ms: 27.690928
+  type: 'test'
+  ...
+1..43
+# tests 43
+# suites 0
+# pass 43
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 23895.348341

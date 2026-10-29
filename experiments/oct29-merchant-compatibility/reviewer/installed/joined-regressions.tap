@@ -1,0 +1,512 @@
+TAP version 13
+# Subtest: agent card exposes aggregate and route-discovery skills over A2A HTTP+JSON
+ok 1 - agent card exposes aggregate and route-discovery skills over A2A HTTP+JSON
+  ---
+  duration_ms: 1.918177
+  type: 'test'
+  ...
+# Subtest: catalog response is a direct A2A message and preserves context
+ok 2 - catalog response is a direct A2A message and preserves context
+  ---
+  duration_ms: 0.338212
+  type: 'test'
+  ...
+# Subtest: message validation requires the normative inbound message fields
+ok 3 - message validation requires the normative inbound message fields
+  ---
+  duration_ms: 0.128704
+  type: 'test'
+  ...
+# Subtest: agent card rejects a missing version and duplicate route skill IDs
+ok 4 - agent card rejects a missing version and duplicate route skill IDs
+  ---
+  duration_ms: 0.328187
+  type: 'test'
+  ...
+# Subtest: version problem advertises supported A2A version
+ok 5 - version problem advertises supported A2A version
+  ---
+  duration_ms: 0.1094
+  type: 'test'
+  ...
+# Subtest: accepts exact GET, POST, alternate, manifest, and A2A construction parity
+ok 6 - accepts exact GET, POST, alternate, manifest, and A2A construction parity
+  ---
+  duration_ms: 2.126998
+  type: 'test'
+  ...
+# Subtest: fails when a transform drops a contract or callable example
+ok 7 - fails when a transform drops a contract or callable example
+  ---
+  duration_ms: 1.477917
+  type: 'test'
+  ...
+# Subtest: generates mapped USDC construction terms for eip155:8453
+ok 8 - generates mapped USDC construction terms for eip155:8453
+  ---
+  duration_ms: 0.318664
+  type: 'test'
+  ...
+# Subtest: generates mapped USDC construction terms for eip155:84532
+ok 9 - generates mapped USDC construction terms for eip155:84532
+  ---
+  duration_ms: 0.160452
+  type: 'test'
+  ...
+# Subtest: rejects an unsupported USDC construction network
+ok 10 - rejects an unsupported USDC construction network
+  ---
+  duration_ms: 0.127119
+  type: 'test'
+  ...
+# Subtest: declared methods, tool text, catalogs, and output schemas stay aligned
+ok 11 - declared methods, tool text, catalogs, and output schemas stay aligned
+  ---
+  duration_ms: 1671.635577
+  type: 'test'
+  ...
+# unknown format "date-time" ignored in schema at path "\#/properties/paymentEvidence/properties/settlementPlane/properties/baseline/anyOf/0"
+# unknown format "date-time" ignored in schema at path "\#/properties/paymentEvidence/properties/settlementPlane/properties/baseline/anyOf/0"
+# Subtest: live free surfaces keep canonical paid routes and kill Circle as a 23rd action
+ok 12 - live free surfaces keep canonical paid routes and kill Circle as a 23rd action
+  ---
+  duration_ms: 1999.559475
+  type: 'test'
+  ...
+# Subtest: x402-only catalog actions are killed from MPP OpenAPI and kept on default OpenAPI
+ok 13 - x402-only catalog actions are killed from MPP OpenAPI and kept on default OpenAPI
+  ---
+  duration_ms: 2.546042
+  type: 'test'
+  ...
+# Subtest: kills Circle Gateway on MCP, A2A, catalog actions, and MPP OpenAPI
+ok 14 - kills Circle Gateway on MCP, A2A, catalog actions, and MPP OpenAPI
+  ---
+  duration_ms: 0.927574
+  type: 'test'
+  ...
+# Subtest: maps HTTP routes to MCP tool names and formats llms prices
+ok 15 - maps HTTP routes to MCP tool names and formats llms prices
+  ---
+  duration_ms: 0.113658
+  type: 'test'
+  ...
+# Subtest: declared caller client is absent until the served guide opts in
+ok 16 - declared caller client is absent until the served guide opts in
+  ---
+  duration_ms: 0.626037
+  type: 'test'
+  ...
+# Subtest: renders every canonical paid route plus a labeled Circle alternate
+ok 17 - renders every canonical paid route plus a labeled Circle alternate
+  ---
+  duration_ms: 0.21758
+  type: 'test'
+  ...
+# Subtest: accepts exact OpenAPI, x402, MCP, A2A, catalog, llms, and Circle alternate parity
+ok 18 - accepts exact OpenAPI, x402, MCP, A2A, catalog, llms, and Circle alternate parity
+  ---
+  duration_ms: 0.280493
+  type: 'test'
+  ...
+# Subtest: fails when llms omits a canonical paid route, matching the 2026-08-20 snapshot
+ok 19 - fails when llms omits a canonical paid route, matching the 2026-08-20 snapshot
+  ---
+  duration_ms: 0.401011
+  type: 'test'
+  ...
+# Subtest: free recover_paid_result is not a paid action and an unknown tool still drifts
+ok 20 - free recover_paid_result is not a paid action and an unknown tool still drifts
+  ---
+  duration_ms: 0.65306
+  type: 'test'
+  ...
+# Subtest: fails when Circle is promoted onto a killed surface
+ok 21 - fails when Circle is promoted onto a killed surface
+  ---
+  duration_ms: 1.750327
+  type: 'test'
+  ...
+# Subtest: live MCP metadata still matches one tool per canonical route shape
+ok 22 - live MCP metadata still matches one tool per canonical route shape
+  ---
+  duration_ms: 0.382953
+  type: 'test'
+  ...
+# Subtest: maps extract/batch to extract_batch for MCP parity
+ok 23 - maps extract/batch to extract_batch for MCP parity
+  ---
+  duration_ms: 0.12185
+  type: 'test'
+  ...
+# Subtest: root JSON derives configured actions, preserving hints without mutating the human map
+ok 24 - root JSON derives configured actions, preserving hints without mutating the human map
+  ---
+  duration_ms: 0.391201
+  type: 'test'
+  ...
+# Subtest: root parity rejects any missing, stale, duplicate or wrongly priced configured operation
+ok 25 - root parity rejects any missing, stale, duplicate or wrongly priced configured operation
+  ---
+  duration_ms: 0.939279
+  type: 'test'
+  ...
+# Subtest: root builder refuses malformed or duplicate hints and does not invent free recipes
+ok 26 - root builder refuses malformed or duplicate hints and does not invent free recipes
+  ---
+  duration_ms: 0.156067
+  type: 'test'
+  ...
+# Subtest: accepts unique stable operation IDs
+ok 27 - accepts unique stable operation IDs
+  ---
+  duration_ms: 1.357343
+  type: 'test'
+  ...
+# Subtest: rejects missing, malformed, or duplicate operation IDs
+ok 28 - rejects missing, malformed, or duplicate operation IDs
+  ---
+  duration_ms: 0.423442
+  type: 'test'
+  ...
+# Subtest: projectors advertise one identity for extract, batch, and lockfile
+ok 29 - projectors advertise one identity for extract, batch, and lockfile
+  ---
+  duration_ms: 2.495627
+  type: 'test'
+  ...
+# Subtest: checker rejects batch sold as per successful call, lockfile on mpp, and an invented rail
+ok 30 - checker rejects batch sold as per successful call, lockfile on mpp, and an invented rail
+  ---
+  duration_ms: 0.278298
+  type: 'test'
+  ...
+# Subtest: live merchant projects one identity across MCP, manifest, A2A, and OpenAPI
+ok 31 - live merchant projects one identity across MCP, manifest, A2A, and OpenAPI
+  ---
+  duration_ms: 1688.90849
+  type: 'test'
+  ...
+# Subtest: publishes one explicit read-only contract for every paid JSON POST route
+ok 32 - publishes one explicit read-only contract for every paid JSON POST route
+  ---
+  duration_ms: 1.514276
+  type: 'test'
+  ...
+# Subtest: effect selection and headers are exact method-route bindings
+ok 33 - effect selection and headers are exact method-route bindings
+  ---
+  duration_ms: 0.220981
+  type: 'test'
+  ...
+# Subtest: the declared paid POST set matches every payment-gated JSON POST operation
+ok 34 - the declared paid POST set matches every payment-gated JSON POST operation
+  ---
+  duration_ms: 1.854629
+  type: 'test'
+  ...
+# Subtest: OpenAPI attachment is generated from the exact declared operation set
+ok 35 - OpenAPI attachment is generated from the exact declared operation set
+  ---
+  duration_ms: 0.481418
+  type: 'test'
+  ...
+# Subtest: availability requires the configured runtime and exact eligible method/path
+ok 36 - availability requires the configured runtime and exact eligible method/path
+  ---
+  duration_ms: 35.038341
+  type: 'test'
+  ...
+# Subtest: identity projectors preserve available rails and reject invented authority
+ok 37 - identity projectors preserve available rails and reject invented authority
+  ---
+  duration_ms: 0.534071
+  type: 'test'
+  ...
+# Subtest: unusable startup configuration cannot supply an available runtime
+ok 38 - unusable startup configuration cannot supply an available runtime
+  ---
+  duration_ms: 0.330109
+  type: 'test'
+  ...
+# Subtest: actual merchant excludes upstream 3850/3852 producers for unpaid requests
+    # Subtest: normal Accept=default
+    ok 1 - normal Accept=default
+      ---
+      duration_ms: 22.430807
+      type: 'test'
+      ...
+    # Subtest: benign-host Accept=default
+    ok 2 - benign-host Accept=default
+      ---
+      duration_ms: 99.580948
+      type: 'test'
+      ...
+    # Subtest: benign-forwarded-host Accept=default
+    ok 3 - benign-forwarded-host Accept=default
+      ---
+      duration_ms: 2.471021
+      type: 'test'
+      ...
+    # Subtest: encoded-query Accept=default
+    ok 4 - encoded-query Accept=default
+      ---
+      duration_ms: 2.354551
+      type: 'test'
+      ...
+    # Subtest: raw-query Accept=default
+    ok 5 - raw-query Accept=default
+      ---
+      duration_ms: 2.18127
+      type: 'test'
+      ...
+    # Subtest: host Accept=default
+    ok 6 - host Accept=default
+      ---
+      duration_ms: 2.693141
+      type: 'test'
+      ...
+    # Subtest: forwarded-host Accept=default
+    ok 7 - forwarded-host Accept=default
+      ---
+      duration_ms: 1.783927
+      type: 'test'
+      ...
+    # Subtest: encoded-slash-query Accept=default
+    ok 8 - encoded-slash-query Accept=default
+      ---
+      duration_ms: 2.107161
+      type: 'test'
+      ...
+    # Subtest: trailing-slash Accept=default
+    ok 9 - trailing-slash Accept=default
+      ---
+      duration_ms: 2.413443
+      type: 'test'
+      ...
+    # Subtest: case Accept=default
+    ok 10 - case Accept=default
+      ---
+      duration_ms: 1.812126
+      type: 'test'
+      ...
+    # Subtest: normal Accept=application/json
+    ok 11 - normal Accept=application/json
+      ---
+      duration_ms: 1.581992
+      type: 'test'
+      ...
+    # Subtest: benign-host Accept=application/json
+    ok 12 - benign-host Accept=application/json
+      ---
+      duration_ms: 1.410182
+      type: 'test'
+      ...
+    # Subtest: benign-forwarded-host Accept=application/json
+    ok 13 - benign-forwarded-host Accept=application/json
+      ---
+      duration_ms: 1.719629
+      type: 'test'
+      ...
+    # Subtest: encoded-query Accept=application/json
+    ok 14 - encoded-query Accept=application/json
+      ---
+      duration_ms: 3.657009
+      type: 'test'
+      ...
+    # Subtest: raw-query Accept=application/json
+    ok 15 - raw-query Accept=application/json
+      ---
+      duration_ms: 4.587478
+      type: 'test'
+      ...
+    # Subtest: host Accept=application/json
+    ok 16 - host Accept=application/json
+      ---
+      duration_ms: 1.254955
+      type: 'test'
+      ...
+    # Subtest: forwarded-host Accept=application/json
+    ok 17 - forwarded-host Accept=application/json
+      ---
+      duration_ms: 1.109116
+      type: 'test'
+      ...
+    # Subtest: encoded-slash-query Accept=application/json
+    ok 18 - encoded-slash-query Accept=application/json
+      ---
+      duration_ms: 1.325938
+      type: 'test'
+      ...
+    # Subtest: trailing-slash Accept=application/json
+    ok 19 - trailing-slash Accept=application/json
+      ---
+      duration_ms: 1.284885
+      type: 'test'
+      ...
+    # Subtest: case Accept=application/json
+    ok 20 - case Accept=application/json
+      ---
+      duration_ms: 1.174677
+      type: 'test'
+      ...
+    # Subtest: normal Accept=text/html
+    ok 21 - normal Accept=text/html
+      ---
+      duration_ms: 1.338216
+      type: 'test'
+      ...
+    # Subtest: benign-host Accept=text/html
+    ok 22 - benign-host Accept=text/html
+      ---
+      duration_ms: 1.315464
+      type: 'test'
+      ...
+    # Subtest: benign-forwarded-host Accept=text/html
+    ok 23 - benign-forwarded-host Accept=text/html
+      ---
+      duration_ms: 1.70828
+      type: 'test'
+      ...
+    # Subtest: encoded-query Accept=text/html
+    ok 24 - encoded-query Accept=text/html
+      ---
+      duration_ms: 1.35368
+      type: 'test'
+      ...
+    # Subtest: raw-query Accept=text/html
+    ok 25 - raw-query Accept=text/html
+      ---
+      duration_ms: 1.152583
+      type: 'test'
+      ...
+    # Subtest: host Accept=text/html
+    ok 26 - host Accept=text/html
+      ---
+      duration_ms: 1.085908
+      type: 'test'
+      ...
+    # Subtest: forwarded-host Accept=text/html
+    ok 27 - forwarded-host Accept=text/html
+      ---
+      duration_ms: 1.11371
+      type: 'test'
+      ...
+    # Subtest: encoded-slash-query Accept=text/html
+    ok 28 - encoded-slash-query Accept=text/html
+      ---
+      duration_ms: 1.071088
+      type: 'test'
+      ...
+    # Subtest: trailing-slash Accept=text/html
+    ok 29 - trailing-slash Accept=text/html
+      ---
+      duration_ms: 1.296242
+      type: 'test'
+      ...
+    # Subtest: case Accept=text/html
+    ok 30 - case Accept=text/html
+      ---
+      duration_ms: 1.111307
+      type: 'test'
+      ...
+    1..30
+ok 39 - actual merchant excludes upstream 3850/3852 producers for unpaid requests
+  ---
+  duration_ms: 1593.06843
+  type: 'test'
+  ...
+# Subtest: builds bounded seller-declared authorization evidence for exact operations
+ok 40 - builds bounded seller-declared authorization evidence for exact operations
+  ---
+  duration_ms: 13.021953
+  type: 'test'
+  ...
+# Subtest: rejects missing response contracts, undeclared effects, and cross-origin resources
+ok 41 - rejects missing response contracts, undeclared effects, and cross-origin resources
+  ---
+  duration_ms: 0.574303
+  type: 'test'
+  ...
+# Subtest: advertises the manifest through one standard describedby link on configured paid or discovery routes
+ok 42 - advertises the manifest through one standard describedby link on configured paid or discovery routes
+  ---
+  duration_ms: 0.428884
+  type: 'test'
+  ...
+# Subtest: machine documentation links name the existing OpenAPI document and x402 catalog
+ok 43 - machine documentation links name the existing OpenAPI document and x402 catalog
+  ---
+  duration_ms: 0.153287
+  type: 'test'
+  ...
+# Subtest: compact skill contract advertises the payment-offer preflight boundary
+ok 44 - compact skill contract advertises the payment-offer preflight boundary
+  ---
+  duration_ms: 1.709917
+  type: 'test'
+  ...
+# Subtest: compact skill contract rejects an invalid public origin
+ok 45 - compact skill contract rejects an invalid public origin
+  ---
+  duration_ms: 0.351909
+  type: 'test'
+  ...
+# Subtest: compact skill contract fails closed on missing, malformed, or duplicate actions
+ok 46 - compact skill contract fails closed on missing, malformed, or duplicate actions
+  ---
+  duration_ms: 0.175935
+  type: 'test'
+  ...
+# Subtest: builds a stable pre-registration document without inventing an agent ID
+ok 47 - builds a stable pre-registration document without inventing an agent ID
+  ---
+  duration_ms: 1.481955
+  type: 'test'
+  ...
+# Subtest: binds the final asset to the exact mainnet registry
+ok 48 - binds the final asset to the exact mainnet registry
+  ---
+  duration_ms: 0.180519
+  type: 'test'
+  ...
+# Subtest: appends canonical paid actions without replacing protocol entry points
+ok 49 - appends canonical paid actions without replacing protocol entry points
+  ---
+  duration_ms: 0.231435
+  type: 'test'
+  ...
+# Subtest: rejects path-bearing origins and malformed asset IDs
+ok 50 - rejects path-bearing origins and malformed asset IDs
+  ---
+  duration_ms: 0.36311
+  type: 'test'
+  ...
+# Subtest: mounted index and SKILL.md match current portable skill source
+ok 51 - mounted index and SKILL.md match current portable skill source
+  ---
+  duration_ms: 1660.85919
+  type: 'test'
+  ...
+# Subtest: mounted negatives: missing file, traversal, unknown name
+ok 52 - mounted negatives: missing file, traversal, unknown name
+  ---
+  duration_ms: 1618.97762
+  type: 'test'
+  ...
+# Subtest: R8 contest health metadata stays disjoint and MCP remains 23 tools
+ok 53 - R8 contest health metadata stays disjoint and MCP remains 23 tools
+  ---
+  duration_ms: 1612.152001
+  type: 'test'
+  ...
+1..53
+# tests 83
+# suites 0
+# pass 83
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14271.605292
+{"regressionExit":0,"signal":null,"localFacilitatorCalls":2,"verify":0,"settle":0}

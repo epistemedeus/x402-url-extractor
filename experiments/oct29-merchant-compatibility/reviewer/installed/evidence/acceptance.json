@@ -1,0 +1,70 @@
+{
+  "source": "/tmp/h64201-reviewer-accept-ahOxQ9/joined",
+  "cases": [
+    {
+      "label": "disabled",
+      "ok": true,
+      "protocols": [
+        "x402"
+      ],
+      "human": {
+        "human:/": "5be6d21a9f39bf154511bd9556d587028587deabf2526da930a0f28fceb3be8e",
+        "human:/radar": "adf7d06e40b7f27d948001634434d668415e2a84bf81032ea4b9d673a738eea5",
+        "human:/platforms": "adf7d06e40b7f27d948001634434d668415e2a84bf81032ea4b9d673a738eea5",
+        "human:/platforms/methodology": "2e0096d458af7ecb0fe87ccc2ac715600fdaec339cc226c698902bfa2f93ac8a",
+        "human:/alerts": "2d9c661a3492814090175d15b03e871e832032bb37fef817b903df03695df15b",
+        "human:/platforms/gofrantic": "837571ffd5ec58e4899a9a9c4a347dd976b65d0a19994b851e77af96aada12f3",
+        "human:/platforms/taskmarket": "04d5a2b79713ada1460a53a17a41569f5781d55668f8e41d579599040590716d",
+        "human:/platforms/bountybook": "3734b050dfa84b9499bc21e9639309c0dc07fcd3025c79557c5db34ead247b93",
+        "human:/platforms/superteam": "0b6e7389c2d6de0c981026e95a57cc999c2f19cbc2bd677f8aad7f765c83b20f",
+        "human:/platforms/moltjobs": "0e62e2269e7f28be51c22aafb53dbf67b15322ca0f0c47d342ee8459699e6065"
+      }
+    },
+    {
+      "label": "enabled",
+      "ok": true,
+      "protocols": [
+        "mpp",
+        "x402"
+      ],
+      "human": {
+        "human:/": "5be6d21a9f39bf154511bd9556d587028587deabf2526da930a0f28fceb3be8e",
+        "human:/radar": "adf7d06e40b7f27d948001634434d668415e2a84bf81032ea4b9d673a738eea5",
+        "human:/platforms": "adf7d06e40b7f27d948001634434d668415e2a84bf81032ea4b9d673a738eea5",
+        "human:/platforms/methodology": "2e0096d458af7ecb0fe87ccc2ac715600fdaec339cc226c698902bfa2f93ac8a",
+        "human:/alerts": "2d9c661a3492814090175d15b03e871e832032bb37fef817b903df03695df15b",
+        "human:/platforms/gofrantic": "837571ffd5ec58e4899a9a9c4a347dd976b65d0a19994b851e77af96aada12f3",
+        "human:/platforms/taskmarket": "04d5a2b79713ada1460a53a17a41569f5781d55668f8e41d579599040590716d",
+        "human:/platforms/bountybook": "3734b050dfa84b9499bc21e9639309c0dc07fcd3025c79557c5db34ead247b93",
+        "human:/platforms/superteam": "0b6e7389c2d6de0c981026e95a57cc999c2f19cbc2bd677f8aad7f765c83b20f",
+        "human:/platforms/moltjobs": "0e62e2269e7f28be51c22aafb53dbf67b15322ca0f0c47d342ee8459699e6065"
+      }
+    },
+    {
+      "label": "disabled-again",
+      "ok": true,
+      "protocols": [
+        "x402"
+      ],
+      "human": {
+        "human:/": "5be6d21a9f39bf154511bd9556d587028587deabf2526da930a0f28fceb3be8e",
+        "human:/radar": "adf7d06e40b7f27d948001634434d668415e2a84bf81032ea4b9d673a738eea5",
+        "human:/platforms": "adf7d06e40b7f27d948001634434d668415e2a84bf81032ea4b9d673a738eea5",
+        "human:/platforms/methodology": "2e0096d458af7ecb0fe87ccc2ac715600fdaec339cc226c698902bfa2f93ac8a",
+        "human:/alerts": "2d9c661a3492814090175d15b03e871e832032bb37fef817b903df03695df15b",
+        "human:/platforms/gofrantic": "837571ffd5ec58e4899a9a9c4a347dd976b65d0a19994b851e77af96aada12f3",
+        "human:/platforms/taskmarket": "04d5a2b79713ada1460a53a17a41569f5781d55668f8e41d579599040590716d",
+        "human:/platforms/bountybook": "3734b050dfa84b9499bc21e9639309c0dc07fcd3025c79557c5db34ead247b93",
+        "human:/platforms/superteam": "0b6e7389c2d6de0c981026e95a57cc999c2f19cbc2bd677f8aad7f765c83b20f",
+        "human:/platforms/moltjobs": "0e62e2269e7f28be51c22aafb53dbf67b15322ca0f0c47d342ee8459699e6065"
+      }
+    }
+  ],
+  "economicAuthorityAndReplayContractUnchanged": true,
+  "oldResultReplay": [
+    "x402",
+    "mpp"
+  ],
+  "verify": 0,
+  "settle": 0
+}
