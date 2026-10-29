@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { operationIdentity } from "./operation-identity.mjs";
+import { operationIdentityFromAction } from "./operation-identity.mjs";
 
 const A2A_VERSION = "1.0";
 const A2A_CATALOG_SKILL_ID = "discover-x402-paid-actions";
@@ -27,12 +27,13 @@ export function buildPaidActionSkills(actions = []) {
     const routeLabel = `${method} ${route}`;
     const price = String(action.priceAtomicUsdc || "");
     const exampleUrl = typeof action?.request?.exampleUrl === "string" ? action.request.exampleUrl : null;
+    const identity = operationIdentityFromAction(action);
     return {
       id,
-      operation: operationIdentity({ route, priceAtomic: price }),
+      operation: identity,
       name: `Discover paid action ${routeLabel}`,
-      description: `Discover the direct ${routeLabel} machine-paid action, its ${price || "current"} atomic USDC price, and x402/MPP invocation contract. Discovery only; invoke the returned exact request directly.${exampleUrl ? ` Complete example: ${exampleUrl}` : ""}`,
-      tags: [...new Set(["x402", "mpp", "paid-action", "discovery", ...(action.tags || [])])],
+      description: `Discover the direct ${routeLabel} machine-paid action, its ${price || "current"} atomic USDC price, and ${identity.supportedRails.join("/")} invocation contract. Discovery only; invoke the returned exact request directly.${exampleUrl ? ` Complete example: ${exampleUrl}` : ""}`,
+      tags: [...new Set([...identity.supportedRails, "paid-action", "discovery", ...(action.tags || []).filter((tag) => tag !== "mpp" || identity.supportedRails.includes("mpp"))])],
       examples: [exampleUrl
         ? `Find the ${routeLabel} paid action, then call ${exampleUrl}`
         : `Find the ${routeLabel} paid action and its exact current price.`],

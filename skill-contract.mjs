@@ -25,16 +25,17 @@ function actionLines(actions) {
 export function buildSkillContract(publicUrl, actions, callerResultClient = null, extractionTrialDiscovery = null) {
   const origin = new URL(publicUrl).origin;
   const actionsMarkdown = actionLines(actions);
+  const mppAvailable = actions.some((action) => action.paymentProtocols?.includes("mpp"));
   const callerGuide = renderCallerResultClientGuide(callerResultClient);
   return `# SameDayDesk machine commerce gateway
 
-Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, exact-action or stateful delegated-signer policy conformance, work-opportunity economics, cross-registry discoverability, x402 and MPP offer preflight, Morpho borrower risk, market underwriting, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
+Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, exact-action or stateful delegated-signer policy conformance, work-opportunity economics, cross-registry discoverability, x402 and MPP offer preflight, Morpho borrower risk, market underwriting, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through ${mppAvailable ? "x402 or native MPP Payment authentication on eligible actions" : "x402"}.
 
 ## Discover
 
 ${extractionTrialDiscovery ? `- Walletless extraction trial contract (current availability, request and limits): ${extractionTrialDiscovery}\n` : ""}- x402 manifest: ${origin}/.well-known/x402
 - OpenAPI: ${origin}/openapi.json
-- MPP discovery: ${origin}/mpp-openapi.json (per-operation offers)
+${mppAvailable ? `- MPP discovery: ${origin}/mpp-openapi.json (currently eligible operations only)` : ""}
 - Action catalog: ${origin}/api/actions
 - Agent skills index: ${origin}/.well-known/skills/index.json
 - MCP transport: POST ${origin}/mcp
@@ -56,11 +57,11 @@ ${actionsMarkdown}
 
 1. Choose an action from the manifest or action catalog.
 2. Send the exact declared method and input. Most actions use GET query parameters; both wallet-policy conformance routes use bounded POST JSON bodies. Agent Skills clients may include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay under the same optional attribution-only boundary above.
-3. One unpaid HTTP 402 carries x402 v2 payment requirements and a native MPP WWW-Authenticate Payment challenge.
+3. One unpaid HTTP 402 carries x402 v2 payment requirements.${mppAvailable ? " Eligible actions also carry a native MPP WWW-Authenticate Payment challenge. Check the selected action’s paymentProtocols." : ""}
 4. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
 5. If your policy uses seller purchase evidence, follow the same-origin describedby link, verify its exact operation and digest, and bind it into authorization. It is seller-declared evidence, not permission to spend.
-6. Pay through x402 and replay with PAYMENT-SIGNATURE, or pay through MPP and replay with Authorization: Payment.
-7. Reconcile PAYMENT-RESPONSE for x402 or Payment-Receipt for MPP before continuing a workflow.
+6. Pay through x402 and replay with PAYMENT-SIGNATURE${mppAvailable ? ", or use Authorization: Payment when the selected action advertises MPP" : ""}.
+7. Reconcile PAYMENT-RESPONSE for x402${mppAvailable ? " or Payment-Receipt for MPP" : ""} before continuing a workflow.
 
 ## Boundaries
 

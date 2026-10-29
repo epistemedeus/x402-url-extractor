@@ -114,6 +114,7 @@ export function renderLlmsTxt({
   if (!origin || !facilitator || !payTo) fail("origin, facilitator, and payTo are required");
   if (!Array.isArray(actions) || actions.length === 0) fail("actions are required");
   const publicOrigin = new URL(origin).origin;
+  const mppAvailable = actions.some((action) => action.paymentProtocols?.includes("mpp"));
   const lines = actions.map((action) => llmsLine({
     origin: publicOrigin,
     method: String(action.method || "GET").toUpperCase(),
@@ -138,16 +139,16 @@ export function renderLlmsTxt({
   const callerGuide = renderCallerResultClientGuide(callerResultClient);
   return `# SameDayDesk machine commerce gateway
 
-> Machine-discoverable HTTP capabilities settle USDC on Base through either x402 or native MPP Payment authentication. Payment-offer preflight also has a Circle Gateway x402 path for gasless batched USDC Nanopayments. MCP remains Base x402-gated. No account or subscription is required. Current standard facilitator: ${facilitator}. payTo ${payTo}.
+> Machine-discoverable HTTP capabilities settle USDC on Base through ${mppAvailable ? "x402 or native MPP Payment authentication on eligible actions" : "x402"}.${alternate ? " Payment-offer preflight also has a Circle Gateway x402 path for gasless batched USDC Nanopayments." : ""} MCP remains Base x402-gated. No account or subscription is required. Current standard facilitator: ${facilitator}. payTo ${payTo}.
 
 ## Endpoints
 ${lines.join("\n")}
 ${freeSection}
 ## How to pay
-1. GET an endpoint such as ${publicOrigin}/enrich?domain=stripe.com. One HTTP 402 advertises both protocols.
+1. GET an endpoint such as ${publicOrigin}/enrich?domain=stripe.com. Inspect its HTTP 402 for the currently available payment protocols.
 2. For x402, use PAYMENT-REQUIRED with an x402 v2 client and replay with PAYMENT-SIGNATURE. A successful response carries PAYMENT-RESPONSE.
-3. For MPP, use WWW-Authenticate: Payment with an mppx EVM charge client and replay with Authorization: Payment. A successful response carries Payment-Receipt.
-4. The Circle Gateway route advertises GatewayWalletBatched x402 requirements and settles the same quoted amount into the seller's Gateway balance.
+${mppAvailable ? "3. For an action advertising MPP, use WWW-Authenticate: Payment with an mppx EVM charge client and replay with Authorization: Payment. A successful response carries Payment-Receipt." : "3. Select x402 from the current action catalog."}
+${alternate ? "4. The Circle Gateway route advertises GatewayWalletBatched x402 requirements and settles the same quoted amount into the seller's Gateway balance." : "4. Use the selected action’s advertised settlement route."}
 5. Runtime payment challenges are authoritative. Enforce the chosen scheme, network, amount, and recipient before signing.
 
 ## Discovery

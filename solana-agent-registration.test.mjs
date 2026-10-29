@@ -8,6 +8,7 @@ import {
 test("builds a stable pre-registration document without inventing an agent ID", () => {
   const registration = buildSolanaAgentRegistration({
     publicUrl: "https://agents.samedaydesk.com",
+    actions: [{ name: "read", route: "/read", paymentProtocols: ["x402", "mpp"] }],
   });
 
   assert.equal(registration.type, "https://eips.ethereum.org/EIPS/eip-8004#registration-v1");
@@ -16,7 +17,7 @@ test("builds a stable pre-registration document without inventing an agent ID", 
   assert.equal(registration.registrations, undefined);
   assert.deepEqual(
     registration.services.map(({ name }) => name),
-    ["MCP", "A2A", "OpenAPI", "SKILL", "x402", "MPP", "ServiceDeployment", "ServiceDeploymentKey", "x402-solana", "MPP-solana", "agentWallet"],
+    ["MCP", "A2A", "OpenAPI", "SKILL", "x402", "MPP", "ServiceDeployment", "ServiceDeploymentKey", "x402-solana", "MPP-solana", "paid-action:read", "agentWallet"],
   );
   assert.equal(registration.services[0].endpoint, "https://agents.samedaydesk.com/mcp");
   assert.equal(registration.services[2].endpoint, "https://agents.samedaydesk.com/openapi.json");
@@ -24,7 +25,7 @@ test("builds a stable pre-registration document without inventing an agent ID", 
   assert.equal(registration.services[7].endpoint, "https://agents.samedaydesk.com/.well-known/agent-payment-policy-service-deployment.pem");
   assert.equal(registration.services[8].endpoint, "https://solana.samedaydesk.com/.well-known/x402");
   assert.equal(
-    registration.services[10].endpoint,
+    registration.services.at(-1).endpoint,
     `solana:${SOLANA_AGENT_REGISTRATION.chainId}:${SOLANA_AGENT_REGISTRATION.merchantWallet}`,
   );
 });
