@@ -1,0 +1,55 @@
+{
+  "repository": "https://github.com/epistemedeus/x402-url-extractor.git",
+  "commit": "38f8787b04bf3221ee0875ce1a6af687592c8015",
+  "files": [
+    {
+      "label": "reader-extract.mjs",
+      "url": "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/38f8787b04bf3221ee0875ce1a6af687592c8015/extract.mjs",
+      "bytes": 15857,
+      "sha256": "e087cdcc6bbb019fa9ea0b8ca2e5f7d9e682dfb2bfd6b205e119330d32a5c6e1"
+    },
+    {
+      "label": "reader-extract-capture.mjs",
+      "url": "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/38f8787b04bf3221ee0875ce1a6af687592c8015/extract-capture.mjs",
+      "bytes": 6384,
+      "sha256": "64c4c0422bd84cedb7168d0509b694d88ef1f8a694e7c5ecc48b18080493b0d5"
+    },
+    {
+      "label": "reader-extract-excerpt-budget.mjs",
+      "url": "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/38f8787b04bf3221ee0875ce1a6af687592c8015/extract-excerpt-budget.mjs",
+      "bytes": 2648,
+      "sha256": "f767283b0078823c4da27b32f4f7c8dab6cb4740e2af1feb660e641ba2376419"
+    },
+    {
+      "label": "reader-extract-batch-config.mjs",
+      "url": "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/38f8787b04bf3221ee0875ce1a6af687592c8015/extract-batch-config.mjs",
+      "bytes": 2995,
+      "sha256": "4ef4d63a5b379250620443fa19c0ba4fa2c0b2d6035b480cf9c0b224c3201728"
+    },
+    {
+      "label": "reader-markdown-table.mjs",
+      "url": "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/38f8787b04bf3221ee0875ce1a6af687592c8015/markdown-table.mjs",
+      "bytes": 11713,
+      "sha256": "cec20b50a4efd91688ff22c4d28c176c3f538f080111af36f4bce2b5a55846ba"
+    },
+    {
+      "label": "reader-extract-batch-c1_url-guard.mjs",
+      "url": "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/38f8787b04bf3221ee0875ce1a6af687592c8015/extract-batch-c1/url-guard.mjs",
+      "bytes": 2340,
+      "sha256": "85931890091efa2b91399b4356764e8bb6adb7f1f81bcf61ad8e5b0e5935193d"
+    },
+    {
+      "label": "reader-extract-batch-c1_public-fetch.mjs",
+      "url": "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/38f8787b04bf3221ee0875ce1a6af687592c8015/extract-batch-c1/public-fetch.mjs",
+      "bytes": 2005,
+      "sha256": "780264c1f85a32c7dda9432d6590775553f1a8afd21d677d53d7f34c0048a082"
+    },
+    {
+      "label": "reader-LICENSE",
+      "url": "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/38f8787b04bf3221ee0875ce1a6af687592c8015/LICENSE",
+      "bytes": 1068,
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    }
+  ],
+  "lockProjection": "exact original locked dependency entries for three root libraries and their transitive closure"
+}

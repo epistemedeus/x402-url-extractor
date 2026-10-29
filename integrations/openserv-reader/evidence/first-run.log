@@ -1,0 +1,107 @@
+TAP version 13
+# Subtest: installed SDK subclass and consumer preserve useful and negative reader records
+ok 1 - installed SDK subclass and consumer preserve useful and negative reader records
+  ---
+  duration_ms: 2159.541503
+  ...
+# Subtest: output cuts never deliver a partial native table
+ok 2 - output cuts never deliver a partial native table
+  ---
+  duration_ms: 771.873667
+  ...
+# Subtest: absent/wrong auth, foreign scopes, unknown actions and invalid inputs have no effects
+not ok 3 - absent/wrong auth, foreign scopes, unknown actions and invalid inputs have no effects
+  ---
+  duration_ms: 15.317979
+  location: '/tmp/root55500-installed-yJwgWM/consumer.test.mjs:136:1'
+  failureType: 'testCodeFailure'
+  error: `Unexpected token '<', "<!DOCTYPE "... is not valid JSON`
+  code: 'ERR_TEST_FAILURE'
+  name: 'SyntaxError'
+  stack: |-
+    JSON.parse (<anonymous>)
+    send (file:///tmp/root55500-installed-yJwgWM/consumer.test.mjs:87:55)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (file:///tmp/root55500-installed-yJwgWM/consumer.test.mjs:148:112)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Error: invalid_action_or_input
+#     at refuse (file:///tmp/root55500-installed-yJwgWM/adapter.mjs:18:38)
+#     at OfflineReaderAgent.handleRootRoute (file:///tmp/root55500-installed-yJwgWM/adapter.mjs:71:43)
+#     at /tmp/root55500-installed-yJwgWM/node_modules/@openserv-labs/sdk/dist/agent.js:815:25
+#     at /tmp/root55500-installed-yJwgWM/node_modules/express-async-router/index.js:92:32
+#     at Layer.handle [as handle_request] (/tmp/root55500-installed-yJwgWM/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/tmp/root55500-installed-yJwgWM/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/tmp/root55500-installed-yJwgWM/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/tmp/root55500-installed-yJwgWM/node_modules/express/lib/router/layer.js:95:5)
+#     at /tmp/root55500-installed-yJwgWM/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/tmp/root55500-installed-yJwgWM/node_modules/express/lib/router/index.js:346:12)
+# Subtest: authoritative task assignment mismatch refuses before source/completion/error
+ok 4 - authoritative task assignment mismatch refuses before source/completion/error
+  ---
+  duration_ms: 9.624909
+  ...
+# Subtest: lost accepted completion ack compares exact original output; replay and reopen never execute again
+ok 5 - lost accepted completion ack compares exact original output; replay and reopen never execute again
+  ---
+  duration_ms: 113.903925
+  ...
+# Subtest: unreceived, not accepted and different readback remain unknown without retries
+ok 6 - unreceived, not accepted and different readback remain unknown without retries
+  ---
+  duration_ms: 328.673336
+  ...
+# Subtest: buyer response loss recovers retained original result without another PUT or fetch
+ok 7 - buyer response loss recovers retained original result without another PUT or fetch
+  ---
+  duration_ms: 105.823956
+  ...
+# Subtest: real default reader deadline aborts a stalled owned stream; later valid task recovers
+ok 8 - real default reader deadline aborts a stalled owned stream; later valid task recovers
+  ---
+  duration_ms: 12206.238051
+  ...
+# Subtest: explicit cancellation reaps only owned reader child and allows later task
+ok 9 - explicit cancellation reaps only owned reader child and allows later task
+  ---
+  duration_ms: 126.007834
+  ...
+# Subtest: private redirect and compressed source cannot weaken reader safety
+not ok 10 - private redirect and compressed source cannot weaken reader safety
+  ---
+  duration_ms: 202.629226
+  location: '/tmp/root55500-installed-yJwgWM/consumer.test.mjs:221:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'unsupported_encoding'
+    - 'reader_unreceived'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'reader_unreceived'
+  actual: 'unsupported_encoding'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/root55500-installed-yJwgWM/consumer.test.mjs:223:61)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: unchanged production fetch blocks private DNS, pins validated address and retains TLS defaults
+ok 11 - unchanged production fetch blocks private DNS, pins validated address and retains TLS defaults
+  ---
+  duration_ms: 5.38258
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 9
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16329.712594

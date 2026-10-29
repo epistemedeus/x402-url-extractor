@@ -1,0 +1,142 @@
+{
+  "installedArchiveRawEqual": true,
+  "licenseRawEqual": true,
+  "sourceCommit": "28b3b2a2651139099f8d41cfc1e2a8b57d54c6ee",
+  "files": [
+    {
+      "path": "dist/agent.d.ts",
+      "bytes": 23826,
+      "sha256": "b2ff6cc820ae03d8327705be8ac376e92ea8402c03e55e62ee13e0aee8113e28"
+    },
+    {
+      "path": "dist/agent.d.ts.map",
+      "bytes": 5800,
+      "sha256": "7901b8ecede457f929440c8685b417bc37f031e6c451ddd5d6d1bc618a421beb"
+    },
+    {
+      "path": "dist/agent.js",
+      "bytes": 46071,
+      "sha256": "5406eb71a00e5e3016917444c41a7c34b5583e7b6e5a75cbbd96f717a9829052"
+    },
+    {
+      "path": "dist/capability.d.ts",
+      "bytes": 971,
+      "sha256": "6803d43c4031d1e248e67914022d38e6d1dcf315edc77cc03d1e604623df4cd3"
+    },
+    {
+      "path": "dist/capability.d.ts.map",
+      "bytes": 950,
+      "sha256": "1f059e52aafda18c95f8580137922f336dbce621887b896bcf9736d5dc2389ce"
+    },
+    {
+      "path": "dist/capability.js",
+      "bytes": 574,
+      "sha256": "b5de2252c6e7cd4bba70060df0085d03434b3019b8fbc7a966c7475439ed2346"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "bytes": 775,
+      "sha256": "9a491fe9d71fcc10225abf6ec47fa18256e991fe8d8c98ad0544640c94b70725"
+    },
+    {
+      "path": "dist/index.d.ts.map",
+      "bytes": 691,
+      "sha256": "8919358dc24fb243d854aae399bafed731d864158bf516eed19b5406bf54b1d3"
+    },
+    {
+      "path": "dist/index.js",
+      "bytes": 761,
+      "sha256": "592c92eaa4558a8be85e7f1ef5ccffbe5cf719e73bc575fccb1205f86e4c7d86"
+    },
+    {
+      "path": "dist/logger.d.ts",
+      "bytes": 184,
+      "sha256": "86c6ed2d4cf71fbfff7362390ae7fe539b7522ffa7f932655d1c790aa7dff636"
+    },
+    {
+      "path": "dist/logger.d.ts.map",
+      "bytes": 170,
+      "sha256": "2989691fd7c0e616287311f489b04b80b59048dbd9352ccc2b4c7868fee4dc0e"
+    },
+    {
+      "path": "dist/logger.js",
+      "bytes": 976,
+      "sha256": "c0ea9d4af88b9a9f62c925ad6784d90c10e6f27aac4c165eab1e2de2306fb109"
+    },
+    {
+      "path": "dist/mcp.d.ts",
+      "bytes": 12788,
+      "sha256": "f6ba569a6eb972f3304361444821cd636b0c35a70852a6d5e87c12f3c310633b"
+    },
+    {
+      "path": "dist/mcp.d.ts.map",
+      "bytes": 2856,
+      "sha256": "33b03e8b2b9f489b088f90b30b91fd5d0e62ba8bf2ccd58a1ad300c2a5abdec9"
+    },
+    {
+      "path": "dist/mcp.js",
+      "bytes": 13503,
+      "sha256": "2eadb0cfa0f96eb158ca71ef9145b89782f21571dd4ccd00b392390be93fc2cb"
+    },
+    {
+      "path": "dist/run.d.ts",
+      "bytes": 1704,
+      "sha256": "8a4dec471ff39c0dc753826b9da05b3225243b9ab41213a270a5de034346ae53"
+    },
+    {
+      "path": "dist/run.d.ts.map",
+      "bytes": 628,
+      "sha256": "6e4c83129911523559fe9a7d8c20189f85e27ad57fbcae3db4bbdf7d2f374e99"
+    },
+    {
+      "path": "dist/run.js",
+      "bytes": 3999,
+      "sha256": "e16e441a8055a27f69913044b176dfa41c2902928f6aa2b8f576fdce36636c2e"
+    },
+    {
+      "path": "dist/tunnel.d.ts",
+      "bytes": 5988,
+      "sha256": "04e29246647d516b1e23dcd7e2c8a162d8e14571911dd52c05b6aef25effe826"
+    },
+    {
+      "path": "dist/tunnel.d.ts.map",
+      "bytes": 2555,
+      "sha256": "4f305d6cdbf3746eed2dde0e5b5f83e58df7209b00c528b777a946dd23a9ab64"
+    },
+    {
+      "path": "dist/tunnel.js",
+      "bytes": 29966,
+      "sha256": "b28c0a06d3ec38bf7450d1d131f2ed0e2665ac481760e9b30047730e675b7ae0"
+    },
+    {
+      "path": "dist/types.d.ts",
+      "bytes": 10552,
+      "sha256": "593dcd7e2e1e87c5dcb31c8e239f2f1c1619884c95037c818a7e62b0927d4e03"
+    },
+    {
+      "path": "dist/types.d.ts.map",
+      "bytes": 10602,
+      "sha256": "65d799dabd59aae658c52913df1a042623a90c1dbb48d0e9865588e7cf00a3b3"
+    },
+    {
+      "path": "dist/types.js",
+      "bytes": 77,
+      "sha256": "d43aa81f5bc89faa359e0f97c814ba25155591ff078fbb9bfd40f8c7c9683230"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1070,
+      "sha256": "3598b8ff5771084204e3fed5f62612fb7308629ec566c5a7512fffd078e94d5c"
+    },
+    {
+      "path": "package.json",
+      "bytes": 3024,
+      "sha256": "ea32ad82ee0d7d3b14289befd4837e476f5fa6aea09ccf0587ea84eff5897605"
+    },
+    {
+      "path": "README.md",
+      "bytes": 31362,
+      "sha256": "fa8ef9c4eefb5687dc94faca4055fcb4600c6b9dd8ecff06fd5d987cad4002f6"
+    }
+  ]
+}

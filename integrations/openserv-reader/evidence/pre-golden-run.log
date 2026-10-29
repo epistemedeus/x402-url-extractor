@@ -1,0 +1,85 @@
+TAP version 13
+# Subtest: installed SDK subclass and consumer preserve useful and negative reader records
+ok 1 - installed SDK subclass and consumer preserve useful and negative reader records
+  ---
+  duration_ms: 2172.530102
+  ...
+# Subtest: output cuts never deliver a partial native table
+ok 2 - output cuts never deliver a partial native table
+  ---
+  duration_ms: 868.513886
+  ...
+# Subtest: absent/wrong auth, foreign scopes, unknown actions and invalid inputs have no effects
+ok 3 - absent/wrong auth, foreign scopes, unknown actions and invalid inputs have no effects
+  ---
+  duration_ms: 46.70194
+  ...
+# Subtest: authoritative task assignment mismatch refuses before source/completion/error
+ok 4 - authoritative task assignment mismatch refuses before source/completion/error
+  ---
+  duration_ms: 6.152114
+  ...
+# Subtest: unreceived task read cannot authorize source acquisition or task error
+ok 5 - unreceived task read cannot authorize source acquisition or task error
+  ---
+  duration_ms: 11.939643
+  ...
+# Subtest: simultaneous duplicate actions single-flight; changed original input refuses
+ok 6 - simultaneous duplicate actions single-flight; changed original input refuses
+  ---
+  duration_ms: 113.096602
+  ...
+# Subtest: lost accepted completion ack compares exact original output; replay and reopen never execute again
+ok 7 - lost accepted completion ack compares exact original output; replay and reopen never execute again
+  ---
+  duration_ms: 113.407838
+  ...
+# Subtest: unreceived, not accepted and different readback remain unknown without retries
+ok 8 - unreceived, not accepted and different readback remain unknown without retries
+  ---
+  duration_ms: 339.051704
+  ...
+# Subtest: a new installed adapter instance recovers original unknown completion from durable bytes
+ok 9 - a new installed adapter instance recovers original unknown completion from durable bytes
+  ---
+  duration_ms: 115.79549
+  ...
+# Subtest: buyer response loss recovers retained original result without another PUT or fetch
+ok 10 - buyer response loss recovers retained original result without another PUT or fetch
+  ---
+  duration_ms: 116.71189
+  ...
+# Subtest: real default reader deadline aborts a stalled owned stream; later valid task recovers
+ok 11 - real default reader deadline aborts a stalled owned stream; later valid task recovers
+  ---
+  duration_ms: 12210.95132
+  ...
+# Subtest: explicit cancellation reaps only owned reader child and allows later task
+ok 12 - explicit cancellation reaps only owned reader child and allows later task
+  ---
+  duration_ms: 126.789583
+  ...
+# Subtest: private redirect and compressed source cannot weaken reader safety
+ok 13 - private redirect and compressed source cannot weaken reader safety
+  ---
+  duration_ms: 204.482182
+  ...
+# Subtest: lost error acknowledgement stays unknown; SDK readback cannot compare original error
+ok 14 - lost error acknowledgement stays unknown; SDK readback cannot compare original error
+  ---
+  duration_ms: 104.085917
+  ...
+# Subtest: unchanged production fetch blocks private DNS, pins validated address and retains TLS defaults
+ok 15 - unchanged production fetch blocks private DNS, pins validated address and retains TLS defaults
+  ---
+  duration_ms: 5.570192
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16843.524776

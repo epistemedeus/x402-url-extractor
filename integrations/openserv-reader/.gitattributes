@@ -1,0 +1,4 @@
+# Preserve byte-exact upstream notices, source captures and execution logs.
+notices/** -whitespace
+upstream/** -whitespace
+evidence/*.log -whitespace

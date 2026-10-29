@@ -1,0 +1,80 @@
+TAP version 13
+# Subtest: installed SDK subclass and consumer preserve useful and negative reader records
+ok 1 - installed SDK subclass and consumer preserve useful and negative reader records
+  ---
+  duration_ms: 2307.543537
+  ...
+# Subtest: output cuts never deliver a partial native table
+ok 2 - output cuts never deliver a partial native table
+  ---
+  duration_ms: 806.91232
+  ...
+# Subtest: absent/wrong auth, foreign scopes, unknown actions and invalid inputs have no effects
+ok 3 - absent/wrong auth, foreign scopes, unknown actions and invalid inputs have no effects
+  ---
+  duration_ms: 45.879012
+  ...
+# Subtest: authoritative task assignment mismatch refuses before source/completion/error
+ok 4 - authoritative task assignment mismatch refuses before source/completion/error
+  ---
+  duration_ms: 8.680077
+  ...
+# Subtest: unreceived task read cannot authorize source acquisition or task error
+ok 5 - unreceived task read cannot authorize source acquisition or task error
+  ---
+  duration_ms: 8.243439
+  ...
+# Subtest: simultaneous duplicate actions single-flight; changed original input refuses
+ok 6 - simultaneous duplicate actions single-flight; changed original input refuses
+  ---
+  duration_ms: 114.116109
+  ...
+# Subtest: lost accepted completion ack compares exact original output; replay and reopen never execute again
+ok 7 - lost accepted completion ack compares exact original output; replay and reopen never execute again
+  ---
+  duration_ms: 117.395103
+  ...
+# Subtest: unreceived, not accepted and different readback remain unknown without retries
+ok 8 - unreceived, not accepted and different readback remain unknown without retries
+  ---
+  duration_ms: 336.326572
+  ...
+# Subtest: buyer response loss recovers retained original result without another PUT or fetch
+ok 9 - buyer response loss recovers retained original result without another PUT or fetch
+  ---
+  duration_ms: 108.845158
+  ...
+# Subtest: real default reader deadline aborts a stalled owned stream; later valid task recovers
+ok 10 - real default reader deadline aborts a stalled owned stream; later valid task recovers
+  ---
+  duration_ms: 12207.552363
+  ...
+# Subtest: explicit cancellation reaps only owned reader child and allows later task
+ok 11 - explicit cancellation reaps only owned reader child and allows later task
+  ---
+  duration_ms: 119.514431
+  ...
+# Subtest: private redirect and compressed source cannot weaken reader safety
+ok 12 - private redirect and compressed source cannot weaken reader safety
+  ---
+  duration_ms: 197.00926
+  ...
+# Subtest: lost error acknowledgement stays unknown; SDK readback cannot compare original error
+ok 13 - lost error acknowledgement stays unknown; SDK readback cannot compare original error
+  ---
+  duration_ms: 102.130195
+  ...
+# Subtest: unchanged production fetch blocks private DNS, pins validated address and retains TLS defaults
+ok 14 - unchanged production fetch blocks private DNS, pins validated address and retains TLS defaults
+  ---
+  duration_ms: 5.502508
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16792.362723

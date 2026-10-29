@@ -1,0 +1,14 @@
+{
+  "startedAt": "2026-10-29T11:10:21.387Z",
+  "endedAt": "2026-10-29T11:10:37.842Z",
+  "runtime": "v22.14.0",
+  "platform": "linux",
+  "arch": "x64",
+  "cwdIsolatedFromCheckout": true,
+  "homeAndEnvIsolated": true,
+  "borrowedRootDependencies": false,
+  "dependencyAndCoreFiles": 8096,
+  "installedUnchanged": true,
+  "exitCode": 1,
+  "command": "node --import ./network-guard.mjs --test --test-concurrency=1 consumer.test.mjs safety.test.mjs"
+}

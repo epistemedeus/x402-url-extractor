@@ -1,0 +1,20 @@
+This adapter and its original fixtures are under the accompanying product MIT
+license. Existing reader modules and MATRIX/SPANS/TABLE fixtures are reused
+without modification from epistemedeus/x402-url-extractor at
+38f8787b04bf3221ee0875ce1a6af687592c8015 (MIT).
+
+OpenServ SDK 2.4.1 is copyright (c) 2024 OpenServ Labs, MIT. Its exact upstream
+license is in upstream/LICENSE and notices/npm/@openserv-labs__sdk/LICENSE.
+
+DEPENDENCIES.json maps every installed package version, registry integrity,
+declared source and copied notice. notices/npm preserves distributed license,
+copyright and NOTICE files, or full READMEs containing the license. This
+includes Apache-2.0, BSD, ISC and MIT notices in the declared SDK/reader closure.
+
+express-async-router 0.1.15 declares MIT in its distributed package.json but
+ships no license text or copyright notice. The exact pinned upstream tree
+e44328c2b4d348b532e24f3d66eb66f51fc421e2 also has no license file. Its original
+package.json is retained as distributed; no missing copyright text is invented.
+Attempted exact-source license reads returned 404/unreadable. Three other
+packages carry complete MIT notices in their distributed README files, which
+are preserved in full.
