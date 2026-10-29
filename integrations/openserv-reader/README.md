@@ -117,7 +117,7 @@ One fixture file retains the original scope/action before execution, then
 fsyncs the original serialized reader result before the only completion PUT.
 It is local test evidence, owned by a single adapter instance, not a financial
 ledger or a distributed execution claim. Duplicate/concurrent delivery never
-repeats source execution. New-instance recovery uses the same retained bytes.
+repeats source execution. New-instance recovery uses the same retained bytes. Scope identity compares the fixed account/agent/workspace/task/execution fields, independently of object-key order. An existing matching journal keeps its original filename and bytes until ordinary recovery updates its state. Multiple matching originals refuse rather than select one. This still provides no interprocess exclusion.
 
 Only the SDK's original-task GET `/detail`, PUT `/complete`, and POST `/error`
 are permitted. Lost completion acknowledgement causes readback of the original

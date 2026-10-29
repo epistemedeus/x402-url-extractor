@@ -1,0 +1,57 @@
+{
+  "at": "2026-10-29T11:47:19.769Z",
+  "originalSource": "ca326e9cf4864cc8fe820bfd77b3380d1c094f83",
+  "originalDefect": {
+    "sameScopeValues": true,
+    "differentPropertyOrder": true,
+    "originalRecordLost": true
+  },
+  "installed": {
+    "startedAt": "2026-10-29T11:41:33.074Z",
+    "endedAt": "2026-10-29T11:41:50.223Z",
+    "runtime": "v22.14.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cwdIsolatedFromCheckout": true,
+    "homeAndEnvIsolated": true,
+    "borrowedRootDependencies": false,
+    "dependencyAndCoreFiles": 8096,
+    "installedUnchanged": true,
+    "packageVersionsVerified": 206,
+    "readerModulesRawVerified": 7,
+    "sdkArchiveFilesRawVerified": 27,
+    "exitCode": 0,
+    "command": "node --import ./network-guard.mjs --test --test-concurrency=1 consumer.test.mjs safety.test.mjs"
+  },
+  "tests": {
+    "groups": 17,
+    "failures": 0,
+    "skips": 0
+  },
+  "newCases": [
+    {
+      "case": "reordered-legacy-scope",
+      "mode": "read-lost",
+      "legacyOriginalReceived": true,
+      "readbackGetsAfterReopen": 1,
+      "completionPutsAfterReopen": 0,
+      "sourceReadsAfterReopen": 0
+    },
+    {
+      "case": "reordered-legacy-scope",
+      "mode": "unaccepted",
+      "legacyOriginalReceived": true,
+      "readbackGetsAfterReopen": 1,
+      "completionPutsAfterReopen": 0,
+      "sourceReadsAfterReopen": 0
+    }
+  ],
+  "providerCalls": 76,
+  "sourceReads": 45,
+  "cleanup": {
+    "ownedServersClosed": true,
+    "ownedReaderChildrenClosed": true
+  },
+  "hostedConsumption": false,
+  "sourceOnly": true
+}

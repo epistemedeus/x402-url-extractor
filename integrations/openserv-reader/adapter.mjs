@@ -2,6 +2,7 @@ import { Agent } from '@openserv-labs/sdk';
 import { z } from 'zod';
 import { readMcpOutputSchema } from './.runtime/reader-core/extract.mjs';
 import { assertPublicHttpUrl } from './.runtime/reader-core/extract-batch-c1/url-guard.mjs';
+import { canonicalScope, sameScope } from './store.mjs';
 
 const id = z.number().int().positive();
 export const inputSchema = z.object({ url: z.string().max(4096), maxChars: z.number().int().min(1).max(40000) }).strict();
@@ -19,13 +20,14 @@ const refuse = code => Object.assign(Error(code), { code, status: 400 });
 
 export class OfflineReaderAgent extends Agent {
   constructor({ scope, apiKey, authToken, store, reader, providerOrigin }) {
+    scope = canonicalScope(scope);
     for (const key of ['workspaceId', 'taskId', 'agentId', 'executionId']) id.parse(scope?.[key]);
     if (!scope?.account || !apiKey?.startsWith('synthetic-') || !authToken?.startsWith('synthetic-')) throw Error('explicit synthetic scope and credentials required');
     const origin = new URL(providerOrigin);
     if (origin.origin !== providerOrigin || origin.protocol !== 'http:' || origin.hostname !== '127.0.0.1') throw Error('loopback fixture provider required');
     if (process.env.OPENSERV_API_URL !== providerOrigin || process.env.OPENSERV_RUNTIME_URL !== providerOrigin) throw Error('SDK origins must be fixed before import');
     super({ systemPrompt: 'Deterministic offline reader fixture. No model runtime.', apiKey, authToken, port: 1 });
-    if (JSON.stringify(store.scope) !== JSON.stringify(scope)) throw Error('store scope mismatch');
+    if (!sameScope(store.scope, scope)) throw Error('store scope mismatch');
     this.scope = Object.freeze({ ...scope }); this.store = store; this.reader = reader;
     this.providerOrigin = providerOrigin; this.transportCalls = []; this.pending = null;
     // Keep SDK startup, router, JSON parser and bcrypt auth. Pin its listen call.
@@ -121,7 +123,7 @@ export class OfflineReaderAgent extends Agent {
   async recover() {
     const record = this.store.read();
     if (!record) throw refuse('no_original_task');
-    if (JSON.stringify(record.scope) !== JSON.stringify(this.scope)) throw refuse('stored_scope_mismatch');
+    if (!sameScope(record.scope, this.scope)) throw refuse('stored_scope_mismatch');
     if (record.state === 'completion_acknowledged' || record.state === 'completion_readback') return record;
     // Read-only original-ID recovery. No PUT, source rerun or error side effect.
     try {

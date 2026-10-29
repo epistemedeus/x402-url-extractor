@@ -4,6 +4,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { once } from 'node:events';
+import { createHash } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { fixtures, MATRIX, SPANS, TABLE, UNICODE } from './fixtures.mjs';
 import { ReaderProcess } from './reader-process.mjs';
@@ -221,6 +222,49 @@ test('a new installed adapter instance recovers original unknown completion from
   proof.cases.push({ case: 'durable-new-instance-recovery', taskId: ctx.scope.taskId, outputMatched: true,
     readbackGetsAfterReopen: 1, completionPutsAfterReopen: 0, sourceReadsAfterReopen: 0 });
   await reopened.stop();
+});
+
+test('reordered scope reopens legacy accepted and unresolved completions without execution or PUT', async () => {
+  for (const mode of ['read-lost', 'unaccepted']) {
+    const ctx = await setup('/matrix', mode); const before = sourceCalls.length;
+    await send(ctx); assert.equal(ctx.store.read().state, 'completion_unknown');
+    const original = ctx.store.read(); await ctx.agent.stop();
+    const directory = path.dirname(ctx.store.file);
+    const legacy = path.join(directory, createHash('sha256').update(JSON.stringify(ctx.scope)).digest('hex') + '.json');
+    if (legacy !== ctx.store.file) fs.renameSync(ctx.store.file, legacy);
+    tasks.get(ctx.scope.taskId).storeFile = legacy;
+    if (mode === 'read-lost') tasks.get(ctx.scope.taskId).readLost = false;
+    const scope = Object.fromEntries(Object.entries(ctx.scope).reverse());
+    const store = new FixtureStore(directory, scope);
+    assert.equal(store.file, legacy); assert.deepEqual(store.read(), original);
+    const reopenedReader = reader();
+    const reopened = new OfflineReaderAgent({ scope, apiKey: 'synthetic-agent-31-key', authToken,
+      store, reader: reopenedReader, providerOrigin });
+    const address = await reopened.start(); ownedAgents.push(reopened);
+    const result = await send({ ...ctx, agent: reopened, url: `http://127.0.0.1:${address.port}` });
+    assert.equal(result.status, 200);
+    if (mode === 'read-lost') assert.equal(result.body.state, 'completion_readback');
+    else assert.equal(result.body.outcome, 'unknown');
+    assert.equal(store.read().output, original.output);
+    assert.equal(sourceCalls.length, before + 1); assert.equal(reopenedReader.started.length, 0);
+    assert.deepEqual(reopened.transportCalls, expectedCalls(ctx, [['GET', 'detail']]));
+    const all = calls.filter(c => c.path.includes(`/tasks/${ctx.scope.taskId}/`));
+    assert.equal(all.filter(c => c.method === 'PUT').length, 1);
+    proof.transports.push({ taskId: ctx.scope.taskId, instance: 'reordered-legacy-reopen', calls: reopened.transportCalls });
+    proof.cases.push({ case: 'reordered-legacy-scope', mode, legacyOriginalReceived: true,
+      readbackGetsAfterReopen: 1, completionPutsAfterReopen: 0, sourceReadsAfterReopen: 0 });
+    await reopened.stop();
+  }
+});
+
+test('ambiguous same-scope journals refuse without choosing another original', () => {
+  const directory = fs.mkdtempSync(path.join(process.env.HOME, 'ambiguous-scope-'));
+  const scope = { account: 'synthetic-local-account', workspaceId: 11, agentId: 31, executionId: 21, taskId: 9999 };
+  const first = new FixtureStore(directory, scope); first.write({ scope, state: 'completion_unknown', output: 'retained' });
+  const second = path.join(directory, 'a'.repeat(64) + '.json'); fs.copyFileSync(first.file, second);
+  const bytes = [fs.readFileSync(first.file), fs.readFileSync(second)];
+  assert.throws(() => new FixtureStore(directory, Object.fromEntries(Object.entries(scope).reverse())), /ambiguous original/);
+  assert.ok(fs.readFileSync(first.file).equals(bytes[0])); assert.ok(fs.readFileSync(second).equals(bytes[1]));
 });
 
 test('buyer response loss recovers retained original result without another PUT or fetch', async () => {

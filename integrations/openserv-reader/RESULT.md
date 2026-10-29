@@ -5,7 +5,7 @@ deliver the existing licensed reader record through its full-control task seam
 in this controlled fixture consumer, without its model runtime or the paid
 merchant. Hosted input, economics and readiness remain unproved.
 
-The final isolated installed consumer passes **15 test groups, 0 failures,
+The original native isolated installed consumer passes **15 test groups, 0 failures,
 0 skips**, exit 0, October 29 2026, 11:20:11–11:20:28 UTC. Full raw TAP is
 `evidence/final.tap`; `final-run.log` is the same run's captured stdout.
 `installed-consumer.json` records exact runtime, invocation and isolation.
@@ -109,3 +109,9 @@ existing supervisor after this owner returns. Root owns later review and any
 hosted transition. One concrete next step is Root receiving a supported hosted
 envelope and zero-cash terms before admitting any hosted execution; no repeated
 account question or new entitlement research is part of this package.
+
+## Receiving correction: stable scope identity
+
+Independent receiving reproduced a restart defect in ca326e9c: equal scope values with reordered object keys selected a new journal file. The adapter/store now use one fixed-field identity and discover an existing matching journal without renaming it. Ambiguous originals refuse. The earlier native source and 15-group logs remain preserved.
+
+The amended installed consumer passes 17 groups,zero failures/skips,at 11:41:50UTC. New accepted/unaccepted completion cases reopen a legacy filename with reordered scope,receive the retained original,then perform one GET and zero new source reads or PUTs. The ambiguity case preserves both originals. The complete controlled trace is76 provider calls and45 source reads across all separate fixtures,not production activity. All8,096 dependency/core entries,206 package versions,27 installed SDK files and seven reader modules remain qualified unchanged. See evidence/scope-recovery.tap,scope-recovery-proof.json and scope-recovery-receiving.json. No hosted readiness,credit use or outside adoption is established.
