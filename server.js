@@ -643,9 +643,11 @@ function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WR
 mountPageChangeHttp(app, {
   observe: isPageChangeHttpEnabled() ? commerceTelemetry.freePageChangeObserver("http") : null,
 });
-// Free profile. It does not join the paid /mcp catalog or its observer,
-// because that observer records route /mcp.
-mountPageChangeMcp(app);
+// Free profile. Record route /mcp/page-change. The paid catalog observer
+// records route /mcp and must not be reused for this mount.
+mountPageChangeMcp(app, {
+  observe: commerceTelemetry.freePageChangeObserver("mcp", { route: PAGE_CHANGE_MCP_PATH }),
+});
 let mcpMountResult = null;
 let commerceWriterDrainStarted = false;
 

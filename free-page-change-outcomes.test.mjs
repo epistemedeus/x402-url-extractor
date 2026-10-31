@@ -168,6 +168,39 @@ test("new HTTP and MCP mounts cannot relabel old journal observations as process
   assert.ok(!JSON.stringify(view).includes("2026-10-25T09:27:00.000Z"));
 });
 
+test("page-change MCP profile outcomes stay off the paid /mcp transport", async (t) => {
+  const { telemetry } = await fixture(t);
+  assert.throws(() => telemetry.freePageChangeObserver("http", { route: "/mcp/page-change" }), /unsupported free page-change route/);
+  assert.throws(() => telemetry.freePageChangeObserver("mcp", { route: "/mcp" }), /unsupported free page-change route/);
+  const observe = telemetry.freePageChangeObserver("mcp", { route: "/mcp/page-change" });
+  invoke(observe, { outcome: "changed" });
+  invoke(observe, { outcome: "refused", status: 400 });
+  invoke(observe, { outcome: "unchanged", closed: true });
+  const captured = await rows(telemetry);
+  assert.equal(captured.length, 3);
+  assert.ok(captured.every((row) => row.route === "/mcp/page-change" && row.kind === "free" && row.paymentPresent === false));
+  assert.ok(captured.every((row) => row.pageChangeOutcome.transport === "page-change-mcp"));
+  assert.deepEqual(Object.keys(captured[0].pageChangeOutcome).sort(), ["outcome", "transport", "v"]);
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.freePageChange.transports.mcp.observations, 0);
+  assert.equal(snapshot.freePageChange.transports.mcp.captureStartedAt, null);
+  assert.equal(snapshot.freePageChange.transports.http.captureStartedAt, null);
+  const profile = snapshot.freePageChange.profiles["/mcp/page-change"];
+  assert.equal(profile.scope, "mounted_page_change_mcp_posts");
+  assert.equal(profile.byOutcome.changed, 1);
+  assert.equal(profile.byOutcome.refused, 1);
+  assert.equal(profile.byOutcome.aborted, 1);
+  assert.equal(typeof profile.captureStartedAt, "string");
+  const relabeled = structuredClone(captured[0]);
+  relabeled.id = randomUUID();
+  relabeled.route = "/mcp";
+  await writeFile(telemetry.paths.currentPath, `${[...captured, relabeled].map((row) => JSON.stringify(row)).join("\n")}\n`);
+  const reread = await telemetry.snapshot({ days: 1 });
+  assert.equal(reread.coverage.integrity.currentFile.unusableRecordCount, 1);
+  assert.equal(reread.freePageChange.transports.mcp.observations, 0);
+  assert.equal(reread.freePageChange.profiles["/mcp/page-change"].byOutcome.changed, 1);
+});
+
 test("bounded reducer never calls incomplete artifacts, parser refusals or errors completed comparisons", () => {
   const output = (verdict, complete, matched = 1) => ({ ok: true, charged: false, report: { schema: "pilot/page-change-brief/v1", verdict, claims: { complete, comparable: true, usefulOutputProven: true }, summary: { matched } } });
   for (const verdict of ["changed", "unchanged", "reordered"]) {

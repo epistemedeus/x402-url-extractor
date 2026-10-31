@@ -8,7 +8,9 @@ This note is for operator review. It is not a published support page, privacy po
 
 ## What this profile does not do
 
-It does not fetch URLs, extract a remote page, schedule a later observation, read a filesystem path, or accept a payment. It does not create an account. It does not infer who the caller is from the user-agent string. It does not write a new measurement record. The existing page-change observer is only for `POST /recipes/page-change` and the paid `POST /mcp` tool named `page_change`.
+It does not fetch URLs, extract a remote page, schedule a later observation, read a filesystem path, or accept a payment. It does not create an account. It does not infer who the caller is from the user-agent string.
+
+It reuses the existing commerce journal. A comparison, refusal, or aborted transmission on this profile can record one outcome for route `/mcp/page-change`. The record does not include the posted page, a secret, or a claim about customers or revenue. Those rows are not added to paid `POST /mcp` or to the catalog tool `page_change`. The HTTP route's 12-per-minute limit is not applied here. Source and owner checks stay separate from outside use.
 
 ## Retention
 

@@ -323,6 +323,11 @@ function walkJsonGraph(value, limits, role) {
   visit(value, 0);
 }
 
+// Stop at the configured depth. Callers use this before any full-graph clone.
+export function assertPageChangeJsonDepth(value, limits, role) {
+  walkJsonGraph(value, limits, role);
+}
+
 function encodedBytes(value) {
   return Buffer.byteLength(JSON.stringify(value), "utf8");
 }
@@ -626,6 +631,10 @@ function jsonError(res, error) {
   });
 }
 
+export function respondPageChangeError(res, error) {
+  return jsonError(res, error);
+}
+
 function disabledJson(res) {
   res.set("Cache-Control", "no-store");
   res.set("X-Robots-Tag", "noindex, nofollow");
@@ -693,7 +702,66 @@ export function drainRequest(req, res) {
   res.once("finish", () => req.destroy());
 }
 
-export async function executePageChangeComparison(body, env = process.env) {
+// Shared by POST /recipes/page-change and POST /mcp/page-change.
+// The HTTP 12/IP/minute gate stays in the HTTP route and is not applied here.
+export function beginPageChangeExchange(req, res, limits) {
+  if (Number(req.headers["content-length"]) > limits.maxRequestBytes) {
+    drainRequest(req, res);
+    return {
+      ok: false,
+      error: new PageChangeHttpError("request exceeds server byte ceiling", { status: 413, code: "payload_too_large" }),
+    };
+  }
+  if (activeRequests >= limits.maxConcurrent) {
+    drainRequest(req, res);
+    return {
+      ok: false,
+      error: new PageChangeHttpError("compare capacity occupied", { status: 503, code: "page_change_busy" }),
+    };
+  }
+  activeRequests += 1;
+  const deadline = performance.now() + limits.timeoutMs;
+  const abort = new AbortController();
+  const onClientGone = () => {
+    if (!res.writableEnded) abort.abort();
+  };
+  req.once("aborted", onClientGone);
+  res.once("close", onClientGone);
+  let released = false;
+  return {
+    ok: true,
+    abort,
+    remainingMs() {
+      return deadline - performance.now();
+    },
+    read() {
+      return readBoundedRequestBody(req, {
+        maxBytes: limits.maxRequestBytes,
+        timeoutMs: Math.max(1, this.remainingMs()),
+      });
+    },
+    release() {
+      if (released) return;
+      released = true;
+      activeRequests -= 1;
+      req.removeListener("aborted", onClientGone);
+      res.removeListener("close", onClientGone);
+    },
+  };
+}
+
+export function parseBoundedJson(raw) {
+  try {
+    return JSON.parse(Buffer.isBuffer(raw) ? raw.toString("utf8") : String(raw ?? ""));
+  } catch (error) {
+    if (error instanceof RangeError) {
+      throw new PageChangeHttpError("request json depth exceeds server limit", { status: 400, code: "json_depth_limit" });
+    }
+    throw new PageChangeHttpError("request body must be valid JSON", { status: 400, code: "invalid_json" });
+  }
+}
+
+export async function executePageChangeComparison(body, env = process.env, options = {}) {
   if (!isPageChangeHttpEnabled(env)) {
     return {
       ok: false,
@@ -706,7 +774,11 @@ export async function executePageChangeComparison(body, env = process.env) {
   }
   const limits = pageChangeHttpLimits(env);
   const job = admitPageChangeRequest(body, limits);
-  const report = await runPageChangeCompare(job, { env });
+  const report = await runPageChangeCompare(job, {
+    env,
+    abortSignal: options?.abortSignal,
+    timeoutMs: options?.timeoutMs,
+  });
   return {
     ok: true,
     product: PAGE_CHANGE_HTTP_PRODUCT,
@@ -794,41 +866,19 @@ export function mountPageChangeHttp(app, { env = process.env, observe = null } =
       drainRequest(req, res);
       return res.status(415).json({ ok: false, error: "unsupported_media_type", charged: false });
     }
-    if (Number(req.headers["content-length"]) > limits.maxRequestBytes) {
-      drainRequest(req, res);
-      return jsonError(res, new PageChangeHttpError("request exceeds server byte ceiling", { status: 413, code: "payload_too_large" }));
+    const exchange = beginPageChangeExchange(req, res, limits);
+    if (!exchange.ok) {
+      if (exchange.error.code === "page_change_busy") res.set("Retry-After", "1");
+      return jsonError(res, exchange.error);
     }
-    if (activeRequests >= limits.maxConcurrent) {
-      drainRequest(req, res);
-      res.set("Retry-After", "1");
-      return jsonError(res, new PageChangeHttpError("compare capacity occupied", { status: 503, code: "page_change_busy" }));
-    }
-    activeRequests += 1;
-    const deadline = performance.now() + limits.timeoutMs;
-    const abort = new AbortController();
-    // IncomingMessage `close` also fires after a complete body while the
-    // response is still pending. Abort only on a real client disconnect.
-    const onClientGone = () => {
-      if (!res.writableEnded) abort.abort();
-    };
-    req.once("aborted", onClientGone);
-    res.once("close", onClientGone);
     try {
-      const raw = await readBoundedRequestBody(req, {
-        maxBytes: limits.maxRequestBytes,
-        timeoutMs: Math.max(1, deadline - performance.now()),
-      });
-      let parsed;
-      try {
-        parsed = JSON.parse(raw.toString("utf8"));
-      } catch {
-        throw new PageChangeHttpError("request body must be valid JSON", { status: 400, code: "invalid_json" });
-      }
+      const raw = await exchange.read();
+      const parsed = parseBoundedJson(raw);
       const job = admitPageChangeRequest(parsed, limits);
       const report = await runPageChangeCompare(job, {
         env,
-        abortSignal: abort.signal,
-        timeoutMs: deadline - performance.now(),
+        abortSignal: exchange.abort.signal,
+        timeoutMs: exchange.remainingMs(),
       });
       if (res.writableEnded) return;
       const output = {
@@ -839,20 +889,18 @@ export function mountPageChangeHttp(app, { env = process.env, observe = null } =
         report,
       };
       if (encodedBytes(output) > limits.maxOutputBytes) throw new PageChangeHttpError("response exceeds server ceiling", { status: 413, code: "output_too_large" });
-      note(abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(output));
+      note(exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(output));
       return res.status(200).json(output);
     } catch (error) {
-      note(abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, error));
+      note(exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, error));
       if (res.writableEnded) return;
       drainRequest(req, res);
-      if (abort.signal.aborted && !(error instanceof PageChangeHttpError)) {
+      if (exchange.abort.signal.aborted && !(error instanceof PageChangeHttpError)) {
         return jsonError(res, new PageChangeHttpError("request aborted", { status: 400, code: "request_aborted" }));
       }
       return jsonError(res, error);
     } finally {
-      activeRequests -= 1;
-      req.removeListener("aborted", onClientGone);
-      res.removeListener("close", onClientGone);
+      exchange.release();
     }
   });
   app.all(PAGE_CHANGE_HTTP_PATH, methodNotAllowed("POST"));

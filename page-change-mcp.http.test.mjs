@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
-import { createServer as createHttpServer } from "node:http";
+import { spawn, spawnSync } from "node:child_process";
+import { createServer as createHttpServer, request as httpRequest } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -11,7 +11,8 @@ import express from "express";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { LATEST_PROTOCOL_VERSION, SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
-import { MCP_JSON_RPC_MAX_BYTES, mcpJsonRpcOverlimitBody } from "./mcp-json-rpc-limit.mjs";
+import { createCommerceTelemetry } from "./commerce-events.mjs";
+import { MCP_JSON_RPC_MAX_BYTES } from "./mcp-json-rpc-limit.mjs";
 import { pageChangeRequestExample } from "./page-change-input-contract.mjs";
 import { PAGE_CHANGE_HTTP_PATH, ownedPageChangeWorkerCount } from "./page-change-http.mjs";
 import {
@@ -89,10 +90,10 @@ async function postDirect(base, body) {
   return { response, json, text };
 }
 
-async function listenProfile(env) {
+async function listenProfile(env, observe = null) {
   const app = express();
   mountPageChangeHttp(app, { env });
-  mountPageChangeMcp(app, { env });
+  mountPageChangeMcp(app, { env, observe });
   const server = createHttpServer(app);
   await new Promise((resolve, reject) => {
     server.listen(0, "127.0.0.1", resolve);
@@ -234,6 +235,7 @@ async function startMerchant() {
     output: () => output,
     startupMs: Date.now() - started,
     child,
+    dataDir,
     facilitator,
     async close() {
       await stopChild(child);
@@ -403,8 +405,11 @@ test("malformed, oversized, wrong method, batch, and unknown tools never compare
     headers: { "content-type": "application/json", accept: ACCEPT },
     body: `{"pad":"${"a".repeat(MCP_JSON_RPC_MAX_BYTES)}"}`,
   });
-  assert.equal(over.status, 200);
-  assert.deepEqual(await over.json(), mcpJsonRpcOverlimitBody());
+  assert.equal(over.status, 413);
+  const overBody = await over.json();
+  assert.equal(overBody.code, "payload_too_large");
+  assert.equal(overBody.charged, false);
+  assert.equal(JSON.stringify(overBody).includes("mcp_json_rpc_too_large"), false);
 
   const wide = JSON.stringify({
     jsonrpc: "2.0",
@@ -454,6 +459,286 @@ test("malformed, oversized, wrong method, batch, and unknown tools never compare
       error: { code: -32602, message: "Unknown tool" },
     });
   }
+  assert.equal(ownedPageChangeWorkerCount(), 0);
+});
+
+function deepToolsCall(depth) {
+  const nested = `{"n":`.repeat(depth) + "1" + "}".repeat(depth);
+  return `{"jsonrpc":"2.0","id":"deep","method":"tools/call","params":{"name":${JSON.stringify(PAGE_CHANGE_MCP_TOOL)},"arguments":{"before":${nested},"after":{"title":"b"},"fields":["title"]}}}`;
+}
+
+function streamMcp(base) {
+  let request;
+  const result = new Promise((resolve, reject) => {
+    request = httpRequest(`${base}${PAGE_CHANGE_MCP_PATH}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: ACCEPT },
+    }, (response) => {
+      const chunks = [];
+      response.on("data", (chunk) => chunks.push(chunk));
+      response.on("end", () => {
+        const text = Buffer.concat(chunks).toString();
+        let json = null;
+        try { json = JSON.parse(text); } catch { json = null; }
+        resolve({ status: response.statusCode, text, json });
+      });
+    });
+    request.on("error", reject);
+  });
+  result.catch(() => {});
+  return { request, result };
+}
+
+test("deep raw JSON is a bounded refusal and the same server still accepts an SDK call", async () => {
+  const base = globalThis.pageChangeProfile.base;
+  const raw = deepToolsCall(3000);
+  assert.ok(Buffer.byteLength(raw) > 16 * 1024);
+  assert.ok(Buffer.byteLength(raw) < 200 * 1024);
+  const parsed = JSON.parse(raw);
+  assert.throws(() => structuredClone(parsed.params.arguments), RangeError);
+  const crashes = [];
+  const onRejection = (error) => crashes.push(error);
+  process.on("unhandledRejection", onRejection);
+  try {
+    const refused = await postRpc(base, raw);
+    assert.ok(refused.response.status === 200 || refused.response.status === 400, refused.text);
+    assert.equal(refused.text.includes("Maximum call stack"), false);
+    assert.equal(`${refused.text}\n${JSON.stringify(refused.json)}`.includes("json_depth_limit"), true);
+    assert.equal(ownedPageChangeWorkerCount(), 0);
+    const session = await connectClient(base);
+    try {
+      const result = await session.client.callTool({
+        name: PAGE_CHANGE_MCP_TOOL,
+        arguments: pageChangeRequestExample(),
+      });
+      assert.notEqual(result.isError, true);
+      const body = toolJson(result);
+      assert.equal(body.ok, true);
+      assert.equal(body.charged, false);
+      assert.equal(body.report.verdict, "changed");
+    } finally {
+      await session.close();
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    assert.equal(crashes.length, 0);
+  } finally {
+    process.off("unhandledRejection", onRejection);
+  }
+});
+
+function refusalCode(payload) {
+  const parsed = payload.json || parseRpcBody(payload.text);
+  if (parsed?.code) return parsed.code;
+  const text = parsed?.result?.content?.find((item) => item.type === "text")?.text || payload.text;
+  try {
+    const body = JSON.parse(text);
+    if (body?.code) return body.code;
+  } catch { /* The tool text is the code carrier when the status stays 200. */ }
+  return text.includes("compare_timeout") ? "compare_timeout" : null;
+}
+
+test("MCP reuses the page-change byte, upload slot, deadline, and disconnect limits", { timeout: 30000 }, async () => {
+  const ceiling = await listenProfile({
+    ...enabledEnv,
+    PAGE_CHANGE_HTTP_MAX_REQUEST_BYTES: "512",
+    PAGE_CHANGE_HTTP_TIMEOUT_MS: "1500",
+  });
+  try {
+    const declared = await fetch(`${ceiling.base}${PAGE_CHANGE_MCP_PATH}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: ACCEPT, "content-length": "1024" },
+      body: Buffer.alloc(1024, 0x61),
+    });
+    assert.equal(declared.status, 413);
+    assert.equal((await declared.json()).code, "payload_too_large");
+    const started = performance.now();
+    const chunked = streamMcp(ceiling.base);
+    chunked.request.write(Buffer.alloc(1024, 0x61));
+    const chunkedResponse = await chunked.result;
+    assert.equal(chunkedResponse.status, 413);
+    assert.equal(chunkedResponse.json.code, "payload_too_large");
+    assert.ok(performance.now() - started < 1000);
+    chunked.request.destroy();
+  } finally {
+    await ceiling.close();
+  }
+
+  const shared = await listenProfile({ ...enabledEnv, PAGE_CHANGE_HTTP_MAX_CONCURRENT: "1" });
+  try {
+    const held = streamMcp(shared.base);
+    held.request.write("{");
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    const busy = await postRpc(shared.base, {
+      jsonrpc: "2.0",
+      id: "busy",
+      method: "initialize",
+      params: { protocolVersion: LATEST_PROTOCOL_VERSION, capabilities: {}, clientInfo: { name: "busy", version: "0" } },
+    });
+    assert.equal(busy.response.status, 503);
+    assert.equal(busy.json.code, "page_change_busy");
+    held.request.destroy();
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    const session = await connectClient(shared.base);
+    try {
+      const recovered = await session.client.callTool({
+        name: PAGE_CHANGE_MCP_TOOL,
+        arguments: pageChangeRequestExample(),
+      });
+      assert.notEqual(recovered.isError, true);
+      assert.equal(toolJson(recovered).report.verdict, "changed");
+    } finally {
+      await session.close();
+    }
+  } finally {
+    await shared.close();
+  }
+
+  const sleepWorker = path.join(cwd, "page-change-http-sleep-worker.mjs");
+  const deadline = await listenProfile({
+    ...enabledEnv,
+    PAGE_CHANGE_HTTP_TIMEOUT_MS: "450",
+    PAGE_CHANGE_HTTP_WORKER_PATH: sleepWorker,
+  });
+  try {
+    const payload = JSON.stringify({
+      jsonrpc: "2.0",
+      id: "deadline",
+      method: "tools/call",
+      params: { name: PAGE_CHANGE_MCP_TOOL, arguments: { before: { title: "a" }, after: { title: "a" }, fields: ["title"] } },
+    });
+    const started = performance.now();
+    const slow = streamMcp(deadline.base);
+    slow.request.write(payload.slice(0, 24));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    slow.request.end(payload.slice(24));
+    const timed = await slow.result;
+    assert.notEqual(timed.status, 503);
+    assert.equal(refusalCode(timed), "compare_timeout");
+    assert.ok(performance.now() - started < 700, `deadline elapsed ${performance.now() - started}`);
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    assert.equal(ownedPageChangeWorkerCount(), 0);
+    assert.equal(spawnSync("pgrep", ["-P", String(process.pid), "-f", "page-change-http"], { encoding: "utf8" }).status, 1);
+  } finally {
+    await deadline.close();
+  }
+
+  const disconnect = await listenProfile({
+    ...enabledEnv,
+    PAGE_CHANGE_HTTP_MAX_CONCURRENT: "1",
+    PAGE_CHANGE_HTTP_TIMEOUT_MS: "5000",
+    PAGE_CHANGE_HTTP_WORKER_PATH: sleepWorker,
+  });
+  try {
+    const payload = JSON.stringify({
+      jsonrpc: "2.0",
+      id: "gone",
+      method: "tools/call",
+      params: { name: PAGE_CHANGE_MCP_TOOL, arguments: { before: { title: "a" }, after: { title: "a" }, fields: ["title"] } },
+    });
+    const abandoned = streamMcp(disconnect.base);
+    abandoned.request.end(payload);
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    abandoned.request.destroy();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    assert.equal(ownedPageChangeWorkerCount(), 0);
+    const again = streamMcp(disconnect.base);
+    const started = performance.now();
+    again.request.end(payload);
+    const retried = await again.result;
+    assert.notEqual(retried.status, 503);
+    assert.equal(refusalCode(retried), "compare_timeout");
+    assert.ok(performance.now() - started < 6500);
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    assert.equal(ownedPageChangeWorkerCount(), 0);
+    assert.equal(spawnSync("pgrep", ["-P", String(process.pid), "-f", "page-change-http"], { encoding: "utf8" }).status, 1);
+  } finally {
+    await disconnect.close();
+  }
+
+  const rated = globalThis.pageChangeProfile.base;
+  for (let n = 0; n < 13; n += 1) {
+    const response = await postRpc(rated, {
+      jsonrpc: "2.0",
+      id: n,
+      method: "initialize",
+      params: { protocolVersion: LATEST_PROTOCOL_VERSION, capabilities: {}, clientInfo: { name: "rate", version: "0" } },
+    });
+    assert.notEqual(response.response.status, 429, `call ${n}`);
+    assert.equal(response.response.status, 200, `call ${n}`);
+  }
+});
+
+test("page-change MCP journal records this route and not the paid catalog bucket", async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "page-change-mcp-journal-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "fixture-secret" });
+  const observe = telemetry.freePageChangeObserver("mcp", { route: PAGE_CHANGE_MCP_PATH });
+  const registered = await telemetry.snapshot({ days: 1 });
+  assert.equal(registered.freePageChange.transports.mcp.captureStartedAt, null);
+  assert.equal(registered.freePageChange.transports.http.captureStartedAt, null);
+  assert.equal(typeof registered.freePageChange.profiles[PAGE_CHANGE_MCP_PATH].captureStartedAt, "string");
+  const profile = await listenProfile(enabledEnv, observe);
+  t.after(() => profile.close());
+  const session = await connectClient(profile.base);
+  try {
+    await session.client.listTools();
+    await telemetry.flush();
+    let before = "";
+    try { before = (await readFile(telemetry.paths.currentPath, "utf8")).trim(); } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    assert.equal(before, "");
+    const input = pageChangeRequestExample();
+    const compared = await session.client.callTool({ name: PAGE_CHANGE_MCP_TOOL, arguments: input });
+    assert.notEqual(compared.isError, true);
+    assert.equal(toolJson(compared).report.verdict, "changed");
+  } finally {
+    await session.close();
+  }
+  const broken = await postRpc(profile.base, "{");
+  assert.equal(broken.response.status, 400);
+  const unknown = await postRpc(profile.base, {
+    jsonrpc: "2.0",
+    id: "extract",
+    method: "tools/call",
+    params: { name: "extract", arguments: { url: "https://example.invalid/paid" } },
+  });
+  assert.equal(unknown.json.error.code, -32602);
+  const sleep = await listenProfile({
+    ...enabledEnv,
+    PAGE_CHANGE_HTTP_TIMEOUT_MS: "5000",
+    PAGE_CHANGE_HTTP_WORKER_PATH: path.join(cwd, "page-change-http-sleep-worker.mjs"),
+  }, observe);
+  t.after(() => sleep.close());
+  const payload = JSON.stringify({
+    jsonrpc: "2.0",
+    id: "abort",
+    method: "tools/call",
+    params: { name: PAGE_CHANGE_MCP_TOOL, arguments: { before: { title: "a" }, after: { title: "a" }, fields: ["title"] } },
+  });
+  const abandoned = streamMcp(sleep.base);
+  abandoned.request.end(payload);
+  await new Promise((resolve) => setTimeout(resolve, 40));
+  abandoned.request.destroy();
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  await telemetry.flush();
+  const stored = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.equal(stored.includes("Synthetic title"), false);
+  assert.equal(stored.includes("https://synthetic.example.invalid/page"), false);
+  const rows = stored.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line));
+  assert.ok(rows.every((row) => row.route === PAGE_CHANGE_MCP_PATH));
+  assert.ok(rows.every((row) => row.pageChangeOutcome.transport === "page-change-mcp"));
+  assert.ok(rows.every((row) => row.kind === "free" && row.paymentPresent === false && row.queryKeys.length === 0));
+  assert.equal(rows.filter((row) => row.pageChangeOutcome.outcome === "changed").length, 1);
+  assert.ok(rows.some((row) => row.pageChangeOutcome.outcome === "refused"));
+  assert.ok(rows.some((row) => row.pageChangeOutcome.outcome === "aborted"));
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.freePageChange.transports.mcp.observations, 0);
+  assert.equal(snapshot.freePageChange.transports.mcp.captureStartedAt, null);
+  assert.equal(snapshot.freePageChange.transports.mcp.byOutcome.changed, 0);
+  assert.equal(snapshot.freePageChange.profiles[PAGE_CHANGE_MCP_PATH].byOutcome.changed, 1);
+  assert.ok(snapshot.freePageChange.profiles[PAGE_CHANGE_MCP_PATH].byOutcome.refused >= 1);
+  assert.ok(snapshot.freePageChange.profiles[PAGE_CHANGE_MCP_PATH].byOutcome.aborted >= 1);
   assert.equal(ownedPageChangeWorkerCount(), 0);
 });
 
@@ -540,6 +825,13 @@ test("merchant catalog and payment protections stay unchanged around the free pr
     await mounted.arrayBuffer();
     assert.match(merchant.output(), /MCP server:\s+POST \/mcp \(\d+ paid tools\)/);
     assert.equal(merchant.output().includes(`${PAGE_CHANGE_MCP_TOOL}`), false);
+    const summary = await (await fetch(`${merchant.base}/v0/commerce-demand.json`)).json();
+    assert.equal(summary.freePageChange.transports.mcp.byOutcome.changed, 0);
+    assert.equal(summary.freePageChange.profiles[PAGE_CHANGE_MCP_PATH].byOutcome.changed, 1);
+    assert.ok(summary.freePageChange.profiles[PAGE_CHANGE_MCP_PATH].byOutcome.refused >= 2);
+    const stored = await readFile(path.join(merchant.dataDir, "commerce-events.ndjson"), "utf8");
+    assert.equal(stored.includes("Alpha v1"), false);
+    assert.equal(stored.includes("6122072a04e1bce878c1a0bd9ad758cafc2f9416263113367bc7b4dc0b9c2554"), false);
   } finally {
     await free.close();
     await paid.close();

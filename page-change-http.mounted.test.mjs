@@ -14,6 +14,7 @@ import { PLATFORM_HEALTH_CARDS } from "./platform-health.mjs";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { PAGE_CHANGE_HTTP_PATH } from "./page-change-http.mjs";
+import { PAGE_CHANGE_MCP_PATH } from "./page-change-mcp.mjs";
 import { MCP_JSON_RPC_MAX_BYTES } from "./mcp-json-rpc-limit.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
@@ -185,10 +186,10 @@ async function postJson(base, body, { headers = {}, method = "POST", path = PAGE
   return { response, json, text };
 }
 
-function streamRequest(base) {
+function streamRequest(base, requestPath = PAGE_CHANGE_HTTP_PATH) {
   let request;
   const result = new Promise((resolve, reject) => {
-    request = httpRequest(`${base}${PAGE_CHANGE_HTTP_PATH}`, { method: "POST", headers: { "content-type": "application/json" } }, (response) => {
+    request = httpRequest(`${base}${requestPath}`, { method: "POST", headers: { "content-type": "application/json" } }, (response) => {
       const chunks = [];
       response.on("data", (chunk) => chunks.push(chunk));
       response.on("end", () => resolve({ status: response.statusCode, text: Buffer.concat(chunks).toString() }));
@@ -237,6 +238,26 @@ test("one deadline covers body plus compare and mounted cancellation leaves no w
   stream.request.end(payload.slice(20));
   assert.equal((await stream.result).status, 408);
   assert.ok(performance.now() - started < 700, "upload cannot buy another full worker timeout");
+  await delay(80);
+  const children = spawnSync("pgrep", ["-P", String(merchant.child.pid), "-f", "page-change-http"], { encoding: "utf8" });
+  assert.equal(children.status, 1, children.stdout);
+});
+
+test("page-change MCP upload shares the HTTP slot and releases it", { timeout: 30000 }, async (t) => {
+  const merchant = await startEnabledMerchant(t, { PAGE_CHANGE_HTTP_MAX_CONCURRENT: "1" });
+  const first = streamRequest(merchant.base, PAGE_CHANGE_MCP_PATH);
+  t.after(() => first.request.destroy());
+  first.request.write("{");
+  await delay(80);
+  const payload = { before: load("merchant", "unchanged-before.json"), after: load("merchant", "unchanged-after.json"), fields: ["title"] };
+  const busy = await postJson(merchant.base, payload);
+  assert.equal(busy.response.status, 503);
+  assert.equal(busy.json.code, "page_change_busy");
+  first.request.destroy();
+  await delay(80);
+  const recovered = await postJson(merchant.base, payload);
+  assert.equal(recovered.response.status, 200);
+  assert.equal(recovered.json.report.verdict, "unchanged");
   await delay(80);
   const children = spawnSync("pgrep", ["-P", String(merchant.child.pid), "-f", "page-change-http"], { encoding: "utf8" });
   assert.equal(children.status, 1, children.stdout);
