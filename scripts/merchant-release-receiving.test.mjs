@@ -153,6 +153,7 @@ test("release receiver configuration never contacts a network", async () => {
     { origin: "http://127.0.0.1:9/extra", expectedSource: SOURCE },
     { origin: "http://127.0.0.1:9", expectedSource: "short" },
     { origin: "http://127.0.0.1:9", expectedSource: SOURCE, freeRoute: "mcp" },
+    ...["/\\other.example/path", "//other.example/path", "/mcp?other=1", "/mcp#other", "/mcp/../paid", "/mcp\n"].map((freeRoute) => ({ origin: "http://127.0.0.1:9", expectedSource: SOURCE, freeRoute })),
   ]) {
     const result = await receiveMerchantRelease({ ...input, fetchImpl });
     assert.equal(result.ownerQa, true);
@@ -208,6 +209,31 @@ test("release receiver separates paid MPP availability from the free route", asy
   assert.deepEqual(present.checks.freeSdk.refused.map((item) => item.name), ["extract", "trial_read"]);
   assert.equal(present.checks.freeSdk.refused.every((item) => item.accepted), true);
   assert.equal(requests.some((item) => item.includes("/openapi.json")), false);
+
+  for (const enabled of [undefined, null, "false", "true", 0, 1]) {
+    const unknown = await receiveMerchantRelease({
+      origin, expectedSource: SOURCE, connect,
+      fetchImpl: async (url, options) => {
+        const route = new URL(url).pathname;
+        if (route === "/healthz") return jsonResponse(200, { ok: true, paymentProtocols: { x402: { enabled: true }, mpp: { enabled } } });
+        if (route === "/mpp-openapi.json") return jsonResponse(200, { openapi: "3.1.0", paths: {} });
+        return fetchImpl(url, options);
+      },
+    });
+    assert.equal(unknown.ok, false);
+    assert.equal(unknown.reason, "mpp_state_unknown");
+    assert.equal(unknown.checks.healthz.mppEnabled, null);
+  }
+
+  const reorderedAnnotations = await receiveMerchantRelease({
+    origin, expectedSource: SOURCE, fetchImpl,
+    connect: async () => {
+      const session = await connect();
+      session.client.listTools = async () => ({ tools: [{ name: PAGE_CHANGE_MCP_TOOL, annotations: Object.fromEntries(Object.entries(PAGE_CHANGE_MCP_ANNOTATIONS).reverse()) }] });
+      return session;
+    },
+  });
+  assert.equal(reorderedAnnotations.ok, true, JSON.stringify(reorderedAnnotations.reasons));
 
   const absent = await receiveMerchantRelease({
     origin, expectedSource: SOURCE, fetchImpl: async (url, options) => {

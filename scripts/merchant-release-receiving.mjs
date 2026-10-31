@@ -6,6 +6,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { pathToFileURL } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 import {
   PAGE_CHANGE_HTTP_HEALTH_PATH,
   PAGE_CHANGE_HTTP_PRODUCT,
@@ -136,7 +137,7 @@ async function receiveFreeRoute({ origin, freeRoute, fetchImpl, connect, healthD
     }
     check.tool = tools[0].name;
     check.annotations = tools[0].annotations || null;
-    if (JSON.stringify(check.annotations) !== JSON.stringify(PAGE_CHANGE_MCP_ANNOTATIONS)) {
+    if (!isDeepStrictEqual(check.annotations, PAGE_CHANGE_MCP_ANNOTATIONS)) {
       return { ...check, reason: "free_route_annotations" };
     }
     for (const name of REFUSAL_TOOLS) check.refused.push(await callRefusal(session.client, name));
@@ -171,7 +172,10 @@ export async function receiveMerchantRelease({
   if (!origin) return configurationResult("missing_origin");
   if (!resolvedOrigin) return configurationResult("origin_not_exact");
   if (!source) return configurationResult("invalid_expected_source");
-  if (typeof freeRoute !== "string" || !freeRoute.startsWith("/") || freeRoute.startsWith("//")) {
+  if (typeof freeRoute !== "string" || !freeRoute.startsWith("/") || freeRoute.startsWith("//")
+      || /[\\\s?#]/.test(freeRoute)
+      || new URL(freeRoute, resolvedOrigin).origin !== resolvedOrigin
+      || new URL(freeRoute, resolvedOrigin).pathname !== freeRoute) {
     return configurationResult("invalid_free_route");
   }
 
@@ -208,12 +212,13 @@ export async function receiveMerchantRelease({
       httpStatus: healthzResponse.status,
       ok: healthzResponse.json?.ok === true,
       x402Enabled: protocols.x402?.enabled === true,
-      mppEnabled: protocols.mpp?.enabled === true,
+      mppEnabled: typeof protocols.mpp?.enabled === "boolean" ? protocols.mpp.enabled : null,
       mppReason: typeof protocols.mpp?.reason === "string" ? protocols.mpp.reason : null,
     };
     if (healthzResponse.status !== 200 || checks.healthz.ok !== true || checks.healthz.x402Enabled !== true) {
       reasons.push("healthz");
     }
+    if (checks.healthz.mppEnabled === null) reasons.push("mpp_state_unknown");
 
     const mpp = await readJson(fetchImpl, endpoint(resolvedOrigin, "/mpp-openapi.json"));
     const operations = paidOperations(mpp.json);
@@ -224,7 +229,7 @@ export async function receiveMerchantRelease({
     };
     if (mpp.status !== 200 || operations === null) reasons.push("mpp_openapi");
     else if (checks.healthz.mppEnabled && operations.length === 0) reasons.push("mpp_paid_operations_absent");
-    else if (!checks.healthz.mppEnabled && operations.length > 0) reasons.push("mpp_paid_operations_present");
+    else if (checks.healthz.mppEnabled === false && operations.length > 0) reasons.push("mpp_paid_operations_present");
   } catch (error) {
     reasons.push("origin_unreachable");
     checks.transport = { message: String(error?.message || error).slice(0, 160) };

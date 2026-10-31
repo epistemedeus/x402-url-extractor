@@ -90,3 +90,9 @@ Unchanged: `server.js`, `operation-identity.mjs`, `machine-surface-parity.mjs`, 
 ## NEXT
 
 Root owns default merge, deployment, the live canary, and account or directory publication. Use the receiver above against the expected deployment source and the exact origin. Read `/healthz` and `/recipes/page-change/health`. Read paid operations from `/mpp-openapi.json`. Keep free SDK transport separate from MPP availability. There is no `/health` route. A disabled page-change HTTP flag is an owner-QA failure, and recovery is a later enabled receive. Do not retarget the October 25 server copies at HEAD.
+
+## Root receiving amendment
+
+Root received all four original source buffers and the original terminal at9e316084. The native export retains complete:false because one untracked dependency symlink remains; independent Root state receiving establishes no tracked changes and exactly that reproducible symlink, without deleting it.
+
+Root corrects exact-origin free-route validation before any network request, explicit boolean MPP-state receiving (unknown is not disabled), and semantic annotation equality independent of JSON property order. Regressions include off-origin backslash routes, normalized/query/fragment/control routes, malformed or absent MPP enabled fields, and reordered valid annotations. The full affected union plus current payment files and separate MPP-availability runner pass on the unchanged enrolled remote runtime. Exact counts/logs are retained in the Root amendment receipt. No production calls or deployment occur. HTTP fetches use8-second deadlines; that is not an overall SDK/receiver deadline.
