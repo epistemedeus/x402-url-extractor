@@ -1772,11 +1772,30 @@ function summarizeFreePageChange(events, { capture, writerHealthy, requestedWind
       observations: external.length, byOutcome, populations,
     };
   }
+  const profileTransport = "page-change-mcp";
+  const profileRows = events.filter(event => event.pageChangeOutcome?.transport === profileTransport);
+  const profileExternal = profileRows.filter(event => event.originClass === "external");
+  const profileByOutcome = Object.fromEntries([...PAGE_CHANGE_OUTCOMES].map(outcome => [outcome, 0]));
+  const profilePopulations = {};
+  for (const row of profileRows) {
+    profilePopulations[row.originClass] ||= Object.fromEntries([...PAGE_CHANGE_OUTCOMES].map(outcome => [outcome, 0]));
+    profilePopulations[row.originClass][row.pageChangeOutcome.outcome]++;
+  }
+  for (const row of profileExternal) profileByOutcome[row.pageChangeOutcome.outcome]++;
   return {
     schemaVersion: "samedaydesk.free-page-change-outcomes.v2", transports,
+    profiles: {
+      "/mcp/page-change": {
+        captureVersion: capture.has(profileTransport) ? 1 : null,
+        captureStartedAt: capture.get(profileTransport) || null,
+        scope: "mounted_page_change_mcp_posts",
+        ...retainedOutcomeCoverage(capture.get(profileTransport) || null, writerHealthy, requestedWindowCoverage),
+        observations: profileExternal.length, byOutcome: profileByOutcome, populations: profilePopulations,
+      },
+    },
     unknownOutcomeObservations: events.filter(event => event.route === "/recipes/page-change" && event.kind === "free" && !hasOwn(event, "pageChangeOutcome")).length,
     historicalUse: "unknown", usefulness: "unknown", callerIdentity: "unknown",
-    policy: "Retained invocation outcomes, not usefulness, independent customers or revenue. Counts include eligible retained rows within the requested window and population cutoffs, which may predate captureStartedAt. Outcome continuity is unknown; retainedWindowCoverage describes the shared journal only. currentCapture describes this process's transport registration and observed journal failure, not historical uptime. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only.",
+    policy: "Retained invocation outcomes, not usefulness, independent customers or revenue. Counts include eligible retained rows within the requested window and population cutoffs, which may predate captureStartedAt. Outcome continuity is unknown; retainedWindowCoverage describes the shared journal only. currentCapture describes this process's transport registration and observed journal failure, not historical uptime. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only. The /mcp/page-change profile is counted on its own route and is not added to the /mcp transport.",
   };
 }
 
@@ -1882,14 +1901,21 @@ function summarizeExtractionTrial(events, { captureStartedAt, writerHealthy, req
   };
 }
 
+function pageChangeRouteForTransport(transport) {
+  if (transport === "http") return "/recipes/page-change";
+  if (transport === "mcp") return "/mcp";
+  if (transport === "page-change-mcp") return "/mcp/page-change";
+  return null;
+}
+
 function acceptsPageChangeOutcome(event) {
   if (!hasOwn(event, "pageChangeOutcome")) return event.kind !== "free" || event.route === "/recipes/page-change" || (event.route === "/trial/extract" && hasOwn(event, "extractionTrialOutcome"));
   const metadata = event.pageChangeOutcome;
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)
     || Object.keys(metadata).sort().join(",") !== "outcome,transport,v"
     || metadata.v !== 1 || !PAGE_CHANGE_OUTCOMES.has(metadata.outcome)) return false;
-  if (metadata.transport !== "http" && metadata.transport !== "mcp") return false;
-  if (event.route !== (metadata.transport === "http" ? "/recipes/page-change" : "/mcp")
+  const expectedRoute = pageChangeRouteForTransport(metadata.transport);
+  if (!expectedRoute || event.route !== expectedRoute
     || event.kind !== "free" || event.method !== "POST" || event.matched !== true
     || event.paymentPresent !== false || event.replayed !== false
     || event.settlementReference !== null || event.protocolsOffered?.length !== 0
@@ -1899,6 +1925,10 @@ function acceptsPageChangeOutcome(event) {
   if (metadata.transport === "http" && metadata.outcome === "refused"
     && !((event.status >= 400 && event.status < 500) || event.status === 503)) return false;
   if (metadata.transport === "http" && metadata.outcome === "failed" && event.status < 400) return false;
+  if (metadata.transport === "page-change-mcp" && metadata.outcome === "refused"
+    && !(event.status === 200 || (event.status >= 400 && event.status < 500) || event.status === 503)) return false;
+  if (metadata.transport === "page-change-mcp" && metadata.outcome === "failed"
+    && !(event.status === 200 || event.status >= 400)) return false;
   return true;
 }
 
@@ -1915,7 +1945,8 @@ function isCanonicalCommerceEvent(value) {
   if (!isCanonicalHttpMethod(value.method)) return false;
   if (!CANONICAL_EVENT_KINDS.has(value.kind) || typeof value.matched !== "boolean") return false;
   const freeMcp = value.kind === "free" && value.route === "/mcp" && hasOwn(value, "pageChangeOutcome");
-  if (!freeMcp && !isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
+  const freePageChangeProfile = value.kind === "free" && value.route === "/mcp/page-change" && hasOwn(value, "pageChangeOutcome");
+  if (!freeMcp && !freePageChangeProfile && !isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
   if (!acceptsPageChangeOutcome(value)) return false;
   if (!acceptsTrialOutcome(value)) return false;
   if (!isCanonicalQueryKeys(value.queryKeys)) return false;
@@ -4051,9 +4082,25 @@ export function createCommerceTelemetry({
 
   // Registration is process-local: a restart never backdates transport coverage.
   const pageChangeCapture = new Map();
-  function freePageChangeObserver(transport) {
+  function freePageChangeObserver(transport, options = {}) {
     if (transport !== "http" && transport !== "mcp") throw new Error("unsupported free page-change transport");
-    if (!pageChangeCapture.has(transport)) pageChangeCapture.set(transport, new Date().toISOString());
+    const requestedRoute = options && typeof options === "object" ? options.route : undefined;
+    let route;
+    let outcomeTransport;
+    let captureKey;
+    if (requestedRoute === undefined) {
+      route = transport === "http" ? "/recipes/page-change" : "/mcp";
+      outcomeTransport = transport;
+      captureKey = transport;
+    } else if (transport === "mcp" && requestedRoute === "/mcp/page-change") {
+      // Separate from the paid catalog observer, which records route /mcp.
+      route = "/mcp/page-change";
+      outcomeTransport = "page-change-mcp";
+      captureKey = "page-change-mcp";
+    } else {
+      throw new Error("unsupported free page-change route");
+    }
+    if (!pageChangeCapture.has(captureKey)) pageChangeCapture.set(captureKey, new Date().toISOString());
     return function begin(req, res) {
       const startedAt = Date.now();
       const headers = req?.headers || {};
@@ -4077,7 +4124,7 @@ export function createCommerceTelemetry({
           declaredAgentDiscoverySource: sourceSplit.declaredAgentDiscoverySource,
           observedAgentDiscoverySource: sourceSplit.observedAgentDiscoverySource,
           discoverySourceKind: sourceSplit.discoverySourceKind,
-          method: "POST", route: transport === "http" ? "/recipes/page-change" : "/mcp",
+          method: "POST", route,
           matched: true, kind: "free", queryKeys: [],
           requestConstruction: "not_measured", requestConstructionRequiredKeyCount: 0,
           paymentPresent: false, paymentCredentialParsed: false, paymentProtocol: null,
@@ -4085,14 +4132,24 @@ export function createCommerceTelemetry({
           paymentActor: null, paymentIdentifier: null, settlementReference: null,
           settlementAmountAtomic: null, settlementNetwork: null, settlementCurrency: null,
           status: Number(res.statusCode || 200), result: "request", durationMs: Math.max(0, Date.now() - startedAt),
-          pageChangeOutcome: { v: 1, transport, outcome: closed ? "aborted" : outcome },
+          pageChangeOutcome: { v: 1, transport: outcomeTransport, outcome: closed ? "aborted" : outcome },
         };
         if (!isCanonicalCommerceEvent(event)) return;
         enqueueExclusive(() => appendEvent(event)).catch(() => {});
       };
-      res.once("finish", () => { try { record(); } catch { /* Observational only. */ } });
-      res.once("close", () => { try { record(true); } catch { /* Observational only. */ } });
+      const onFinish = () => { try { record(); } catch { /* Observational only. */ } };
+      const onClose = () => { try { record(true); } catch { /* Observational only. */ } };
+      res.once("finish", onFinish);
+      res.once("close", onClose);
       return (observed) => {
+        // Protocol methods that are not comparisons must not become refusals.
+        if (observed === "omit") {
+          if (recorded) return;
+          recorded = true;
+          res.removeListener("finish", onFinish);
+          res.removeListener("close", onClose);
+          return;
+        }
         if (PAGE_CHANGE_OUTCOMES.has(observed)) outcome = observed;
       };
     };
