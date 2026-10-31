@@ -732,6 +732,11 @@ test("page-change MCP journal records this route and not the paid catalog bucket
   assert.equal(rows.filter((row) => row.pageChangeOutcome.outcome === "changed").length, 1);
   assert.ok(rows.some((row) => row.pageChangeOutcome.outcome === "refused"));
   assert.ok(rows.some((row) => row.pageChangeOutcome.outcome === "aborted"));
+  assert.equal(Object.hasOwn(rows.find((row) => row.pageChangeOutcome.outcome === "changed"), "pageChangeRefusal"), false);
+  assert.ok(rows.some((row) => row.pageChangeRefusal?.stage === "parser" && row.pageChangeRefusal?.reason === "invalid_json"));
+  assert.ok(rows.some((row) => row.pageChangeRefusal?.stage === "parser" && row.pageChangeRefusal?.reason === "unknown_tool"));
+  assert.ok(rows.filter((row) => row.pageChangeOutcome.outcome === "aborted").every((row) => row.pageChangeRefusal?.stage === "transport" && row.pageChangeRefusal?.reason === "aborted"));
+  assert.equal(stored.includes("https://example.invalid"), false);
   const snapshot = await telemetry.snapshot({ days: 1 });
   assert.equal(snapshot.freePageChange.transports.mcp.observations, 0);
   assert.equal(snapshot.freePageChange.transports.mcp.captureStartedAt, null);
@@ -740,6 +745,80 @@ test("page-change MCP journal records this route and not the paid catalog bucket
   assert.ok(snapshot.freePageChange.profiles[PAGE_CHANGE_MCP_PATH].byOutcome.refused >= 1);
   assert.ok(snapshot.freePageChange.profiles[PAGE_CHANGE_MCP_PATH].byOutcome.aborted >= 1);
   assert.equal(ownedPageChangeWorkerCount(), 0);
+});
+
+test("disabled profile records admission/disabled and a hostile worker code is not stored", async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "page-change-refusal-profile-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "fixture-secret" });
+  const observe = telemetry.freePageChangeObserver("mcp", { route: PAGE_CHANGE_MCP_PATH });
+  const disabled = await listenProfile({}, observe);
+  t.after(() => disabled.close());
+  const session = await connectClient(disabled.base);
+  try {
+    const result = await session.client.callTool({
+      name: PAGE_CHANGE_MCP_TOOL,
+      arguments: { before: {}, after: {}, fields: ["title"] },
+    });
+    assert.equal(result.isError, true);
+    assert.equal(toolJson(result).error, "page_change_http_disabled");
+  } finally {
+    await session.close();
+  }
+  const previousSleep = process.env.PAGE_CHANGE_HTTP_SLEEP_MS;
+  process.env.PAGE_CHANGE_HTTP_SLEEP_MS = "0";
+  t.after(() => {
+    if (previousSleep === undefined) delete process.env.PAGE_CHANGE_HTTP_SLEEP_MS;
+    else process.env.PAGE_CHANGE_HTTP_SLEEP_MS = previousSleep;
+  });
+  const hostile = await listenProfile({
+    PAGE_CHANGE_HTTP_ENABLED: "1",
+    PAGE_CHANGE_HTTP_WORKER_PATH: path.join(cwd, "page-change-http-sleep-worker.mjs"),
+  }, observe);
+  t.after(() => hostile.close());
+  const hostileSession = await connectClient(hostile.base);
+  try {
+    const slept = await hostileSession.client.callTool({
+      name: PAGE_CHANGE_MCP_TOOL,
+      arguments: { before: { title: "a" }, after: { title: "b" }, fields: ["title"] },
+    });
+    assert.equal(slept.isError, true);
+    assert.equal(toolJson(slept).code, "sleep_elapsed");
+  } finally {
+    await hostileSession.close();
+  }
+  const outside = await listenProfile({
+    PAGE_CHANGE_HTTP_ENABLED: "1",
+    PAGE_CHANGE_HTTP_WORKER_PATH: "/tmp/h84010-not-a-worker.mjs",
+  }, observe);
+  t.after(() => outside.close());
+  const outsideSession = await connectClient(outside.base);
+  try {
+    const rejected = await outsideSession.client.callTool({
+      name: PAGE_CHANGE_MCP_TOOL,
+      arguments: { before: { title: "a" }, after: { title: "b" }, fields: ["title"] },
+    });
+    assert.equal(rejected.isError, true);
+    assert.equal(toolJson(rejected).code, "invalid_worker_path");
+  } finally {
+    await outsideSession.close();
+  }
+  await telemetry.flush();
+  const stored = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.equal(stored.includes("sleep_elapsed"), false);
+  assert.equal(stored.includes("should have been killed"), false);
+  assert.equal(stored.includes("/tmp/h84010-not-a-worker.mjs"), false);
+  assert.equal(stored.includes("title"), false);
+  const parsed = stored.trim().split("\n").map((line) => JSON.parse(line));
+  assert.ok(parsed.some((row) => row.pageChangeRefusal?.stage === "admission" && row.pageChangeRefusal?.reason === "disabled"));
+  assert.ok(parsed.some((row) => row.pageChangeOutcome.outcome === "refused" && !row.pageChangeRefusal));
+  assert.ok(parsed.some((row) => row.pageChangeRefusal?.stage === "core" && row.pageChangeRefusal?.reason === "compare_failed"));
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  const reasons = snapshot.freePageChange.profiles[PAGE_CHANGE_MCP_PATH].refusals.external.byReason;
+  assert.equal(reasons["admission.disabled"], 1);
+  assert.equal(reasons["core.compare_failed"], 1);
+  assert.equal(snapshot.freePageChange.transports.mcp.observations, 0);
+  assert.equal(JSON.stringify(snapshot.freePageChange).includes("sleep_elapsed"), false);
 });
 
 test("disabled profile stays mounted and refuses the compare without HTTP 404", async () => {

@@ -13,6 +13,7 @@
  */
 
 import { renderCallerResultClientGuide } from "./caller-result-client-entry.mjs";
+import { renderFreePageCompareLlmsSection } from "./page-change-free-surface.mjs";
 
 export const CIRCLE_ALTERNATE_KIND = "circle-alternate";
 
@@ -110,6 +111,7 @@ export function renderLlmsTxt({
   freeRecipes = [],
   callerResultClient = null,
   extractionTrialDiscovery = null,
+  freePageCompare = false,
 } = {}) {
   if (!origin || !facilitator || !payTo) fail("origin, facilitator, and payTo are required");
   if (!Array.isArray(actions) || actions.length === 0) fail("actions are required");
@@ -136,6 +138,7 @@ export function renderLlmsTxt({
     return `- ${String(recipe.method || "POST").toUpperCase()} ${recipe.route} (charged: false). ${flatten(recipe.description)}`;
   });
   const freeSection = freeLines.length ? `\n## Free recipes\n${freeLines.join("\n")}\n` : "\n";
+  const compareSection = freePageCompare ? renderFreePageCompareLlmsSection(publicOrigin) : "";
   const callerGuide = renderCallerResultClientGuide(callerResultClient);
   return `# SameDayDesk machine commerce gateway
 
@@ -143,8 +146,7 @@ export function renderLlmsTxt({
 
 ## Endpoints
 ${lines.join("\n")}
-${freeSection}
-## How to pay
+${freeSection}${compareSection}## How to pay
 1. GET an endpoint such as ${publicOrigin}/enrich?domain=stripe.com. Inspect its HTTP 402 for the currently available payment protocols.
 2. For x402, use PAYMENT-REQUIRED with an x402 v2 client and replay with PAYMENT-SIGNATURE. A successful response carries PAYMENT-RESPONSE.
 ${mppAvailable ? "3. For an action advertising MPP, use WWW-Authenticate: Payment with an mppx EVM charge client and replay with Authorization: Payment. A successful response carries Payment-Receipt." : "3. Select x402 from the current action catalog."}

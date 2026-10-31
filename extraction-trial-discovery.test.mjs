@@ -12,6 +12,7 @@ import { fixture, authority, NOW } from "./extraction-trial-test-fixture.mjs";
 import { createExtractionTrialBudget } from "./extraction-trial.mjs";
 import { AIAX_MAX_BYTES } from "./aiax-discovery/projection.mjs";
 import { PLATFORM_HEALTH_CARDS } from "./platform-health.mjs";
+import { FREE_PAGE_COMPARE_SKILL_ID, omitFreePageCompareAgentSkill, omitFreePageCompareLlmsSection } from "./page-change-free-surface.mjs";
 
 const BASE = "c2aeb77a8546c1d8bb7b27473fc466b373538c72";
 const origin = "https://agents.samedaydesk.com";
@@ -121,12 +122,16 @@ test("each machine entry discovers canonical trial request and truthful availabi
 
 // Remove precisely the admitted pointer additions, then compare entire documents.
 function withoutLink(route, response) {
-  if (["/llms.txt", "/skill.md", "/SKILL.md"].includes(route)) return response.text.replace(/^- Walletless extraction trial contract \(current availability, request and limits\): https:\/\/[^\n]+\n/m, "");
+  if (route === "/llms.txt") return omitFreePageCompareLlmsSection(response.text.replace(/^- Walletless extraction trial contract \(current availability, request and limits\): https:\/\/[^\n]+\n/m, ""));
+  if (["/skill.md", "/SKILL.md"].includes(route)) return response.text.replace(/^- Walletless extraction trial contract \(current availability, request and limits\): https:\/\/[^\n]+\n/m, "");
   const value = structuredClone(response.json);
   if (route.includes("openapi") || route === "/swagger.json") delete value["x-service-info"].docs.extractionTrial;
   if (route === "/api/actions") delete value.discovery.extractionTrial;
   if (route === "/mcp") delete value.extractionTrial;
-  if (route.includes("agent-card") || route === "/.well-known/agent.json") value.description = value.description.replace(/ Walletless extraction trial contract.*$/, "");
+  if (route.includes("agent-card") || route === "/.well-known/agent.json") {
+    value.description = value.description.replace(/ Walletless extraction trial contract.*$/, "");
+    return omitFreePageCompareAgentSkill(value);
+  }
   if (route.includes("aiax")) {
     if (route.includes("sections")) delete value.extensions.samedaydesk.extraction_trial_discovery;
     else {
@@ -202,7 +207,13 @@ test("exact admitted base preserves paid documents, challenges, MCP tools and al
   const fullExpected = await capture(admitted, false);
   await admitted.stop();
   await t.test("exact measurement base preserves all sixteen full entries, paid challenge, MCP tools and human bytes", () => {
-    assert.deepEqual(fullActual, fullExpected);
+    const comparable = structuredClone(fullActual);
+    comparable["/llms.txt"] = omitFreePageCompareLlmsSection(comparable["/llms.txt"]);
+    for (const route of ["/.well-known/agent-card.json", "/.well-known/agent.json"]) comparable[route] = omitFreePageCompareAgentSkill(comparable[route]);
+    assert.deepEqual(comparable, fullExpected);
+    assert.match(fullActual["/llms.txt"], /compare_page_observations/);
+    assert.equal(fullActual["/.well-known/agent-card.json"].skills.some((skill) => skill.id === FREE_PAGE_COMPARE_SKILL_ID), true);
+    assert.deepEqual(fullActual.human, fullExpected.human);
   });
   for (const [entry, value] of Object.entries(expected)) await t.test(entry, () => assert.deepEqual(actual[entry], value));
   assert.equal(Object.keys(actual.human).length, 12);

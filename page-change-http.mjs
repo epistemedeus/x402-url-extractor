@@ -850,7 +850,7 @@ export function mountPageChangeHttp(app, { env = process.env, observe = null } =
   app.post(PAGE_CHANGE_HTTP_PATH, async (req, res) => {
     let noteOutcome = () => {};
     try { if (enabled && typeof observe === "function") noteOutcome = observe(req, res) || noteOutcome; } catch { /* Optional measurement. */ }
-    const note = outcome => { try { noteOutcome(outcome); } catch { /* Optional measurement. */ } };
+    const note = (outcome, code) => { try { noteOutcome(outcome, code); } catch { /* Optional measurement. */ } };
     res.set("Cache-Control", "no-store");
     res.set("X-Robots-Tag", "noindex, nofollow");
     if (!enabled) {
@@ -860,15 +860,18 @@ export function mountPageChangeHttp(app, { env = process.env, observe = null } =
     if (!allowPageChangeHttp(req)) {
       drainRequest(req, res);
       res.set("Retry-After", "60");
+      note("refused", "rate_limit_exceeded");
       return res.status(429).json({ ok: false, error: "rate_limit_exceeded", charged: false });
     }
     if (!isJsonContentType(req)) {
       drainRequest(req, res);
+      note("refused", "unsupported_media_type");
       return res.status(415).json({ ok: false, error: "unsupported_media_type", charged: false });
     }
     const exchange = beginPageChangeExchange(req, res, limits);
     if (!exchange.ok) {
       if (exchange.error.code === "page_change_busy") res.set("Retry-After", "1");
+      note(pageChangeServiceOutcome(null, exchange.error), exchange.error?.code);
       return jsonError(res, exchange.error);
     }
     try {
@@ -889,10 +892,16 @@ export function mountPageChangeHttp(app, { env = process.env, observe = null } =
         report,
       };
       if (encodedBytes(output) > limits.maxOutputBytes) throw new PageChangeHttpError("response exceeds server ceiling", { status: 413, code: "output_too_large" });
-      note(exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(output));
+      note(
+        exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(output),
+        exchange.abort.signal.aborted ? "request_aborted" : undefined,
+      );
       return res.status(200).json(output);
     } catch (error) {
-      note(exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, error));
+      note(
+        exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, error),
+        exchange.abort.signal.aborted ? "request_aborted" : error?.code,
+      );
       if (res.writableEnded) return;
       drainRequest(req, res);
       if (exchange.abort.signal.aborted && !(error instanceof PageChangeHttpError)) {

@@ -195,6 +195,7 @@ export function handleWellKnownSkillsRequest(req, res, {
   publicUrl,
   skills = loadWellKnownSkills(),
   extraIndexSkills = [],
+  renderSkillMarkdown = (skill) => skill.markdown,
 } = {}) {
   const method = String(req.method || "GET").toUpperCase();
   const origin = canonicalWellKnownSkillsOrigin(publicUrl);
@@ -270,7 +271,7 @@ export function handleWellKnownSkillsRequest(req, res, {
     return send(res, {
       status: 200,
       headers: skillsHeaders(SKILL_CONTENT_TYPE, canonicalWellKnownSkillUrl(publicUrl, resolved.name)),
-      body: skill.markdown,
+      body: renderSkillMarkdown(skill),
       method,
     });
   }
@@ -282,11 +283,12 @@ export function mountWellKnownSkills(app, {
   publicUrl,
   skillsRoot = DEFAULT_SKILLS_ROOT,
   extraIndexSkills = [],
+  renderSkillMarkdown,
 } = {}) {
   const skills = loadWellKnownSkills(skillsRoot);
   const handler = (req, res, next) => {
     if (!isWellKnownSkillsPath(req.path)) return next();
-    return handleWellKnownSkillsRequest(req, res, { publicUrl, skills, extraIndexSkills });
+    return handleWellKnownSkillsRequest(req, res, { publicUrl, skills, extraIndexSkills, renderSkillMarkdown });
   };
   app.use(handler);
   return {

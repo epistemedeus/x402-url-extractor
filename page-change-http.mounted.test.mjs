@@ -14,7 +14,9 @@ import { PLATFORM_HEALTH_CARDS } from "./platform-health.mjs";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { PAGE_CHANGE_HTTP_PATH } from "./page-change-http.mjs";
-import { PAGE_CHANGE_MCP_PATH } from "./page-change-mcp.mjs";
+import { PAGE_CHANGE_MCP_PATH, PAGE_CHANGE_MCP_TOOL } from "./page-change-mcp.mjs";
+import { pageChangeRequestExample } from "./page-change-input-contract.mjs";
+import { omitFreePageCompareAgentSkill, omitFreePageCompareLlmsSection, renderFreePageCompareSkillAppendix } from "./page-change-free-surface.mjs";
 import { MCP_JSON_RPC_MAX_BYTES } from "./mcp-json-rpc-limit.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
@@ -717,6 +719,15 @@ test("mounted parser, graph, rate and capacity limits are refusals, while unsele
   const before = await freeOutcomeSummary(merchant);
   assert.equal(before.freePageChange.transports.http.byOutcome.refused, 12);
   assert.equal(before.freePageChange.transports.http.byOutcome.aborted, 1);
+  const httpReasons = before.freePageChange.transports.http.refusals.external.byReason;
+  assert.equal(httpReasons["parser.json_depth"], 1);
+  assert.equal(httpReasons["capacity.busy"], 1);
+  assert.equal(httpReasons["admission.incompatible_input"], 9);
+  assert.equal(httpReasons["capacity.rate_limited"], 1);
+  assert.equal(httpReasons["transport.aborted"], 1);
+  assert.equal(before.freePageChange.transports.http.refusals.external.unknown, 0);
+  assert.equal(before.freePageChange.transports.mcp.refusals.external.byReason["parser.json_depth"], 1);
+  assert.equal(before.freePageChange.profiles["/mcp/page-change"].byOutcome.refused, 0);
   const mcpHeaders = { "content-type": "application/json", accept: "application/json, text/event-stream" };
   const malformed = await fetch(`${merchant.base}/mcp`, { method: "POST", headers: mcpHeaders, body: "{private-mcp-parser-marker" });
   assert.equal(malformed.status, 400);
@@ -727,7 +738,9 @@ test("mounted parser, graph, rate and capacity limits are refusals, while unsele
     body: JSON.stringify({ jsonrpc: "0.1", id: 5, method: "tools/call", params: { name: "page_change", arguments: unchangedPayload() } }) });
   assert.equal(invalidRpc.status, 400);
   const after = await freeOutcomeSummary(merchant);
+  assert.equal(JSON.stringify(after.freePageChange).includes("private-mcp-parser-marker"), false);
   assert.equal(after.freePageChange.transports.mcp.observations, before.freePageChange.transports.mcp.observations);
+  assert.deepEqual(after.freePageChange.transports.mcp.refusals, before.freePageChange.transports.mcp.refusals);
   assert.equal(after.freePageChange.transports.mcp.byOutcome.refused, 1);
   assert.equal(after.freePageChange.transports.mcp.byOutcome.changed, 0);
   assert.equal(after.freePageChange.transports.mcp.scope, "parsed_page_change_tools_call");
@@ -751,6 +764,8 @@ test("canonical journal failure cannot change mounted HTTP or MCP free delivery"
   for (const transport of ["http", "mcp"]) {
     assert.equal(summary.freePageChange.transports[transport].currentCapture.coverage, "unmeasured");
     assert.equal(summary.freePageChange.transports[transport].observations, 0);
+    assert.equal(summary.freePageChange.transports[transport].refusals.external.known, 0);
+    assert.equal(summary.freePageChange.transports[transport].refusals.external.unknown, 0);
   }
 });
 
@@ -1076,7 +1091,11 @@ test("ROOT9560 exact mounted byte qualification, local-ref negatives and example
   const merchant = await startMerchant({ extraEnv });
   t.after(() => merchant.close());
   const candidate = await capture(merchant);
-  assert.deepEqual(candidate.preserved, baseline.preserved, "raw human/assets, challenge, trial declaration and terms stay exact");
+  const preserved = structuredClone(candidate.preserved);
+  preserved["/llms.txt"] = { ...preserved["/llms.txt"], raw: omitFreePageCompareLlmsSection(preserved["/llms.txt"].raw) };
+  assert.match(candidate.preserved["/llms.txt"].raw, /## Free comparison/);
+  assert.equal(baseline.preserved["/llms.txt"].raw.includes("## Free comparison"), false);
+  assert.deepEqual(preserved, baseline.preserved, "raw human/assets, challenge, trial declaration and terms stay exact");
   const measurements = {};
   for (const route of routes) {
     const before = baseline.documents[route], after = candidate.documents[route];
@@ -1137,4 +1156,76 @@ test("ROOT9560 exact mounted byte qualification, local-ref negatives and example
       assert.throws(() => assertSyntheticReport(output, "changed"), /unchanged/);
     }
   });
+});
+
+test("admitted base keeps human and root bytes while cold machine reads name the free profile", { timeout: 90_000 }, async (t) => {
+  const scratch = await mkdtemp(path.join(tmpdir(), "h84010-human-"));
+  t.after(() => rm(scratch, { recursive: true, force: true }));
+  const clockHook = path.join(scratch, "clock.mjs");
+  await writeFile(clockHook, `const RealDate = Date;
+    globalThis.Date = class extends RealDate {
+      constructor(...args) { super(...(args.length ? args : [1792987200000])); }
+      static now() { return 1792987200000; }
+    };`);
+  const extraEnv = {
+    PAGE_CHANGE_HTTP_ENABLED: "1",
+    MPP_SECRET_KEY: "",
+    EXTRACTION_TRIAL_ENABLED: "0",
+    NODE_OPTIONS: `--max-old-space-size=512 --import=${clockHook}`,
+  };
+  const humanRoutes = ["/", "/platforms", "/radar", "/platforms/methodology", "/alerts",
+    ...PLATFORM_HEALTH_CARDS.map((card) => `/platforms/${card.platform_id}`), "/favicon.ico", "/favicon.svg", "/skill.md", "/SKILL.md"];
+  async function capture(merchant) {
+    const found = {};
+    for (const route of humanRoutes) {
+      const response = await fetch(merchant.base + route, { redirect: "manual", headers: { accept: "text/html" } });
+      found[route] = { status: response.status, raw: await response.text(), type: response.headers.get("content-type") };
+    }
+    const jsonRoot = await fetch(merchant.base + "/", { headers: { accept: "application/json" } });
+    found.jsonRoot = { status: jsonRoot.status, raw: await jsonRoot.text() };
+    const actions = await fetch(`${merchant.base}/api/actions`);
+    found.actions = { status: actions.status, raw: await actions.text() };
+    found.llms = await (await fetch(`${merchant.base}/llms.txt`)).text();
+    found.card = await (await fetch(`${merchant.base}/.well-known/agent-card.json`)).json();
+    found.skill = await (await fetch(`${merchant.base}/.well-known/skills/page-change/SKILL.md`)).text();
+    return found;
+  }
+  const base = await startMerchant({ sourceBase: "7138c170c7c5d06dae0568466b7a93b77439bbda", extraEnv });
+  let baseline;
+  try { baseline = await capture(base); } finally { await base.close(); }
+  const merchant = await startMerchant({ extraEnv });
+  t.after(() => merchant.close());
+  const current = await capture(merchant);
+  for (const route of humanRoutes) assert.deepEqual(current[route], baseline[route], route);
+  assert.equal(current.jsonRoot.raw, baseline.jsonRoot.raw);
+  assert.equal(current.actions.raw, baseline.actions.raw);
+  assert.equal(omitFreePageCompareLlmsSection(current.llms), baseline.llms);
+  assert.match(current.llms, /POST \/mcp\/page-change is the free-only Streamable HTTP MCP profile/);
+  assert.match(current.llms, /compare_page_observations/);
+  assert.match(current.llms, /charged: false/);
+  assert.match(current.llms, /does not fetch URLs/);
+  assert.equal(baseline.llms.includes("compare_page_observations"), false);
+  const example = JSON.parse(current.llms.slice(current.llms.indexOf("Input example: ") + "Input example: ".length).split("\n")[0]);
+  assert.deepEqual(example, pageChangeRequestExample());
+  assert.deepEqual(omitFreePageCompareAgentSkill(current.card), baseline.card);
+  const skill = current.card.skills.find((entry) => entry.id === "compare-held-page-observations");
+  assert.match(skill.description, /compare_page_observations/);
+  assert.match(skill.description, /does not fetch URLs/);
+  assert.equal(JSON.stringify(skill).includes("/gateway/"), false);
+  assert.equal(baseline.card.skills.some((entry) => entry.id === "compare-held-page-observations"), false);
+  const portable = await readFile(path.join(cwd, "plugins/samedaydesk-x402/skills/page-change/SKILL.md"), "utf8");
+  assert.equal(baseline.skill, portable);
+  assert.equal(current.skill, `${portable}${renderFreePageCompareSkillAppendix("https://agents.samedaydesk.com")}`);
+  assert.doesNotMatch(current.skill.slice(portable.length), /Mcp-Method|X-PAYMENT|PAYMENT-SIGNATURE|Authorization:|Bearer |api_key|api-key/);
+  const listed = await fetch(`${merchant.base}${PAGE_CHANGE_MCP_PATH}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }),
+  });
+  const listedText = await listed.text();
+  assert.equal(listed.status, 200);
+  assert.match(listedText, new RegExp(PAGE_CHANGE_MCP_TOOL));
+  const paid = await fetch(`${merchant.base}/mcp`);
+  const paidText = await paid.text();
+  assert.equal(paidText.includes(PAGE_CHANGE_MCP_TOOL), false);
 });
