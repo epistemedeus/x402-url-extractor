@@ -166,8 +166,10 @@ test("release receiver configuration never contacts a network", async () => {
 test("release receiver separates paid MPP availability from the free route", async () => {
   const origin = "http://127.0.0.1:9";
   const requests = [];
+  const ownerHeaders = [];
   const fetchImpl = async (url, options = {}) => {
     requests.push(`${options.method || "GET"} ${url}`);
+    ownerHeaders.push(new Headers(options.headers).get("user-agent"));
     const route = new URL(url).pathname;
     if (route === "/recipes/page-change/health") {
       return jsonResponse(200, {
@@ -292,6 +294,7 @@ test("release receiver separates paid MPP availability from the free route", asy
   assert.equal(dropped.reason, "free_route_transport");
   assert.equal(freeHits, 1);
   assert.equal(dropped.checks.pageChangeHealth.commit, SOURCE);
+  assert(ownerHeaders.every((value) => value === "SameDayDesk-merchant-release-receiving/0"), "all default receiver HTTP reads identify owner QA");
 });
 
 test("mounted release receiver covers source, route, refusal, disabled, and recovery", { timeout: 90_000 }, async () => {
@@ -360,6 +363,12 @@ test("mounted release receiver covers source, route, refusal, disabled, and reco
     assert.equal(dark.checks.healthz.mppEnabled, false);
     assert.deepEqual(dark.checks.mppOpenApi.paidOperations, []);
     assert.equal(dark.checks.freeSdk.refused.every((item) => item.accepted), true);
+    const demand = await (await fetch(`${disabled.origin}/v0/commerce-demand.json`, {
+      headers: { "user-agent": "SameDayDesk-owner-test" },
+    })).json();
+    const profile = demand.freePageChange.profiles[PAGE_CHANGE_MCP_PATH];
+    assert.equal(profile.observations, 0, "owner-QA SDK invocation must not become outside demand");
+    assert.equal(profile.populations.owner_monitor.refused, 3, "two unknown-tool refusals and the disabled free invocation remain owner QA");
   } finally {
     await disabled.close();
   }
