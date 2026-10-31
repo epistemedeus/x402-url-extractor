@@ -82,23 +82,284 @@ async function stopChild(child) {
   });
 }
 
+// Historical server.js calls supportedRailsForRoute(route) with the one-argument
+// contract from these October 25 revisions. HEAD operation-identity.mjs fail-closes
+// that call to x402 (ab5bf51, 2026-10-29). The copied server still emits GET /extract
+// on the MPP profile, and current machine-surface-parity then rejects startup.
+// Close the identity module at the same revision. Do not symlink it to HEAD, and
+// do not retarget the server copy at HEAD. Current parity stays the startup judge.
+const HISTORICAL_SERVER_CLOSURE = Object.freeze([
+  "server.js",
+  "page-change-http.mjs",
+  "mcp-tool-metadata.mjs",
+  "page-change-input-contract.mjs",
+  "operation-identity.mjs",
+]);
+
+// ab5bf51 projects configured MPP availability. These October 25 revisions are
+// earlier and still advertise x402+MPP. They are not rewritten to HEAD.
+const AVAILABILITY_REVISION = "ab5bf51b60c7fa6e2d3587fcac23b26f00872b65";
+const LOCKFILE_ROUTE = "/lockfile-pin-delta";
+const TRIAL_READ_TOOL = "trial_read";
+const AVAILABILITY_SENTENCES = Object.freeze([
+  ["Pay per call through Base x402 or native MPP, with a Circle Gateway Nanopayments path for gasless batched USDC.",
+    "Pay per call through Base x402, with a Circle Gateway Nanopayments path for gasless batched USDC."],
+  ["Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
+    "Choose the narrowest route that answers the task. Supply required query parameters, inspect the currently advertised HTTP 402 offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative."],
+  ["Return the exact-price x402 and MPP action catalog as an A2A direct message.",
+    "Return the exact-price currently available action catalog as an A2A direct message."],
+  ["x402 exact or MPP evm/charge USDC on Base", "x402 exact USDC on Base"],
+  ["This free catalog is discovery only. Call the selected action URL directly and satisfy its live x402 or MPP challenge; no marketplace proxy can stand in for the route-bound payment credential.",
+    "This free catalog is discovery only. Call the selected action URL directly and satisfy one of its currently advertised payment challenges; no marketplace proxy can stand in for the route-bound payment credential."],
+  ["x402 USDC on Base per paid MCP tool call; page_change is free and HTTP actions also accept native MPP",
+    "x402 USDC on Base per paid MCP tool call; page_change is free"],
+  ["through x402 or native MPP Payment authentication on eligible actions.", "through x402."],
+  ["3. For an action advertising MPP, use WWW-Authenticate: Payment with an mppx EVM charge client and replay with Authorization: Payment. A successful response carries Payment-Receipt.",
+    "3. Select x402 from the current action catalog."],
+]);
+
+function assertIdentifiedHistoricalRevision(sourceBase) {
+  assert.notEqual(sourceBase, AVAILABILITY_REVISION);
+  assert.equal(spawnSync("git", ["merge-base", "--is-ancestor", sourceBase, "HEAD"], { cwd }).status, 0, sourceBase);
+  assert.notEqual(spawnSync("git", ["merge-base", "--is-ancestor", AVAILABILITY_REVISION, sourceBase], { cwd }).status, 0, sourceBase);
+  assert.equal(spawnSync("git", ["merge-base", "--is-ancestor", AVAILABILITY_REVISION, "HEAD"], { cwd }).status, 0);
+  const subject = spawnSync("git", ["log", "-1", "--format=%s", AVAILABILITY_REVISION], { cwd, encoding: "utf8" });
+  assert.equal(subject.status, 0);
+  assert.equal(subject.stdout.trim(), "Project configured MPP availability across machine discovery");
+}
+
+function replaceKnownSentences(value) {
+  let next = value;
+  for (const [from, to] of AVAILABILITY_SENTENCES) {
+    if (next.includes(from)) next = next.replaceAll(from, to);
+  }
+  return next;
+}
+
+function sameJson(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function dropMppToken(value) {
+  return value.filter((item) => item !== "mpp");
+}
+
+function dropMppProtocol(value) {
+  return value.filter((item) => !(item && typeof item === "object" && !Array.isArray(item) && Object.hasOwn(item, "mpp")));
+}
+
+// Project only the availability edit that current actually published. A rail or
+// protocol entry that current still carries, including paid-effect declarations,
+// stays in the historical document so a later deep equal can reject it.
+function projectNode(historical, current) {
+  if (typeof historical === "string") return replaceKnownSentences(historical);
+  if (Array.isArray(historical)) {
+    if (Array.isArray(current)
+      && historical.every((item) => item === "x402" || item === "mpp")
+      && historical.includes("mpp")
+      && !current.includes("mpp")
+      && sameJson(dropMppToken(historical), current)) {
+      return dropMppToken(historical);
+    }
+    if (Array.isArray(current) && historical.some((item) => item && typeof item === "object" && Object.hasOwn(item, "mpp"))) {
+      const dropped = dropMppProtocol(historical);
+      if (sameJson(dropped, current)) return dropped;
+    }
+    if (!Array.isArray(current) || historical.length !== current.length) {
+      return historical.map((item) => (typeof item === "string" ? replaceKnownSentences(item) : item));
+    }
+    return historical.map((item, index) => projectNode(item, current[index]));
+  }
+  if (!historical || typeof historical !== "object") return historical;
+  const currentObject = current && typeof current === "object" && !Array.isArray(current) ? current : {};
+  const out = {};
+  for (const [key, child] of Object.entries(historical)) {
+    if ((key === "supportedRails" || key === "paymentProtocols") && Array.isArray(child) && Array.isArray(currentObject[key])
+      && child.every((item) => item === "x402" || item === "mpp")
+      && child.includes("mpp")
+      && !currentObject[key].includes("mpp")
+      && sameJson(dropMppToken(child), currentObject[key])) {
+      out[key] = dropMppToken(child);
+      continue;
+    }
+    if (key === "protocols" && Array.isArray(child) && Array.isArray(currentObject[key])) {
+      const dropped = dropMppProtocol(child);
+      if (dropped.length !== child.length && sameJson(dropped, currentObject[key])) {
+        out[key] = dropped;
+        continue;
+      }
+    }
+    if (key === "description" && typeof child === "string" && typeof currentObject[key] === "string") {
+      const replaced = replaceKnownSentences(child.replaceAll("x402 or MPP", "x402"));
+      if (replaced === currentObject[key]) {
+        out[key] = replaced;
+        continue;
+      }
+    }
+    out[key] = projectNode(child, currentObject[key]);
+  }
+  return out;
+}
+
+function projectDiscoveryDocument(historical, current) {
+  return projectNode(historical, current);
+}
+
+function paidMppOperations(document) {
+  const operations = [];
+  for (const [path, pathItem] of Object.entries(document?.paths || {})) {
+    if (!pathItem || typeof pathItem !== "object") continue;
+    for (const method of ["get", "post", "put", "patch", "delete"]) {
+      if (pathItem[method]?.["x-payment-info"]) operations.push({ method: method.toUpperCase(), path });
+    }
+  }
+  return operations;
+}
+
+function projectClosedMppDocument(historical, current) {
+  const historicalPaid = paidMppOperations(historical);
+  const currentPaid = paidMppOperations(current);
+  assert.ok(historicalPaid.some((operation) => operation.method === "GET" && operation.path === "/extract"), "historical MPP profile lists GET /extract");
+  assert.deepEqual(currentPaid, [], "unavailable MPP profile lists no paid operation");
+  assert.equal(current.paths?.["/extract"], undefined);
+  assert.ok(historical.paths?.["/extract"]?.get?.["x-payment-info"]);
+  const projected = structuredClone(historical);
+  for (const operation of historicalPaid) {
+    delete projected.paths[operation.path][operation.method.toLowerCase()];
+    if (!Object.keys(projected.paths[operation.path]).length) delete projected.paths[operation.path];
+  }
+  return projectDiscoveryDocument(projected, current);
+}
+
+function firstDifference(left, right, pointer = "$") {
+  if (Object.is(left, right)) return null;
+  const leftObject = left && typeof left === "object";
+  const rightObject = right && typeof right === "object";
+  if (!leftObject || !rightObject) {
+    return `${pointer} :: ${JSON.stringify(left)?.slice(0, 160)} => ${JSON.stringify(right)?.slice(0, 160)}`;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
+      return `${pointer} length ${left?.length} => ${right?.length}`;
+    }
+    for (let index = 0; index < left.length; index += 1) {
+      const found = firstDifference(left[index], right[index], `${pointer}[${index}]`);
+      if (found) return found;
+    }
+    return null;
+  }
+  for (const key of new Set([...Object.keys(left), ...Object.keys(right)])) {
+    const found = firstDifference(left[key], right[key], `${pointer}.${key}`);
+    if (found) return found;
+  }
+  return null;
+}
+
+function assertProjectedEqual(actual, projected, label) {
+  const delta = firstDifference(projected, actual);
+  assert.equal(delta, null, `${label}: ${delta}`);
+  assert.deepEqual(actual, projected, label);
+}
+
+function assertCatalogEconomics(historical, current) {
+  assert.deepEqual(historical.paymentProtocols, ["x402", "mpp"]);
+  assert.deepEqual(current.paymentProtocols, ["x402"]);
+  assert.equal(historical.settlement, "x402 exact or MPP evm/charge USDC on Base");
+  assert.equal(current.settlement, "x402 exact USDC on Base");
+  const economics = (catalog) => catalog.actions.map((action) => ({
+    route: action.route,
+    method: action.method,
+    priceAtomicUsdc: action.priceAtomicUsdc,
+    billingBasis: action.billingBasis,
+  }));
+  assert.deepEqual(economics(current), economics(historical));
+  for (const action of historical.actions) {
+    const rails = action.route === LOCKFILE_ROUTE ? ["x402"] : ["x402", "mpp"];
+    assert.deepEqual(action.supportedRails, rails, action.route);
+    assert.deepEqual(action.paymentProtocols, rails, action.route);
+  }
+  for (const action of current.actions) {
+    assert.deepEqual(action.supportedRails, ["x402"], action.route);
+    assert.deepEqual(action.paymentProtocols, ["x402"], action.route);
+  }
+}
+
+function assertExtractStaysPriced(historical, current) {
+  const historicalOperation = historical.paths["/extract"].get["x-payment-info"].operation;
+  const currentOperation = current.paths["/extract"].get["x-payment-info"].operation;
+  assert.deepEqual(historicalOperation.supportedRails, ["x402", "mpp"]);
+  assert.deepEqual(currentOperation.supportedRails, ["x402"]);
+  assert.equal(currentOperation.price, historicalOperation.price);
+  assert.match(String(currentOperation.price), /^[1-9][0-9]*$/);
+  assert.equal(currentOperation.billingBasis, historicalOperation.billingBasis);
+}
+
+function assertMcpDescriptor(historical, current) {
+  assert.equal(historical.freeTools.some((tool) => tool.name === TRIAL_READ_TOOL), false);
+  const trial = current.freeTools.filter((tool) => tool.name === TRIAL_READ_TOOL);
+  assert.equal(trial.length, 1);
+  assert.equal(trial[0].charged, false);
+  assert.equal(historical.payment, AVAILABILITY_SENTENCES[5][0]);
+  assert.equal(current.payment, AVAILABILITY_SENTENCES[5][1]);
+  const rest = (descriptor) => ({ ...descriptor, freeTools: descriptor.freeTools.filter((tool) => tool.name !== TRIAL_READ_TOOL) });
+  assertProjectedEqual(rest(current), projectDiscoveryDocument(rest(historical), rest(current)), "GET /mcp");
+}
+
+function assertToolClosure(historicalTools, currentTools, { schemaOracle = false } = {}) {
+  assert.equal(historicalTools.some((tool) => tool.name === TRIAL_READ_TOOL), false);
+  const names = [];
+  for (const tool of historicalTools) {
+    if (tool.name === "recover_paid_result") names.push(TRIAL_READ_TOOL);
+    names.push(tool.name);
+  }
+  assert.deepEqual(currentTools.map((tool) => tool.name), names);
+  assert.equal(JSON.stringify(historicalTools).includes('"supportedRails":["x402","mpp"]'), true);
+  assert.equal(JSON.stringify(currentTools.filter((tool) => tool.name !== TRIAL_READ_TOOL)).includes('"supportedRails":["x402","mpp"]'), false);
+  for (const before of historicalTools) {
+    const after = currentTools.find((tool) => tool.name === before.name);
+    const projected = projectNode(before, after);
+    if (schemaOracle && before.name === "page_change") {
+      try {
+        assertEquivalentTool(projected, after);
+      } catch (error) {
+        const delta = firstDifference(
+          { ...projected, inputSchema: dereferenceContract(projected.inputSchema) },
+          { ...after, inputSchema: dereferenceContract(after.inputSchema) },
+        );
+        assert.fail(`page_change: ${delta || error.message}`);
+      }
+    } else {
+      assertProjectedEqual(after, projected, before.name);
+    }
+  }
+}
+
+function assertChallengePreserved(historical, current) {
+  assert.equal(historical.mpp ?? null, null);
+  assert.equal(current.mpp ?? null, null);
+  assert.deepEqual(current, historical);
+}
+
 async function startMerchant({ extraEnv = {}, startupTimeout = 20_000, dataDir: retainedDataDir = null, sourceBase = null } = {}) {
   const dataDir = retainedDataDir || await mkdtemp(path.join(tmpdir(), "page-change-http-"));
   let codeDir = cwd;
   if (sourceBase) {
     codeDir = await mkdtemp(path.join(tmpdir(), "root9420-base-"));
     for (const entry of await readdir(cwd)) {
-      if ([".git", "server.js", "page-change-http.mjs", "mcp-tool-metadata.mjs", "page-change-input-contract.mjs"].includes(entry)) continue;
+      if ([".git", ...HISTORICAL_SERVER_CLOSURE].includes(entry)) continue;
       await symlink(path.join(cwd, entry), path.join(codeDir, entry));
     }
     // The older pre-9420 preservation base has no shared contract module.
     // Copy only actual Git members; never resolve a changed module via a symlink.
     const members = spawnSync("git", ["ls-tree", "--name-only", sourceBase, "--",
-      "server.js", "page-change-http.mjs", "mcp-tool-metadata.mjs", "page-change-input-contract.mjs"], { cwd, encoding: "utf8" });
+      ...HISTORICAL_SERVER_CLOSURE], { cwd, encoding: "utf8" });
     assert.equal(members.status, 0);
-    for (const entry of members.stdout.trim().split("\n")) {
+    const present = members.stdout.trim().split("\n").filter(Boolean);
+    assert.ok(present.includes("server.js"), `${sourceBase} has no server.js`);
+    assert.ok(present.includes("operation-identity.mjs"), `${sourceBase} has no operation-identity.mjs`);
+    for (const entry of present) {
       const result = spawnSync("git", ["show", `${sourceBase}:${entry}`], { cwd, maxBuffer: 2 * 1024 * 1024 });
-      assert.equal(result.status, 0);
+      assert.equal(result.status, 0, entry);
       await writeFile(path.join(codeDir, entry), result.stdout);
     }
   }
@@ -980,12 +1241,29 @@ test("exact source base preserves paid contracts, challenges, unrelated MCP tool
     };`);
   const extraEnv = { PAGE_CHANGE_HTTP_ENABLED: "1", MPP_SECRET_KEY: "", EXTRACTION_TRIAL_ENABLED: "0",
     NODE_OPTIONS: `--max-old-space-size=512 --import=${clockHook}` };
-  const base = await startMerchant({ sourceBase: "a6978f989a3bc754421884a3d260be834a84c73a", extraEnv });
+  const sourceBase = "a6978f989a3bc754421884a3d260be834a84c73a";
+  assertIdentifiedHistoricalRevision(sourceBase);
+  const base = await startMerchant({ sourceBase, extraEnv });
   let expected;
   try { expected = await capture(base); } finally { await base.close(); }
   const amended = await startMerchant({ extraEnv });
-  try { assert.deepEqual(await capture(amended), expected); } finally { await amended.close(); }
-  assert.equal(Object.keys(expected.human).length, 12);
+  try {
+    const current = await capture(amended);
+    assert.equal(Object.keys(expected.human).length, 12);
+    assert.deepEqual(current.human, expected.human);
+    assertChallengePreserved(expected.challenge, current.challenge);
+    assertCatalogEconomics(expected["/api/actions"], current["/api/actions"]);
+    assertProjectedEqual(current["/api/actions"], projectDiscoveryDocument(expected["/api/actions"], current["/api/actions"]), "/api/actions");
+    for (const route of ["/openapi.json", "/swagger.json"]) {
+      assertExtractStaysPriced(expected[route], current[route]);
+      assert.ok(expected[route].info.description.includes(AVAILABILITY_SENTENCES[0][0]));
+      assert.ok(current[route].info.description.includes(AVAILABILITY_SENTENCES[0][1]));
+      assertProjectedEqual(current[route], projectDiscoveryDocument(expected[route], current[route]), route);
+    }
+    assertProjectedEqual(current["/mpp-openapi.json"], projectClosedMppDocument(expected["/mpp-openapi.json"], current["/mpp-openapi.json"]), "/mpp-openapi.json");
+    assertMcpDescriptor(expected["/mcp"], current["/mcp"]);
+    assertToolClosure(expected.tools, current.tools);
+  } finally { await amended.close(); }
 });
 
 test("contract callers retain malformed, depth, byte and freshness admission bounds", { timeout: 60_000 }, async t => {
@@ -1032,6 +1310,8 @@ test("ROOT9560 exact mounted byte qualification, local-ref negatives and example
     };`);
   const extraEnv = { PAGE_CHANGE_HTTP_ENABLED: "1", MPP_SECRET_KEY: "", EXTRACTION_TRIAL_ENABLED: "0",
     NODE_OPTIONS: `--max-old-space-size=512 --import=${clockHook}` };
+  const sourceBase = "d9e5cde379cf7798f473d0cc6bf2139c9ec857d9";
+  assertIdentifiedHistoricalRevision(sourceBase);
   const routes = ["/openapi.json", "/recipes/page-change/openapi.json", "/mpp-openapi.json", "/swagger.json"];
   async function capture(merchant) {
     const documents = {};
@@ -1070,17 +1350,52 @@ test("ROOT9560 exact mounted byte qualification, local-ref negatives and example
     });
     return { documents, mcp, mcpWire, preserved };
   }
-  const base = await startMerchant({ sourceBase: "d9e5cde379cf7798f473d0cc6bf2139c9ec857d9", extraEnv });
+  const base = await startMerchant({ sourceBase, extraEnv });
   let baseline;
   try { baseline = await capture(base); } finally { await base.close(); }
   const merchant = await startMerchant({ extraEnv });
   t.after(() => merchant.close());
   const candidate = await capture(merchant);
-  assert.deepEqual(candidate.preserved, baseline.preserved, "raw human/assets, challenge, trial declaration and terms stay exact");
+  for (const [route, before] of Object.entries(baseline.preserved)) {
+    const after = candidate.preserved[route];
+    if (route === "challenge") {
+      assertChallengePreserved(before, after);
+      continue;
+    }
+    if (route === "/llms.txt") {
+      const projected = replaceKnownSentences(before.raw);
+      assert.notEqual(projected, before.raw);
+      assert.equal(after.raw, projected);
+      assert.equal(after.status, before.status);
+      assert.equal(after.type, before.type);
+      assert.equal(after.location, before.location);
+      continue;
+    }
+    if (route === "/api/actions") {
+      const historicalCatalog = JSON.parse(before.raw);
+      const currentCatalog = JSON.parse(after.raw);
+      assertCatalogEconomics(historicalCatalog, currentCatalog);
+      assertProjectedEqual(currentCatalog, projectDiscoveryDocument(historicalCatalog, currentCatalog), route);
+      assert.equal(after.status, before.status);
+      assert.equal(after.type, before.type);
+      continue;
+    }
+    assert.deepEqual(after, before, route);
+  }
   const measurements = {};
   for (const route of routes) {
     const before = baseline.documents[route], after = candidate.documents[route];
-    assertEquivalentOpenApi(before.document, after.document);
+    const expectedDocument = route === "/recipes/page-change/openapi.json"
+      ? before.document
+      : route === "/mpp-openapi.json"
+        ? projectClosedMppDocument(before.document, after.document)
+        : projectDiscoveryDocument(before.document, after.document);
+    if (route === "/openapi.json" || route === "/swagger.json") {
+      assertExtractStaysPriced(before.document, after.document);
+      assert.ok(before.document.info.description.includes(AVAILABILITY_SENTENCES[0][0]));
+      assert.ok(after.document.info.description.includes(AVAILABILITY_SENTENCES[0][1]));
+    }
+    assertEquivalentOpenApi(expectedDocument, after.document);
     // Compile the REAL emitted document base; no test resolver is needed by AJV.
     const ajv = new Ajv2020({ strict: false });
     ajv.addSchema(after.document, "urn:root9560:openapi");
@@ -1092,14 +1407,11 @@ test("ROOT9560 exact mounted byte qualification, local-ref negatives and example
       baselineCharacters: before.raw.length, candidateCharacters: after.raw.length };
   }
   const beforeTools = baseline.mcp.result.tools, afterTools = candidate.mcp.result.tools;
-  assert.equal(afterTools.length, beforeTools.length);
-  for (let i = 0; i < beforeTools.length; i++) {
-    const before = beforeTools[i], after = afterTools[i];
+  for (const listed of afterTools) {
     // Every registered input compiles alone. No OpenAPI/other-tool definitions.
-    new Ajv({ strict: false, validateFormats: false }).compile(after.inputSchema);
-    if (before.name === "page_change") assertEquivalentTool(before, after);
-    else assert.deepEqual(after, before, "unrelated tool remains byte-equivalent");
+    new Ajv({ strict: false, validateFormats: false }).compile(listed.inputSchema);
   }
+  assertToolClosure(beforeTools, afterTools, { schemaOracle: true });
   const tool = afterTools.find(tool => tool.name === "page_change");
   const baselineTool = beforeTools.find(tool => tool.name === "page_change");
   measurements.page_change = { baseline: Buffer.byteLength(JSON.stringify(baselineTool)), candidate: Buffer.byteLength(JSON.stringify(tool)) };
@@ -1111,6 +1423,7 @@ test("ROOT9560 exact mounted byte qualification, local-ref negatives and example
     await writeFile(path.join(process.env.ROOT9560_CAPTURE_DIR, "candidate.json"), JSON.stringify(candidate));
   }
   const root = candidate.documents["/openapi.json"].document;
+  const comparableOpenApi = projectDiscoveryDocument(baseline.documents["/openapi.json"].document, root);
   for (const [name, mutate, message] of [
     ["unresolved", doc => { doc.components.schemas.PageChangeArtifact = { $ref: "#/absent" }; }, /unresolved reference/],
     ["cycle", doc => { doc.components.schemas.PageChangeArtifact = { $ref: "#/components/schemas/PageChangeArtifact" }; }, /cyclic reference/],
@@ -1119,7 +1432,7 @@ test("ROOT9560 exact mounted byte qualification, local-ref negatives and example
     ["external", doc => { doc.components.schemas.PageChangeArtifact = { $ref: "https://synthetic.example.invalid/schema" }; }, /non-local reference/],
   ]) await t.test(name, () => {
     const invalid = structuredClone(root); mutate(invalid);
-    assert.throws(() => assertEquivalentOpenApi(baseline.documents["/openapi.json"].document, invalid), message);
+    assert.throws(() => assertEquivalentOpenApi(comparableOpenApi, invalid), message);
   });
   await t.test("schema-valid behaviorally wrong example is rejected", async () => {
     const media = root.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"];
@@ -1129,12 +1442,12 @@ test("ROOT9560 exact mounted byte qualification, local-ref negatives and example
     assert.equal(validate(request), true, "schema acceptance alone cannot establish the annotated behavior");
     const changedDocument = structuredClone(root);
     changedDocument.paths[PAGE_CHANGE_HTTP_PATH].post.requestBody.content["application/json"].examples.titleChanged.value = request;
-    assert.throws(() => assertEquivalentOpenApi(baseline.documents["/openapi.json"].document, changedDocument));
+    assert.throws(() => assertEquivalentOpenApi(comparableOpenApi, changedDocument));
     const http = await postJson(merchant.base, request);
     const mcp = await mcpRpc(merchant.base, "tools/call", { name: "page_change", arguments: request });
     for (const output of [http.json, JSON.parse(mcp.result.content[0].text)]) {
       assertSyntheticReport(output, "unchanged");
-      assert.throws(() => assertSyntheticReport(output, "changed"), /unchanged/);
+      assert.throws(() => assertSyntheticReport(output, "changed"), (error) => error.actual === "unchanged" && error.expected === "changed");
     }
   });
 });
