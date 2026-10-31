@@ -261,6 +261,7 @@ import {
   pageChangeHttpInputSchema,
   pageChangeHttpOutputSchema,
 } from "./page-change-http.mjs";
+import { PAGE_CHANGE_MCP_PATH, mountPageChangeMcp } from "./page-change-mcp.mjs";
 import { buildRouteBindingReport } from "./route-binding-inspect.mjs";
 import {
   CAREERS_BOARD_AMOUNT_ATOMIC,
@@ -616,7 +617,7 @@ const jsonParser = express.json({
 });
 app.use((req, res, next) => {
   // POST /mcp owns MCP_JSON_RPC_MAX_BYTES. The ordinary parser must not run first.
-  if (req.path === "/mcp" || isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
+  if (req.path === "/mcp" || req.path === PAGE_CHANGE_MCP_PATH || isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
   return jsonParser(req, res, next);
 });
 // Parsing precedes observation and the semantic validator. Keep that boundary:
@@ -642,6 +643,9 @@ function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WR
 mountPageChangeHttp(app, {
   observe: isPageChangeHttpEnabled() ? commerceTelemetry.freePageChangeObserver("http") : null,
 });
+// Free profile. It does not join the paid /mcp catalog or its observer,
+// because that observer records route /mcp.
+mountPageChangeMcp(app);
 let mcpMountResult = null;
 let commerceWriterDrainStarted = false;
 

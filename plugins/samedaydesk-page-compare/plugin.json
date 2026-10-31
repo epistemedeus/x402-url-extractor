@@ -1,0 +1,105 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "samedaydesk-page-compare",
+  "version": "0.1.0",
+  "description": "Compare two JSON page observations the caller already holds. One tool, compare_page_observations. It does not fetch, schedule, or take payment.",
+  "author": {
+    "name": "SameDayDesk",
+    "url": "https://agents.samedaydesk.com/"
+  },
+  "homepage": "https://agents.samedaydesk.com/",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor",
+  "license": "MIT",
+  "keywords": ["page-change", "comparison", "json"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "SameDayDesk Page Compare",
+        "shortDescription": "Compare held page snapshots",
+        "longDescription": "Compare two JSON page observations the caller already holds. The only tool reads those supplied objects and reports whether the selected fields changed, stayed the same, were reordered, or cannot be compared. It does not fetch URLs, extract remote pages, schedule a later observation, or take payment. Incomplete, ambiguous, and incomparable results stay visible. This draft names the existing SameDayDesk merchant route /mcp/page-change. That route is not live until the operator deploys this branch.",
+        "developerName": "SameDayDesk",
+        "category": "Developer Tools",
+        "capabilities": ["Compare held JSON observations"],
+        "websiteURL": "https://agents.samedaydesk.com/",
+        "defaultPrompt": [
+          "Compare the title field of these two JSON observations I already hold.",
+          "Did these held page snapshots change? Do not fetch either URL."
+        ]
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Selected fields differ between two held observations.",
+              "prompt": "Compare the attached before and after observations for fields title and description. Do not fetch either page. Report the verdict.",
+              "tools_triggered": "compare_page_observations",
+              "expected_behavior": "The tool returns ok true, charged false, and report.verdict changed.",
+              "file_attachment_urls": [
+                "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/9c07ed4c1a170bd80ec8c821a5984b59bb73d9f6/examples/customer-x402/fixtures/page-change/w5-corpus/cases/case-0001-changed_selected_fields/observation-before.json",
+                "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/9c07ed4c1a170bd80ec8c821a5984b59bb73d9f6/examples/customer-x402/fixtures/page-change/w5-corpus/cases/case-0001-changed_selected_fields/observation-after.json"
+              ]
+            },
+            {
+              "description": "Selected fields match between two held observations.",
+              "prompt": "Compare the attached before and after observations for fields title and description. Do not fetch either page. Report the verdict.",
+              "tools_triggered": "compare_page_observations",
+              "expected_behavior": "The tool returns ok true, charged false, and report.verdict unchanged.",
+              "file_attachment_urls": [
+                "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/9c07ed4c1a170bd80ec8c821a5984b59bb73d9f6/examples/customer-x402/fixtures/page-change/w5-corpus/cases/case-0000-unchanged_pages/observation-before.json",
+                "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/9c07ed4c1a170bd80ec8c821a5984b59bb73d9f6/examples/customer-x402/fixtures/page-change/w5-corpus/cases/case-0000-unchanged_pages/observation-after.json"
+              ]
+            },
+            {
+              "description": "The same selected rows appear in a different order.",
+              "prompt": "Compare the attached before and after observations for fields title and description. Do not fetch either page. Report the verdict.",
+              "tools_triggered": "compare_page_observations",
+              "expected_behavior": "The tool returns ok true, charged false, and report.verdict reordered.",
+              "file_attachment_urls": [
+                "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/9c07ed4c1a170bd80ec8c821a5984b59bb73d9f6/examples/customer-x402/fixtures/page-change/w5-corpus/cases/case-0002-row_reorder/observation-before.json",
+                "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/9c07ed4c1a170bd80ec8c821a5984b59bb73d9f6/examples/customer-x402/fixtures/page-change/w5-corpus/cases/case-0002-row_reorder/observation-after.json"
+              ]
+            },
+            {
+              "description": "A requested field is missing from a held observation.",
+              "prompt": "Compare the attached before and after observations for fields title and description. Do not fetch either page. Report the verdict.",
+              "tools_triggered": "compare_page_observations",
+              "expected_behavior": "The tool returns ok true, charged false, and report.verdict incomplete.",
+              "file_attachment_urls": [
+                "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/9c07ed4c1a170bd80ec8c821a5984b59bb73d9f6/examples/customer-x402/fixtures/page-change/w5-corpus/cases/case-0004-missing_requested_field/observation-before.json",
+                "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/9c07ed4c1a170bd80ec8c821a5984b59bb73d9f6/examples/customer-x402/fixtures/page-change/w5-corpus/cases/case-0004-missing_requested_field/observation-after.json"
+              ]
+            },
+            {
+              "description": "Duplicate active source identities make the comparison ambiguous.",
+              "prompt": "Use the attached observation as both before and after. Compare field title. Do not fetch the page. Report the verdict.",
+              "tools_triggered": "compare_page_observations",
+              "expected_behavior": "The tool returns ok true, charged false, and report.verdict ambiguous.",
+              "file_attachment_urls": [
+                "https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/9c07ed4c1a170bd80ec8c821a5984b59bb73d9f6/examples/customer-x402/fixtures/page-change/merchant/duplicate-active.json"
+              ]
+            }
+          ],
+          "negative": [
+            {
+              "description": "The caller asks to fetch a URL and extract a page. This tool must not do that.",
+              "prompt": "Fetch https://example.invalid/pricing and extract its title."
+            },
+            {
+              "description": "The caller asks for a paid extract or a trial read. Those tools are not on this server.",
+              "prompt": "Pay for an extract of https://example.invalid/pricing, or call trial_read."
+            },
+            {
+              "description": "The caller asks to delete a file, raise a limit, or schedule a later observation.",
+              "prompt": "Delete /tmp/snapshots/before.json, raise maxBytes, and schedule another observation for tomorrow."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "This tool compares JSON the caller supplies. It does not sell a product, take payment, or start a paid extraction."
+      },
+      "publication": {
+        "release_notes": "Unpublished draft 0.1.0. One tool, compare_page_observations, on the existing merchant route /mcp/page-change. That route is not connected until this branch is deployed. Support, privacy, and terms URLs, a demo recording, verified developer identity, icons, and the domain challenge are not in this package."
+      }
+    }
+  }
+}

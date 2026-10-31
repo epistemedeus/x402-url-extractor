@@ -1,0 +1,56 @@
+{
+  "retrieved": "2026-10-31",
+  "schemas": [
+    {
+      "url": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+      "lastModified": "Thu, 29 Oct 2026 21:10:52 GMT",
+      "contentLength": 1805,
+      "sha256": "0a4aad95ce337878ad38802ebf0daa3fde76abe3f65400c86bcbb1ec0b3ab883",
+      "etag": "\"0cdf13561b86acbee6ab0c9c44cbef96\""
+    },
+    {
+      "url": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+      "lastModified": "Thu, 29 Oct 2026 23:43:38 GMT",
+      "contentLength": 3408,
+      "sha256": "6539175bfcdf43085855183e86da40ea94b166547a72b47ae9a0a390516d3acb",
+      "etag": "\"3036bf37fd097dbf16082202ee8093bb\""
+    }
+  ],
+  "absentSchema": {
+    "url": "https://agent-plugins.org/schemas/1.1.0/mcp.schema.json",
+    "status": 404
+  },
+  "docs": [
+    {
+      "url": "https://developers.openai.com/plugins/deploy/submission",
+      "lastModified": "Sat, 31 Oct 2026 08:45:56 GMT",
+      "contentLength": 512123,
+      "etag": "\"7e24bbce45fe2d65818a9cf040a241cf\""
+    },
+    {
+      "url": "https://developers.openai.com/plugins/build/plugins",
+      "lastModified": "Sat, 31 Oct 2026 08:43:32 GMT",
+      "contentLength": 531548,
+      "etag": "\"cb6fefb409afc22177b7b74c3b3d2f7d\""
+    },
+    {
+      "url": "https://developers.openai.com/plugins/plugin-guidelines",
+      "lastModified": "Sat, 31 Oct 2026 08:49:20 GMT",
+      "contentLength": 453447,
+      "etag": "\"c5c191d76fd1a92328123f5701558143\""
+    },
+    {
+      "url": "https://developers.openai.com/plugins/deploy/app-review",
+      "lastModified": "Sat, 31 Oct 2026 08:58:38 GMT",
+      "contentLength": 426856,
+      "etag": "\"7e16d52ad9277a94f120fe145b408453\""
+    },
+    {
+      "url": "https://developers.openai.com/plugins/deploy/submission-errors",
+      "lastModified": "Sat, 31 Oct 2026 08:52:57 GMT",
+      "contentLength": 441001,
+      "etag": "\"f4892ab88a7933bcd5b0836a047c4aad\""
+    }
+  ],
+  "gap": "mcp.schema.json additionalProperties is false on a streamable-http server. The 31 Oct 2026 docs ask for extensions[\"com.openai\"].auth. A schema-valid mcp.json cannot carry that object. This server has no auth. etag is secondary to last-modified, content-length, and sha256."
+}
