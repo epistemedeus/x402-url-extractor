@@ -26,6 +26,11 @@ export const PAGE_CHANGE_MCP_TOOL = "compare_page_observations";
 export const PAGE_CHANGE_MCP_SERVER_NAME = "samedaydesk-page-compare";
 export const PAGE_CHANGE_MCP_INSTRUCTIONS = "Compare two JSON page observations the caller already holds. The only tool is compare_page_observations. Do not fetch URLs, extract remote pages, schedule a later observation, or take payment.";
 
+export function isPageChangeMcpPath(pathname) {
+  const path = String(pathname || "").split("?", 1)[0].toLowerCase().replace(/\/+$/, "");
+  return path === PAGE_CHANGE_MCP_PATH;
+}
+
 // Pure supplied-JSON computation. No write, no deletion, no open-ended fetch.
 export const PAGE_CHANGE_MCP_ANNOTATIONS = Object.freeze({
   readOnlyHint: true,

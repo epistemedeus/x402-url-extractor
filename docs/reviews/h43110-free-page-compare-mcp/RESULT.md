@@ -117,3 +117,16 @@ Smallest operator acceptance, in order:
 The two historical source-base startup failures above are not an acceptance step for this profile. Do not weaken the MPP OpenAPI rule to make those old copies start.
 
 No credentials, signer, payment, or resident job were used.
+
+## Root mounted-alias receiving
+
+Root independently reproduced the original198-case union:196pass/2historical
+fixture failures. A real trailing-slash call then reproduced408after the
+ordinary parser consumed it. The shared path matcher now follows Express
+case/trailing-slash routing before body parsing. Canonical,trailing-slash and
+mixed-case calls return useful comparisons;20KiBunknown-tool calls use the
+free profile ceiling. The first Root candidate accidentally omitted an import
+still used by the observer;that failed isolated startup is preserved,not published.
+The corrected full union and42current payment/construction cases are received
+separately;the two original historical-source failures remain failures. No
+production deployment,paid call or human asset changes occurred.

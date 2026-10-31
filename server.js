@@ -261,7 +261,7 @@ import {
   pageChangeHttpInputSchema,
   pageChangeHttpOutputSchema,
 } from "./page-change-http.mjs";
-import { PAGE_CHANGE_MCP_PATH, mountPageChangeMcp } from "./page-change-mcp.mjs";
+import { PAGE_CHANGE_MCP_PATH, isPageChangeMcpPath, mountPageChangeMcp } from "./page-change-mcp.mjs";
 import { buildRouteBindingReport } from "./route-binding-inspect.mjs";
 import {
   CAREERS_BOARD_AMOUNT_ATOMIC,
@@ -617,7 +617,7 @@ const jsonParser = express.json({
 });
 app.use((req, res, next) => {
   // POST /mcp owns MCP_JSON_RPC_MAX_BYTES. The ordinary parser must not run first.
-  if (req.path === "/mcp" || req.path === PAGE_CHANGE_MCP_PATH || isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
+  if (req.path === "/mcp" || isPageChangeMcpPath(req.path) || isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
   return jsonParser(req, res, next);
 });
 // Parsing precedes observation and the semantic validator. Keep that boundary:

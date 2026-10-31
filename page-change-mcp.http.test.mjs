@@ -841,3 +841,27 @@ test("merchant catalog and payment protections stay unchanged around the free pr
   assert.equal(merchant.child.exitCode !== null || merchant.child.signalCode !== null, true);
   await assert.rejects(() => fetch(`${merchant.base}/mcp`));
 });
+
+test("mounted MCP aliases retain the free parser and recover with a useful comparison", { timeout: 30000 }, async () => {
+  const merchant = await startMerchant();
+  try {
+    for (const route of ["/mcp/page-change", "/mcp/page-change/", "/MCP/PAGE-CHANGE"]) {
+      const request = { jsonrpc: "2.0", id: 81, method: "tools/call",
+        params: { name: PAGE_CHANGE_MCP_TOOL, arguments: pageChangeRequestExample() } };
+      const response = await fetch(merchant.base + route, { method: "POST",
+        headers: { "content-type": "application/json", accept: ACCEPT, "user-agent": "SameDayDesk-owner-receiving" },
+        body: JSON.stringify(request), signal: AbortSignal.timeout(7000) });
+      assert.equal(response.status, 200, route);
+      const rpc = parseRpcBody(await response.text());
+      assert.equal(rpc?.result?.isError, undefined, route);
+      assert.equal(toolJson(rpc.result).report.verdict, "changed", route);
+      const large = await fetch(merchant.base + route, { method: "POST",
+        headers: { "content-type": "application/json", accept: ACCEPT },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 82, method: "tools/call",
+          params: { name: "outside-free-profile", arguments: { text: "x".repeat(20000) } } }),
+        signal: AbortSignal.timeout(7000) });
+      assert.equal(large.status, 200, route + " must not use the ordinary16KiB parser");
+      assert.equal(parseRpcBody(await large.text())?.error?.code, -32602, route);
+    }
+  } finally { await merchant.close(); }
+});
