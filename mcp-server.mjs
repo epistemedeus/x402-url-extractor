@@ -526,7 +526,12 @@ function freeUnpaidHandler(tool) {
     try {
       const value = await tool.run(args, note);
       if (tool.name === "page_change") {
-        try { mcpFreePageChangeAls.getStore()?.(pageChangeServiceOutcome(value)); } catch { /* Optional measurement. */ }
+        try {
+          mcpFreePageChangeAls.getStore()?.(
+            pageChangeServiceOutcome(value),
+            typeof value?.error === "string" ? value.error : undefined,
+          );
+        } catch { /* Optional measurement. */ }
       }
       const failed = !value || value.ok === false || Boolean(value.error);
       return withoutSuccessShapedStructuredContent({
@@ -535,7 +540,12 @@ function freeUnpaidHandler(tool) {
       });
     } catch (error) {
       if (tool.name === "page_change") {
-        try { mcpFreePageChangeAls.getStore()?.(pageChangeServiceOutcome(null, error)); } catch { /* Optional measurement. */ }
+        try {
+          mcpFreePageChangeAls.getStore()?.(
+            pageChangeServiceOutcome(null, error),
+            typeof error?.code === "string" ? error.code : undefined,
+          );
+        } catch { /* Optional measurement. */ }
       }
       return withoutSuccessShapedStructuredContent({
         ...asToolResult({

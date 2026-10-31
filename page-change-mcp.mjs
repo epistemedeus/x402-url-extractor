@@ -142,13 +142,13 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
           try {
             if (typeof observe === "function") record = observe(req, res) || record;
           } catch { /* Optional measurement. */ }
-          note = (outcome) => { try { record(outcome); } catch { /* Optional measurement. */ } };
+          note = (outcome, code) => { try { record(outcome, code); } catch { /* Optional measurement. */ } };
         }
         return note;
       };
       if (!isJsonContentType(req)) {
         drainRequest(req, res);
-        ensureNote();
+        ensureNote()("refused", "unsupported_media_type");
         return res.status(415).json({
           ok: false,
           product: PAGE_CHANGE_HTTP_PRODUCT,
@@ -161,7 +161,7 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
       const exchange = beginPageChangeExchange(req, res, limits);
       if (!exchange.ok) {
         if (exchange.error.code === "page_change_busy") res.set("Retry-After", "1");
-        ensureNote()(pageChangeServiceOutcome(null, exchange.error));
+        ensureNote()(pageChangeServiceOutcome(null, exchange.error), exchange.error?.code);
         return respondPageChangeError(res, exchange.error);
       }
       release = () => exchange.release();
@@ -172,11 +172,15 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
       } catch (error) {
         const bounded = boundedToolError(error);
         drainRequest(req, res);
-        note(exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, bounded));
+        note(
+          exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, bounded),
+          exchange.abort.signal.aborted ? "request_aborted" : bounded?.code,
+        );
         return respondPageChangeError(res, bounded);
       }
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.hasOwn(parsed, "id")) rpcId = parsed.id;
       if (Array.isArray(parsed)) {
+        note("refused", "invalid_request");
         return res.status(400).json({
           jsonrpc: "2.0",
           error: { code: -32600, message: "Invalid Request" },
@@ -184,7 +188,10 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
         });
       }
       const unknown = unknownToolError(parsed);
-      if (unknown) return res.status(200).json(unknown);
+      if (unknown) {
+        note("refused", "unknown_tool");
+        return res.status(200).json(unknown);
+      }
       const journalCompare = parsed?.method === "tools/call";
       if (!journalCompare) note("omit");
       // Zod is discovery-only. Its copy reorders keys and changes the artifact
@@ -199,7 +206,7 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
           if (suppliedArguments.after !== undefined) assertPageChangeJsonDepth(suppliedArguments.after, limits, "after");
         } catch (error) {
           const bounded = boundedToolError(error);
-          note(pageChangeServiceOutcome(null, bounded));
+          note(pageChangeServiceOutcome(null, bounded), bounded?.code);
           return respondPageChangeError(res, bounded);
         }
       }
@@ -228,12 +235,19 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
           }
           const failed = !output || output.ok !== true || output.charged !== false;
           if (journalCompare) {
-            note(exchange.abort.signal.aborted ? "aborted" : (failed ? "refused" : pageChangeServiceOutcome(output)));
+            if (exchange.abort.signal.aborted) note("aborted", "request_aborted");
+            else if (failed) note("refused", typeof output?.error === "string" ? output.error : undefined);
+            else note(pageChangeServiceOutcome(output));
           }
           return toolText(output, failed);
         } catch (error) {
           const bounded = boundedToolError(error);
-          if (journalCompare) note(exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, bounded));
+          if (journalCompare) {
+            note(
+              exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, bounded),
+              exchange.abort.signal.aborted ? "request_aborted" : bounded?.code,
+            );
+          }
           return toolText(failureBody(bounded), true);
         }
       });
@@ -246,7 +260,12 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
       await transport.handleRequest(req, res, parsed);
     } catch (error) {
       const bounded = boundedToolError(error);
-      try { note(pageChangeServiceOutcome(null, bounded)); } catch { /* Optional measurement. */ }
+      try {
+        note(
+          pageChangeServiceOutcome(null, bounded),
+          bounded?.code,
+        );
+      } catch { /* Optional measurement. */ }
       if (!res.headersSent) {
         if (bounded instanceof PageChangeHttpError) return respondPageChangeError(res, bounded);
         res.status(500).json({

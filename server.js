@@ -252,6 +252,7 @@ import {
   ALL_FIELDS,
 } from "./extract-batch.mjs";
 import { compactPageChangeOpenApi, pageChangeRequestExamples, pageChangeMcpInputSchema, pageChangeMcpDescription } from "./page-change-input-contract.mjs";
+import { renderFreePageCompareSkillAppendix } from "./page-change-free-surface.mjs";
 import {
   PAGE_CHANGE_HTTP_PATH,
   executePageChangeComparison,
@@ -1471,6 +1472,7 @@ function renderServedLlmsTxt(catalog = machineActionCatalog()) {
     freeRecipes: catalog.freeRecipes,
     extractionTrialDiscovery: catalog.discovery.extractionTrial,
     callerResultClient: catalog.callerResultClient,
+    freePageCompare: true,
   });
 }
 const currentAgentCard = () => buildAgentCard({
@@ -1478,6 +1480,7 @@ const currentAgentCard = () => buildAgentCard({
   serviceVersion: SERVICE_VERSION,
   actions: machineActionCatalog().actions,
   extractionTrialDiscovery: extractionTrialDiscoveryUrl,
+  freePageCompare: true,
 });
 const constructionParityReceipt = () => {
   const catalog = machineActionCatalog();
@@ -1646,6 +1649,9 @@ mountMachineAcquisition(app, { publicUrl: PUBLIC_URL });
 mountWellKnownSkills(app, {
   publicUrl: PUBLIC_URL,
   extraIndexSkills: [acquisitionIndexSkill({ recipient: PAY_TO })],
+  renderSkillMarkdown: (skill) => skill.name === "page-change"
+    ? `${skill.markdown}${renderFreePageCompareSkillAppendix(PUBLIC_URL)}`
+    : skill.markdown,
 });
 
 const publicAcquisitionOptional = fileURLToPath(new URL("./public-acquisition/optional-mount.mjs", import.meta.url));

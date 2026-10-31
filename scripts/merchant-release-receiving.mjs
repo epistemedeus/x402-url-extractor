@@ -22,6 +22,7 @@ import {
 const SOURCE_PATTERN = /^[a-f0-9]{40}$/;
 const REQUEST_TIMEOUT_MS = 8_000;
 const REFUSAL_TOOLS = Object.freeze(["extract", "trial_read"]);
+const OWNER_QA_HEADERS = Object.freeze({ "user-agent": "SameDayDesk-merchant-release-receiving/0" });
 
 export function exactOrigin(value) {
   if (typeof value !== "string" || value.length === 0) return null;
@@ -61,7 +62,7 @@ function paidOperations(document) {
 }
 
 async function readJson(fetchImpl, url) {
-  const response = await fetchImpl(url, { redirect: "manual", signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+  const response = await fetchImpl(url, { headers: OWNER_QA_HEADERS, redirect: "manual", signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   const text = await response.text();
   let body = null;
   if (text) {
@@ -75,7 +76,7 @@ function endpoint(origin, route) {
 }
 
 async function defaultConnect(routeUrl) {
-  const transport = new StreamableHTTPClientTransport(new URL(routeUrl));
+  const transport = new StreamableHTTPClientTransport(new URL(routeUrl), { requestInit: { headers: OWNER_QA_HEADERS } });
   const client = new Client({ name: "merchant-release-receiving", version: "0" });
   await client.connect(transport);
   return {
@@ -119,7 +120,7 @@ async function receiveFreeRoute({ origin, freeRoute, fetchImpl, connect, healthD
   };
   let method;
   try {
-    method = await fetchImpl(routeUrl, { method: "GET", redirect: "manual", signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    method = await fetchImpl(routeUrl, { method: "GET", headers: OWNER_QA_HEADERS, redirect: "manual", signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
     await method.arrayBuffer();
   } catch (error) {
     return { ...check, reason: "free_route_transport", message: String(error?.message || error).slice(0, 160) };

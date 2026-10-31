@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { operationIdentityFromAction } from "./operation-identity.mjs";
+import { freePageCompareAgentSkill } from "./page-change-free-surface.mjs";
 
 const A2A_VERSION = "1.0";
 const A2A_CATALOG_SKILL_ID = "discover-x402-paid-actions";
@@ -43,7 +44,7 @@ export function buildPaidActionSkills(actions = []) {
   });
 }
 
-export function buildAgentCard({ publicUrl, serviceVersion, actions = [], extractionTrialDiscovery = null }) {
+export function buildAgentCard({ publicUrl, serviceVersion, actions = [], extractionTrialDiscovery = null, freePageCompare = false }) {
   if (!serviceVersion) throw new Error("serviceVersion is required");
   return {
     name: "SameDayDesk machine commerce storefront",
@@ -83,6 +84,7 @@ export function buildAgentCard({ publicUrl, serviceVersion, actions = [], extrac
         outputModes: ["application/json"],
       },
       ...buildPaidActionSkills(actions),
+      ...(freePageCompare ? [freePageCompareAgentSkill(publicUrl)] : []),
     ],
   };
 }

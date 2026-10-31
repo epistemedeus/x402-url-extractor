@@ -13,6 +13,8 @@ import {
   buildRootPaidRoutes,
   validateMachineSurfaceParity,
 } from "./machine-surface-parity.mjs";
+import { pageChangeRequestExample } from "./page-change-input-contract.mjs";
+import { omitFreePageCompareLlmsSection } from "./page-change-free-surface.mjs";
 
 const origin = "https://agents.samedaydesk.com";
 const extract = {
@@ -357,4 +359,61 @@ test("root builder refuses malformed or duplicate hints and does not invent free
   }), /duplicate root paid operation/);
   const root = buildRootPaidRoutes({ actions });
   assert.equal(Object.keys(root).some((key) => key.includes("page-change") || key.includes("recipes/")), false);
+});
+
+test("free comparison is an additive llms section and not a paid route", () => {
+  const plain = renderLlmsTxt({
+    origin,
+    facilitator: "cdp",
+    payTo: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    actions,
+    alternate,
+    buyerPolicyRelease: "https://github.com/epistemedeus/agent-payment-policy/releases/tag/v0.4.0",
+    purchaseEvidencePath: "/.well-known/agent-payment-evidence.json",
+  });
+  const advertised = renderLlmsTxt({
+    origin,
+    facilitator: "cdp",
+    payTo: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    actions,
+    alternate,
+    buyerPolicyRelease: "https://github.com/epistemedeus/agent-payment-policy/releases/tag/v0.4.0",
+    purchaseEvidencePath: "/.well-known/agent-payment-evidence.json",
+    freePageCompare: true,
+  });
+  assert.equal(omitFreePageCompareLlmsSection(advertised), plain);
+  const withRecipes = renderLlmsTxt({
+    origin,
+    facilitator: "cdp",
+    payTo: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    actions,
+    alternate,
+    buyerPolicyRelease: "https://github.com/epistemedeus/agent-payment-policy/releases/tag/v0.4.0",
+    purchaseEvidencePath: "/.well-known/agent-payment-evidence.json",
+    freeRecipes: [{ method: "POST", route: "/recipes/page-change", charged: false, description: "Held before/after comparison." }],
+  });
+  const advertisedWithRecipes = renderLlmsTxt({
+    origin,
+    facilitator: "cdp",
+    payTo: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    actions,
+    alternate,
+    buyerPolicyRelease: "https://github.com/epistemedeus/agent-payment-policy/releases/tag/v0.4.0",
+    purchaseEvidencePath: "/.well-known/agent-payment-evidence.json",
+    freeRecipes: [{ method: "POST", route: "/recipes/page-change", charged: false, description: "Held before/after comparison." }],
+    freePageCompare: true,
+  });
+  assert.equal(omitFreePageCompareLlmsSection(advertisedWithRecipes), withRecipes);
+  assert.match(advertised, /## Free comparison/);
+  assert.match(advertised, /POST \/mcp\/page-change/);
+  assert.match(advertised, /compare_page_observations/);
+  assert.match(advertised, /does not fetch URLs/);
+  const section = advertised.slice(advertised.indexOf("## Free comparison"), advertised.indexOf("## How to pay"));
+  assert.equal(section.includes("](https:"), false);
+  assert.equal(advertised.includes("](https://agents.samedaydesk.com/mcp/page-change)"), false);
+  assert.equal(parseLlmsPaidRoutes(advertised).some((entry) => entry.route === "/mcp/page-change"), false);
+  assert.equal(parseLlmsPaidRoutes(advertisedWithRecipes).some((entry) => entry.route === "/mcp/page-change"), false);
+  const example = JSON.parse(advertised.slice(advertised.indexOf("Input example: ") + "Input example: ".length).split("\n")[0]);
+  assert.deepEqual(example, pageChangeRequestExample());
+  assert.equal(validateMachineSurfaceParity(surfaces({ llms: advertised })).llmsCanonicalCount, actions.length);
 });
