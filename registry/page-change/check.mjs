@@ -16,7 +16,6 @@ export const DESCRIPTOR_NAME = "io.github.epistemedeus/page-change";
 export const DESCRIPTOR_NAMESPACE = "io.github.epistemedeus";
 export const DESCRIPTOR_TITLE = "Page Change";
 export const DESCRIPTOR_DESCRIPTION = "Free compare_page_observations for two held JSON pages. No fetch, wallet, or payment.";
-export const PAID_SERVER_SHA256 = "1e3da1f5dc833cf84a8f8a5415efc5c48be69d22505739003d621418bd1f017c";
 export const PAID_NAME = "io.github.epistemedeus/x402-data-gateway";
 export const PAID_REMOTE = "https://agents.samedaydesk.com/mcp";
 export const PUBLIC_ORIGIN = "https://agents.samedaydesk.com";
@@ -136,7 +135,7 @@ export function assertFreeDescriptor(descriptor, { serviceVersion, schema = sche
   if ("packages" in descriptor) fail("packages", "this profile is remote-only");
   if ("icons" in descriptor || "_meta" in descriptor) fail("extra", "smallest descriptor omits icons and _meta");
   const keys = Object.keys(descriptor);
-  if (keys.join(",") !== "$schema,name,title,description,version,websiteUrl,repository,remotes") {
+  if (keys.slice().sort().join(",") !== "$schema,description,name,remotes,repository,title,version,websiteUrl") {
     fail("descriptor_keys", keys.join(","));
   }
   const rules = schemaRules(schema);
@@ -170,13 +169,10 @@ export function assertFreeDescriptor(descriptor, { serviceVersion, schema = sche
   if (descriptor.description !== DESCRIPTOR_DESCRIPTION) fail("description", "description drifted");
   if (typeof descriptor.version !== "string" || descriptor.version.length > rules.versionMax) fail("descriptor_version", String(descriptor.version));
   if (/[\^~><*]|\blatest\b|\d+\.x\b/i.test(descriptor.version)) fail("version_range", descriptor.version);
-  if (descriptor.version === serviceVersion) {
-    fail("runtime_version", "descriptor version must stay distinct from the merchant runtime version");
-  }
   if (descriptor.version !== DESCRIPTOR_VERSION) fail("descriptor_version", descriptor.version);
   if (descriptor.websiteUrl !== `${PUBLIC_ORIGIN}/`) fail("website", String(descriptor.websiteUrl));
   const repository = descriptor.repository;
-  if (!repository || typeof repository !== "object" || Object.keys(repository).join(",") !== "url,source") {
+  if (!repository || typeof repository !== "object" || Object.keys(repository).sort().join(",") !== "source,url") {
     fail("repository", "expected url and source only");
   }
   if (repository.url !== "https://github.com/epistemedeus/x402-url-extractor" || repository.source !== "github") {
@@ -186,7 +182,7 @@ export function assertFreeDescriptor(descriptor, { serviceVersion, schema = sche
   const remote = descriptor.remotes[0];
   if (!remote || typeof remote !== "object") fail("remote", "missing");
   if (remote.headers || remote.variables) fail("remote_auth", "free profile publishes no headers or URL variables");
-  if (Object.keys(remote).join(",") !== "type,url") fail("remote_keys", Object.keys(remote).join(","));
+  if (Object.keys(remote).sort().join(",") !== "type,url") fail("remote_keys", Object.keys(remote).join(","));
   if (remote.type !== "streamable-http" || !rules.transportEnum.includes(remote.type)) fail("transport", String(remote.type));
   if (typeof remote.url !== "string" || !rules.urlPattern.test(remote.url)) fail("url_pattern", String(remote.url));
   let parsed;
@@ -203,18 +199,16 @@ export function assertFreeDescriptor(descriptor, { serviceVersion, schema = sche
   return descriptor;
 }
 
-export function assertPaidUnchanged(serviceVersion) {
-  const bytes = readFileSync(path.join(repoRoot, "server.json"));
-  const sha256 = createHash("sha256").update(bytes).digest("hex");
-  if (sha256 !== PAID_SERVER_SHA256) fail("paid_descriptor_drift", sha256);
-  const paid = JSON.parse(bytes.toString("utf8"));
+export function assertPaidIdentity(serviceVersion, {
+  paid = readJson(path.join(repoRoot, "server.json")),
+  lock = readJson(path.join(repoRoot, "package-lock.json")),
+} = {}) {
   if (paid.name !== PAID_NAME) fail("paid_name", paid.name);
   if (paid.version !== serviceVersion) fail("paid_version", `${paid.version} != ${serviceVersion}`);
   if (!Array.isArray(paid.remotes) || paid.remotes.length !== 1 || paid.remotes[0].url !== PAID_REMOTE) {
     fail("paid_remote", "paid listing remote drifted");
   }
   refuseEquivalentRemotes(paid);
-  const lock = readJson(path.join(repoRoot, "package-lock.json"));
   if (lock.version !== serviceVersion || lock.packages?.[""]?.version !== serviceVersion) {
     fail("lock_version", "package lock version drifted");
   }
@@ -230,7 +224,7 @@ export function checkAll() {
   if (typeof serviceVersion !== "string" || !/^\d+\.\d+\.\d+$/.test(serviceVersion)) {
     fail("runtime_version", "package.json version is not a runtime version");
   }
-  assertPaidUnchanged(serviceVersion);
+  assertPaidIdentity(serviceVersion);
   const contract = profileContract();
   const committedText = readFileSync(path.join(here, "server.json"), "utf8");
   if (committedText !== canonicalDescriptorText()) fail("recovery", "committed server.json is not the source builder output");

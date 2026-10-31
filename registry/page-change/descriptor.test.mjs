@@ -11,10 +11,10 @@ import {
   DESCRIPTOR_VERSION,
   PAID_NAME,
   PAID_REMOTE,
-  PAID_SERVER_SHA256,
   REGISTRY_SCHEMA_SHA256,
   REGISTRY_SCHEMA_URL,
   assertFreeDescriptor,
+  assertPaidIdentity,
   buildDescriptor,
   canonicalDescriptorText,
   checkAll,
@@ -40,7 +40,6 @@ test("recovers the committed free descriptor and leaves the paid listing unchang
   assert.equal(result.name, DESCRIPTOR_NAME);
   assert.equal(result.descriptorVersion, "1.0.0");
   assert.equal(result.descriptorVersion, DESCRIPTOR_VERSION);
-  assert.notEqual(result.descriptorVersion, result.runtimeVersion);
   assert.equal(result.runtimeVersion, serviceVersion);
   assert.equal(result.remote, "https://agents.samedaydesk.com/mcp/page-change");
   assert.equal(result.remote, contract.url);
@@ -66,7 +65,6 @@ test("checker command exits 0 without a registry or tool call", () => {
   });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /^ok name=io\.github\.epistemedeus\/page-change descriptor=1\.0\.0 runtime=\d+\.\d+\.\d+ remote=https:\/\/agents\.samedaydesk\.com\/mcp\/page-change tool=compare_page_observations\n$/);
-  assert.equal(result.stdout.includes(PAID_SERVER_SHA256), false);
 });
 
 test("schema allows multiple remotes, and this package refuses different tool sets", () => {
@@ -92,11 +90,10 @@ test("schema allows multiple remotes, and this package refuses different tool se
   assert.doesNotThrow(() => refuseEquivalentRemotes(buildDescriptor()));
 });
 
-test("refuses namespace, transport, payment, and runtime-version drift", () => {
+test("refuses namespace, transport, payment, and descriptor-version drift", () => {
   rejected((descriptor) => { descriptor.name = "io.github.other/page-change"; }, "namespace");
   rejected((descriptor) => { descriptor.name = "io.github.epistemedeus/x402-data-gateway"; }, "paid_identity");
   rejected((descriptor) => { descriptor.name = "io.github.epistemedeus/other"; }, "name");
-  rejected((descriptor) => { descriptor.version = serviceVersion; }, "runtime_version");
   rejected((descriptor) => { descriptor.version = "^1.0.0"; }, "version_range");
   rejected((descriptor) => { descriptor.version = "1.0.1"; }, "descriptor_version");
   rejected((descriptor) => {
@@ -111,4 +108,26 @@ test("refuses namespace, transport, payment, and runtime-version drift", () => {
   rejected((descriptor) => { descriptor.remotes[0].headers = [{ name: "Authorization", value: "secret" }]; }, "remote_auth");
   rejected((descriptor) => { descriptor.packages = []; }, "packages");
   rejected((descriptor) => { descriptor._meta = { published: true }; }, "extra");
+});
+
+test("semantic descriptor keys do not depend on JSON member order", () => {
+  const descriptor = buildDescriptor();
+  const reordered = Object.fromEntries(Object.entries(descriptor).reverse());
+  reordered.repository = Object.fromEntries(Object.entries(descriptor.repository).reverse());
+  reordered.remotes = descriptor.remotes.map(remote => Object.fromEntries(Object.entries(remote).reverse()));
+  assert.doesNotThrow(() => assertFreeDescriptor(reordered, {serviceVersion}));
+  assert.throws(() => assertFreeDescriptor({...reordered, unexpected: true}, {serviceVersion}), e => e.code === "descriptor_keys");
+  assert.doesNotThrow(() => assertFreeDescriptor(buildDescriptor(), {serviceVersion: DESCRIPTOR_VERSION}));
+});
+
+test("paid metadata can evolve while its identity and current runtime stay bound", () => {
+  const paid = JSON.parse(readFileSync(path.join(repoRoot, "server.json"), "utf8"));
+  const next = {...paid, version: "2.0.0", description: "A future maintained merchant description."};
+  const lock = {version: "2.0.0", packages: {"": {version: "2.0.0"}}};
+  assert.doesNotThrow(() => assertPaidIdentity("2.0.0", {paid: next, lock}));
+  assert.throws(() => assertPaidIdentity("2.0.0", {paid: {...next, name: DESCRIPTOR_NAME}, lock}), e => e.code === "paid_name");
+  assert.throws(() => assertPaidIdentity("2.0.0", {paid: {...next, remotes: buildDescriptor().remotes}, lock}), e => e.code === "paid_remote");
+  assert.throws(() => assertPaidIdentity("1.0.0", {paid: next, lock}), e => e.code === "paid_version");
+  assert.throws(() => assertPaidIdentity("2.0.0", {paid: next, lock: {...lock, version: "1.0.0"}}), e => e.code === "lock_version");
+  assert.doesNotThrow(() => assertPaidIdentity("2.0.0", {paid: next, lock}));
 });

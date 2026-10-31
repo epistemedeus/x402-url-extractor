@@ -80,3 +80,12 @@ Require the new `server` object to match this descriptor, `status` `active`, and
 ## Next
 
 Root publishes this file and reads both rows back. No further descriptor work is required unless that readback disagrees.
+
+## Root receiving amendment
+
+JSON member order is not semantic. Separate descriptor/runtime identities may
+have equal numeric versions. Paid metadata may evolve without a frozen source
+hash, while its name, remote and current runtime/lock binding remain checked.
+The original paid descriptor and runtime bytes are unchanged in this release.
+Focused descriptor and service-version tests pass remotely after these changes.
+The scoped source checker is not a replacement for official Registry validation.
