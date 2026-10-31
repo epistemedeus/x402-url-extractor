@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.epistemedeus/page-change",
+  "title": "Page Change",
+  "description": "Free compare_page_observations for two held JSON pages. No fetch, wallet, or payment.",
+  "version": "1.0.0",
+  "websiteUrl": "https://agents.samedaydesk.com/",
+  "repository": {
+    "url": "https://github.com/epistemedeus/x402-url-extractor",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://agents.samedaydesk.com/mcp/page-change"
+    }
+  ]
+}
