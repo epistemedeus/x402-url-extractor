@@ -115,6 +115,7 @@ async function receiveFreeRoute({ origin, freeRoute, fetchImpl, connect, healthD
     authorizationSent: false,
     refused: [],
     disabledCall: null,
+    cleanup: { failed: false },
   };
   let method;
   try {
@@ -156,7 +157,8 @@ async function receiveFreeRoute({ origin, freeRoute, fetchImpl, connect, healthD
   } catch (error) {
     return { ...check, reason: "free_route_transport", message: String(error?.message || error).slice(0, 160) };
   } finally {
-    await session?.close?.();
+    try { await session?.close?.(); }
+    catch { check.cleanup.failed = true; }
   }
 }
 
@@ -245,6 +247,7 @@ export async function receiveMerchantRelease({
   });
   checks.freeSdk = free;
   if (free.reason) reasons.push(free.reason);
+  if (free.cleanup?.failed === true) reasons.push("free_route_cleanup");
 
   return {
     ownerQa: true,

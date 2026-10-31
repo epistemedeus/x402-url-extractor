@@ -235,6 +235,22 @@ test("release receiver separates paid MPP availability from the free route", asy
   });
   assert.equal(reorderedAnnotations.ok, true, JSON.stringify(reorderedAnnotations.reasons));
 
+  for (const failCall of [false, true]) {
+    const cleanup = await receiveMerchantRelease({
+      origin, expectedSource: SOURCE, fetchImpl,
+      connect: async () => {
+        const session = await connect();
+        if (failCall) session.client.listTools = async () => { throw new Error("dropped transport"); };
+        session.close = async () => { throw new Error("cleanup failed"); };
+        return session;
+      },
+    });
+    assert.equal(cleanup.ok, false);
+    assert.equal(cleanup.checks.freeSdk.cleanup.failed, true);
+    assert(cleanup.reasons.includes("free_route_cleanup"));
+    if (failCall) assert(cleanup.reasons.includes("free_route_transport"));
+  }
+
   const absent = await receiveMerchantRelease({
     origin, expectedSource: SOURCE, fetchImpl: async (url, options) => {
       requests.push(`absent ${url}`);
