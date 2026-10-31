@@ -1,5 +1,6 @@
 import { constants as journalFs } from "node:fs";
 import { normalizeExtractionTrialReason, normalizeExtractionTrialOperation, normalizeExtractionTrialTransport } from "./extraction-trial-reason.mjs";
+import { PAGE_CHANGE_REFUSAL_POLICY, PAGE_CHANGE_REFUSAL_SCHEMA, normalizePageChangeRefusal, pageChangeRefusalFromCode } from "./page-change-refusal.mjs";
 import { authenticateJournalCut, isJournalCutRecord } from "./commerce-journal-cut-auth.mjs";
 import { admitCommerceJournal, drainJournalObservations, noteJournalRotation, noteJournalWrite, noteJournalFault, observeContinuationTransmission, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
 import {
@@ -1750,6 +1751,36 @@ function retainedOutcomeCoverage(captureStartedAt, writerHealthy, requestedWindo
   };
 }
 
+function summarizePageChangeRefusals(rows) {
+  const external = { known: 0, unknown: 0, byReason: {} };
+  const populations = {};
+  for (const row of rows) {
+    const outcome = row.pageChangeOutcome?.outcome;
+    if (outcome !== "refused" && outcome !== "failed" && outcome !== "aborted") continue;
+    const refusal = normalizePageChangeRefusal(outcome, row.pageChangeRefusal, row.pageChangeOutcome?.transport);
+    const bucket = populations[row.originClass] ||= { known: 0, unknown: 0, byReason: {} };
+    if (refusal) {
+      const key = `${refusal.stage}.${refusal.reason}`;
+      bucket.known += 1;
+      increment(bucket.byReason, key);
+      if (row.originClass === "external") {
+        external.known += 1;
+        increment(external.byReason, key);
+      }
+    } else {
+      bucket.unknown += 1;
+      if (row.originClass === "external") external.unknown += 1;
+    }
+  }
+  return {
+    schemaVersion: PAGE_CHANGE_REFUSAL_SCHEMA,
+    scope: "eligible_refused_failed_aborted_rows",
+    external,
+    populations,
+    policy: PAGE_CHANGE_REFUSAL_POLICY,
+  };
+}
+
 function summarizeFreePageChange(events, { capture, writerHealthy, requestedWindowCoverage, externalCutoffMs, generatedAtMs }) {
   events = events.filter(event => eventTimestampMs(event) <= generatedAtMs
     && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs));
@@ -1770,6 +1801,7 @@ function summarizeFreePageChange(events, { capture, writerHealthy, requestedWind
       scope: transport === "http" ? "enabled_route_posts" : "parsed_page_change_tools_call",
       ...retainedOutcomeCoverage(capture.get(transport) || null, writerHealthy, requestedWindowCoverage),
       observations: external.length, byOutcome, populations,
+      refusals: summarizePageChangeRefusals(rows),
     };
   }
   const profileTransport = "page-change-mcp";
@@ -1791,11 +1823,13 @@ function summarizeFreePageChange(events, { capture, writerHealthy, requestedWind
         scope: "mounted_page_change_mcp_posts",
         ...retainedOutcomeCoverage(capture.get(profileTransport) || null, writerHealthy, requestedWindowCoverage),
         observations: profileExternal.length, byOutcome: profileByOutcome, populations: profilePopulations,
+        refusals: summarizePageChangeRefusals(profileRows),
       },
     },
     unknownOutcomeObservations: events.filter(event => event.route === "/recipes/page-change" && event.kind === "free" && !hasOwn(event, "pageChangeOutcome")).length,
     historicalUse: "unknown", usefulness: "unknown", callerIdentity: "unknown",
-    policy: "Retained invocation outcomes, not usefulness, independent customers or revenue. Counts include eligible retained rows within the requested window and population cutoffs, which may predate captureStartedAt. Outcome continuity is unknown; retainedWindowCoverage describes the shared journal only. currentCapture describes this process's transport registration and observed journal failure, not historical uptime. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only. The /mcp/page-change profile is counted on its own route and is not added to the /mcp transport.",
+    refusalSchemaVersion: PAGE_CHANGE_REFUSAL_SCHEMA,
+    policy: "Retained invocation outcomes, not usefulness, independent customers or revenue. Counts include eligible retained rows within the requested window and population cutoffs, which may predate captureStartedAt. Outcome continuity is unknown; retainedWindowCoverage describes the shared journal only. currentCapture describes this process's transport registration and observed journal failure, not historical uptime. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only. The /mcp/page-change profile is counted on its own route and is not added to the /mcp transport. Coarse refusal stage and reason labels live only in the additive refusals object. They do not change outcome counts, and they are not intent, usefulness, people, conversion, or revenue.",
   };
 }
 
@@ -4114,10 +4148,19 @@ export function createCommerceTelemetry({
       const actor = createHmac("sha256", secret)
         .update(`${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`).digest("hex").slice(0, 24);
       let outcome = "refused";
+      let evidenceCode;
       let recorded = false;
       const record = (closed = false) => {
         if (recorded) return;
         recorded = true;
+        const finalOutcome = closed ? "aborted" : outcome;
+        // Normalize against the outcome that is actually stored. A close that
+        // wins without a compatible reason is transport/aborted, not the
+        // caller's last string. Success outcomes store no refusal.
+        const prior = pageChangeRefusalFromCode(finalOutcome, evidenceCode, outcomeTransport);
+        const refusal = closed
+          ? (prior || pageChangeRefusalFromCode("aborted", "client_closed", outcomeTransport))
+          : prior;
         const event = {
           v: 3, id: randomUUID(), ts: new Date().toISOString(), actor, actorEpoch, originClass,
           agentDiscoverySource: sourceSplit.agentDiscoverySource,
@@ -4132,7 +4175,8 @@ export function createCommerceTelemetry({
           paymentActor: null, paymentIdentifier: null, settlementReference: null,
           settlementAmountAtomic: null, settlementNetwork: null, settlementCurrency: null,
           status: Number(res.statusCode || 200), result: "request", durationMs: Math.max(0, Date.now() - startedAt),
-          pageChangeOutcome: { v: 1, transport: outcomeTransport, outcome: closed ? "aborted" : outcome },
+          pageChangeOutcome: { v: 1, transport: outcomeTransport, outcome: finalOutcome },
+          ...(refusal ? { pageChangeRefusal: refusal } : {}),
         };
         if (!isCanonicalCommerceEvent(event)) return;
         enqueueExclusive(() => appendEvent(event)).catch(() => {});
@@ -4141,7 +4185,7 @@ export function createCommerceTelemetry({
       const onClose = () => { try { record(true); } catch { /* Observational only. */ } };
       res.once("finish", onFinish);
       res.once("close", onClose);
-      return (observed) => {
+      return (observed, code) => {
         // Protocol methods that are not comparisons must not become refusals.
         if (observed === "omit") {
           if (recorded) return;
@@ -4150,7 +4194,10 @@ export function createCommerceTelemetry({
           res.removeListener("close", onClose);
           return;
         }
-        if (PAGE_CHANGE_OUTCOMES.has(observed)) outcome = observed;
+        if (PAGE_CHANGE_OUTCOMES.has(observed)) {
+          outcome = observed;
+          evidenceCode = code;
+        }
       };
     };
   }

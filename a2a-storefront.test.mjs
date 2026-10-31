@@ -6,6 +6,8 @@ import {
   validateA2aMessage,
   versionProblem,
 } from "./a2a-storefront.mjs";
+import { pageChangeRequestExample } from "./page-change-input-contract.mjs";
+import { FREE_PAGE_COMPARE_SKILL_ID } from "./page-change-free-surface.mjs";
 
 const actions = [
   { name: "extract", method: "GET", route: "/extract", priceAtomicUsdc: "5000", tags: ["extraction"], request: { exampleUrl: "https://agents.example/extract?url=https%3A%2F%2Fexample.com" } },
@@ -65,6 +67,23 @@ test("message validation requires the normative inbound message fields", () => {
     validateA2aMessage({ message: { messageId: "message-1", role: "ROLE_USER", parts: [{ text: "list" }] } }),
     null,
   );
+});
+
+test("free comparison is an optional non-paid agent-card skill", () => {
+  const plain = buildAgentCard({ publicUrl: "https://agents.example", serviceVersion: "1.12.2", actions });
+  assert.equal(plain.skills.some((skill) => skill.id === FREE_PAGE_COMPARE_SKILL_ID), false);
+  const card = buildAgentCard({ publicUrl: "https://agents.example", serviceVersion: "1.12.2", actions, freePageCompare: true });
+  const skill = card.skills.find((entry) => entry.id === FREE_PAGE_COMPARE_SKILL_ID);
+  assert.ok(skill);
+  assert.equal(skill.id.startsWith("discover-paid-action-"), false);
+  assert.match(skill.description, /POST https:\/\/agents\.example\/mcp\/page-change/);
+  assert.match(skill.description, /compare_page_observations/);
+  assert.match(skill.description, /charged is false/);
+  assert.match(skill.description, /does not fetch URLs/);
+  assert.equal(skill.description.includes("/gateway/"), false);
+  const example = JSON.parse(skill.description.slice(skill.description.indexOf("Input example: ") + "Input example: ".length));
+  assert.deepEqual(example, pageChangeRequestExample());
+  assert.equal(card.skills.filter((entry) => entry.id.startsWith("discover-paid-action-")).length, actions.length);
 });
 
 test("agent card rejects a missing version and duplicate route skill IDs", () => {

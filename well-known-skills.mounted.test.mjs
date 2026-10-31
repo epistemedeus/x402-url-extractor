@@ -14,6 +14,7 @@ import {
   WELL_KNOWN_SKILLS_INDEX_PATH,
   loadWellKnownSkills,
 } from "./well-known-skills.mjs";
+import { renderFreePageCompareSkillAppendix } from "./page-change-free-surface.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_URL = "https://agents.samedaydesk.com";
@@ -167,7 +168,10 @@ test("mounted index and SKILL.md match current portable skill source", { timeout
     const resource = await fetch(`${merchant.base}/.well-known/skills/${skill.name}/SKILL.md`);
     assert.equal(resource.status, 200);
     assert.equal(resource.headers.get("content-type"), "text/markdown; charset=utf-8");
-    assert.equal(await resource.text(), skill.markdown);
+    const expectedMarkdown = skill.name === "page-change"
+      ? `${skill.markdown}${renderFreePageCompareSkillAppendix(PUBLIC_URL)}`
+      : skill.markdown;
+    assert.equal(await resource.text(), expectedMarkdown);
     assert.equal(
       resource.headers.get("link"),
       `<https://agents.samedaydesk.com/.well-known/skills/${skill.name}/SKILL.md>; rel="canonical"`,

@@ -12,6 +12,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { AIAX_MANIFEST_PATHS, AIAX_SECTION_PATH, AIAX_MAX_BYTES, buildAiaxDiscovery } from "./projection.mjs";
 import { EXTRACT_MAX_BODY_BYTES, EXTRACT_TIMEOUT_MS, EXTRACT_TEXT_EXCERPT_CHARS, EXTRACT_TEXT_EXCERPT_MAX_CHARS } from "../extract-capture.mjs";
+import { omitFreePageCompareLlmsSection } from "../page-change-free-surface.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const origin = "https://agents.samedaydesk.com";
@@ -292,6 +293,7 @@ test("offline actual merchant AIAX projection and removal preserve owning consum
           if (baseline && !target.startsWith("HTML ") && target !== "invalid extract") {
             if (["/llms.txt", "/skill.md"].includes(target)) {
               amended = amended.replace(/^- Walletless extraction trial contract \(current availability, request and limits\): https:\/\/[^\n]+\n/m, "");
+              if (target === "/llms.txt") amended = omitFreePageCompareLlmsSection(amended);
             } else {
               const value = JSON.parse(amended);
               if (target.includes("openapi")) delete value["x-service-info"].docs.extractionTrial;
