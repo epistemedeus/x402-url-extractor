@@ -1,0 +1,43 @@
+{
+  "id": "wellformed-payto-delivers",
+  "title": "Well-formed matching payTo may settle once (positive control)",
+  "expect": "pass",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "requirePaidDelivery": true,
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "paymentPresent": false,
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false
+    },
+    {
+      "seq": 2,
+      "phase": "fresh",
+      "httpStatus": 200,
+      "paymentPresent": true,
+      "quotedPayTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "acceptedPayTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "authorizationTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "hasPaymentResponse": true,
+      "charged": true
+    }
+  ]
+}

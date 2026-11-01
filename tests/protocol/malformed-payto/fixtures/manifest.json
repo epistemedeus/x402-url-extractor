@@ -1,0 +1,64 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.malformed-payto.v1",
+  "scope": "x402 v2 exact unpaid 402 payTo must be a 0x-prefixed 40-hex EVM address. Malformed authorization.to or accepted.payTo (empty, payto:// URI, ENS, URL, wrong length) must not deliver or settle. Loopback merchant only; never pay, never xpay/CDP, never checkout.",
+  "spec": {
+    "x402Version": 2,
+    "scheme": "exact",
+    "payTo": "0x-prefixed 40-hex EVM address",
+    "invalidReason": "invalid_pay_to",
+    "artifact": "server.js"
+  },
+  "fixtures": [
+    {
+      "id": "unpaid-wellformed-payto",
+      "path": "pass/unpaid-wellformed-payto.json",
+      "expect": "pass",
+      "kind": "unpaid-challenge"
+    },
+    {
+      "id": "malformed-to-rejected",
+      "path": "pass/malformed-to-rejected.json",
+      "expect": "pass",
+      "kind": "malformed-authorization-to"
+    },
+    {
+      "id": "malformed-accepted-payto-rejected",
+      "path": "pass/malformed-accepted-payto-rejected.json",
+      "expect": "pass",
+      "kind": "malformed-accepted-payto-uri"
+    },
+    {
+      "id": "empty-payto-rejected",
+      "path": "pass/empty-payto-rejected.json",
+      "expect": "pass",
+      "kind": "empty-accepted-payto"
+    },
+    {
+      "id": "wellformed-payto-delivers",
+      "path": "pass/wellformed-payto-delivers.json",
+      "expect": "pass",
+      "kind": "fresh-delivery"
+    },
+    {
+      "id": "seeded-malformed-payto-accepted",
+      "path": "reject/seeded-malformed-payto-accepted.json",
+      "expect": "reject",
+      "rejectCode": "malformed_payto_accepted",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-empty-payto-accepted",
+      "path": "reject/seeded-empty-payto-accepted.json",
+      "expect": "reject",
+      "rejectCode": "malformed_payto_accepted",
+      "kind": "seeded-empty-accepted"
+    },
+    {
+      "id": "seeded-unpaid-malformed-payto",
+      "path": "reject/seeded-unpaid-malformed-payto.json",
+      "expect": "reject",
+      "rejectCode": "malformed_quoted_payto",
+      "kind": "seeded-unpaid-malformed"
+    }
+  ]
+}

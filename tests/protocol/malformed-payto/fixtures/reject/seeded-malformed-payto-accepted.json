@@ -1,0 +1,49 @@
+{
+  "id": "seeded-malformed-payto-accepted",
+  "title": "Seeded failure: malformed authorization.to delivered as paid success",
+  "expect": "reject",
+  "rejectCode": "malformed_payto_accepted",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "claims": {
+    "ok": true,
+    "malformedPayToRejected": false,
+    "message": "settlement complete"
+  },
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "paymentPresent": false,
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false
+    },
+    {
+      "seq": 2,
+      "phase": "malformed-to",
+      "httpStatus": 200,
+      "paymentPresent": true,
+      "quotedPayTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "acceptedPayTo": "not-an-address",
+      "authorizationTo": "not-an-address",
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "hasPaymentResponse": true,
+      "charged": true,
+      "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  ]
+}
