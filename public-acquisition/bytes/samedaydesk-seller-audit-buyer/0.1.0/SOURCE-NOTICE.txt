@@ -1,0 +1,4 @@
+samedaydesk-seller-audit-buyer is a draft buyer for one explicitly authorized GET /commerce/seller-integrity-audit purchase.
+It is not a hosted acquisition, a wallet, or a checkout.
+contract and preflight do not read a wallet, sign, or send payment.
+This sidecar does not carry merchant server source, private keys, journals, or signers.

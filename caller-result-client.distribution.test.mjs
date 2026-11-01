@@ -456,11 +456,11 @@ test("advertised caller archive installs recovery with the merchant checkout abs
   for (const asset of predecessorAssets) {
     assert.deepEqual(combinedManifest.assets.find((item) => item.relativePath === asset.relativePath), asset);
   }
-  assert.equal(combinedManifest.assets.filter((asset) => asset.id !== "samedaydesk-caller-result").length, 21);
+  assert.equal(combinedManifest.assets.filter((asset) => asset.id !== "samedaydesk-caller-result").length, 25);
   const roleKeys = combinedManifest.assets.map((asset) => `${asset.id}@${asset.version}:${asset.role}`);
   assert.equal(new Set(roleKeys).size, roleKeys.length);
   const retainedOnIndex = index.assets.filter((asset) => !String(asset.originalUrl).includes("/downloads/samedaydesk-caller-result/"));
-  assert.equal(retainedOnIndex.length, 21);
+  assert.equal(retainedOnIndex.length, 25);
   const current = indexArchive(index, entry.version);
   const feedback = indexArchive(index, "0.1.0");
   assert.equal(current.originalUrl, entry.archiveUrl);

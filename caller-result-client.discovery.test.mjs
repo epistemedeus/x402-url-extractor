@@ -253,7 +253,7 @@ test("a local machine entry serves the draft client and an offline caller can in
   assert.equal(acquisitionIndex.productionHosted, false);
   assert.equal(acquisitionIndex.draft, true);
   const retained = acquisitionIndex.assets.filter((asset) => !String(asset.originalUrl).includes("/downloads/samedaydesk-caller-result/"));
-  assert.equal(retained.length, 21);
+  assert.equal(retained.length, 25);
   const currentAsset = acquisitionIndex.assets.find((asset) => asset.role === "archive" && asset.version === entry.version && asset.originalUrl === entry.archiveUrl);
   assert.equal(currentAsset.sha256, entry.sha256);
   assert.equal(currentAsset.alternateUrl, `https://agents.samedaydesk.com${currentAsset.alternatePath}`);
