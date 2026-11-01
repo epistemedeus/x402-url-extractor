@@ -10,9 +10,6 @@ Official MCP clients can discover and call the existing free comparison. The mer
 
 - Repository: `https://github.com/epistemedeus/x402-url-extractor.git`. Default branch is `master`.
 - Writer base: `2c284a4de5707979af916d88e79b9c10251d7914`.
-- Installed merchant: `d795e2badf805f991c3074755061a20d0c255b00`. It is an ancestor of the writer base, 16 commits earlier. `server.js` there sets `modernProtocol: true`. The package version string is `1.23.55` and the MCP package pins match the writer base. `page-change-mcp.mjs` is absent. Registry publication of the free profile is not that hosted runtime.
-- Operating context: `epistemedeus/pilot` `59ea74fbbaf8680e0a87f926761df389615772ea`. Assignment blob `c0180902787ff053c294ec62a5eed698449d9adc`.
-- Companion branch `codex/h99110-mcp-compat-receiving-20261101`: absent. `git ls-remote` of pilot returned HEAD `5f852692f07cdd84f6a7d942b2e9b903f96fec56` and no companion ref. No companion checkout was created.
 - Node `v22.23.4`. Installed and locked, with no upgrade: `@modelcontextprotocol/sdk` `1.30.0`, `@modelcontextprotocol/client` `2.4.0`, `@modelcontextprotocol/server` `2.4.0`, `@modelcontextprotocol/core` `2.4.0`, `@modelcontextprotocol/node` `2.1.2`, `@x402/mcp` `2.16.0`.
 - SDK `1.30.0` `dist/esm/types.js` sets `LATEST_PROTOCOL_VERSION` to `2025-11-25` and also lists `2025-06-18`, `2025-03-26`, `2024-11-05`, and `2024-10-07`. Its `dist/esm/spec.types.js` exports an internal `LATEST_PROTOCOL_VERSION` of `DRAFT-2026-v1`, generated from `schema/draft` at `35fa160caf287a9c48696e3ae452c0645c713669`. That draft constant is not the client default and was not exercised.
 - Client `2.4.0` sets `DEFAULT_VERSION_NEGOTIATION_MODE` to `"legacy"`. Its modern wire revision, and its only supported modern version, is `2026-07-28`. Pin mode has no fallback. Failure is `SdkError` code `ERA_NEGOTIATION_FAILED`.
@@ -65,3 +62,7 @@ Unchanged: `page-change-mcp.mjs`, `mcp-server.mjs`, `server.js`, payment authori
 ## Limits
 
 The synthetic facilitator returns `{ isValid: false, success: false }` except `GET /supported`, which returns kind `eip155:8453`, scheme `exact`, `x402Version` 2. The test process and the merchant child use a 512 MiB heap. No production configuration, credential, signer, paid call, or live site was used.
+
+## Independent receiving
+
+The original missing-Python observation above is preserved. A separate clean source checkout now uses isolated Python mcp 2.3.0 and runs the affected serial gates: mcp-current-client-compat.test.mjs (1pass/0fail/0skip); test/mcp-unknown-tool.test.mjs (2pass/0fail/0skip); page-change-mcp.http.test.mjs (10pass/0fail/0skip); experiments/oct29-merchant-compatibility/merchant-compatibility.test.mjs (17pass/0fail/0skip). All exit0. Source protocol/payment files and dependency pins are unchanged. The source qualification does not establish an outside user or production deployment.

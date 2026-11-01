@@ -1,7 +1,7 @@
-# H99110 NEXT
+# Official-client compatibility: integration next
 
-Root receives branch `codex/h99110-mcp-current-client-compat-20261101`. Integration, registry publication, and deployment stay with Root.
+This branch adds a mounted regression and test entry,not a protocol implementation. Receive the exact tested source and normal CI before integration. No registry publication or deployment is required merely to support these client modes.
 
-The installed runtime remains `d795e2badf805f991c3074755061a20d0c255b00` until that release. This commit does not merge to `master` and does not deploy.
+Free-comparison callers should use the current official client default or auto negotiation,which selects the supported2025-11-25path. Explicit2026-07-28pinning is not supported by that free profile. The separate protected gateway supports that revision but has a different catalog;it is not a substitute endpoint for the free comparison.
 
-Free-profile callers on the current official client default, and on auto, already have the supported `2025-11-25` path. Callers that pin `2026-07-28` use paid `POST /mcp` for that revision. The free profile keeps its v1 contract.
+Installed deployment identity is a separate live operational fact,not established by this source test.
