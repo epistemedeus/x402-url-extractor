@@ -1,6 +1,33 @@
 const OBSERVED_AT = "2026-08-08T17:42:00.000Z";
 const FRESH_UNTIL = "2026-08-09T17:42:00.000Z";
 
+export const PLATFORM_HEALTH_FRESHNESS = Object.freeze(["fresh", "stale", "not_current"]);
+export const PLATFORM_HEALTH_TIME_REASONS = Object.freeze([
+  "within_window",
+  "exact_expiry",
+  "window_elapsed",
+  "observation_missing",
+  "observation_invalid",
+  "fresh_until_missing",
+  "fresh_until_invalid",
+  "observation_in_future",
+  "window_reversed",
+]);
+export const PLATFORM_HEALTH_INVENTORY_REASONS = Object.freeze(["observed", "unknown", "not_current"]);
+export const CALLER_CLAIMABLE_REASON = "advertised_or_open_state_is_not_caller_claimability";
+export const VERIFIED_CHAIN_TIME_REASON = "provider_or_payment_time_is_not_verified_chain_time";
+
+const CURRENT_AVAILABILITY_KEYS = Object.freeze([
+  "time_state",
+  "time_reason",
+  "open_inventory_count",
+  "open_inventory_reason",
+  "caller_claimable",
+  "caller_claimable_reason",
+  "verified_chain_time",
+  "verified_chain_time_reason",
+]);
+
 export const RADAR_DISCLAIMER = {
   id: "samedaydesk-radar-disclaimer.v0",
   short:
@@ -68,7 +95,41 @@ export const PLATFORM_HEALTH_SCHEMA = {
     window_end: { type: "string", format: "date-time" },
     observed_at: { type: "string", format: "date-time" },
     fresh_until: { type: "string", format: "date-time" },
-    current_platform_state: { type: "object" },
+    freshness: {
+      description: "Machine qualification of this response. Stored observations omit it. fresh includes the exact fresh_until instant. not_current means the timestamps do not establish a current window.",
+      enum: PLATFORM_HEALTH_FRESHNESS,
+    },
+    current_availability: {
+      description: "Projected current availability for this response clock. Historical inventory and payment evidence stay on current_platform_state and evidence.",
+      type: "object",
+      additionalProperties: false,
+      required: CURRENT_AVAILABILITY_KEYS,
+      properties: {
+        time_state: { enum: PLATFORM_HEALTH_FRESHNESS },
+        time_reason: { enum: PLATFORM_HEALTH_TIME_REASONS },
+        open_inventory_count: { type: ["integer", "null"], minimum: 0 },
+        open_inventory_reason: { enum: PLATFORM_HEALTH_INVENTORY_REASONS },
+        caller_claimable: { type: "null" },
+        caller_claimable_reason: { const: CALLER_CLAIMABLE_REASON },
+        verified_chain_time: { type: "null" },
+        verified_chain_time_reason: { const: VERIFIED_CHAIN_TIME_REASON },
+      },
+    },
+    current_platform_state: {
+      type: "object",
+      additionalProperties: false,
+      required: ["open_inventory_count", "competition_signal", "custody_status", "notes"],
+      properties: {
+        open_inventory_count: {
+          description: "Dated observation. Null is unknown, not zero. A machine response does not treat this historical value as current availability.",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        competition_signal: { type: "string" },
+        custody_status: { type: ["string", "null"] },
+        notes: { type: "string" },
+      },
+    },
     rights_class: {
       enum: [
         "PUBLIC_READ",
@@ -370,30 +431,143 @@ export const PLATFORM_HEALTH_CARDS = Object.freeze([
   }),
 ]);
 
-export function freshnessFor(cardValue, now = new Date()) {
+function evaluationInstant(now) {
   const current = now instanceof Date ? now : new Date(now);
   if (Number.isNaN(current.getTime())) throw new TypeError("now must be a valid date");
-  return current.getTime() <= Date.parse(cardValue.fresh_until) ? "fresh" : "stale";
+  return current;
+}
+
+function instantKind(value) {
+  if (value === undefined || value === null) return "missing";
+  if (typeof value !== "string") return "invalid";
+  const trimmed = value.trim();
+  if (trimmed === "") return "missing";
+  const parsed = Date.parse(trimmed);
+  return Number.isNaN(parsed) ? "invalid" : parsed;
+}
+
+function supplied(value) {
+  return !(value === undefined || value === null || (typeof value === "string" && value.trim() === ""));
+}
+
+// Invalid timestamps win, then a reversed bound, then a future observation.
+// A valid window is fresh through the exact fresh_until instant.
+export function classifyPlatformHealthFreshness(cardValue, now = new Date()) {
+  const currentMs = evaluationInstant(now).getTime();
+  if (!cardValue || typeof cardValue !== "object" || Array.isArray(cardValue)) {
+    return { freshness: "not_current", reason: "observation_invalid" };
+  }
+  const observed = instantKind(cardValue.observed_at);
+  if (observed === "missing") return { freshness: "not_current", reason: "observation_missing" };
+  if (observed === "invalid") return { freshness: "not_current", reason: "observation_invalid" };
+  const freshUntil = instantKind(cardValue.fresh_until);
+  if (freshUntil === "missing") return { freshness: "not_current", reason: "fresh_until_missing" };
+  if (freshUntil === "invalid") return { freshness: "not_current", reason: "fresh_until_invalid" };
+
+  const windowStart = instantKind(cardValue.window_start);
+  const windowEnd = instantKind(cardValue.window_end);
+  if (supplied(cardValue.window_start) && (windowStart === "missing" || windowStart === "invalid")) {
+    return { freshness: "not_current", reason: "observation_invalid" };
+  }
+  if (supplied(cardValue.window_end) && (windowEnd === "missing" || windowEnd === "invalid")) {
+    return { freshness: "not_current", reason: "observation_invalid" };
+  }
+  if (supplied(cardValue.window_start) && supplied(cardValue.window_end) && windowEnd < windowStart) {
+    return { freshness: "not_current", reason: "window_reversed" };
+  }
+  if (freshUntil < observed) return { freshness: "not_current", reason: "window_reversed" };
+  if (observed > currentMs) return { freshness: "not_current", reason: "observation_in_future" };
+  if (currentMs === freshUntil) return { freshness: "fresh", reason: "exact_expiry" };
+  if (currentMs < freshUntil) return { freshness: "fresh", reason: "within_window" };
+  return { freshness: "stale", reason: "window_elapsed" };
+}
+
+function observedInventoryCount(state) {
+  if (!state || typeof state !== "object" || Array.isArray(state) || !Object.hasOwn(state, "open_inventory_count")) {
+    return { reason: "unknown" };
+  }
+  const count = state.open_inventory_count;
+  if (typeof count === "number" && Number.isInteger(count) && count >= 0) return { reason: "observed", count };
+  return { reason: "unknown" };
+}
+
+function projectCurrentAvailability(entry, classification) {
+  const historical = observedInventoryCount(entry?.current_platform_state);
+  const fresh = classification.freshness === "fresh";
+  return {
+    time_state: classification.freshness,
+    time_reason: classification.reason,
+    open_inventory_count: fresh && historical.reason === "observed" ? historical.count : null,
+    open_inventory_reason: fresh ? historical.reason : "not_current",
+    caller_claimable: null,
+    caller_claimable_reason: CALLER_CLAIMABLE_REASON,
+    verified_chain_time: null,
+    verified_chain_time_reason: VERIFIED_CHAIN_TIME_REASON,
+  };
+}
+
+export function projectPlatformHealthCard(entry, now = new Date()) {
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) throw new TypeError("card must be an object");
+  const classification = classifyPlatformHealthFreshness(entry, now);
+  const projected = structuredClone(entry);
+  projected.freshness = classification.freshness;
+  projected.current_availability = projectCurrentAvailability(entry, classification);
+  return projected;
+}
+
+export function freshnessFor(cardValue, now = new Date()) {
+  return classifyPlatformHealthFreshness(cardValue, now).freshness;
+}
+
+export function platformHealthEvidenceRequiresRefresh(card) {
+  if (!card) return false;
+  if (card.freshness !== "fresh") return true;
+  return card.current_availability?.time_state !== undefined && card.current_availability.time_state !== "fresh";
 }
 
 export function listPlatformHealthCards(now = new Date()) {
-  return PLATFORM_HEALTH_CARDS.map((entry) => ({ ...entry, freshness: freshnessFor(entry, now) }));
+  return PLATFORM_HEALTH_CARDS.map((entry) => projectPlatformHealthCard(entry, now));
 }
 
 export function getPlatformHealthCard(platformId, now = new Date()) {
   const entry = PLATFORM_HEALTH_CARDS.find((item) => item.platform_id === platformId);
-  return entry ? { ...entry, freshness: freshnessFor(entry, now) } : null;
+  return entry ? projectPlatformHealthCard(entry, now) : null;
 }
 
 export function buildPlatformHealthResponse(now = new Date()) {
+  const current = evaluationInstant(now);
   return {
     schema_version: "platform-health-index.v0",
-    generated_at: new Date(now).toISOString(),
+    generated_at: current.toISOString(),
     methodology: "https://agents.samedaydesk.com/platforms/methodology",
     schema: "https://agents.samedaydesk.com/schemas/platform-health-card-v0.json",
     disclaimer: RADAR_DISCLAIMER,
-    cards: listPlatformHealthCards(now),
+    cards: listPlatformHealthCards(current),
   };
+}
+
+function currentAvailabilityConsistent(value) {
+  if (value.freshness === undefined && value.current_availability === undefined) return true;
+  if (!PLATFORM_HEALTH_FRESHNESS.includes(value.freshness)) return false;
+  const availability = value.current_availability;
+  if (!availability || typeof availability !== "object" || Array.isArray(availability)) return false;
+  const keys = Object.keys(availability);
+  if (keys.length !== CURRENT_AVAILABILITY_KEYS.length || CURRENT_AVAILABILITY_KEYS.some((key) => !Object.hasOwn(availability, key))) {
+    return false;
+  }
+  if (availability.time_state !== value.freshness) return false;
+  if (!PLATFORM_HEALTH_TIME_REASONS.includes(availability.time_reason)) return false;
+  if (!PLATFORM_HEALTH_INVENTORY_REASONS.includes(availability.open_inventory_reason)) return false;
+  if (availability.caller_claimable !== null || availability.caller_claimable_reason !== CALLER_CLAIMABLE_REASON) return false;
+  if (availability.verified_chain_time !== null || availability.verified_chain_time_reason !== VERIFIED_CHAIN_TIME_REASON) return false;
+  const count = availability.open_inventory_count;
+  if (!(count === null || (Number.isInteger(count) && count >= 0))) return false;
+  if (value.freshness !== "fresh") return count === null && availability.open_inventory_reason === "not_current";
+  const historical = observedInventoryCount(value.current_platform_state);
+  if (historical.reason === "observed") {
+    return availability.open_inventory_reason === "observed" && count === historical.count;
+  }
+  return availability.open_inventory_reason === "unknown" && count === null;
 }
 
 export function validatePlatformHealthCard(value) {
@@ -419,7 +593,8 @@ export function validatePlatformHealthCard(value) {
       value.sample_count >= 0 &&
       Array.isArray(value.evidence) &&
       value.evidence.length > 0 &&
-      !forbiddenScore,
+      !forbiddenScore &&
+      currentAvailabilityConsistent(value),
     missing,
     forbiddenScore,
   };

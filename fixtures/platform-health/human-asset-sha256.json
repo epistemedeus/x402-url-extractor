@@ -1,0 +1,49 @@
+{
+  "source": "Rendered by platform-health-page.mjs from list/get at ff61d7c688e2448fcab508feae4fc527ac3e3d7c before the machine projection. SHA-256 of the full HTML or text bytes.",
+  "clocks": {
+    "2026-08-08T18:00:00.000Z": {
+      "index": "ec7c92a2b72e9a60b1acfa5b1622a1e0e3ca28ed1dd43bd4ae85355d44b353d9",
+      "details": {
+        "gofrantic": "d660313ce7f8c74ddce3a94ed877a96f0b94c8f2bf9b04927d0a487b995ddc86",
+        "taskmarket": "7a8c285db16600ac41700f343f94be96d6f453f8daa323e5e901f1cff726328c",
+        "bountybook": "a27dc97d5e3abd524083f8b96324403546233c0c2ccf48d09198a46187ccc2da",
+        "superteam": "00e8d21ba33758b68d93b5a0fef6b959da95c1f2bf09f3db095d6c55f4548e90",
+        "moltjobs": "a077c5c022d07a3a0d91ab98c242a9212a4c83a9acc4053879590b1ce72e10c5"
+      }
+    },
+    "2026-08-09T17:42:00.000Z": {
+      "index": "ec7c92a2b72e9a60b1acfa5b1622a1e0e3ca28ed1dd43bd4ae85355d44b353d9",
+      "details": {
+        "gofrantic": "d660313ce7f8c74ddce3a94ed877a96f0b94c8f2bf9b04927d0a487b995ddc86",
+        "taskmarket": "7a8c285db16600ac41700f343f94be96d6f453f8daa323e5e901f1cff726328c",
+        "bountybook": "a27dc97d5e3abd524083f8b96324403546233c0c2ccf48d09198a46187ccc2da",
+        "superteam": "00e8d21ba33758b68d93b5a0fef6b959da95c1f2bf09f3db095d6c55f4548e90",
+        "moltjobs": "a077c5c022d07a3a0d91ab98c242a9212a4c83a9acc4053879590b1ce72e10c5"
+      }
+    },
+    "2026-08-10T00:00:00.000Z": {
+      "index": "adf7d06e40b7f27d948001634434d668415e2a84bf81032ea4b9d673a738eea5",
+      "details": {
+        "gofrantic": "837571ffd5ec58e4899a9a9c4a347dd976b65d0a19994b851e77af96aada12f3",
+        "taskmarket": "04d5a2b79713ada1460a53a17a41569f5781d55668f8e41d579599040590716d",
+        "bountybook": "3734b050dfa84b9499bc21e9639309c0dc07fcd3025c79557c5db34ead247b93",
+        "superteam": "0b6e7389c2d6de0c981026e95a57cc999c2f19cbc2bd677f8aad7f765c83b20f",
+        "moltjobs": "0e62e2269e7f28be51c22aafb53dbf67b15322ca0f0c47d342ee8459699e6065"
+      }
+    },
+    "2026-11-02T07:10:00.000Z": {
+      "index": "adf7d06e40b7f27d948001634434d668415e2a84bf81032ea4b9d673a738eea5",
+      "details": {
+        "gofrantic": "837571ffd5ec58e4899a9a9c4a347dd976b65d0a19994b851e77af96aada12f3",
+        "taskmarket": "04d5a2b79713ada1460a53a17a41569f5781d55668f8e41d579599040590716d",
+        "bountybook": "3734b050dfa84b9499bc21e9639309c0dc07fcd3025c79557c5db34ead247b93",
+        "superteam": "0b6e7389c2d6de0c981026e95a57cc999c2f19cbc2bd677f8aad7f765c83b20f",
+        "moltjobs": "0e62e2269e7f28be51c22aafb53dbf67b15322ca0f0c47d342ee8459699e6065"
+      }
+    }
+  },
+  "methodology": "2e0096d458af7ecb0fe87ccc2ac715600fdaec339cc226c698902bfa2f93ac8a",
+  "alerts": "2d9c661a3492814090175d15b03e871e832032bb37fef817b903df03695df15b",
+  "robots": "e639561362aee5e3190d2baf393dd35dfa46174e4dbd7ac3453c1633ac9876ad",
+  "sitemap": "2c89ed8add02dbd07adc7db159c43d0c84e0913c047dfbb1568d83e38a5f1971"
+}

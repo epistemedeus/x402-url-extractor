@@ -1,0 +1,118 @@
+{
+  "outcome": "H108010",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor.git",
+  "branch": "codex/h108010-machine-card-freshness-20261102",
+  "worktree": "/home/ubuntu/ae14-work/h108010",
+  "candidateCommit": "the commit that introduces this handoff on codex/h108010-machine-card-freshness-20261102",
+  "predecessor": {
+    "commit": "ff61d7c688e2448fcab508feae4fc527ac3e3d7c",
+    "tree": "a4bb41503c2c0c2a95af00f7100e8b509f29c92c",
+    "rollback": "Check out predecessor ff61d7c688e2448fcab508feae4fc527ac3e3d7c. Stored cards are unchanged, so rollback is a tree reset. That tree still publishes historical open_inventory_count on current_platform_state and labels an elapsed window stale."
+  },
+  "pins": {
+    "operatingContext": "44ccd82ced6e7f7ff8d1dec1d458e7ccd6af6182",
+    "assignment": "0077a4716c0984a1b85ef34df29b0415dfbe6ec7",
+    "assignmentBlob": "15433cbd345c059d52c79997d297ec35db9cbe6d",
+    "checkpoint": "2026-11-02T07:10:00.000Z",
+    "requiredUntil": "2026-11-02T07:25:00.000Z",
+    "node": "v22.23.4"
+  },
+  "fieldStrategy": "Deep-clone each card. Keep current_platform_state, evidence, notes, categories, rights, and attribution. Add sibling current_availability. freshness is fresh, stale, or not_current. Invalid or missing timestamps, a reversed window, and a future observation are not_current. now equal to fresh_until is fresh with reason exact_expiry. A fresh integer count of zero or more is projected with reason observed. A fresh null or malformed count is null with reason unknown. Every other time state projects null with reason not_current. caller_claimable and verified_chain_time stay null. Projection logic contains no platform name, incident date, or census fact.",
+  "changedPaths": [
+    "platform-health.mjs",
+    "opportunity-preflight.mjs",
+    "platform-health.test.mjs",
+    "platform-health-page.test.mjs",
+    "opportunity-preflight.test.mjs",
+    "internal-opportunity-gateway.test.mjs",
+    "mcp-output-schema-wave3.test.mjs",
+    "fixtures/platform-health/human-asset-sha256.json",
+    "fixtures/platform-health/loopback-cards-readback.json",
+    "docs/reviews/h108010-machine-card-freshness/HANDOFF.json"
+  ],
+  "unchangedPaths": [
+    "server.js",
+    "package.json",
+    "package-lock.json",
+    "platform-health-page.mjs"
+  ],
+  "consumers": [
+    {
+      "name": "pure list/get/build",
+      "seam": "platform-health.mjs listPlatformHealthCards, getPlatformHealthCard, buildPlatformHealthResponse",
+      "result": "At the checkpoint all five cards stay stale, historical counts are 0, 18, 100, null, 3, and projected counts are null with reason not_current. Fresh 2026-08-08T18:00:00.000Z projects 0, 18, 100, null, 3 with reasons observed, observed, observed, unknown, observed. Exact expiry 2026-08-09T17:42:00.000Z stays fresh. One millisecond later is stale. Repeated reads stay equal after the caller mutates a returned card."
+    },
+    {
+      "name": "emitted JSON and published schema",
+      "seam": "PLATFORM_HEALTH_SCHEMA and validatePlatformHealthCard; server.js schema route",
+      "result": "freshness and current_availability are optional, so stored seeds still validate. Emitted cards pass Ajv 8.20.0 and currentAvailabilityConsistent. Loopback GET /schemas/platform-health-card-v0.json matched the published schema object. Ajv ignored unknown date-time and uri formats."
+    },
+    {
+      "name": "mounted /v0/cards.json",
+      "seam": "server.js calls buildPlatformHealthResponse",
+      "result": "Loopback status 200, content-type application/json; charset=utf-8, cache-control public, max-age=300, stale-while-revalidate=900. Body sha256 755a347e535aaf25f558c07e29b57b7bb99cf752bc5ca824bf5ccaf620c6adbd. generated_at 2026-11-02T06:09:39.697Z is that process clock, not a golden value."
+    },
+    {
+      "name": "opportunity HTTP and MCP",
+      "seam": "opportunityPreflight via platformHealthEvidenceRequiresRefresh; POST /mcp tools/list",
+      "result": "Fresh taskmarket at 2026-08-09T08:00:00.000Z does not add refresh_platform_health_evidence and keeps count 18. Stale bountybook is verify_first, keeps VERIFIER_BLOCK and observedAt 2026-08-08T17:42:00.000Z, and requires refresh. Future and renamed non-fresh states also require refresh. Paid platformEvidence stays the existing field subset with freshness as a string. Trial GET ?trial=1 is uncharged. Unpaid custom GET is 402. Malformed rewardUsd is 400. MCP outputSchema keeps additionalProperties false on the object branch of nullable platformEvidence."
+    },
+    {
+      "name": "internal authenticated gateway",
+      "seam": "createInternalOpportunityPreflightHandler uses getPlatformHealthCard and opportunityPreflight",
+      "result": "Authorized bountybook at the checkpoint is 200, cache-control no-store, decision verify_first, upstreamAuthenticated true, historical count 100, and refresh required. Missing and bad tokens stay rejected. The paid output schema accepts the body after the gateway delivery field is removed."
+    },
+    {
+      "name": "human pages and sitemap",
+      "seam": "platform-health-page.mjs through the existing list/get routes",
+      "result": "Renderer was not edited. At fresh, exact-expiry, stale, and checkpoint clocks the five stored cards remain fresh or stale, so index, detail, methodology, alerts, robots, and sitemap bytes match fixtures/platform-health/human-asset-sha256.json. Live loopback HTML matched the checkpoint hashes. Homepage bytes were stable across two fetches and contained the existing title."
+    }
+  ],
+  "commands": [
+    {
+      "command": "npm ci --no-audit --no-fund",
+      "exit": 0,
+      "note": "Local install of the locked tree, 256 packages. ajv 8.20.0. node_modules is gitignored."
+    },
+    {
+      "command": "node --test --test-concurrency=1 platform-health.test.mjs platform-health-page.test.mjs opportunity-preflight.test.mjs internal-opportunity-gateway.test.mjs mcp-output-schema-wave3.test.mjs",
+      "exit": 1,
+      "note": "First run: 49 pass, 1 fail. The loopback MCP assertion read platformEvidence.properties before resolving the Zod nullable anyOf/oneOf object branch."
+    },
+    {
+      "command": "node --test --test-concurrency=1 platform-health.test.mjs platform-health-page.test.mjs opportunity-preflight.test.mjs internal-opportunity-gateway.test.mjs mcp-output-schema-wave3.test.mjs",
+      "exit": 0,
+      "note": "Recovery run recorded in /tmp/h108010-test.tap. tests 50, pass 50, fail 0, skipped 0, duration_ms 2785.597592. The loopback case duration_ms was 1623.140587."
+    }
+  ],
+  "skips": "The focused suite skipped nothing. The repository-wide npm test script was not executed.",
+  "readback": {
+    "path": "fixtures/platform-health/loopback-cards-readback.json",
+    "command": "node server.js",
+    "bind": "127.0.0.1",
+    "port": 42821,
+    "publicUrl": "https://agents.samedaydesk.com",
+    "clock": "2026-11-02T06:09:39.697Z",
+    "checkpoint": "2026-11-02T07:10:00.000Z",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "cacheControl": "public, max-age=300, stale-while-revalidate=900",
+    "sha256": "755a347e535aaf25f558c07e29b57b7bb99cf752bc5ca824bf5ccaf620c6adbd",
+    "nonsecretConfiguration": {
+      "PORT": "42821",
+      "PUBLIC_URL": "https://agents.samedaydesk.com",
+      "MPP_SECRET_KEY": "",
+      "COMMERCE_RECONCILIATION_INTERVAL_MS": "86400000",
+      "COMMERCE_INTERNAL_TOKEN": "set-local-test-token-not-recorded",
+      "FACILITATOR": "xpay"
+    }
+  },
+  "promotion": "Machine-only. Root owns release. Do not merge and do not deploy from this writer. Fetch this branch at the candidate commit. Read GET /v0/cards.json and use current_availability.open_inventory_count with open_inventory_reason. A non-fresh card asks opportunity preflight to reverify. Human pages stay on the existing renderer.",
+  "selfReview": [
+    "server.js needed no card-route edit. /v0/cards.json, the schema route, human routes, the internal gateway, and MCP already call list/get/build or opportunityPreflight.",
+    "The preflight change is one predicate. A missing card still uses platform_evidence_not_available_reverify_primary_source. Any freshness other than fresh, including not_current and unknown, adds refresh_platform_health_evidence. Prices, payment, authentication, and execution authority are untouched.",
+    "Canonical PLATFORM_HEALTH_CARDS are not mutated. structuredClone isolates list and get results.",
+    "Human notes and badges are unchanged for the five stored cards at the matched clocks. A not_current pill can appear only when timestamps themselves are missing, invalid, reversed, or future.",
+    "No H107 writer, Pilot STATE, execution plan, index, Root document, provider call, or production publish."
+  ]
+}
