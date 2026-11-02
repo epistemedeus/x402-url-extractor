@@ -6,6 +6,9 @@ import {
   createInternalOpportunityPreflightHandler,
   internalGatewayAuthorized,
 } from "./internal-opportunity-gateway.mjs";
+import { getPlatformHealthCard } from "./platform-health.mjs";
+import { opportunityPreflight, opportunityPreflightOutputSchema } from "./opportunity-preflight.mjs";
+import Ajv from "ajv";
 
 const TOKEN = "test-only-internal-gateway-token-1234567890";
 
@@ -92,6 +95,46 @@ test("authorized gateway returns a bounded delivery error", async () => {
     error: "rewardUsd is required",
     boundary: "No source-platform account, claim, bid, payment, or submission was touched.",
   });
+});
+
+test("authorized gateway reverifies stale card evidence and preserves the auth boundary", async () => {
+  const clock = new Date("2026-11-02T07:10:00.000Z");
+  const handler = createInternalOpportunityPreflightHandler({
+    token: TOKEN,
+    getPlatformHealthCard: (platform) => getPlatformHealthCard(platform, clock),
+    opportunityPreflight,
+  });
+  const res = responseRecorder();
+  await handler({
+    headers: { "x-samedaydesk-internal": TOKEN },
+    query: {
+      platform: " BountyBook ",
+      rewardUsd: "10",
+      hours: "0.25",
+      hourlyCostUsd: "4",
+      selectionProbabilityPct: "80",
+      agentAccess: "agent_allowed",
+      acceptance: "deterministic",
+      settlement: "escrow",
+    },
+  }, res, () => assert.fail("authorized request must not fall through"));
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.headers["cache-control"], "no-store");
+  assert.equal(res.body.decision, "verify_first");
+  assert.equal(res.body.platformEvidence.platformId, "bountybook");
+  assert.equal(res.body.platformEvidence.freshness, "stale");
+  assert.equal(res.body.platformEvidence.observedAt, "2026-08-08T17:42:00.000Z");
+  assert.equal(res.body.platformEvidence.healthCategory, "VERIFIER_BLOCK");
+  assert.equal(res.body.gates.requiredChecks.includes("refresh_platform_health_evidence"), true);
+  assert.equal(res.body.input.rewardUsd, 10);
+  assert.equal(res.body.delivery.upstreamAuthenticated, true);
+  const schema = structuredClone(opportunityPreflightOutputSchema());
+  delete schema.$schema;
+  const validate = new Ajv({ allErrors: true, strict: false }).compile(schema);
+  assert.equal(validate(JSON.parse(JSON.stringify(res.body))), false);
+  const delivered = { ...res.body };
+  delete delivered.delivery;
+  assert.equal(validate(JSON.parse(JSON.stringify(delivered))), true, JSON.stringify(validate.errors));
 });
 
 test("authorized Solana payment-offer delivery bypasses the duplicate Base gate", async () => {

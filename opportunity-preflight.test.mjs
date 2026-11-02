@@ -11,7 +11,7 @@ import {
   opportunityPreflightTrial,
   opportunityPreflightTrialOutputSchema,
 } from "./opportunity-preflight.mjs";
-import { getPlatformHealthCard, PLATFORM_HEALTH_CARDS } from "./platform-health.mjs";
+import { getPlatformHealthCard, PLATFORM_HEALTH_CARDS, projectPlatformHealthCard } from "./platform-health.mjs";
 
 const base = {
   rewardUsd: 10,
@@ -250,4 +250,70 @@ test("1,955 paid success variants keep matching the paid schema", () => {
     assert.equal(Object.hasOwn(encoded, "charged"), false);
     assert.equal(Object.hasOwn(encoded, "trial"), false);
   }
+});
+
+test("non-current platform evidence keeps dated facts and requires reverify", () => {
+  const fresh = getPlatformHealthCard("taskmarket", new Date("2026-08-09T08:00:00.000Z"));
+  const freshResult = opportunityPreflight({
+    ...base,
+    platform: "taskmarket",
+    competition: 80,
+    selectionProbabilityPct: 2,
+  }, { platformCard: fresh });
+  assert.equal(fresh.current_availability.open_inventory_count, 18);
+  assert.equal(freshResult.gates.requiredChecks.includes("refresh_platform_health_evidence"), false);
+  assert.equal(freshResult.platformEvidence.freshness, "fresh");
+  assert.equal(freshResult.platformEvidence.observedAt, fresh.observed_at);
+
+  const stale = getPlatformHealthCard("bountybook", new Date("2026-11-02T07:10:00.000Z"));
+  const staleResult = opportunityPreflight({ ...base, platform: "bountybook" }, { platformCard: stale });
+  assert.equal(stale.current_platform_state.open_inventory_count, 100);
+  assert.equal(stale.current_availability.open_inventory_count, null);
+  assert.equal(staleResult.decision, "verify_first");
+  assert.equal(staleResult.platformEvidence.healthCategory, "VERIFIER_BLOCK");
+  assert.equal(staleResult.platformEvidence.freshness, "stale");
+  assert.equal(staleResult.platformEvidence.observedAt, "2026-08-08T17:42:00.000Z");
+  assert.equal(staleResult.platformEvidence.evidence.length > 0, true);
+  assert.equal(staleResult.gates.requiredChecks.includes("refresh_platform_health_evidence"), true);
+  assert.equal(compileJsonSchema(opportunityPreflightOutputSchema())(JSON.parse(JSON.stringify(staleResult))), true);
+
+  const future = projectPlatformHealthCard({
+    platform_id: "synthetic-lane",
+    platform_name: "Synthetic Lane",
+    health_category: "INSUFFICIENT_EVIDENCE",
+    confidence: "low",
+    observed_at: "2026-12-01T00:00:00.000Z",
+    fresh_until: "2026-12-02T00:00:00.000Z",
+    sample_count: 1,
+    settlement_mechanism: ["UNFUNDED_OR_UNKNOWN"],
+    rights_class: "PUBLIC_READ",
+    evidence: [{
+      fact_class: "PUBLIC_PAGE",
+      summary: "future observation",
+      source_url: "https://example.invalid/synthetic",
+      observed_at: "2026-12-01T00:00:00.000Z",
+      stage_reached: "discoverable",
+      failed_at: null,
+      confidence: "low",
+    }],
+    unknowns: ["current inventory"],
+    current_platform_state: {
+      open_inventory_count: 7,
+      competition_signal: "advertised",
+      custody_status: null,
+      notes: "open does not mean claimable",
+    },
+  }, new Date("2026-11-02T07:10:00.000Z"));
+  assert.equal(future.freshness, "not_current");
+  assert.equal(future.current_availability.open_inventory_count, null);
+  assert.equal(future.current_platform_state.open_inventory_count, 7);
+  const futureResult = opportunityPreflight({ ...base, platform: "synthetic-lane" }, { platformCard: future });
+  assert.equal(futureResult.decision, "verify_first");
+  assert.equal(futureResult.platformEvidence.freshness, "not_current");
+  assert.equal(futureResult.gates.requiredChecks.includes("refresh_platform_health_evidence"), true);
+  assert.equal(compileJsonSchema(opportunityPreflightOutputSchema())(JSON.parse(JSON.stringify(futureResult))), true);
+
+  const renamed = opportunityPreflight(base, { platformCard: { ...fresh, freshness: "unknown" } });
+  assert.equal(renamed.gates.requiredChecks.includes("refresh_platform_health_evidence"), true);
+  assert.equal(renamed.platformEvidence.freshness, "unknown");
 });

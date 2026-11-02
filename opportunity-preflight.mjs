@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { platformHealthEvidenceRequiresRefresh } from "./platform-health.mjs";
+
 const AGENT_ACCESS = new Set(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]);
 const ACCEPTANCE = new Set(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]);
 const SETTLEMENT = new Set(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]);
@@ -164,7 +166,7 @@ export function opportunityPreflight(input, { platformCard = null } = {}) {
 
   const health = platformCard?.health_category;
   if (normalized.platform && !platformCard) requiredChecks.push("platform_evidence_not_available_reverify_primary_source");
-  if (platformCard?.freshness === "stale") requiredChecks.push("refresh_platform_health_evidence");
+  if (platformHealthEvidenceRequiresRefresh(platformCard)) requiredChecks.push("refresh_platform_health_evidence");
   if (["VERIFIER_BLOCK", "CUSTODY_OR_PAYOUT_FROZEN", "EMPTY_OR_ILLIQUID", "IDENTITY_GATED"].includes(health)) {
     requiredChecks.push(`resolve_platform_${health.toLowerCase()}`);
   }

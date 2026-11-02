@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { getPlatformHealthCard, listPlatformHealthCards } from "./platform-health.mjs";
+import { getPlatformHealthCard, listPlatformHealthCards, PLATFORM_HEALTH_CARDS } from "./platform-health.mjs";
 import {
   renderAlertPilot,
   renderMethodology,
@@ -65,5 +67,24 @@ test("robots permits public discovery and names the canonical sitemap", () => {
   assert.equal(
     renderRobotsTxt("https://agents.samedaydesk.com/"),
     "User-agent: *\nAllow: /\n\n# Public evidence and machine-readable product surfaces\nSitemap: https://agents.samedaydesk.com/sitemap.xml\n"
+  );
+});
+
+test("emitted human assets match the pre-projection bytes at matched clocks", () => {
+  const humanAssets = JSON.parse(readFileSync(new URL("./fixtures/platform-health/human-asset-sha256.json", import.meta.url), "utf8"));
+  const sha = (value) => createHash("sha256").update(value).digest("hex");
+  for (const [clock, expected] of Object.entries(humanAssets.clocks)) {
+    const cards = listPlatformHealthCards(new Date(clock));
+    assert.equal(sha(renderPlatformIndex(cards)), expected.index, clock);
+    for (const card of cards) {
+      assert.equal(sha(renderPlatformCard(card)), expected.details[card.platform_id], `${clock} ${card.platform_id}`);
+    }
+  }
+  assert.equal(sha(renderMethodology()), humanAssets.methodology);
+  assert.equal(sha(renderAlertPilot()), humanAssets.alerts);
+  assert.equal(sha(renderRobotsTxt("https://agents.samedaydesk.com/")), humanAssets.robots);
+  assert.equal(
+    sha(renderSitemapXml("https://agents.samedaydesk.com/", PLATFORM_HEALTH_CARDS.map((card) => card.platform_id))),
+    humanAssets.sitemap,
   );
 });

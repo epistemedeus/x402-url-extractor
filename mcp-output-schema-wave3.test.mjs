@@ -13,7 +13,7 @@ import { contractQualifiedSearchMcpOutputSchema } from "./contract-qualified-sea
 import { morphoPreLiquidationReplayMcpOutputSchema } from "./morpho-preliquidation-replay.mjs";
 import { morphoProtectionMcpOutputSchema } from "./morpho-protection.mjs";
 import { paymentOfferPreflightMcpOutputSchema } from "./payment-offer-preflight.mjs";
-import { getPlatformHealthCard } from "./platform-health.mjs";
+import { getPlatformHealthCard, projectPlatformHealthCard } from "./platform-health.mjs";
 import { scanRepoMcpOutputSchema } from "./scan.mjs";
 import { settlementProofMcpOutputSchema } from "./settlement-proof.mjs";
 import {
@@ -240,6 +240,52 @@ test("opportunity-preflight handler outputs pass AJV and MCP Zod", () => {
     assertSchemaMatchesHandler(opportunityPreflightMcpOutputSchema, value);
   }
   assert.equal(evidenced.platformEvidence.evidence[0].factClass.length > 0, true);
+  assert.equal(evidenced.gates.requiredChecks.includes("refresh_platform_health_evidence"), false);
+  assert.equal(card.current_availability.open_inventory_count, 18);
+
+  const staleCard = getPlatformHealthCard("gofrantic", new Date("2026-11-02T07:10:00.000Z"));
+  const stale = opportunityPreflight({ ...opportunityBase, platform: "gofrantic" }, { platformCard: staleCard });
+  assert.equal(staleCard.current_platform_state.open_inventory_count, 0);
+  assert.equal(staleCard.current_availability.open_inventory_count, null);
+  assert.equal(stale.decision, "verify_first");
+  assert.equal(stale.platformEvidence.freshness, "stale");
+  assert.equal(stale.gates.requiredChecks.includes("refresh_platform_health_evidence"), true);
+  assertAjvMatchesHandler(opportunityPreflightOutputSchema(), stale);
+  assertSchemaMatchesHandler(opportunityPreflightMcpOutputSchema, stale);
+
+  const futureCard = projectPlatformHealthCard({
+    platform_id: "synthetic-lane",
+    platform_name: "Synthetic Lane",
+    health_category: "INSUFFICIENT_EVIDENCE",
+    confidence: "none",
+    observed_at: "2030-01-02T00:00:00.000Z",
+    fresh_until: "2030-01-03T00:00:00.000Z",
+    sample_count: 0,
+    settlement_mechanism: ["UNFUNDED_OR_UNKNOWN"],
+    rights_class: "META_ONLY",
+    evidence: [{
+      fact_class: "PUBLIC_API",
+      summary: "future synthetic observation",
+      source_url: "https://example.invalid/future",
+      observed_at: "2030-01-02T00:00:00.000Z",
+      stage_reached: "listed",
+      failed_at: null,
+      confidence: "none",
+    }],
+    unknowns: ["claimability"],
+    current_platform_state: {
+      open_inventory_count: 9,
+      competition_signal: "none",
+      custody_status: null,
+      notes: "not current",
+    },
+  }, new Date("2026-11-02T07:10:00.000Z"));
+  const future = opportunityPreflight({ ...opportunityBase, platform: "synthetic-lane" }, { platformCard: futureCard });
+  assert.equal(futureCard.freshness, "not_current");
+  assert.equal(future.platformEvidence.freshness, "not_current");
+  assert.equal(future.gates.requiredChecks.includes("refresh_platform_health_evidence"), true);
+  assertAjvMatchesHandler(opportunityPreflightOutputSchema(), future);
+  assertSchemaMatchesHandler(opportunityPreflightMcpOutputSchema, future);
 });
 
 test("paid opportunity-preflight POST and MCP schemas reject trial-only fields", () => {
