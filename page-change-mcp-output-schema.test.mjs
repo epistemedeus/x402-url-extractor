@@ -12,7 +12,13 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import { pageChangeRequestExample, pageChangeRequestExamples } from "./page-change-input-contract.mjs";
-import { executePageChangeComparison, ownedPageChangeWorkerCount } from "./page-change-http.mjs";
+import { comparePageBatches } from "./examples/customer-x402/src/page-change/compare.mjs";
+import {
+  PAGE_CHANGE_HTTP_PRODUCT,
+  PAGE_CHANGE_HTTP_SCHEMA,
+  executePageChangeComparison,
+  ownedPageChangeWorkerCount,
+} from "./page-change-http.mjs";
 import {
   PAGE_CHANGE_MCP_PATH,
   PAGE_CHANGE_MCP_TOOL,
@@ -155,6 +161,33 @@ test("success, unchanged, and edge reports match the output schema", { timeout: 
     ["failed-row", await w5("case-0005-failed_fetch"), "incomplete", enabledEnv],
     ["partial", await w5("case-0006-partial_batch"), "changed", enabledEnv],
     ["differing-fields", await w5("case-0007-differing_requested_fields"), "incomplete", enabledEnv],
+    ["duplicate-urls", await w5("case-0003-duplicate_urls"), "unchanged", enabledEnv],
+    ["unknown-freshness", await w5("case-0008-unknown_observation_freshness"), "unchanged", enabledEnv],
+    ["merchant-unchanged", {
+      before: await load("merchant", "unchanged-before.json"),
+      after: await load("merchant", "unchanged-after.json"),
+      fields: ["title", "description"],
+    }, "unchanged", enabledEnv],
+    ["merchant-reordered", {
+      before: await load("merchant", "unchanged-before.json"),
+      after: await load("merchant", "reordered-after.json"),
+      fields: ["title", "description"],
+    }, "reordered", enabledEnv],
+    ["c1-files", {
+      before: await load("c1", "before.json"),
+      after: await load("c1", "after.json"),
+      fields: (await load("c1", "job.json")).fields,
+    }, "changed", enabledEnv],
+    ["customer-job-files", {
+      before: await load("customer-job", "before.json"),
+      after: await load("customer-job", "after.json"),
+      fields: (await load("customer-job", "job.json")).fields,
+    }, "changed", enabledEnv],
+    ["hostile-malformed", {
+      before: await load("merchant", "unchanged-before.json"),
+      after: { mediaType: "application/json", body: await readFile(fx("hostile", "malformed.json"), "utf8") },
+      fields: ["title"],
+    }, "incomparable", enabledEnv],
     ["ambiguous", { before: duplicate, after: structuredClone(duplicate), fields: ["title"] }, "ambiguous", enabledEnv],
     ["incomparable-empty", { before: {}, after: {}, fields: ["title"] }, "incomparable", enabledEnv],
     ["public-example", pageChangeRequestExample(), "changed", enabledEnv],
@@ -223,6 +256,73 @@ test("success, unchanged, and edge reports match the output schema", { timeout: 
   } finally {
     await session.close();
   }
+  assert.equal(ownedPageChangeWorkerCount(), 0);
+});
+
+test("field-diff throw coverage validates through the comparePageBatches limits seam", async () => {
+  // Tool input cannot reach this catch. Admission uses the same maxJsonNodes
+  // and maxJsonDepth as the worker, and the worker receives JSON, so
+  // cloneJson never sees a non-finite number from a tool call. The case
+  // below calls comparePageBatches, the function the worker calls, and sets
+  // options.limits.maxJsonNodes under the selected field graph. That
+  // options.limits object is the existing seam.
+  const before = await load("merchant", "unchanged-before.json");
+  const after = await load("merchant", "unchanged-after.json");
+  before.sources = [before.sources[0]];
+  after.sources = [after.sources[0]];
+  before.sources[0].data = { title: { a: "one", b: "two" } };
+  after.sources[0].data = { title: { a: "one", b: "three" } };
+  const input = { before, after, fields: ["title"] };
+
+  const ordinary = await executePageChangeComparison(input, enabledEnv, { timeoutMs: 8000 });
+  assert.equal(ordinary.ok, true);
+  assert.equal(ordinary.report.coverageUnknown.some((item) => item.field === null), false);
+
+  const tight = await listen({ ...enabledEnv, PAGE_CHANGE_HTTP_MAX_JSON_NODES: "2" });
+  try {
+    const refused = await fetch(`${tight.base}${PAGE_CHANGE_MCP_PATH}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: PAGE_CHANGE_MCP_TOOL, arguments: input },
+      }),
+    });
+    const refusedBody = await refused.json();
+    assert.equal(refused.status, 400);
+    assert.equal(refusedBody.code, "json_node_limit");
+    assert.equal(refusedBody.structuredContent, undefined);
+    reject(refusedBody, "tight node admission");
+  } finally {
+    await tight.close();
+  }
+
+  const report = await comparePageBatches(
+    { mediaType: "application/json", body: before, observedAt: null },
+    { mediaType: "application/json", body: after, observedAt: null },
+    {
+      fields: ["title"],
+      clock: null,
+      allowFreshClaim: false,
+      limits: { maxJsonNodes: 2 },
+    },
+  );
+  const diffCoverage = report.coverageUnknown.filter((item) => item.field === null);
+  assert.deepEqual(diffCoverage, [{
+    sourceKey: "https://rfq.example/widgets",
+    field: null,
+    reason: "node_limit",
+  }]);
+  const output = {
+    ok: true,
+    product: PAGE_CHANGE_HTTP_PRODUCT,
+    schemaVersion: PAGE_CHANGE_HTTP_SCHEMA,
+    charged: false,
+    report,
+  };
+  accept(output, "diff throw seam");
   assert.equal(ownedPageChangeWorkerCount(), 0);
 });
 
