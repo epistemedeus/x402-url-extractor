@@ -6,6 +6,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { pageChangeMcpDescription, pageChangeMcpInputSchema } from "./page-change-input-contract.mjs";
+import { pageChangeMcpOutputSchema } from "./page-change-mcp-output-schema.mjs";
 import {
   PAGE_CHANGE_HTTP_PRODUCT,
   PAGE_CHANGE_HTTP_SCHEMA,
@@ -120,9 +121,19 @@ function boundedToolError(error) {
  * @param {import("express").Express} app
  * @param {{ env?: NodeJS.ProcessEnv, observe?: Function | null }} [options]
  */
+export function pageChangeMcpToolConfig() {
+  return {
+    title: "Compare page observations",
+    description: pageChangeMcpDescription(),
+    inputSchema: pageChangeMcpInputSchema(),
+    outputSchema: pageChangeMcpOutputSchema,
+    annotations: PAGE_CHANGE_MCP_ANNOTATIONS,
+    _meta: { samedaydesk: { charged: false, paymentRequired: false } },
+  };
+}
+
 export function mountPageChangeMcp(app, { env = process.env, observe = null } = {}) {
-  const inputSchema = pageChangeMcpInputSchema();
-  const description = pageChangeMcpDescription();
+  const toolConfig = pageChangeMcpToolConfig();
   const limits = pageChangeHttpLimits(env);
 
   app.post(PAGE_CHANGE_MCP_PATH, async (req, res) => {
@@ -216,13 +227,7 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
       }, {
         instructions: PAGE_CHANGE_MCP_INSTRUCTIONS,
       });
-      server.registerTool(PAGE_CHANGE_MCP_TOOL, {
-        title: "Compare page observations",
-        description,
-        inputSchema,
-        annotations: PAGE_CHANGE_MCP_ANNOTATIONS,
-        _meta: { samedaydesk: { charged: false, paymentRequired: false } },
-      }, async () => {
+      server.registerTool(PAGE_CHANGE_MCP_TOOL, toolConfig, async () => {
         try {
           const output = await executePageChangeComparison(suppliedArguments, env, {
             abortSignal: exchange.abort.signal,
