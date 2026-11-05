@@ -305,7 +305,20 @@ test("configured MPP exposes matching /wallet-enrich schemas on both OpenAPI pro
   assert.equal(operation["x-payment-info"].protocols[0].x402.network, NETWORK);
   assert.equal(operation["x-payment-info"].protocols[1].mpp.network, NETWORK);
   assert.deepEqual(action.paymentProtocols, ["x402", "mpp"]);
-  assert.deepEqual(mppOperation["x-payment-info"].protocols.map((entry) => Object.keys(entry)[0]), ["mpp"]);
+  // mpp-openapi advertises MPP offers, not the agentCash protocols array.
+  assert.equal(mppOperation["x-payment-info"].protocols, undefined);
+  assert.deepEqual(
+    mppOperation["x-payment-info"].offers.map((offer) => ({
+      amount: offer.amount,
+      intent: offer.intent,
+      method: offer.method,
+      network: offer.network,
+    })),
+    [
+      { amount: PRICE_ATOMIC, intent: "charge", method: "evm", network: NETWORK },
+      { amount: PRICE_ATOMIC, intent: "exact", method: "x402", network: NETWORK },
+    ],
+  );
 
   for (const declaredOperation of [operation, mppOperation]) {
     const failure = declaredOperation.responses["502"];
