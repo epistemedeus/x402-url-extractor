@@ -218,7 +218,8 @@ import {
   listDeclaredAgentDiscoverySources,
 } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
-import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, trackReplaySettlementAttempts, registerReplayHttpLifecycle } from "./idempotency-replay.mjs";
+import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts, registerReplayHttpLifecycle } from "./idempotency-replay.mjs";
+import { assertSameMcpProjection, describeMcpCatalog, projectMcpInventory } from "./mcp-catalog-projection.mjs";
 import { registerIndexingPayloadContinuity } from "./indexing-payload-continuity.mjs";
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
@@ -1589,6 +1590,44 @@ let retainDeliveredReceipt = null;
 // A browser or indexer sometimes probes MCP with GET before opening the
 // streamable-HTTP POST transport. Return a free machine descriptor instead of
 // a 405; actual tool discovery and calls remain on POST /mcp.
+// toolCount is the registered tools/list length. paidToolCount stays the
+// priced action count. Neither field is advertised until the tool list exists,
+// and a failed mount clears it.
+const mcpCatalogPublication = { state: "pending", projection: null };
+
+function mcpFreeToolDetail(name) {
+  if (name === "page_change") {
+    return { name, method: "POST", route: PAGE_CHANGE_HTTP_PATH, charged: false };
+  }
+  if (name === "careers_board_cold") {
+    return { name, method: "GET", route: CAREERS_BOARD_COLD_PATH, charged: false };
+  }
+  if (name === "report_caller_result") {
+    return { name, charged: false, channel: "mcp", optional: true };
+  }
+  if (name === TRIAL_READ_MCP_TOOL) {
+    return {
+      name,
+      charged: false,
+      paymentRequired: false,
+      consumesSharedTrialAllowance: true,
+      discovery: extractionTrialDiscoveryUrl,
+    };
+  }
+  if (name === MCP_RECOVERY_TOOL) {
+    return { name, charged: false, paymentRequired: false, channel: "mcp" };
+  }
+  return { name, charged: false };
+}
+
+function currentMcpCatalogDocument() {
+  return describeMcpCatalog({
+    state: mcpCatalogPublication.state,
+    projection: mcpCatalogPublication.projection,
+    detailFor: mcpFreeToolDetail,
+  });
+}
+
 app.get("/mcp", (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.json({
@@ -1597,34 +1636,7 @@ app.get("/mcp", (_req, res) => {
     transport: "streamable-http",
     endpoint: `${PUBLIC_URL}/mcp`,
     method: "POST",
-    toolCount: RESOURCES.length,
-    freeTools: [
-      ...(isPageChangeHttpEnabled() ? [{
-        name: "page_change",
-        method: "POST",
-        route: PAGE_CHANGE_HTTP_PATH,
-        charged: false,
-      }] : []),
-      {
-        name: "careers_board_cold",
-        method: "GET",
-        route: CAREERS_BOARD_COLD_PATH,
-        charged: false,
-      },
-      {
-        name: "report_caller_result",
-        charged: false,
-        channel: "mcp",
-        optional: true,
-      },
-      {
-        name: TRIAL_READ_MCP_TOOL,
-        charged: false,
-        paymentRequired: false,
-        consumesSharedTrialAllowance: true,
-        discovery: extractionTrialDiscoveryUrl,
-      },
-    ],
+    ...currentMcpCatalogDocument(),
     callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
     jsonRpc: {
       maxBytes: MCP_JSON_RPC_MAX_BYTES,
@@ -4669,6 +4681,12 @@ import("./mcp-server.mjs")
         const bound = bindDeclaredHttpRoute(tool, action);
         return { ...bound, operationIdentity: operationIdentityFromAction(action) };
       });
+    const projected = projectMcpInventory(mcpTools, { nativeRecovery: true });
+    if (projected.paidToolCount !== RESOURCES.length) {
+      throw new Error(`mcp_registered_inventory_drift:paid:${projected.paidToolCount}:${RESOURCES.length}`);
+    }
+    mcpCatalogPublication.projection = projected;
+    mcpCatalogPublication.state = "pending";
     if (routeBindingInspectOnly) {
       const report = buildRouteBindingReport({
         app,
@@ -4706,10 +4724,14 @@ import("./mcp-server.mjs")
     });
   })
   .then((r) => {
+    assertSameMcpProjection(mcpCatalogPublication.projection, r.projection);
+    mcpCatalogPublication.state = "ready";
     mcpMountResult = r;
     console.log(`  MCP server:  POST /mcp (${r.toolCount} paid tools)`);
   })
   .catch((e) => {
+    mcpCatalogPublication.projection = null;
+    mcpCatalogPublication.state = "failed";
     console.error(`  /mcp mount FAILED (HTTP routes unaffected): ${e.message}`);
     if (routeBindingInspectOnly) process.exit(1);
   });

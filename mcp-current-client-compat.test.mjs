@@ -19,6 +19,7 @@ import { StreamableHTTPClientTransport as CurrentTransport } from "@modelcontext
 import { pageChangeRequestExample } from "./page-change-input-contract.mjs";
 import { ownedPageChangeWorkerCount } from "./page-change-http.mjs";
 import { PAGE_CHANGE_MCP_PATH, PAGE_CHANGE_MCP_TOOL } from "./page-change-mcp.mjs";
+import { compareMcpCatalog } from "./mcp-catalog-projection.mjs";
 import { SERVICE_VERSION } from "./service-version.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
@@ -343,6 +344,13 @@ test("mounted merchant accepts official legacy and current clients without settl
   assert.equal(pinnedPaid.server().name, "x402-data-gateway");
   const paidTools = await pinnedPaid.client.listTools();
   assert.equal(paidTools.tools.some((tool) => tool.name === PAGE_CHANGE_MCP_TOOL), false);
+  const paidDescriptor = await fetch(paidUrl).then((response) => response.json());
+  const catalogAgreement = compareMcpCatalog(paidDescriptor, paidTools.tools);
+  assert.equal(catalogAgreement.ok, true, JSON.stringify(catalogAgreement.differences));
+  assert.equal(paidDescriptor.tools.some((tool) => tool.name === "page_change" && tool.charged === false), true);
+  assert.equal(paidDescriptor.paidToolCount, paidDescriptor.tools.filter((tool) => tool.charged).length);
+  const freeProbe = await fetch(freeUrl);
+  assert.equal(freeProbe.status, 405);
   const cold = paidTools.tools.find((tool) => tool.name === "careers_board_cold");
   assert.equal(cold._meta.samedaydesk.charged, false);
   const enrich = paidTools.tools.find((tool) => tool.name === "enrich");
