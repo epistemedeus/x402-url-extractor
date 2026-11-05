@@ -1,0 +1,31 @@
+{
+  "schema": "samedaydesk.caller-result-client.v1",
+  "name": "samedaydesk-caller-result",
+  "version": "0.1.1",
+  "license": "MIT",
+  "archive": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz",
+  "sha256": "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3",
+  "bytes": 32421,
+  "source": "https://github.com/epistemedeus/x402-url-extractor/tree/72ef93bd0350b8bcd67a6ec0f048515d0533f199/caller-result-client",
+  "nodeMinimum": "22.12.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@x402/mcp": "2.16.0"
+  },
+  "install": [
+    "mkdir samedaydesk-caller-result",
+    "tar -xzf samedaydesk-caller-result-0.1.1.tar.gz -C samedaydesk-caller-result",
+    "cd samedaydesk-caller-result",
+    "npm ci --ignore-scripts"
+  ],
+  "modules": [
+    "samedaydesk-caller-result/http",
+    "samedaydesk-caller-result/mcp",
+    "samedaydesk-caller-result/contract",
+    "samedaydesk-caller-result/recovery"
+  ],
+  "payment": "Use your existing configured payment client and explicit payment authorization. Reporting is optional and free.",
+  "result": "The 0.1.0 archive is feedback only. Choose useful or not_useful from your task outcome. accepted records a statement; bound confirms its settlement association.",
+  "provenance": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/provenance.json",
+  "npmPublished": false
+}

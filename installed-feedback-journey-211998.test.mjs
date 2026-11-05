@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -13,8 +13,21 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { FIXTURE_ADDRESS } from "./experiments/morpho-useful-delivery-1005/fixture.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const installedRoot = path.resolve(process.env.SAMEDAYDESK_INSTALLED_SKILL_ROOT
-  || "/tmp/hermes-user-211994/.hermes/skills/samedaydesk-task-result");
+const fixtureSkillRoot = path.join(root, "fixtures/installed-skills/samedaydesk-task-result");
+function resolveInstalledSkillRoot() {
+  if (process.env.SAMEDAYDESK_INSTALLED_SKILL_ROOT) {
+    return path.resolve(process.env.SAMEDAYDESK_INSTALLED_SKILL_ROOT);
+  }
+  if (existsSync(path.join(fixtureSkillRoot, "scripts/task-result.mjs"))) {
+    return fixtureSkillRoot;
+  }
+  if (process.env.HERMES_HOME) {
+    return path.join(process.env.HERMES_HOME, "skills/samedaydesk-task-result");
+  }
+  // Legacy private path kept last so normal agents hit the in-repo fixture first.
+  return "/tmp/hermes-user-211994/.hermes/skills/samedaydesk-task-result";
+}
+const installedRoot = resolveInstalledSkillRoot();
 const script = path.join(installedRoot, "scripts/task-result.mjs");
 const skipJourney = existsSync(script) ? false : `installed skill missing at ${script}`;
 const PRODUCT = "0693da2a609df703f892eb4322d37910c3743b69";
@@ -199,15 +212,59 @@ function toolJson(result) {
   try { return JSON.parse(text); } catch { return null; }
 }
 
+const downloadFixtureRoot = path.join(root, "fixtures/installed-skills/caller-result-0.1.1-downloads");
+const downloadFixtureReady = existsSync(path.join(
+  downloadFixtureRoot,
+  "downloads/samedaydesk-caller-result/0.1.1/descriptor.json",
+));
+
+async function serveDownloadFixture() {
+  const server = createServer((req, res) => {
+    const url = new URL(req.url || "/", "http://127.0.0.1");
+    const rel = url.pathname.replace(/^\/+/, "");
+    const filePath = path.join(downloadFixtureRoot, rel);
+    if (!filePath.startsWith(downloadFixtureRoot) || !existsSync(filePath)) {
+      res.writeHead(404);
+      res.end("missing");
+      return;
+    }
+    const bytes = readFileSync(filePath);
+    res.writeHead(200, {
+      "content-type": "application/octet-stream",
+      "content-length": bytes.length,
+      "cache-control": "no-store",
+    });
+    res.end(bytes);
+  });
+  const port = await listen(server);
+  return {
+    server,
+    publicRoot: `http://127.0.0.1:${port}/`,
+    async close() {
+      await new Promise((resolve) => server.close(resolve));
+    },
+  };
+}
+
 let acquired;
 function acquireCaller() {
   acquired ??= (async () => {
     const work = path.join(await mkdtemp(path.join(tmpdir(), "installed-feedback-211998-")), "work");
-    const result = await runScript(["acquire", "--work", work, "--install", "yes"], 180_000);
-    if (result.code !== 0 || result.body?.outcome !== "acquired") {
-      throw new Error(`acquire failed ${result.code}`);
+    const args = ["acquire", "--work", work, "--install", "yes"];
+    let mount = null;
+    if (downloadFixtureReady) {
+      mount = await serveDownloadFixture();
+      args.push("--public-root", mount.publicRoot);
     }
-    return { caller: result.body.callerDir, body: result.body };
+    try {
+      const result = await runScript(args, 180_000);
+      if (result.code !== 0 || result.body?.outcome !== "acquired") {
+        throw new Error(`acquire failed ${result.code} ${result.stderr?.slice(0, 400) || result.stdout?.slice(0, 400) || ""}`);
+      }
+      return { caller: result.body.callerDir, body: result.body };
+    } finally {
+      if (mount) await mount.close();
+    }
   })();
   return acquired;
 }

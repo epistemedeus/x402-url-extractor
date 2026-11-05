@@ -1,0 +1,6 @@
+Sealed caller-result 0.1.1 download pin for offline local_receiving.
+
+Exact bytes fetched from https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/
+and verified against fixtures/installed-skills/samedaydesk-task-result PIN.files hashes.
+Used only as a loopback public-root for installed-feedback-journey acquire; not a
+second registry publication and not a live host substitute for production.

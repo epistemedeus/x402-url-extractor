@@ -48,11 +48,13 @@ allow_private_urls or --force.
 
 hermes skills install epistemedeus/x402-url-extractor/plugins/samedaydesk-x402/skills/web-extract
 hermes skills install epistemedeus/x402-url-extractor/plugins/samedaydesk-x402/skills/page-change
+hermes skills install epistemedeus/x402-url-extractor/plugins/samedaydesk-x402/skills/explicit-record
 
 Or URL:
 
 hermes skills install https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/master/plugins/samedaydesk-x402/skills/web-extract/SKILL.md
 hermes skills install https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/master/plugins/samedaydesk-x402/skills/page-change/SKILL.md
+hermes skills install https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/master/plugins/samedaydesk-x402/skills/explicit-record/SKILL.md
 
 Hub install copies into $HERMES_HOME/skills (default ~/.hermes/skills). Set a
 fresh throwaway HERMES_HOME before testing these commands. Do not run it against
@@ -68,3 +70,22 @@ from these skills. Installation is not demand.
 
 To stop using an isolated profile: unset HERMES_HOME. The temporary
 directory is retained. No recursive cleanup command is provided.
+
+5. Installed caller-result skill for feedback journeys (exact byte fixture):
+
+The merchant checkout now ships the sealed skill under
+fixtures/installed-skills/samedaydesk-task-result/ (SOURCE-NOTICE.txt names
+the public skills-repo pin). Point the journey at it without a private
+/tmp hermes profile:
+
+export SAMEDAYDESK_INSTALLED_SKILL_ROOT="$PWD/fixtures/installed-skills/samedaydesk-task-result"
+
+Or copy into an isolated Hermes profile:
+
+export HERMES_HOME="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-hermes.XXXXXX")"
+mkdir -p "$HERMES_HOME/skills"
+cp -R fixtures/installed-skills/samedaydesk-task-result "$HERMES_HOME/skills/"
+
+Do not mutate ~/.hermes from this package. The fixture is not a hub install
+and does not call a model.
+
