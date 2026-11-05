@@ -8,6 +8,12 @@
 # full writer-history for the admitted tip/branch, plus explicit off-ancestry
 # object fetches. Do not use deepen=N (can follow origin HEAD / default line).
 # Verify exact relevant ancestry and blobs before suites.
+#
+# loopback-profile.json: public-acquisition/engine.test.mjs rewrites it as a
+# generated evidence artifact (not claim/payment path). Under default parallel
+# npm test that dirty tree is concurrent generated state, not a product bug.
+# Run with --test-concurrency=2 (accepted 7475eaad consumer) and restore HEAD
+# bytes after the suite.
 set -u
 REPO="${1:-/tmp/n4-team/dm/repo}"
 OUT="${2:-/tmp/n4-team/dm}"
@@ -123,6 +129,16 @@ FULL=$?
 echo "cmd=npm test -- --test-concurrency=2 exit=$FULL" | tee -a "$OUT/batch.meta"
 rg -n '^# (tests|pass|fail|cancelled|skipped|todo|duration_ms)' "$OUT/full.log" | tee -a "$OUT/batch.meta" || true
 tail -n 40 "$OUT/full.log" | tee -a "$OUT/batch.meta"
+
+# Generated evidence artifact from engine.test.mjs; restore committed bytes.
+if git diff --quiet -- public-acquisition/loopback-profile.json 2>/dev/null; then
+  echo "loopback_profile=clean" | tee -a "$OUT/batch.meta"
+else
+  echo "loopback_profile=dirty_after_suite (generated evidence; restoring HEAD)" | tee -a "$OUT/batch.meta"
+  git restore --source=HEAD -- public-acquisition/loopback-profile.json
+  echo "loopback_profile_restore_exit=$?" | tee -a "$OUT/batch.meta"
+fi
+
 echo "finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)" | tee -a "$OUT/batch.meta"
 echo "A2_EXIT=$A2 B2_EXIT=$B2 FULL_EXIT=$FULL" | tee -a "$OUT/batch.meta"
 if [[ $A2 -ne 0 || $B2 -ne 0 || $FULL -ne 0 ]]; then exit 1; fi
