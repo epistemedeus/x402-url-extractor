@@ -3,9 +3,11 @@
 # Locator: scripts/dm-t5-merchant-batch.sh on codex/n5-merchant-baseline-reliability-20261105
 #
 # Historical pins: page-change-http.mounted and caller-result-client.distribution
-# call git show / merge-base --is-ancestor on identified revisions. A depth-1
-# checkout is a normal-environment miss for those tests (git exit 128). This
-# script deepens history and fetches the off-ancestry caller pin before suites.
+# require identified revisions (git show / merge-base --is-ancestor). A depth-1
+# checkout is a normal-environment miss (git exit 128). Repair with ordinary
+# full writer-history for the admitted tip/branch, plus explicit off-ancestry
+# object fetches. Do not use deepen=N (can follow origin HEAD / default line).
+# Verify exact relevant ancestry and blobs before suites.
 set -u
 REPO="${1:-/tmp/n4-team/dm/repo}"
 OUT="${2:-/tmp/n4-team/dm}"
@@ -14,10 +16,15 @@ cd "$REPO" || exit 90
 HEAD=$(git rev-parse HEAD)
 TREE=$(git rev-parse 'HEAD^{tree}')
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo DETACHED)
+WRITER_REF="$BRANCH"
+if [[ "$WRITER_REF" == "HEAD" || "$WRITER_REF" == "DETACHED" || -z "$WRITER_REF" ]]; then
+  WRITER_REF=codex/n5-merchant-baseline-reliability-20261105
+fi
 {
   echo "DM_T5_BATCH"
   echo "cwd=$PWD"
   echo "branch=$BRANCH"
+  echo "writer_ref=$WRITER_REF"
   echo "head=$HEAD"
   echo "tree=$TREE"
   echo "started=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -25,32 +32,45 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo DETACHED)
 
 SHALLOW=$(git rev-parse --is-shallow-repository 2>/dev/null || echo unknown)
 echo "shallow_before=$SHALLOW" | tee -a "$OUT/batch.meta"
-# Deepen enough for e0daf4d9 (~372) and sealed-archive pins (~157).
 if [[ "$SHALLOW" == "true" ]]; then
-  git fetch --deepen=400 origin HEAD >/dev/null 2>"$OUT/git-deepen.err"
-  echo "deepen_exit=$?" | tee -a "$OUT/batch.meta"
-  if [[ -s "$OUT/git-deepen.err" ]]; then
-    tail -n 5 "$OUT/git-deepen.err" | tee -a "$OUT/batch.meta"
-  fi
+  # Full writer-history for this admitted tip (not deepen against origin HEAD).
+  git fetch --unshallow origin "$HEAD" >"$OUT/git-unshallow.log" 2>&1 \
+    || git fetch --unshallow origin "refs/heads/${WRITER_REF}:refs/remotes/origin/${WRITER_REF}" >"$OUT/git-unshallow.log" 2>&1 \
+    || git fetch origin "$WRITER_REF" >"$OUT/git-unshallow.log" 2>&1
+  echo "writer_history_fetch_exit=$?" | tee -a "$OUT/batch.meta"
+  tail -n 8 "$OUT/git-unshallow.log" | tee -a "$OUT/batch.meta" || true
 fi
-# 6ea1294b is required by caller recovery and is not an ancestor of this tip.
-OFF_PIN=6ea1294b8693f2c655d239f0870800e93bfff040
-if ! git cat-file -e "${OFF_PIN}^{commit}" 2>/dev/null; then
-  git fetch --depth=1 origin "$OFF_PIN" >/dev/null 2>"$OUT/git-fetch-offpin.err"
-  echo "offpin_fetch_exit=$?" | tee -a "$OUT/batch.meta"
-else
-  echo "offpin_fetch_exit=already_present" | tee -a "$OUT/batch.meta"
-fi
-REQUIRED_PINS=(
-  94e45050e9d992ca2eb613cfb3850676217b9fb1
+
+# Off-ancestry pin required by caller recovery (not an ancestor of this tip).
+OFF_PINS=(
   6ea1294b8693f2c655d239f0870800e93bfff040
+)
+for pin in "${OFF_PINS[@]}"; do
+  if git cat-file -e "${pin}^{commit}" 2>/dev/null; then
+    echo "offpin_present=$pin" | tee -a "$OUT/batch.meta"
+  else
+    git fetch origin "$pin" >"$OUT/git-fetch-${pin}.log" 2>&1
+    echo "offpin_fetch_exit=$pin:$?" | tee -a "$OUT/batch.meta"
+  fi
+done
+
+# Must be ancestors of HEAD (mounted / sealed-archive bases).
+ANCESTOR_PINS=(
+  94e45050e9d992ca2eb613cfb3850676217b9fb1
   a6978f989a3bc754421884a3d260be834a84c73a
   d9e5cde379cf7798f473d0cc6bf2139c9ec857d9
   7138c170c7c5d06dae0568466b7a93b77439bbda
   ab5bf51b60c7fa6e2d3587fcac23b26f00872b65
+  e0daf4d9a9e775a8180ae0aa9bee351c10b850c8
 )
+# Exact blobs exercised by the historical suites.
+BLOB_SPECS=(
+  94e45050e9d992ca2eb613cfb3850676217b9fb1:caller-result-client/export/public/manifest.json
+  6ea1294b8693f2c655d239f0870800e93bfff040:public-acquisition/manifest.json
+)
+
 PIN_MISS=0
-for pin in "${REQUIRED_PINS[@]}"; do
+for pin in "${ANCESTOR_PINS[@]}" "${OFF_PINS[@]}"; do
   if git cat-file -e "${pin}^{commit}" 2>/dev/null; then
     echo "pin_ok=$pin" | tee -a "$OUT/batch.meta"
   else
@@ -58,8 +78,24 @@ for pin in "${REQUIRED_PINS[@]}"; do
     PIN_MISS=1
   fi
 done
+for pin in "${ANCESTOR_PINS[@]}"; do
+  if git merge-base --is-ancestor "$pin" HEAD 2>/dev/null; then
+    echo "ancestor_ok=$pin" | tee -a "$OUT/batch.meta"
+  else
+    echo "ancestor_miss=$pin" | tee -a "$OUT/batch.meta"
+    PIN_MISS=1
+  fi
+done
+for spec in "${BLOB_SPECS[@]}"; do
+  if git cat-file -e "$spec" 2>/dev/null; then
+    echo "blob_ok=$spec" | tee -a "$OUT/batch.meta"
+  else
+    echo "blob_miss=$spec" | tee -a "$OUT/batch.meta"
+    PIN_MISS=1
+  fi
+done
 if [[ $PIN_MISS -ne 0 ]]; then
-  echo "history_preflight=fail (depth-1 or incomplete history; deepen/fetch required pins)" | tee -a "$OUT/batch.meta"
+  echo "history_preflight=fail (full writer-history + off-ancestry pins required)" | tee -a "$OUT/batch.meta"
   echo "finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)" | tee -a "$OUT/batch.meta"
   exit 91
 fi
@@ -81,14 +117,13 @@ B2=$?
 echo "cmd=npm run python:consumer exit=$B2" | tee -a "$OUT/batch.meta"
 tail -n 8 "$OUT/b2.log" | tee -a "$OUT/batch.meta"
 
-npm test >"$OUT/full.log" 2>&1
+# Match the earlier accepted full-suite consumer (concurrency=2).
+npm test -- --test-concurrency=2 >"$OUT/full.log" 2>&1
 FULL=$?
-echo "cmd=npm test exit=$FULL" | tee -a "$OUT/batch.meta"
-# node --test summary lines
+echo "cmd=npm test -- --test-concurrency=2 exit=$FULL" | tee -a "$OUT/batch.meta"
 rg -n '^# (tests|pass|fail|cancelled|skipped|todo|duration_ms)' "$OUT/full.log" | tee -a "$OUT/batch.meta" || true
 tail -n 40 "$OUT/full.log" | tee -a "$OUT/batch.meta"
 echo "finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)" | tee -a "$OUT/batch.meta"
 echo "A2_EXIT=$A2 B2_EXIT=$B2 FULL_EXIT=$FULL" | tee -a "$OUT/batch.meta"
-# non-zero if any step failed
 if [[ $A2 -ne 0 || $B2 -ne 0 || $FULL -ne 0 ]]; then exit 1; fi
 exit 0
