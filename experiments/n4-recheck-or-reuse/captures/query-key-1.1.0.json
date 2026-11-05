@@ -1,0 +1,52 @@
+{
+  "schema": "neomorphic.query-key-1.1.0.entry.v1",
+  "sourceCommit": "bb78211863af9bfb9d18e71ecc32af4ecb0a0902",
+  "role": "first-party-seed",
+  "humanPage": false,
+  "hostedAcquisitionVerified": false,
+  "publicRouteClaimed": false,
+  "successorSource": null,
+  "sourceRepository": "epistemedeus/neomorphic-io",
+  "sourcePath": "tools/query-key-1.1.0",
+  "license": "CC0-1.0",
+  "codec": "urllib.parse.quote",
+  "version": "1.1.0",
+  "archive": {
+    "path": "/downloads/query-key/1.1.0/query-key.tar.gz",
+    "sha256": "51b1b65766b68550b644e25f3d0653f9e09b8988f7ab36f0e649dce8f60405aa",
+    "bytes": 14566,
+    "files": 12,
+    "contentType": "application/gzip"
+  },
+  "corpus": {
+    "path": "/downloads/query-key/1.1.0/corpus.json",
+    "sha256": "060c8aa08ca58c665f1b610d4cccbb9800a53f16f242d2f22bed496dd6c201d6",
+    "bytes": 5219,
+    "schema": "cc0.query-key-cases.v4"
+  },
+  "runner": {
+    "path": "/downloads/query-key/1.1.0/execute.py",
+    "sha256": "824f8c47b727c302ac95b80cc2ad523ff46a637309ac41abb733374bcc0e5031",
+    "bytes": 40388
+  },
+  "upstream": {
+    "repository": "https://github.com/dhyabi2/x402-nano-exact",
+    "license": "MIT",
+    "before": "f0b3e89463d4b291cab95830151c4c1c05ff04b6",
+    "middle": "164d9e30abf5cd8aa3c2eaae617c71a115b24fbe",
+    "current": "9cdf0e470a232c2a9779c88f080a2aeb1e76a664",
+    "copied": false
+  },
+  "authorReport": {
+    "url": "https://github.com/pursekeeper/x402-nano-exact/pull/4#issuecomment-6623032000",
+    "passed": 133,
+    "skipped": 2,
+    "independentReplay": false
+  },
+  "executionRequiresCallerCheckouts": true,
+  "walletCalls": 0,
+  "facilitatorCalls": 0,
+  "liveSettlement": false,
+  "replaySettlementFixed": false,
+  "nextAction": "Verify sha256 51b1b65766b68550b644e25f3d0653f9e09b8988f7ab36f0e649dce8f60405aa of /downloads/query-key/1.1.0/query-key.tar.gz and extract it. Check out upstream commit f0b3e89463d4b291cab95830151c4c1c05ff04b6, commit 164d9e30abf5cd8aa3c2eaae617c71a115b24fbe, and commit 9cdf0e470a232c2a9779c88f080a2aeb1e76a664 into local directories. From the query-key-1.1.0 directory, the archive command is node apply.mjs cases --artifact corpus.json and the supplied-checkout command is node apply.mjs cases --artifact corpus.json --before /path/to/before --middle /path/to/middle --after /path/to/after and the loopback command is node apply.mjs mount --before /path/to/before --middle /path/to/middle --after /path/to/after and the caller command is node apply.mjs apply --artifact corpus.json --input examples/next-consumer.json and the caller checkout command is node apply.mjs apply --artifact corpus.json --input examples/next-consumer.json --before /path/to/before --middle /path/to/middle --after /path/to/after and the caller loopback command is node apply.mjs apply --artifact corpus.json --input examples/next-consumer.json --before /path/to/before --middle /path/to/middle --after /path/to/after --mount"
+}
