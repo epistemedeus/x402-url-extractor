@@ -9,7 +9,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const skillRoot = path.join(root, "samedaydesk-task-result");
 const INSTALLED_FILES = {
   "SKILL.md": { bytes: 3696, sha256: "83fd65e53ffd93c45e7915afa0fd7e271ce226cb2a63e6d17e32b644bad66254" },
-  "scripts/task-result.mjs": { bytes: 33653, sha256: "d1bc056d8a08d912c11803f69c5d85d82348801ed28494bc870d7c4c72b714c3" },
+  "scripts/task-result.mjs": { bytes: 34092, sha256: "8ad3a164db08a33233340b9db381da17047378be9e3965cdd90b7065ad95a4b6" },
   "references/caller-pin.json": { bytes: 3642, sha256: "7e6adbccf8436c90e23e3ee2338cbac093c33968628e5c5cae5c7d697abb13b7" },
   "references/LICENSE.txt": { bytes: 1071, sha256: "044d7291c37a2ead106ea4b4c26f713e63b7834637ed634da640f74e8cbe4625" },
 };

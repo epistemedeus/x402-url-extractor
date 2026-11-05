@@ -3,7 +3,7 @@
 // existing retain, recovery, and optional feedback contracts on caller-owned files.
 import { createHash } from "node:crypto";
 import { constants } from "node:fs";
-import { closeSync, mkdirSync, openSync, readFileSync, writeSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, writeSync } from "node:fs";
 import { mkdir, open, readFile, realpath, rm } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import path from "node:path";
@@ -402,12 +402,18 @@ async function acquire(flags) {
     if (flags.install === "yes") {
       const npmHome = path.join(real, "npm-home");
       await mkdir(npmHome, { mode: 0o700 });
-      const npm = path.join(path.dirname(process.execPath), "npm");
+      // Prefer npm beside this node (Bot toolchain). Fall back to ambient PATH
+      // when sibling is absent (Cursor VM /exec-daemon/node has no sibling npm).
+      const nodeDir = path.dirname(process.execPath);
+      const siblingNpm = path.join(nodeDir, "npm");
+      const npm = existsSync(siblingNpm) ? siblingNpm : "npm";
+      const ambientPath = typeof process.env.PATH === "string" ? process.env.PATH : "";
+      const installPath = ambientPath ? `${nodeDir}${path.delimiter}${ambientPath}` : nodeDir;
       const installed = await runBounded(npm, ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
         cwd: caller,
         timeoutMs: NPM_TIMEOUT_MS,
         env: {
-          PATH: path.dirname(process.execPath),
+          PATH: installPath,
           HOME: npmHome,
           CI: "true",
           npm_config_registry: PIN.npmRegistry,
