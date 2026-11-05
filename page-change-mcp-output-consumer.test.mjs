@@ -1,7 +1,7 @@
 // Ordinary consumer of compare_page_observations outputSchema.
-// SDK Client 1.30 validates structuredContent after listTools caches the
-// tools/list schema. If a future client returns tampered structuredContent,
-// this test records that and rejects it with Ajv instead.
+// @modelcontextprotocol/sdk 1.30.0 Client validates structuredContent
+// against the outputSchema cached by listTools. Tampered structuredContent
+// is rejected by that client.
 import assert from "node:assert/strict";
 import { createServer as createHttpServer } from "node:http";
 import { readFileSync } from "node:fs";
@@ -142,25 +142,22 @@ test("SDK client accepts a mounted result and rejects tampered structuredContent
     tamperedHttp = await listen(tamperedApp(tampered));
     tamperedClient = await connect(tamperedHttp.base);
     await tamperedClient.listTools();
-    let rejected = false;
-    let returned = null;
+    let rejected = null;
     try {
-      returned = await tamperedClient.callTool({
+      await tamperedClient.callTool({
         name: PAGE_CHANGE_MCP_TOOL,
         arguments: pageChangeRequestExample(),
       });
     } catch (error) {
-      rejected = true;
-      assert.equal(error instanceof McpError, true);
-      assert.match(error.message, /does not match the tool's output schema/);
+      rejected = error;
     }
-    if (rejected) {
-      assert.equal(rejected, true, `@modelcontextprotocol/sdk ${sdkVersion} validates listed outputSchema`);
-    } else {
-      // Recorded fallback: this client returned tampered structuredContent.
-      assert.equal(returned.structuredContent.report.verdict, "nope");
-      assert.equal(validate(returned.structuredContent).valid, false, `recorded: @modelcontextprotocol/sdk ${sdkVersion} did not validate; Ajv rejected the tampered structuredContent`);
-    }
+    assert.equal(sdkVersion, "1.30.0");
+    assert.equal(
+      rejected instanceof McpError,
+      true,
+      `@modelcontextprotocol/sdk ${sdkVersion} client rejects tampered structuredContent`,
+    );
+    assert.match(rejected.message, /Structured content does not match the tool's output schema/);
   } finally {
     await tamperedClient?.close().catch(() => {});
     await tamperedHttp?.close();

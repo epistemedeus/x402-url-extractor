@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { ownedPageChangeWorkerCount } from "../../page-change-http.mjs";
 import {
+  REUSE_MEANING,
   evaluate,
   loadCapture,
   publicScore,
@@ -53,11 +54,20 @@ test("recheck or reuse matches git history and emits the produced decision", { t
     assert.equal(result.cases.mismatched.refused, true);
     assert.equal(result.cases.mismatched.compared, false);
     assert.equal(result.score.falseAlerts, 0);
-    assert.equal(result.score.missedChanges, 0);
+    assert.equal(result.score.missedChanges, "untested");
+    assert.equal(result.score.missedChangeNote, "no same-path change in history");
+    assert.equal(result.score.reuseMeaning, REUSE_MEANING);
     assert.equal(result.score.unknownPairs, 2);
     assert.equal(result.score.comparablePairs, 4);
     assert.equal(result.score.use, null);
-    assert.equal(result.history.filter((row) => row.contentDiff === "unknown").length, 2);
+    assert.equal(result.history.some((row) => row.gitChanged), false);
+    const unknown = result.history.filter((row) => row.contentDiff === "unknown");
+    assert.equal(unknown.length, 2);
+    for (const row of unknown) {
+      assert.equal(row.falseAlert, null);
+      assert.equal(row.missedChange, null);
+      assert.equal(row.scored, false);
+    }
     const view = publicScore(result);
     const { produced, ...score } = view;
     assert.deepEqual(score, readJson("score.json"));
@@ -66,6 +76,7 @@ test("recheck or reuse matches git history and emits the produced decision", { t
     assert.equal(produced.schema, "samedaydesk.recurring-job-recipe-result.v1");
     assert.equal(produced.outcome, "unchanged");
     assert.equal(produced.decision, "reuse");
+    assert.equal(produced.recovery.operatorNext.startsWith(REUSE_MEANING), true);
     assert.equal(produced.evidence.contentHash, "sha256:67445e443ec1e6c08f082a135d82d28df168a84c4d9078c8e89caa5310a9d6e7");
     assert.deepEqual(produced.evidence.changed, []);
     assert.equal(typeof produced.recovery.action, "string");
@@ -77,4 +88,19 @@ test("recheck or reuse matches git history and emits the produced decision", { t
   } finally {
     assert.equal(ownedPageChangeWorkerCount(), 0);
   }
+});
+
+test("readme states the reuse mapping, the projection, and the write command", () => {
+  const readme = readFileSync(path.join(here, "README.md"), "utf8");
+  const decision = readme.slice(readme.indexOf("## Decision"), readme.indexOf("## Git history"));
+  assert.match(decision, /executePageChangeComparison/);
+  assert.match(decision, /no skip path/);
+  assert.match(decision, new RegExp(REUSE_MEANING.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(decision, /changedFields` are pin values projected onto page field slots, not entry field names/);
+  assert.match(decision, /`title` is the entry schema/);
+  assert.match(decision, /node experiments\/n4-recheck-or-reuse\/decide\.mjs --write/);
+  assert.match(readme, /falseAlert` and `missedChange` are null/);
+  assert.match(readme, /missed-change result is `untested`, not 0 missed/);
+  assert.match(readme, /no same-path change in history/);
+  assert.equal(readme.includes("\u2014"), false);
 });

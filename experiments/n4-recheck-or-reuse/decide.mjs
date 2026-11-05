@@ -1,10 +1,15 @@
 // Recheck or reuse a pinned compatibility result from saved machine entries.
-// The comparison core stays executePageChangeComparison. This file only
-// projects a pin, reads the existing report, and refuses a capture whose
-// recorded sha256 does not match the saved bytes.
+// The comparison core stays executePageChangeComparison. Every comparable
+// case runs that compare. reuse maps an unchanged result. It does not show
+// that a recompute was avoided. This file only projects a pin, reads the
+// existing report, and refuses a capture whose recorded sha256 does not match
+// the saved bytes.
+//
+// node experiments/n4-recheck-or-reuse/decide.mjs --write
+// writes score.json and produced-decision.json from evaluate().
 
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { pageChangeRequestExample } from "../../page-change-input-contract.mjs";
@@ -17,6 +22,7 @@ const indexPath = path.join(captureDir, "index.json");
 
 export const RECIPE_ID = "source-change-alert";
 export const RECIPE_VERSION = "samedaydesk.recurring-job-recipe-result.v1";
+export const REUSE_MEANING = "Reuse means the compare ran and found the selected projected fields unchanged, and it does not show that a recompute was avoided.";
 export const QUERY_KEY_PATH = "public/machine/query-key.json";
 export const QUERY_KEY_11_PATH = "public/machine/query-key-1.1.0.json";
 const ENTRY_SCHEMAS = new Set([
@@ -181,6 +187,7 @@ function fromReport(output, sourceCommit, caseHint) {
     return { ...base, decision: "recheck", case: "changed" };
   }
   if (report.verdict === "unchanged") {
+    // The compare already ran. reuse is only this mapping.
     return { ...base, decision: "reuse", case: "unchanged", changedFields: [] };
   }
   return { ...base, decision: "missing-input", case: "malformed", reason: report.verdict };
@@ -253,8 +260,8 @@ function historyRow(beforeRecord, afterRecord, decision) {
     changedFields: decision.changedFields,
     sourceCommit: decision.sourceCommit,
     freshness: decision.freshness,
-    falseAlert: !absent && contentRecheck && !gitChanged,
-    missedChange: !absent && decision.decision === "reuse" && gitChanged,
+    falseAlert: absent ? null : contentRecheck && !gitChanged,
+    missedChange: absent ? null : decision.decision === "reuse" && gitChanged,
   };
 }
 
@@ -280,7 +287,7 @@ export function toProducedDecision(decision, afterRecord) {
     },
     recovery: {
       action: "reuse",
-      operatorNext: "Reuse the pinned compatibility result. Selected fields did not change. Freshness is unknown and is not a current or fresh claim. This first-party capture is not use.",
+      operatorNext: `${REUSE_MEANING} Freshness is unknown and is not a current or fresh claim. This first-party capture is not use.`,
     },
   };
 }
@@ -342,8 +349,11 @@ export async function evaluate(entries = readCaptureIndex()) {
 
   const produced = toProducedDecision(unchanged, current);
   if (!produced) throw new Error("unchanged pin did not produce a reusable decision");
-  const falseAlerts = history.filter((row) => row.falseAlert).length;
-  const missedChanges = history.filter((row) => row.missedChange).length;
+  const falseAlerts = history.filter((row) => row.falseAlert === true).length;
+  const samePathChanges = history.filter((row) => row.gitChanged === true).length;
+  const missedChangeCount = history.filter((row) => row.missedChange === true).length;
+  const missedChanges = samePathChanges === 0 ? "untested" : missedChangeCount;
+  const missedChangeNote = samePathChanges === 0 ? "no same-path change in history" : null;
   const unknownPairs = history.filter((row) => row.contentDiff === "unknown").length;
   const comparablePairs = history.filter((row) => row.scored).length;
   return {
@@ -352,11 +362,13 @@ export async function evaluate(entries = readCaptureIndex()) {
     score: {
       falseAlerts,
       missedChanges,
+      missedChangeNote,
       unknownPairs,
       comparablePairs,
       unknownIsNotZero: true,
       firstPartyRunIsUse: false,
       use: null,
+      reuseMeaning: REUSE_MEANING,
     },
     produced,
   };
@@ -388,4 +400,25 @@ export function publicScore(result) {
     history: result.history,
     produced: result.produced,
   };
+}
+
+function jsonText(value) {
+  return `${JSON.stringify(value, null, 2)}\n`;
+}
+
+export async function writeDecisionFiles() {
+  const view = publicScore(await evaluate());
+  const { produced, ...score } = view;
+  writeFileSync(path.join(here, "score.json"), jsonText(score));
+  writeFileSync(path.join(here, "produced-decision.json"), jsonText(produced));
+}
+
+const entry = process.argv[1] ? path.resolve(process.argv[1]) : "";
+if (entry === fileURLToPath(import.meta.url)) {
+  if (!process.argv.includes("--write")) {
+    process.stderr.write("usage: node experiments/n4-recheck-or-reuse/decide.mjs --write\n");
+    process.exitCode = 2;
+  } else {
+    await writeDecisionFiles();
+  }
 }

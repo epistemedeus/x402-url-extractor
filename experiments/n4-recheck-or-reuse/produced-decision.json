@@ -30,6 +30,6 @@
   },
   "recovery": {
     "action": "reuse",
-    "operatorNext": "Reuse the pinned compatibility result. Selected fields did not change. Freshness is unknown and is not a current or fresh claim. This first-party capture is not use."
+    "operatorNext": "Reuse means the compare ran and found the selected projected fields unchanged, and it does not show that a recompute was avoided. Freshness is unknown and is not a current or fresh claim. This first-party capture is not use."
   }
 }
