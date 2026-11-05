@@ -38,6 +38,7 @@ import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources
 import { drainJournalObservations, journalObservationStatus, observeContinuationTransmission } from "./commerce-journal-admission.mjs";
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
 import { MCP_RECOVERY_META, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
+import { assertPreparedMatchesProjection, projectMcpInventory } from "./mcp-catalog-projection.mjs";
 import { MCP_JSON_RPC_MAX_BYTES, mcpJsonRpcOverlimitBody } from "./mcp-json-rpc-limit.mjs";
 import { MCP_SERVER_INPUT_LIMITS } from "./mcp-tool-input-ceiling.mjs";
 import { advertiseDeclaredHttpRoute } from "./mcp-tool-metadata.mjs";
@@ -1129,8 +1130,11 @@ async function prepareMerchantMcp({
     });
   }
 
+  const projection = projectMcpInventory(tools, { nativeRecovery: Boolean(nativeRecovery) });
+  assertPreparedMatchesProjection(projection, prepared);
   return {
     prepared,
+    projection,
     catalogByName,
     serverInfo,
     typedEnabled,
@@ -1238,6 +1242,7 @@ export async function mountMcp(app, cfg = {}) {
   const preparedState = await prepareMerchantMcp(cfg);
   const {
     prepared,
+    projection,
     catalogByName,
     serverInfo,
     typedEnabled,
@@ -1434,6 +1439,7 @@ export async function mountMcp(app, cfg = {}) {
   const mountResult = {
     toolCount: prepared.filter((tool) => tool.free !== true).length,
     freeToolCount: prepared.filter((tool) => tool.free === true).length,
+    projection,
     modernProtocol: modernProtocol ? "2026-07-28" : false,
     catalog: Object.freeze(Object.fromEntries(
       [...catalogByName.entries()].map(([name, entry]) => [name, entry.binding]),

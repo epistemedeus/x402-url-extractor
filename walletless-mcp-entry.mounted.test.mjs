@@ -13,6 +13,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { publicFetch } from "./extract-batch-c1/public-fetch.mjs";
 import { MCP_JSON_RPC_MAX_BYTES } from "./mcp-json-rpc-limit.mjs";
 import { mountMcp } from "./mcp-server.mjs";
+import { compareMcpCatalog } from "./mcp-catalog-projection.mjs";
 import {
   createExtractionTrialBudget, executeBoundedTrialRead, mountExtractionTrial, READER_TRIAL_PATH,
   TRIAL_READ_MCP_TOOL, trialReadMcpAnnotations, trialReadMcpDescription, trialReadMcpInputSchema, trialReadMcpOutputSchema,
@@ -99,7 +100,10 @@ test("mounted streamable HTTP trial_read returns the frozen table and refuses pa
   const advertised = descriptor.json.freeTools.find((tool) => tool.name === TRIAL_READ_MCP_TOOL);
   assert.equal(advertised.consumesSharedTrialAllowance, true);
   assert.equal(advertised.discovery, descriptor.json.extractionTrial.discovery);
-  assert.equal(descriptor.json.toolCount, 23);
+  assert.equal(descriptor.json.paidToolCount, 23);
+  assert.equal(descriptor.json.registered, true);
+  const catalogAgreement = compareMcpCatalog(descriptor.json, listed.tools);
+  assert.equal(catalogAgreement.ok, true, JSON.stringify(catalogAgreement.differences));
 
   const started = (await discovery(merchant)).started;
   for (const [name, args] of [

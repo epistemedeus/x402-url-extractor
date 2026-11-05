@@ -270,8 +270,11 @@ test("named-board read charges only a prepared observation on both rails", { tim
   assert.equal(cold.callerResultFeedback.invoked, false);
   assert.match(cold.files["PUBLIC-RECIPE.md"], /careers/);
   assert.equal(Object.hasOwn(homepage.paidRoutes, `GET ${CAREERS_BOARD_PATH}`), false);
-  assert.equal(mcpDescriptor.toolCount, 23);
+  assert.equal(mcpDescriptor.paidToolCount, 23);
+  assert.equal(mcpDescriptor.toolCount, mcpDescriptor.tools.length);
+  assert.equal(mcpDescriptor.tools.filter((tool) => tool.charged).length, 23);
   assert.equal(mcpDescriptor.freeTools.some((tool) => tool.name === "careers_board_cold" && tool.charged === false), true);
+  assert.equal(mcpDescriptor.freeTools.some((tool) => tool.name === "recover_paid_result" && tool.charged === false), true);
   assert.match(llms, /\/data\/careers-board/);
   assert.match(llms, /\$0\.005 USDC/);
   assert.match(llms, /\/recipes\/careers-board-cold/);
@@ -284,6 +287,9 @@ test("named-board read charges only a prepared observation on both rails", { tim
     const names = (await client.listTools()).tools.map((tool) => tool.name);
     assert.ok(names.includes("careers_board"));
     assert.ok(names.includes("careers_board_cold"));
+    const registered = await fetch(`${base}/mcp`).then((response) => response.json());
+    assert.equal(registered.registered, true);
+    assert.deepEqual(registered.tools.map((tool) => tool.name), names);
   } finally {
     await client.close();
   }

@@ -84,6 +84,8 @@ async function startMerchant(t, extraEnv = {}) {
       MPP_SECRET_KEY: "test-secret-key-test-secret-key-32",
       PUBLIC_URL,
       EXTRACT_BATCH_ENABLED: "1",
+      LOCKFILE_PIN_DELTA_ENABLED: "",
+      PAGE_CHANGE_HTTP_ENABLED: "",
       ...extraEnv,
     },
     stdio: ["ignore", "pipe", "pipe"],
@@ -230,14 +232,21 @@ test("mounted negatives: missing file, traversal, unknown name", { timeout: 30_0
   }
 });
 
-test("R8 contest health metadata stays disjoint and MCP remains 23 tools", { timeout: 30_000 }, async (t) => {
+test("R8 contest health metadata stays disjoint and the configured MCP inventory stays consistent", { timeout: 30_000 }, async (t) => {
   const merchant = await startMerchant(t);
   const skills = await fetch(`${merchant.base}${WELL_KNOWN_SKILLS_INDEX_PATH}`).then((r) => r.json());
   assert.equal(skills.skills.some((skill) => skill.name === "xagent-verification"), false);
   const proof = await fetch(`${merchant.base}/.well-known/xagent-verification.json`);
   assert.equal(proof.status, 404);
   const mcp = await fetch(`${merchant.base}/mcp`).then((r) => r.json());
-  assert.equal(mcp.toolCount, 24);
+  assert.equal(mcp.registered, true);
+  assert.equal(mcp.paidToolCount, 24);
+  assert.equal(mcp.toolCount, mcp.tools.length);
+  assert.equal(mcp.tools.filter((tool) => tool.charged).length, 24);
+  assert.equal(mcp.tools.some((tool) => tool.name === "extract_batch" && tool.charged === true), true);
+  assert.equal(mcp.tools.some((tool) => tool.name === "lockfile_pin_delta"), false);
+  assert.equal(mcp.tools.some((tool) => tool.name === "page_change"), false);
+  assert.equal(mcp.freeTools.some((tool) => tool.name === "recover_paid_result" && tool.charged === false), true);
   assert.match(merchant.output, /MCP server:  POST \/mcp \(24 paid tools\)/);
   const card = await fetch(`${merchant.base}/.well-known/agent-card.json`).then((r) => r.json());
   assert.equal(card.skills.some((skill) => skill.id === "web-extract"), false);

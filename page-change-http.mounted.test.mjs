@@ -18,6 +18,7 @@ import { PAGE_CHANGE_MCP_PATH, PAGE_CHANGE_MCP_TOOL } from "./page-change-mcp.mj
 import { pageChangeRequestExample } from "./page-change-input-contract.mjs";
 import { omitFreePageCompareAgentSkill, omitFreePageCompareLlmsSection, renderFreePageCompareSkillAppendix } from "./page-change-free-surface.mjs";
 import { MCP_JSON_RPC_MAX_BYTES } from "./mcp-json-rpc-limit.mjs";
+import { historicalMcpDescriptorView } from "./mcp-catalog-projection.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const fx = (...parts) => path.join(cwd, "examples/customer-x402/fixtures/page-change", ...parts);
@@ -303,8 +304,9 @@ function assertMcpDescriptor(historical, current) {
   assert.equal(trial[0].charged, false);
   assert.equal(historical.payment, AVAILABILITY_SENTENCES[5][0]);
   assert.equal(current.payment, AVAILABILITY_SENTENCES[5][1]);
+  const viewed = historicalMcpDescriptorView(current);
   const rest = (descriptor) => ({ ...descriptor, freeTools: descriptor.freeTools.filter((tool) => tool.name !== TRIAL_READ_TOOL) });
-  assertProjectedEqual(rest(current), projectDiscoveryDocument(rest(historical), rest(current)), "GET /mcp");
+  assertProjectedEqual(rest(viewed), projectDiscoveryDocument(rest(historical), rest(viewed)), "GET /mcp");
 }
 
 function assertToolClosure(historicalTools, currentTools, { schemaOracle = false } = {}) {

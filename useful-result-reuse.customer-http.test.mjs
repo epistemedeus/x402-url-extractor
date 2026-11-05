@@ -717,7 +717,9 @@ test("a second HTTP client retrieves a retained receipt with only the returned g
   assert.equal(gateway.machineCommerce.usefulResultRetention.price, "free");
   const mcp = await fetch(`${merchant.base}/mcp`).then((response) => response.json());
   assert.equal(mcp.usefulResultGrant, "https://agents.samedaydesk.com/.well-known/useful-result-reuse/retained");
-  assert.equal(mcp.toolCount, 23);
+  assert.equal(mcp.paidToolCount, 23);
+  assert.equal(mcp.toolCount, mcp.tools.length);
+  assert.equal(mcp.tools.filter((tool) => tool.charged).length, mcp.paidToolCount);
   const openapi = await fetch(`${merchant.base}/openapi.json`).then((response) => response.json());
   assert.equal(openapi.paths["/.well-known/useful-result-reuse/retained"].get.operationId, "readRetainedUsefulResult");
   assert.equal(openapi.paths["/.well-known/useful-result-reuse/retained"].post.operationId, "mutateRetainedUsefulResult");
