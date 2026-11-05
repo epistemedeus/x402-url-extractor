@@ -18,7 +18,8 @@
 //  - POST /mcp is exempt from the ordinary 16 KiB JSON parser. This route's
 //    parser is the authoritative MCP JSON-RPC byte limit.
 //
-// Verified against @x402/mcp@2.16.0 + @modelcontextprotocol/sdk@1.29.0 (June 2026).
+// Payment calls stay on @x402/mcp@2.16.0. The streamable HTTP server SDK is
+// @modelcontextprotocol/sdk@1.32.2.
 
 import { pageChangeServiceOutcome } from "./page-change-http.mjs";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -38,6 +39,7 @@ import { drainJournalObservations, journalObservationStatus, observeContinuation
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
 import { MCP_RECOVERY_META, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
 import { MCP_JSON_RPC_MAX_BYTES, mcpJsonRpcOverlimitBody } from "./mcp-json-rpc-limit.mjs";
+import { MCP_SERVER_INPUT_LIMITS } from "./mcp-tool-input-ceiling.mjs";
 import { advertiseDeclaredHttpRoute } from "./mcp-tool-metadata.mjs";
 import {
   buildRegisteredCatalog,
@@ -1180,7 +1182,7 @@ function compileModernCatalog(prepared, fromJsonSchema) {
 
 function buildModernServer(sdk, serverInfo, compiled, seal) {
   const body = mcpHttpRequestAls.getStore()?.body;
-  const server = new sdk.McpServer(serverInfo);
+  const server = new sdk.McpServer(serverInfo, MCP_SERVER_INPUT_LIMITS);
   for (const entry of compiled) {
     const tool = entry.tool;
     const guardedCall = tool.guardedHttpInput && body?.jsonrpc === "2.0"
@@ -1267,7 +1269,7 @@ export async function mountMcp(app, cfg = {}) {
 
   // A fresh MCP server per request (stateless mode requires server+transport per call).
   const makeServer = (requestBody) => {
-    const server = new McpServer(serverInfo);
+    const server = new McpServer(serverInfo, MCP_SERVER_INPUT_LIMITS);
     for (const t of prepared) {
       const operationMeta = t.operationIdentity
         ? { samedaydesk: { operation: t.operationIdentity } }
