@@ -17,7 +17,7 @@ curl -sS "http://127.0.0.1:${PORT}/mcp/page-change" \
   --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"page-compare-example","version":"0.1.0"}}}'
 ```
 
-A call uses the same path. Put the example object in `params.arguments` and set `params.name` to `compare_page_observations`. A successful JSON result has `charged` false and `report.verdict` `changed` for that example.
+A call uses the same path. `listTools`, then `callTool`, then rely on schema validation. Put the example object in `params.arguments` and set `params.name` to `compare_page_observations`. A successful JSON result has `charged` false and `report.verdict` `changed` for that example. Success `structuredContent` validates against the `outputSchema` from `tools/list`. An `isError` result carries no `structuredContent`.
 
 ```js
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -31,7 +31,7 @@ const result = await client.callTool({ name: "compare_page_observations", argume
 await client.close();
 ```
 
-`listed.tools` contains only `compare_page_observations`. Its annotations are `readOnlyHint` true, `destructiveHint` false, `openWorldHint` false, and `idempotentHint` true. Those match a pure computation over supplied JSON.
+`listed.tools` contains only `compare_page_observations`. Its `outputSchema` is the contract `callTool` validates after `listTools`. Its annotations are `readOnlyHint` true, `destructiveHint` false, `openWorldHint` false, and `idempotentHint` true. Those match a pure computation over supplied JSON.
 
 GET, PUT, PATCH, DELETE, and HEAD return 405. The body tells the caller to POST JSON-RPC. This is a stateless server, not a missing listener.
 

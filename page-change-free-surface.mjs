@@ -8,6 +8,7 @@ import { pageChangeRequestExample } from "./page-change-input-contract.mjs";
 export const FREE_PAGE_COMPARE_ROUTE = "/mcp/page-change";
 export const FREE_PAGE_COMPARE_TOOL = "compare_page_observations";
 export const FREE_PAGE_COMPARE_SKILL_ID = "compare-held-page-observations";
+export const FREE_PAGE_COMPARE_OUTPUT_CONTRACT = "Success structuredContent validates against the outputSchema on tools/list. isError results carry none.";
 
 export function freePageCompareFacts(origin) {
   const publicOrigin = new URL(origin).origin;
@@ -30,6 +31,7 @@ export function renderFreePageCompareLlmsSection(origin) {
     "",
     "## Free comparison",
     `POST ${facts.route} is the free-only Streamable HTTP MCP profile at ${facts.url}. Tool ${facts.tool}. charged: false. paymentRequired: false. This profile does not fetch URLs, take payment, or schedule a later observation. It is not the mixed catalog POST /mcp. Caller-held input stays separate from any optional paid observation. The example URL string is synthetic and is never fetched.`,
+    FREE_PAGE_COMPARE_OUTPUT_CONTRACT,
     `Input example: ${JSON.stringify(facts.example)}`,
   ].join("\n") + "\n";
 }
@@ -51,6 +53,7 @@ export function renderFreePageCompareSkillAppendix(origin) {
     "This profile does not fetch URLs, take payment, or schedule a later observation.",
     "The offline recipe above remains a separate caller-held path. This section does not replace it and does not require payment.",
     "The example URL string below is synthetic and is never fetched.",
+    FREE_PAGE_COMPARE_OUTPUT_CONTRACT,
     "",
     "Input example:",
     "",
@@ -66,7 +69,7 @@ export function freePageCompareAgentSkill(origin) {
   return {
     id: FREE_PAGE_COMPARE_SKILL_ID,
     name: "Compare held page observations",
-    description: `Free-only Streamable HTTP MCP ${facts.method} ${facts.url}. Tool ${facts.tool}. charged is false. paymentRequired is false. It does not fetch URLs, take payment, or schedule a later observation. It is not the mixed catalog POST /mcp. Caller-held JSON input is separate from any optional paid observation. The example URL string is synthetic and is never fetched. Input example: ${JSON.stringify(facts.example)}`,
+    description: `Free-only Streamable HTTP MCP ${facts.method} ${facts.url}. Tool ${facts.tool}. charged is false. paymentRequired is false. It does not fetch URLs, take payment, or schedule a later observation. It is not the mixed catalog POST /mcp. Caller-held JSON input is separate from any optional paid observation. The example URL string is synthetic and is never fetched. ${FREE_PAGE_COMPARE_OUTPUT_CONTRACT} Input example: ${JSON.stringify(facts.example)}`,
     tags: ["free", "page-change", "no-payment", "no-fetch"],
     examples: [`Call ${facts.tool} on ${facts.method} ${facts.url} with the shared held-observation input. charged is false. No fetch and no payment.`],
     inputModes: ["application/json"],

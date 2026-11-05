@@ -1,0 +1,35 @@
+{
+  "recipeId": "source-change-alert",
+  "schema": "samedaydesk.recurring-job-recipe-result.v1",
+  "outcome": "unchanged",
+  "decision": "reuse",
+  "sourceCommit": "04be653a1fe009b9bac99fa60c6ab359d4e5c6db",
+  "priorCommit": "7c28d8e914aecdfd87df429bb4442a194e1060d8",
+  "path": "public/machine/query-key.json",
+  "blob": "2226f589a960d329dcb293236d64d64790856701",
+  "freshness": "unknown",
+  "changedFields": [],
+  "use": null,
+  "evidence": {
+    "kind": "field_diff",
+    "contentHash": "sha256:67445e443ec1e6c08f082a135d82d28df168a84c4d9078c8e89caa5310a9d6e7",
+    "changed": [],
+    "unchanged": [
+      "title",
+      "description",
+      "canonical",
+      "lang",
+      "text",
+      "jsonLd",
+      "openGraph",
+      "twitter",
+      "headings",
+      "links",
+      "aiReadiness"
+    ]
+  },
+  "recovery": {
+    "action": "reuse",
+    "operatorNext": "Reuse means the compare ran and found the selected projected fields unchanged, and it does not show that a recompute was avoided. Freshness is unknown and is not a current or fresh claim. This first-party capture is not use."
+  }
+}

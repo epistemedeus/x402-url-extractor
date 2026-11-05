@@ -1,0 +1,43 @@
+{
+  "schema": "neomorphic.query-key-reuse.entry.v1",
+  "role": "first-party-seed",
+  "humanPage": false,
+  "hostedAcquisitionVerified": true,
+  "publicRouteClaimed": true,
+  "successorSource": null,
+  "sourceRepository": "epistemedeus/neomorphic-io",
+  "sourceCommit": "027432d7cadd597daecf51de808ed7b0ab0e8f93",
+  "base": "bebfe6cba25c2e5162b45d10ab51df92d478d8b3",
+  "sourcePath": "tools/query-key",
+  "license": "CC0-1.0",
+  "codec": "urllib.parse.urlencode",
+  "archive": {
+    "path": "/downloads/query-key/query-key.tar.gz",
+    "sha256": "45e933d2b1f2bd7bc2736142d447c7561a936be4d84f3ab2ea23be6d73f88d6e",
+    "bytes": 13443,
+    "files": 21,
+    "contentType": "application/gzip"
+  },
+  "corpus": {
+    "path": "/downloads/query-key/corpus.json",
+    "sha256": "ba40feee52cb1de06f5eb7fab1a25f489d8bc8b1639461987297205d8834461a",
+    "bytes": 3039,
+    "schema": "cc0.query-key-cases.v3",
+    "digest": "4c329b98652f3a040df979abeb33ee9a56fba1f8693d6c964aba56fbf37a645f"
+  },
+  "upstream": {
+    "repository": "https://github.com/dhyabi2/x402-nano-exact",
+    "license": "MIT",
+    "before": "f0b3e89463d4b291cab95830151c4c1c05ff04b6",
+    "after": "164d9e30abf5cd8aa3c2eaae617c71a115b24fbe",
+    "copied": false
+  },
+  "installedFence": "e32c3f2ce4391ccba9e7d15a3fda0a65459406fd",
+  "emptyDataAllowedByRecipe": true,
+  "executionRequiresCallerCheckouts": true,
+  "walletCalls": 0,
+  "facilitatorCalls": 0,
+  "liveSettlement": false,
+  "replaySettlementFixed": false,
+  "nextAction": "Verify sha256 45e933d2b1f2bd7bc2736142d447c7561a936be4d84f3ab2ea23be6d73f88d6e of /downloads/query-key/query-key.tar.gz and extract it. Check out upstream commit f0b3e89463d4b291cab95830151c4c1c05ff04b6 and commit 164d9e30abf5cd8aa3c2eaae617c71a115b24fbe into local directories. From the query-key directory, the archive command is node apply.mjs cases --artifact corpus.json and the supplied-checkout command is node apply.mjs cases --artifact corpus.json --before /path/to/before --after /path/to/after and the changed-input command is node apply.mjs apply --artifact corpus.json --input seed/examples/reversed.json --before /path/to/before --after /path/to/after"
+}

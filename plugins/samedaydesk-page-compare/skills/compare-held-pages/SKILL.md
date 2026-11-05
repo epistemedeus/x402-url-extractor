@@ -10,6 +10,12 @@ Call `compare_page_observations` with the caller's `before` object, `after` obje
 
 This skill does not replace the tool. A skills-only package cannot run the comparison. The connected server is required.
 
+## Call
+
+1. `listTools` and read the `outputSchema` for `compare_page_observations`.
+2. `callTool` with the caller's `before` object, `after` object, and explicit `fields` array.
+3. Rely on schema validation. Success `structuredContent` validates against that `outputSchema`. An `isError` result carries no `structuredContent`.
+
 ## Do
 
 - Pass the JSON objects the caller already holds.
