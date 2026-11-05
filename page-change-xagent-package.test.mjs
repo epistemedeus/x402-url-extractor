@@ -14,8 +14,10 @@ import {
   VENDOR_SHA256,
   buildPageChangePackage,
   classifyExclusion,
+  listMerchantFiles,
   sha256,
   planPackageFiles,
+  SOURCE_ENTRY_CAP,
 } from "./scripts/page-change-xagent-package.mjs";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -163,8 +165,9 @@ test('existing output, source parent and symlink output never overwritten',async
  const link=join(scratch,'link');await symlink(out,link);await assert.rejects(buildPageChangePackage({repoRoot:root,commit:head(),outDir:join(link,DEFAULT_SLUG)}));
 });
 test('commit mode rejects symlinks and nonportable encoded source paths',async(t)=>{
- const repo=await fixtureRepo(t);await writeFile(join(repo,'ok'),'data');await symlink('ok',join(repo,'link'));let pin=commitFixture(repo);
- assert.throws(()=>planPackageFiles(repo,{commit:pin}),/Non-regular/);await rm(join(repo,'link'));await writeFile(join(repo,'bad\\path'),'data');pin=commitFixture(repo);assert.throws(()=>planPackageFiles(repo,{commit:pin}),/Unsafe/);
+ const repo=await fixtureRepo(t);const scoped=join(repo,'examples/customer-x402/src/page-change');await mkdir(scoped,{recursive:true});
+ await writeFile(join(scoped,'ok'),'data');await symlink('ok',join(scoped,'link'));let pin=commitFixture(repo);
+ assert.throws(()=>planPackageFiles(repo,{commit:pin}),/Non-regular/);await rm(join(scoped,'link'));await writeFile(join(scoped,'bad\\path'),'data');pin=commitFixture(repo);assert.throws(()=>planPackageFiles(repo,{commit:pin}),/Unsafe/);
 });
 test('unchanged commit builds deterministic manifests and verifies every source byte', {timeout:60000},async(t)=>{
  const scratch=await fixtureRepo(t),pin=head();const a=join(scratch,'a'),b=join(scratch,'b');await mkdir(a);await mkdir(b);
@@ -183,8 +186,25 @@ test('sidecar detects a skip-worktree modification to the official validator',as
 });
 
 test('local Git replacements cannot relabel archived source bytes',async(t)=>{
- const repo=await fixtureRepo(t);await writeFile(join(repo,'safe.mjs'),'export const value=1;');const original=commitFixture(repo);
- await writeFile(join(repo,'safe.mjs'),'export const value=2;');const replacement=commitFixture(repo);gitAt(repo,['replace',original,replacement]);
- assert.equal(gitAt(repo,['show',`${original}:safe.mjs`]),'export const value=2;');
+ const repo=await fixtureRepo(t);const scoped=join(repo,'examples/customer-x402/src/page-change');await mkdir(scoped,{recursive:true});
+ await writeFile(join(scoped,'safe.mjs'),'export const value=1;');const original=commitFixture(repo);
+ await writeFile(join(scoped,'safe.mjs'),'export const value=2;');const replacement=commitFixture(repo);gitAt(repo,['replace',original,replacement]);
+ assert.equal(gitAt(repo,['show',`${original}:examples/customer-x402/src/page-change/safe.mjs`]),'export const value=2;');
  const plan=planPackageFiles(repo,{commit:original});assert.equal(plan.included[0].sha256,sha256(Buffer.from('export const value=1;')));
+});
+
+test("scoped page-change source stays under the entry cap and an over-cap set still fails", async (t) => {
+  const files = listMerchantFiles(root, { commit: head() });
+  assert.ok(files.length > 0 && files.length <= SOURCE_ENTRY_CAP);
+  assert.equal(files.includes(`${VENDOR_DIR}/compare.mjs`), true);
+  assert.equal(files.includes("server.js"), false);
+  const repo = await fixtureRepo(t);
+  const scoped = join(repo, "examples/customer-x402/src/page-change");
+  await mkdir(scoped, { recursive: true });
+  for (let index = 0; index < SOURCE_ENTRY_CAP + 1; index += 1) {
+    await writeFile(join(scoped, `extra-${String(index).padStart(4, "0")}.txt`), "x");
+  }
+  await writeFile(join(repo, "outside-the-package.txt"), "not part of the page-change source set");
+  const pin = commitFixture(repo);
+  assert.throws(() => listMerchantFiles(repo, { commit: pin }), /Source exceeds 2000 entries/);
 });
