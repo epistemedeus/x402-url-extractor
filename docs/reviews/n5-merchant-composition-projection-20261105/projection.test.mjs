@@ -12,18 +12,30 @@ import {
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 
-test("prepared pin projects blocked_suite until Console receives the suite", () => {
+test("qualified tip with Console receipt refuses deploy until Railway is re-read", () => {
   const projection = projectMerchantComposition();
-  assert.equal(projection.decision, "blocked_suite");
+  assert.equal(projection.decision, "re_read_railway_before_effect");
   assert.equal(projection.recognizedRevenueAtomic, "0");
-  assert.equal(projection.prepared.commit, PREPARED.commit);
+  assert.equal(projection.prepared.commit, "f1fa8bf53d4f4cfb30a9fcfed0b105811b0cc620");
+  assert.equal(projection.prepared.tree, "461cc9ea075f74686c040e7feb095ae3a800e5ca");
+  assert.equal(projection.prepared.suiteStatus, "received_console_model_free_vm");
+  assert.equal(projection.prepared.suiteReceipt.pid, 102276);
   assert.equal(projection.installed.commit, INSTALLED.commit);
-  assert.ok(projection.gaps.some((g) => g.code === "suite_pending_console_route"));
+  assert.ok(!projection.gaps.some((g) => g.code === "suite_pending_console_route"));
   assert.ok(projection.gaps.some((g) => g.code === "railway_preflight_dated"));
   assertProjectionHonest(projection);
 });
 
-test("suite received still refuses deploy until Railway is re-read", () => {
+test("pending suiteStatus still blocks until Console receives the suite", () => {
+  const projection = projectMerchantComposition({
+    prepared: { ...PREPARED, suiteStatus: "pending_console_model_free_vm", suiteReceipt: undefined },
+  });
+  assert.equal(projection.decision, "blocked_suite");
+  assert.ok(projection.gaps.some((g) => g.code === "suite_pending_console_route"));
+  assertProjectionHonest(projection);
+});
+
+test("explicit suiteReceived still refuses deploy until Railway is re-read", () => {
   const projection = projectMerchantComposition({ suiteReceived: true });
   assert.equal(projection.decision, "re_read_railway_before_effect");
   assertProjectionHonest(projection);

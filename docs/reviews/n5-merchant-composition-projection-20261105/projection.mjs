@@ -19,17 +19,31 @@ export const INSTALLED = Object.freeze({
   note: "Railway preflight facts are dated; re-read before any effect.",
 });
 
-// Prepared Bot-authored composition head (keep as pushed; suite pending Console route).
+// Prepared Bot-authored composition head after Console Root-contract suite (PID 102276).
 export const PREPARED = Object.freeze({
   branch: "codex/n5-merchant-baseline-reliability-20261105",
-  commit: "f23acb762a2b9c2e5c37f50930343a3c49bfa3c0",
-  tree: "6889e0f7a19b55faff5ebaf50de6c32af04c43eb",
+  commit: "f1fa8bf53d4f4cfb30a9fcfed0b105811b0cc620",
+  tree: "461cc9ea075f74686c040e7feb095ae3a800e5ca",
   parentReliability: "7475eaad",
   compositionBase: "75d1a89c",
   compositionTree: "b3bdcd2a",
   runtimeVersion: "1.23.55",
   configuredMppWalletEnrichCovered: true,
-  suiteStatus: "pending_console_model_free_vm",
+  suiteStatus: "received_console_model_free_vm",
+  suiteReceipt: Object.freeze({
+    pid: 102276,
+    out: "/tmp/n4-team/dm/rerun-f1fa8bf",
+    collect: "/workspace/n4-collect-1105/dm-rerun-f1fa8bf/batch.meta",
+    collectSha256: "4c167f7ff82ea806663b36c23b358c2cfc3cccf51f5ca31ed7c84b7b5dded504",
+    historyPreflight: "ok",
+    shallowAfter: false,
+    cmd: "npm test -- --test-concurrency=2",
+    counts: Object.freeze({ tests: 1423, pass: 1418, fail: 0, skipped: 5 }),
+    a2Exit: 0,
+    b2Exit: 0,
+    fullExit: 0,
+    loopbackProfileRestoreExit: 0,
+  }),
 });
 
 export const CLAIM_PATHS = Object.freeze([
@@ -90,7 +104,10 @@ export function projectMerchantComposition({
   if (prepared.configuredMppWalletEnrichCovered !== true) {
     gaps.push({ code: "configured_mpp_wallet_enrich_uncovered" });
   }
-  if (prepared.suiteStatus === "pending_console_model_free_vm" && !suiteReceived) {
+  const suiteOk = suiteReceived === true
+    || (typeof prepared.suiteStatus === "string"
+      && prepared.suiteStatus !== "pending_console_model_free_vm");
+  if (!suiteOk) {
     gaps.push({ code: "suite_pending_console_route" });
   }
   if (!railwayReread) {
@@ -107,7 +124,7 @@ export function projectMerchantComposition({
   }
 
   let decision = "do_not_deploy";
-  if (!suiteReceived) decision = "blocked_suite";
+  if (!suiteOk) decision = "blocked_suite";
   else if (!railwayReread) decision = "re_read_railway_before_effect";
   else decision = "ready_remote_suite";
   if (!DECISIONS.has(decision)) throw new Error("projection_decision_invalid");
