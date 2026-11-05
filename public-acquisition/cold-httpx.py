@@ -16,6 +16,11 @@ import sys
 import tempfile
 from pathlib import Path
 
+# Declared install: python/install-consumer.sh into <repo>/.python-consumer.
+_CONSUMER_SITE = Path(__file__).resolve().parents[1] / ".python-consumer"
+if _CONSUMER_SITE.is_dir():
+    sys.path.insert(0, str(_CONSUMER_SITE))
+
 
 def fail(message: str, code: int = 2) -> None:
     print(message, file=sys.stderr)

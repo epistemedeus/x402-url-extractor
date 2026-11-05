@@ -1,0 +1,6 @@
+# Cold httpx consumer: hermes-agent 0.19.0 requires this extra.
+# Recorded in public-acquisition/client-observation.json.
+httpx[socks]==0.28.1
+# Merchant compatibility client imported by python-false-settlement.py.
+# Recorded as mcp 2.3.0 for that payment case.
+mcp==2.3.0

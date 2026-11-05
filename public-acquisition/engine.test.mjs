@@ -352,6 +352,15 @@ test("old route-lock descriptors are unchanged and Root mounts only the optional
   assert.doesNotMatch(patch, /priceToAtomic|EXTRACT_PRICE|PAY_TO =/);
 });
 
+test("declared Python consumer pins are httpx 0.28.1 and mcp 2.3.0", () => {
+  const requirements = readFileSync(join(REPO, "python/consumer-requirements.txt"), "utf8");
+  assert.match(requirements, /^httpx\[socks\]==0\.28\.1$/m);
+  assert.match(requirements, /^mcp==2\.3\.0$/m);
+  const installer = readFileSync(join(REPO, "python/install-consumer.sh"), "utf8");
+  assert.match(installer, /python\/consumer-requirements\.txt/);
+  assert.match(installer, /\.python-consumer/);
+});
+
 test("cold node and python httpx clients unpack the mount and run the declared commands", async () => {
   const child = spawn(NODE, [join(ROOT, "serve-receiving.mjs")], { stdio: ["ignore", "pipe", "pipe"] });
   let stdout = "";

@@ -29,6 +29,7 @@
     "acquire:basepay-upstream": "npm run acquire-upstream --prefix examples/basepay-composition",
     "test:page-change-mcp": "node --test --test-concurrency=1 page-change-mcp.http.test.mjs page-change-mcp-output-schema.test.mjs plugins/samedaydesk-page-compare/plugin.test.mjs",
     "test:dependency-risk": "node --test --test-concurrency=1 dependency-risk.test.mjs",
+    "python:consumer": "sh python/install-consumer.sh",
     "test:mcp-current-client-compat": "node --test --test-concurrency=1 --max-old-space-size=512 mcp-current-client-compat.test.mjs",
     "test:page-change-xagent": "node --test page-change-http.test.mjs extract-batch-page-change.test.mjs page-change-xagent-package.test.mjs",
     "test:page-change-registry": "node --test --test-concurrency=1 registry/page-change/descriptor.test.mjs",
