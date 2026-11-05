@@ -9,6 +9,7 @@ import {
   PAGE_CHANGE_MCP_TOOL,
   pageChangeMcpToolConfig,
 } from "./page-change-mcp.mjs";
+import { MCP_SERVER_INPUT_LIMITS } from "./mcp-tool-input-ceiling.mjs";
 import { SERVICE_VERSION } from "./service-version.mjs";
 
 const server = new McpServer({
@@ -16,6 +17,7 @@ const server = new McpServer({
   version: SERVICE_VERSION,
 }, {
   instructions: PAGE_CHANGE_MCP_INSTRUCTIONS,
+  ...MCP_SERVER_INPUT_LIMITS,
 });
 server.registerTool(PAGE_CHANGE_MCP_TOOL, pageChangeMcpToolConfig(), async () => ({
   content: [{ type: "text", text: JSON.stringify({ ok: false, charged: false, error: "stdio_probe_does_not_compare" }) }],

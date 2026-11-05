@@ -20,6 +20,7 @@ import {
   parseBoundedJson,
   respondPageChangeError,
 } from "./page-change-http.mjs";
+import { MCP_SERVER_INPUT_LIMITS } from "./mcp-tool-input-ceiling.mjs";
 import { SERVICE_VERSION } from "./service-version.mjs";
 
 export const PAGE_CHANGE_MCP_PATH = "/mcp/page-change";
@@ -226,6 +227,7 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
         version: SERVICE_VERSION,
       }, {
         instructions: PAGE_CHANGE_MCP_INSTRUCTIONS,
+        ...MCP_SERVER_INPUT_LIMITS,
       });
       server.registerTool(PAGE_CHANGE_MCP_TOOL, toolConfig, async () => {
         try {
