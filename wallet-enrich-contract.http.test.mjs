@@ -199,7 +199,11 @@ test("wallet-enrich exports RPC failure as a declared non-success without a seco
     fetch(`${merchant.base}/api/actions`).then((response) => response.json()),
   ]);
   const operation = openapi.paths["/wallet-enrich"].get;
-  const mppOperation = mppOpenapi.paths["/wallet-enrich"].get;
+  // ab5bf51 omits a paid operation from the MPP document when the configured
+  // stack does not offer MPP. This merchant is started with an empty secret,
+  // so /wallet-enrich stays on the x402 document and the live GET, and the
+  // MPP document does not expose it. The route handler is unchanged.
+  assert.equal(mppOpenapi.paths["/wallet-enrich"], undefined);
   const action = catalog.actions.find((entry) => entry.route === "/wallet-enrich");
   assert.deepEqual(operation.parameters.map((parameter) => ({
     in: parameter.in,
@@ -212,20 +216,18 @@ test("wallet-enrich exports RPC failure as a declared non-success without a seco
 
   const successSchema = operation.responses["200"].content["application/json"].schema;
   assert.deepEqual(successSchema.required, ["ok", "address", "type"]);
-  assert.deepEqual(mppOperation.responses["200"].content["application/json"].schema, successSchema);
   assert.deepEqual(action.response.schema, successSchema);
   assert.equal(successSchema.properties.ok.type, "boolean");
   assert.deepEqual(successSchema.properties.type.enum, ["eoa", "contract"]);
 
   assert.deepEqual(operation["x-payment-info"].price, { amount: "0.05", currency: "USD", mode: "fixed" });
-  assert.deepEqual(operation["x-payment-info"].protocols.map((entry) => Object.keys(entry)[0]), ["x402", "mpp"]);
+  assert.deepEqual(operation["x-payment-info"].protocols.map((entry) => Object.keys(entry)[0]), ["x402"]);
   assert.equal(operation["x-payment-info"].protocols[0].x402.network, NETWORK);
-  assert.equal(operation["x-payment-info"].protocols[1].mpp.network, NETWORK);
   assert.equal(action.priceAtomicUsdc, PRICE_ATOMIC);
   assert.equal(action.priceUsdc, 0.05);
   assert.equal(catalog.payTo, PAY_TO);
   assert.equal(catalog.network, NETWORK);
-  assert.deepEqual(action.paymentProtocols, ["x402", "mpp"]);
+  assert.deepEqual(action.paymentProtocols, ["x402"]);
 
   for (const alias of ["address", "wallet", "addr"]) {
     const response = await fetch(`${merchant.base}/wallet-enrich?${alias}=${ADDRESS}`);
@@ -246,7 +248,7 @@ test("wallet-enrich exports RPC failure as a declared non-success without a seco
   assert.ok(Buffer.byteLength(text) <= 256, `wallet-enrich error exceeded 256 bytes: ${Buffer.byteLength(text)}`);
   assert.deepEqual(JSON.parse(text), { ok: false, address: ADDRESS, error: UPSTREAM_ERROR });
 
-  for (const declaredOperation of [operation, mppOperation]) {
+  for (const declaredOperation of [operation]) {
     const failure = declaredOperation.responses["502"];
     assert.match(failure.description, /Base RPC/i);
     const schema = failure.content["application/json"].schema;
