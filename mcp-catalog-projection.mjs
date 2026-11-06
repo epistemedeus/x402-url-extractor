@@ -67,6 +67,13 @@ export function assertSameMcpProjection(left, right) {
   })));
 }
 
+// A shared cache may store GET /mcp for the ready document's max-age.
+// Pending and failed documents are not that document. They stay uncached
+// so a startup or failed mount cannot hide the registered inventory.
+export function mcpCatalogCacheControl(state) {
+  return state === "ready" ? "public, max-age=300" : "no-store";
+}
+
 export function describeMcpCatalog({ state = "pending", projection = null, detailFor } = {}) {
   const mountState = state === "ready" || state === "pending" || state === "failed" ? state : "failed";
   if (!projection || mountState === "failed") {

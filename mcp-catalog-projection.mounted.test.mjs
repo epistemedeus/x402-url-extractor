@@ -100,11 +100,19 @@ async function startMerchant(flags) {
     stdio: ["ignore", "pipe", "pipe"],
   });
   let output = "";
+  let startupProbe = null;
   try {
     await new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error(`merchant startup timed out: ${output.slice(-2000)}`)), 40000);
       const onData = (chunk) => {
         output = `${output}${chunk}`.slice(-80000);
+        if (!startupProbe && output.includes(`x402-merchant listening on :${port}`)) {
+          startupProbe = fetch(`http://127.0.0.1:${port}/mcp`).then(async (response) => ({
+            status: response.status,
+            cacheControl: response.headers.get("cache-control"),
+            body: await response.json(),
+          })).catch((error) => ({ error: String(error && error.message || error) }));
+        }
         if (output.includes(`MCP server:  POST /mcp (${paidCount} paid tools)`)) {
           clearTimeout(timer);
           resolve();
@@ -126,6 +134,7 @@ async function startMerchant(flags) {
   return {
     base: `http://127.0.0.1:${port}`,
     paidCount,
+    startupProbe,
     facilitator,
     async close() {
       await stopChild(child);
@@ -229,7 +238,15 @@ async function assertUnrelatedConsumers(merchant) {
 async function checkConfiguration(flags, { negotiate = false } = {}) {
   const merchant = await startMerchant(flags);
   try {
-    const descriptor = await fetch(`${merchant.base}/mcp`).then((response) => response.json());
+    const startup = await merchant.startupProbe;
+    assert.equal(startup.error, undefined);
+    assert.equal(startup.status, 200);
+    assert.notEqual(startup.body.mountState, "ready");
+    assert.equal(startup.cacheControl, "no-store");
+    assert.equal(startup.body.registered, false);
+    const descriptorResponse = await fetch(`${merchant.base}/mcp`);
+    assert.equal(descriptorResponse.headers.get("cache-control"), "public, max-age=300");
+    const descriptor = await descriptorResponse.json();
     const legacy = await connectLegacy(`${merchant.base}/mcp`);
     try {
       const listed = await legacy.client.listTools();
@@ -242,7 +259,9 @@ async function checkConfiguration(flags, { negotiate = false } = {}) {
       try {
         assert.equal(current.protocol(), CURRENT_PROTOCOL);
         const listed = await current.client.listTools();
-        const again = await fetch(`${merchant.base}/mcp`).then((response) => response.json());
+        const againResponse = await fetch(`${merchant.base}/mcp`);
+        assert.equal(againResponse.headers.get("cache-control"), "public, max-age=300");
+        const again = await againResponse.json();
         expectConfigured(again, listed.tools, flags);
       } finally {
         await current.close();
