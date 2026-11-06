@@ -219,7 +219,7 @@ import {
 } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts, registerReplayHttpLifecycle } from "./idempotency-replay.mjs";
-import { assertSameMcpProjection, describeMcpCatalog, projectMcpInventory } from "./mcp-catalog-projection.mjs";
+import { assertSameMcpProjection, describeMcpCatalog, mcpCatalogCacheControl, projectMcpInventory } from "./mcp-catalog-projection.mjs";
 import { registerIndexingPayloadContinuity } from "./indexing-payload-continuity.mjs";
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
@@ -1629,7 +1629,7 @@ function currentMcpCatalogDocument() {
 }
 
 app.get("/mcp", (_req, res) => {
-  res.set("Cache-Control", "public, max-age=300");
+  res.set("Cache-Control", mcpCatalogCacheControl(mcpCatalogPublication.state));
   return res.json({
     name: "x402-data-gateway",
     extractionTrial: { discovery: extractionTrialDiscoveryUrl },

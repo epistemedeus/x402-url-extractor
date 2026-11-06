@@ -7,6 +7,7 @@ import {
   compareMcpCatalog,
   describeMcpCatalog,
   historicalMcpDescriptorView,
+  mcpCatalogCacheControl,
   projectMcpInventory,
 } from "./mcp-catalog-projection.mjs";
 
@@ -108,6 +109,14 @@ test("duplicate, colliding, unnamed, and drifted inventories fail closed", () =>
   assert.throws(() => assertSameMcpProjection(projection, {
     tools: [{ name: "extract", charged: true, outputSchema: false }, projection.tools[1]],
   }), /extract/);
+});
+
+test("catalog cache is public only after a ready mount", () => {
+  assert.equal(mcpCatalogCacheControl("ready"), "public, max-age=300");
+  assert.equal(mcpCatalogCacheControl("pending"), "no-store");
+  assert.equal(mcpCatalogCacheControl("failed"), "no-store");
+  assert.equal(mcpCatalogCacheControl("other"), "no-store");
+  assert.equal(mcpCatalogCacheControl(undefined), "no-store");
 });
 
 test("descriptor follows mount state and rejects a charged free-tool detail", () => {
