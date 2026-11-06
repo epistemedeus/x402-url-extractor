@@ -210,6 +210,8 @@ const EXACT_ROUTES = new Map([
   ["/defi/morpho-preliquidation-replay", { route: "/defi/morpho-preliquidation-replay", kind: "paid" }],
   ["/work/opportunity-preflight", { route: "/work/opportunity-preflight", kind: "paid" }],
   ["/distribution/agent-discoverability-audit", { route: "/distribution/agent-discoverability-audit", kind: "paid" }],
+  // Exact paid catalog route. Collapsing it into /distribution/* drops the paid server event.
+  ["/distribution/agent-surface-budget-audit", { route: "/distribution/agent-surface-budget-audit", kind: "paid" }],
   ["/commerce/payment-offer-preflight", { route: "/commerce/payment-offer-preflight", kind: "paid" }],
   ["/commerce/seller-integrity-audit", { route: "/commerce/seller-integrity-audit", kind: "paid" }],
   // Free diagnosis is an exact unmatched route so the received producer records
