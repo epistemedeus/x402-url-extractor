@@ -81,3 +81,16 @@ test("two cold consumers accept the public fixture and reject the seeded control
   assert.equal(committedLoad.document.assets.length, 4);
   await rm(dir, { recursive: true, force: true });
 });
+
+test("public archive bytes do not depend on the invoking umask", async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), "useful-export-umask-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const manifest = JSON.parse(await readFile(path.join(committed, "manifest.json"), "utf8"));
+  const expected = manifest.assets.find(asset => asset.role === "archive").sha256;
+  const invoke = 'process.umask(parseInt(process.argv[1],8)); const p=process.argv[2], out=process.argv[3]; process.argv=[process.execPath,p,out]; import(require("node:url").pathToFileURL(p).href);';
+  for (const mask of ["0022", "0077"]) {
+    const packed = spawnSync(process.execPath, ["-e", invoke, mask, packer, path.join(dir, mask)], { encoding: "utf8" });
+    assert.equal(packed.status, 0, packed.stderr);
+    assert.equal(JSON.parse(packed.stdout).archiveSha256, expected, mask);
+  }
+});
