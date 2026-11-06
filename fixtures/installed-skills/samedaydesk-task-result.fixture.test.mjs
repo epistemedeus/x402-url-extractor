@@ -32,6 +32,17 @@ const DOWNLOAD_FILES = {
   "samedaydesk-caller-result-0.1.1.tar.gz": { bytes: 32421, sha256: "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3" },
 };
 
+test("fixture source notice cites the feature commit and keeps the prior main pin as history", () => {
+  const notice = readFileSync(path.join(skillRoot, "SOURCE-NOTICE.txt"), "utf8");
+  assert.match(notice, /4c48f13fed8fa654b24177850257ed6f9d3650cc/);
+  assert.match(notice, /codex\/h155010-task-result-acquire-20261106/);
+  assert.equal(notice.includes("main at fetch"), false);
+  assert.match(notice, /960ec370aa56e80565f86e5e26b3e9f5418e8bf4/);
+  assert.match(notice, /33653 bytes/);
+  assert.match(notice, /d1bc056d8a08d912c11803f69c5d85d82348801ed28494bc870d7c4c72b714c3/);
+  assert.match(notice, /8ad3a164db08a33233340b9db381da17047378be9e3965cdd90b7065ad95a4b6/);
+});
+
 test("offline caller-result download pin matches the sealed skill PIN.files hashes", () => {
   for (const [relative, expected] of Object.entries(DOWNLOAD_FILES)) {
     const bytes = readFileSync(path.join(downloadRoot, relative));

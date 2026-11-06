@@ -1,7 +1,21 @@
 SameDayDesk installed skill fixture: samedaydesk-task-result
 
-Exact byte pin from public repo epistemedeus/x402-data-gateway-skills
-@960ec370aa56e80565f86e5e26b3e9f5418e8bf4 (main at fetch).
+Exact bytes from public repo epistemedeus/x402-data-gateway-skills
+@4c48f13fed8fa654b24177850257ed6f9d3650cc
+on branch codex/h155010-task-result-acquire-20261106.
+Public main remains 960ec370aa56e80565f86e5e26b3e9f5418e8bf4.
+The four installed files match the anonymous codeload archive of that
+feature commit.
+
+History: the previous notice named main
+960ec370aa56e80565f86e5e26b3e9f5418e8bf4. At that commit SKILL.md,
+references/caller-pin.json and references/LICENSE.txt already matched
+the hashes below. scripts/task-result.mjs was 33653 bytes /
+d1bc056d8a08d912c11803f69c5d85d82348801ed28494bc870d7c4c72b714c3.
+The feature commit changes only npm resolution in that script, to
+34092 bytes / 8ad3a164db08a33233340b9db381da17047378be9e3965cdd90b7065ad95a4b6.
+The historical main pin records those previous script bytes. The hashes
+below are the feature commit.
 
 Verified against installed-feedback-journey-211998.test.mjs INSTALLED_FILES:
   SKILL.md bytes=3696 sha256=83fd65e53ffd93c45e7915afa0fd7e271ce226cb2a63e6d17e32b644bad66254
