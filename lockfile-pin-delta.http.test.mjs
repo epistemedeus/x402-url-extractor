@@ -18,6 +18,7 @@ import { mppAssetForNetwork } from "./mpp-dual-stack.mjs";
 import { EXTRACT_BATCH_PATH } from "./extract-batch-config.mjs";
 import { LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC, LOCKFILE_PIN_DELTA_PATH, LOCKFILE_PIN_DELTA_PRICE_USD, LOCKFILE_PIN_DELTA_QUOTE_MEANING } from "./lockfile-pin-delta-config.mjs";
 import { lockfilePinDeltaOutputSchema } from "./lockfile-pin-delta.mjs";
+import { compareMcpCatalog } from "./mcp-catalog-projection.mjs";
 
 const validateOutput = new Ajv2020({ strict: false, allErrors: true }).compile(lockfilePinDeltaOutputSchema());
 function assertOutput(result) {
@@ -445,7 +446,11 @@ test("mounted success, no-change, malformed, oversize, and wrong-replay-input", 
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
   try {
     const tools = (await client.listTools()).tools;
-    assert.equal(tools.length, 27);
+    const descriptor = await fetch(`${merchant.base}/mcp`).then((response) => response.json());
+    const agreement = compareMcpCatalog(descriptor, tools);
+    assert.equal(agreement.ok, true, JSON.stringify(agreement.differences));
+    assert.equal(descriptor.paidToolCount, 24);
+    assert.equal(tools.some((tool) => tool.name === "recover_paid_result"), true);
     assert.equal(tools.some((tool) => tool.name === "report_caller_result"), true);
     const tool = tools.find((entry) => entry.name === "lockfile_pin_delta");
     assert.ok(tool);
@@ -611,9 +616,13 @@ test("lockfile flag does not disable production extract_batch", { timeout: 60_00
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
   try {
     const tools = (await client.listTools()).tools;
-    assert.equal(tools.length, 28);
+    const descriptor = await fetch(`${merchant.base}/mcp`).then((response) => response.json());
+    const agreement = compareMcpCatalog(descriptor, tools);
+    assert.equal(agreement.ok, true, JSON.stringify(agreement.differences));
+    assert.equal(descriptor.paidToolCount, 25);
     assert.ok(tools.some((tool) => tool.name === "extract_batch"));
     assert.ok(tools.some((tool) => tool.name === "lockfile_pin_delta"));
+    assert.equal(tools.some((tool) => tool.name === "recover_paid_result"), true);
     assert.equal(tools.some((tool) => tool.name === "report_caller_result"), true);
   } finally {
     await client.close();

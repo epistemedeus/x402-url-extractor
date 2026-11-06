@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -13,14 +13,27 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { FIXTURE_ADDRESS } from "./experiments/morpho-useful-delivery-1005/fixture.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const installedRoot = path.resolve(process.env.SAMEDAYDESK_INSTALLED_SKILL_ROOT
-  || "/tmp/hermes-user-211994/.hermes/skills/samedaydesk-task-result");
+const fixtureSkillRoot = path.join(root, "fixtures/installed-skills/samedaydesk-task-result");
+function resolveInstalledSkillRoot() {
+  if (process.env.SAMEDAYDESK_INSTALLED_SKILL_ROOT) {
+    return path.resolve(process.env.SAMEDAYDESK_INSTALLED_SKILL_ROOT);
+  }
+  if (existsSync(path.join(fixtureSkillRoot, "scripts/task-result.mjs"))) {
+    return fixtureSkillRoot;
+  }
+  if (process.env.HERMES_HOME) {
+    return path.join(process.env.HERMES_HOME, "skills/samedaydesk-task-result");
+  }
+  // Legacy private path kept last so normal agents hit the in-repo fixture first.
+  return "/tmp/hermes-user-211994/.hermes/skills/samedaydesk-task-result";
+}
+const installedRoot = resolveInstalledSkillRoot();
 const script = path.join(installedRoot, "scripts/task-result.mjs");
 const skipJourney = existsSync(script) ? false : `installed skill missing at ${script}`;
 const PRODUCT = "0693da2a609df703f892eb4322d37910c3743b69";
 const INSTALLED_FILES = {
   "SKILL.md": { bytes: 3696, sha256: "83fd65e53ffd93c45e7915afa0fd7e271ce226cb2a63e6d17e32b644bad66254" },
-  "scripts/task-result.mjs": { bytes: 33653, sha256: "d1bc056d8a08d912c11803f69c5d85d82348801ed28494bc870d7c4c72b714c3" },
+  "scripts/task-result.mjs": { bytes: 34092, sha256: "8ad3a164db08a33233340b9db381da17047378be9e3965cdd90b7065ad95a4b6" },
   "references/caller-pin.json": { bytes: 3642, sha256: "7e6adbccf8436c90e23e3ee2338cbac093c33968628e5c5cae5c7d697abb13b7" },
   "references/LICENSE.txt": { bytes: 1071, sha256: "044d7291c37a2ead106ea4b4c26f713e63b7834637ed634da640f74e8cbe4625" },
 };
@@ -199,15 +212,59 @@ function toolJson(result) {
   try { return JSON.parse(text); } catch { return null; }
 }
 
+const downloadFixtureRoot = path.join(root, "fixtures/installed-skills/caller-result-0.1.1-downloads");
+const downloadFixtureReady = existsSync(path.join(
+  downloadFixtureRoot,
+  "downloads/samedaydesk-caller-result/0.1.1/descriptor.json",
+));
+
+async function serveDownloadFixture() {
+  const server = createServer((req, res) => {
+    const url = new URL(req.url || "/", "http://127.0.0.1");
+    const rel = url.pathname.replace(/^\/+/, "");
+    const filePath = path.join(downloadFixtureRoot, rel);
+    if (!filePath.startsWith(downloadFixtureRoot) || !existsSync(filePath)) {
+      res.writeHead(404);
+      res.end("missing");
+      return;
+    }
+    const bytes = readFileSync(filePath);
+    res.writeHead(200, {
+      "content-type": "application/octet-stream",
+      "content-length": bytes.length,
+      "cache-control": "no-store",
+    });
+    res.end(bytes);
+  });
+  const port = await listen(server);
+  return {
+    server,
+    publicRoot: `http://127.0.0.1:${port}/`,
+    async close() {
+      await new Promise((resolve) => server.close(resolve));
+    },
+  };
+}
+
 let acquired;
 function acquireCaller() {
   acquired ??= (async () => {
     const work = path.join(await mkdtemp(path.join(tmpdir(), "installed-feedback-211998-")), "work");
-    const result = await runScript(["acquire", "--work", work, "--install", "yes"], 180_000);
-    if (result.code !== 0 || result.body?.outcome !== "acquired") {
-      throw new Error(`acquire failed ${result.code}`);
+    const args = ["acquire", "--work", work, "--install", "yes"];
+    let mount = null;
+    if (downloadFixtureReady) {
+      mount = await serveDownloadFixture();
+      args.push("--public-root", mount.publicRoot);
     }
-    return { caller: result.body.callerDir, body: result.body };
+    try {
+      const result = await runScript(args, 180_000);
+      if (result.code !== 0 || result.body?.outcome !== "acquired") {
+        throw new Error(`acquire failed ${result.code} ${result.stderr?.slice(0, 400) || result.stdout?.slice(0, 400) || ""}`);
+      }
+      return { caller: result.body.callerDir, body: result.body };
+    } finally {
+      if (mount) await mount.close();
+    }
   })();
   return acquired;
 }

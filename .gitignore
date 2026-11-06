@@ -1,4 +1,5 @@
 node_modules/
+.python-consumer/
 .env
 data/
 .scratch/

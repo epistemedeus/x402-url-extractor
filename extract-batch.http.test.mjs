@@ -22,6 +22,7 @@ import {
   readExtractBatchInputRefusalCode,
 } from "./extract-batch.mjs";
 import { assertExtractDiscoveryInventory } from "./extract-discovery-inventory.mjs";
+import { compareMcpCatalog } from "./mcp-catalog-projection.mjs";
 const validateOutput = new Ajv2020({ strict: false, allErrors: true }).compile(extractBatchOutputSchema());
 function assertOutput(result) {
   assert.equal(validateOutput(result), true, JSON.stringify(validateOutput.errors));
@@ -291,8 +292,12 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
   try {
     const tools = (await client.listTools()).tools;
-    assert.equal(tools.length, 26);
+    const descriptor = await fetch(`${merchant.base}/mcp`).then((response) => response.json());
+    const agreement = compareMcpCatalog(descriptor, tools);
+    assert.equal(agreement.ok, true, JSON.stringify(agreement.differences));
+    assert.equal(descriptor.paidToolCount, 23);
     assert.equal(tools.some((tool) => tool.name === "extract_batch"), false);
+    assert.equal(tools.some((tool) => tool.name === "recover_paid_result"), true);
     assert.equal(tools.some((tool) => tool.name === "report_caller_result"), true);
   } finally {
     await client.close();

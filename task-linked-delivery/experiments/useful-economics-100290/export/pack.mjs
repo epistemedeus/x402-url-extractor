@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -46,6 +46,8 @@ for (const rel of members) {
   const target = path.join(stage, rel);
   mkdirSync(path.dirname(target), { recursive: true });
   writeFileSync(target, readFileSync(path.join(pkg, rel)));
+  // Archive metadata is part of the public byte contract, not caller umask.
+  chmodSync(target, 0o644);
 }
 const archiveName = `${id}-${version}.tar.gz`;
 const packed = spawnSync("tar", [

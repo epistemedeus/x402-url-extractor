@@ -37,7 +37,7 @@ test("installed axios is the patched 1.20.0 pin, separate from HTTP/2 applicabil
   const cdp = readFileSync(new URL("../../node_modules/@coinbase/cdp-sdk/src/openapi-client/cdpApiClient.ts", import.meta.url), "utf8");
   assert.equal(version, "1.20.0");
   assert.equal(pkg.overrides.axios, "1.20.0");
-  assert.equal(pkg.overrides.qs, "6.16.0");
+  assert.equal(pkg.overrides.qs, "6.16.2");
   assert.equal(cdp.includes("httpVersion"), false);
   assert.match(cdp, /Axios\.create\(\{\s*baseURL,/);
 });

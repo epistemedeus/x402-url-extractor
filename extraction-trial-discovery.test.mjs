@@ -13,6 +13,7 @@ import { createExtractionTrialBudget } from "./extraction-trial.mjs";
 import { AIAX_MAX_BYTES } from "./aiax-discovery/projection.mjs";
 import { PLATFORM_HEALTH_CARDS } from "./platform-health.mjs";
 import { FREE_PAGE_COMPARE_SKILL_ID, omitFreePageCompareAgentSkill, omitFreePageCompareLlmsSection } from "./page-change-free-surface.mjs";
+import { compareMcpCatalog, historicalMcpDescriptorView } from "./mcp-catalog-projection.mjs";
 
 const BASE = "c2aeb77a8546c1d8bb7b27473fc466b373538c72";
 const origin = "https://agents.samedaydesk.com";
@@ -165,6 +166,8 @@ test("exact admitted base preserves paid documents, challenges, MCP tools and al
     }
     docs.human = human;
     // trial_read is an additive MCP entry. Removing it restores the admitted tool order.
+    // The registered-inventory fields are a later projection delta, not a paid-document change.
+    if (docs["/mcp"]) docs["/mcp"] = historicalMcpDescriptorView(docs["/mcp"]);
     if (docs["/mcp"]?.freeTools) docs["/mcp"].freeTools = docs["/mcp"].freeTools.filter((tool) => tool.name !== "trial_read");
     if (Array.isArray(docs.tools?.tools)) docs.tools.tools = docs.tools.tools.filter((tool) => tool.name !== "trial_read");
     return docs;
@@ -192,6 +195,8 @@ test("exact admitted base preserves paid documents, challenges, MCP tools and al
   assert.equal(advertised.paymentRequired, false);
   assert.equal(advertised.consumesSharedTrialAllowance, true);
   assert.equal(advertised.discovery, descriptor.json.extractionTrial.discovery);
+  const catalogAgreement = compareMcpCatalog(descriptor.json, listed.tools);
+  assert.equal(catalogAgreement.ok, true, JSON.stringify(catalogAgreement.differences));
   const actual = await capture(amended);
   const fullActual = await capture(amended, false);
   for (const route of ["/openapi.json", "/mpp-openapi.json"]) await t.test(`official AgentCash parser ${route}`, async () => {

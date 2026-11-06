@@ -12,6 +12,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { mcpToolNameForRoute, parseLlmsPaidRoutes, validateMachineSurfaceParity } from "./machine-surface-parity.mjs";
+import { compareMcpCatalog } from "./mcp-catalog-projection.mjs";
 import { listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { opportunityPreflight } from "./opportunity-preflight.mjs";
 import { CDP_RESOURCE_DESCRIPTION_MAX_CODE_POINTS } from "./x402-resource-compat.mjs";
@@ -242,7 +243,10 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(receipt.llmsCanonicalCount, 23);
   assert.equal(receipt.llmsAlternateCount, 1);
   assert.equal(receipt.mcpToolCount, 23);
-  assert.equal(mcpDescriptor.toolCount, 23);
+  assert.equal(mcpDescriptor.paidToolCount, 23);
+  assert.equal(mcpDescriptor.registered, true);
+  const catalogAgreement = compareMcpCatalog(mcpDescriptor, mcpTools);
+  assert.equal(catalogAgreement.ok, true, JSON.stringify(catalogAgreement.differences));
   assert.equal(manifest.items.length, 24);
   const declaredAgentSources = listDeclaredAgentDiscoverySources();
   assert.deepEqual(

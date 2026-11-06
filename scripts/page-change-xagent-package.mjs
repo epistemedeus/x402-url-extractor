@@ -23,6 +23,40 @@ export const VENDOR_DIR = "examples/customer-x402/src/page-change/vendor/change-
 export const BLOCKED_DIR_NAMES = Object.freeze(["node_modules", ".git", "dist", "build", ".next"]);
 export const CONTEST_WRAPPER_PREFIX = "experiments/s118-xagent/";
 export const SECRET_FILENAME_RE = /(?:^|\/)\.env(?!.*example)|(?:^|\/)[^/]+\.(?:pem|p12|pfx|key)$/i;
+export const SOURCE_ENTRY_CAP = 2000;
+
+// The review packet ships the offline page-change capability, not the merchant
+// monorepo. The entry cap applies to this set. vendor/ stays inside the
+// page-change tree so its blob bytes remain the committed bytes.
+const PACKAGE_SOURCE_PREFIXES = Object.freeze([
+  "examples/customer-x402/src/page-change/",
+  "examples/customer-x402/fixtures/page-change/",
+]);
+const PACKAGE_SOURCE_FILES = new Set([
+  "LICENSE",
+  "extract-batch-c1/url-guard.mjs",
+  "extract-batch-config.mjs",
+  "extract-excerpt-budget.mjs",
+  "examples/customer-x402/bin/page-change.mjs",
+  "examples/customer-x402/src/batch-admission.mjs",
+  "examples/customer-x402/src/batch-output.mjs",
+  "examples/customer-x402/src/constants.mjs",
+  "examples/customer-x402/src/record/merchant-batch-schema.json",
+  "page-change-http.mjs",
+  "page-change-http-sleep-worker.mjs",
+  "page-change-http-worker.mjs",
+  "page-change-http.test.mjs",
+  "page-change-input-contract.mjs",
+  "scripts/page-change-xagent-package.mjs",
+  "scripts/page-change-xagent-sidecar.mjs",
+]);
+
+export function isPackageSourcePath(relativePath) {
+  const path = posix(relativePath);
+  if (PACKAGE_SOURCE_FILES.has(path)) return true;
+  return PACKAGE_SOURCE_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
 export const VENDOR_SHA256 = Object.freeze({
   "index.mjs": "d452847daf499950238f3318799e8efee437faba4fd00ec0a6228026f8dacd7d",
   "NOTICE.md": "ec4e92f58b79cd145c535d1f3c95b2eb21a893bad7f559939c0e93a176dd6ab7",
@@ -98,8 +132,9 @@ function requireCommit(commit) {
 function merchantEntries(repoRoot, commit) {
   const ref=requireCommit(commit);
   const records=new TextDecoder('utf-8',{fatal:true}).decode(git(resolve(repoRoot), ['ls-tree','-r','-z',ref], 'buffer')).split('\0').filter(Boolean);
-  if(records.length>2000) throw new Error('Source exceeds 2000 entries');
-  return records.map(record=>{
+  const scoped=records.filter((record)=>{const tab=record.indexOf('\t');return tab!==-1 && isPackageSourcePath(record.slice(tab+1));});
+  if(scoped.length>SOURCE_ENTRY_CAP) throw new Error('Source exceeds 2000 entries');
+  return scoped.map(record=>{
     const tab=record.indexOf('\t');
     const [mode,type,oid]=record.slice(0,tab).split(' ');
     return {path:record.slice(tab+1),mode,type,oid};
