@@ -5,6 +5,11 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { Challenge, Credential } from "mppx";
+import {
+  issueCallerResultFeedbackToken,
+  readCallerResultFeedbackToken,
+} from "./caller-result-feedback.mjs";
+import { callerResultFeedbackPublicContract } from "./caller-result-client/src/contract.mjs";
 import { declareDiscoveryContract } from "./discovery-contract.mjs";
 
 import { evaluateMcpTypedTelemetryOutcome } from "./mcp-typed-telemetry-producer.mjs";
@@ -47,6 +52,22 @@ declareDiscoveryContract({
     type: "object",
     properties: { url: { type: "string" } },
     required: ["url"],
+  },
+  output: { example: { ok: true } },
+  outputSchema: {
+    type: "object",
+    properties: { ok: { type: "boolean" } },
+    required: ["ok"],
+  },
+});
+
+declareDiscoveryContract({
+  routeKey: "GET /distribution/agent-surface-budget-audit",
+  input: { origin: "https://agents.example" },
+  inputSchema: {
+    type: "object",
+    properties: { origin: { type: "string" } },
+    required: ["origin"],
   },
   output: { example: { ok: true } },
   outputSchema: {
@@ -769,6 +790,16 @@ test("route classification preserves useful intent without recording opaque path
   });
   assert.equal(classifyCommerceRoute("/work/opportunity-preflight").kind, "paid");
   assert.equal(classifyCommerceRoute("/distribution/agent-discoverability-audit").kind, "paid");
+  assert.deepEqual(classifyCommerceRoute("/distribution/agent-surface-budget-audit"), {
+    route: "/distribution/agent-surface-budget-audit",
+    kind: "paid",
+    matched: true,
+  });
+  assert.deepEqual(classifyCommerceRoute("/distribution/not-a-catalog-route"), {
+    route: "/distribution/*",
+    kind: "unmatched",
+    matched: false,
+  });
   assert.equal(classifyCommerceRoute("/commerce/payment-offer-preflight").kind, "paid");
   assert.equal(classifyCommerceRoute("/commerce/seller-integrity-audit").kind, "paid");
   assert.deepEqual(classifyCommerceRoute("/commerce/seller-repair-diagnosis"), {
@@ -5698,5 +5729,187 @@ test("a finished status of 0 stays outside the canonical range", async () => {
   assert.equal(snapshot.integrityStatus, COMMERCE_INTEGRITY_UNUSABLE_RECORDS);
   assert.equal(snapshot.coverage.integrity.currentFile.unusableRecordCount, 1);
   assert.equal(snapshot.coverage.retainedParseableEventCount, 0);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("agent-surface budget audit keeps its paid server event and does not mint customers", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-surface-budget-event-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "surface-budget-event-secret",
+    externalSince: "2020-01-01T00:00:00.000Z",
+    requestConstructionSince: "2020-01-01T00:00:00.000Z",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+  });
+  const sentinel = "https://private.example/budget-origin-do-not-store";
+  const route = "/distribution/agent-surface-budget-audit";
+  function finish({ requestPath, query = {}, status = 402, headers = {} }) {
+    const listeners = new Map();
+    const headersSent = [];
+    telemetry.middleware({
+      path: requestPath,
+      url: requestPath,
+      method: "GET",
+      headers,
+      query,
+      ip: "203.0.113.70",
+      socket: {},
+    }, {
+      statusCode: status,
+      headersSent: false,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+      setHeader(name, value) { headersSent.push([name, value]); },
+      append(name, value) { headersSent.push([name, value]); },
+    }, () => {});
+    // Excluded routes return before registering a finish listener. That omission is the event.
+    const listener = listeners.get("finish");
+    if (listener) listener();
+    return headersSent;
+  }
+
+  const shares = [
+    finish({
+      requestPath: route,
+      headers: { "user-agent": "curl/8.0" },
+      query: { origin: sentinel },
+    }),
+    finish({
+      requestPath: route,
+      headers: { "user-agent": "Agent402/1.0" },
+      query: {},
+    }),
+    finish({
+      requestPath: route,
+      headers: { "user-agent": "SameDayDesk-monitor" },
+      query: { origin: sentinel },
+    }),
+    finish({
+      requestPath: route,
+      headers: { "user-agent": "curl/8.0", "payment-signature": "not-a-credential" },
+      query: {},
+    }),
+    finish({
+      requestPath: "/distribution/not-a-catalog-route",
+      status: 404,
+      headers: { "user-agent": "Agent402/1.0" },
+    }),
+    finish({
+      requestPath: "/commerce/caller-result-feedback",
+      status: 200,
+      headers: { "user-agent": "curl/8.0" },
+    }),
+  ];
+  assert.equal(shares.flat().some(([, value]) => String(value).includes("caller-result")), false);
+  await telemetry.flush();
+
+  const raw = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.equal(raw.includes(sentinel), false);
+  assert.equal(raw.includes("not-a-credential"), false);
+  const rows = raw.trim().split("\n").map((line) => JSON.parse(line));
+  assert.equal(rows.length, 5);
+  assert.equal(rows.some((row) => row.route === "/commerce/caller-result-feedback"), false);
+
+  const [external, crawler, owner, paidAttempt, collapsed] = rows;
+  assert.equal(external.route, route);
+  assert.equal(external.kind, "paid");
+  assert.equal(external.matched, true);
+  assert.equal(external.result, "challenge");
+  assert.equal(external.originClass, "external");
+  assert.equal(external.requestConstruction, "constructed");
+  assert.equal(external.requestConstructionRequiredKeyCount, 1);
+  assert.deepEqual(external.queryKeys, ["origin"]);
+  assert.equal(external.paymentPresent, false);
+  assert.equal(external.paymentFailureCode, null);
+  assert.equal(external.settlementReference, null);
+
+  assert.equal(crawler.route, route);
+  assert.equal(crawler.kind, "paid");
+  assert.equal(crawler.originClass, "crawler");
+  assert.equal(crawler.agentDiscoverySource, "agent402");
+  assert.equal(crawler.requestConstruction, "missing_required_input");
+  assert.deepEqual(crawler.queryKeys, []);
+  assert.equal(crawler.result, "challenge");
+
+  assert.equal(owner.originClass, "owner_monitor");
+  assert.equal(owner.route, route);
+  assert.equal(owner.result, "challenge");
+
+  assert.equal(paidAttempt.route, route);
+  assert.equal(paidAttempt.paymentPresent, true);
+  assert.equal(paidAttempt.paymentFailureCode, "missing_required_input");
+  assert.equal(paidAttempt.paymentFailureEvidence, "request_shape");
+  assert.equal(paidAttempt.result, "challenge");
+  assert.equal(paidAttempt.settlementReference, null);
+  assert.equal(paidAttempt.originClass, "external");
+
+  assert.equal(collapsed.route, "/distribution/*");
+  assert.equal(collapsed.kind, "unmatched");
+  assert.equal(collapsed.matched, false);
+  assert.equal(collapsed.result, "unmatched");
+
+  const rare = await readFile(telemetry.paths.rareFunnelPath, "utf8");
+  assert.equal(rare.includes(sentinel), false);
+  const rareRows = rare.trim().split("\n").map((line) => JSON.parse(line));
+  assert.equal(rareRows.length, 1);
+  assert.equal(rareRows[0].id, paidAttempt.id);
+  assert.equal(rareRows[0].route, route);
+  assert.equal(rareRows[0].usefulness, "unknown");
+  assert.equal(rareRows[0].result, "challenge");
+
+  const snapshot = await telemetry.snapshot({ days: 90 });
+  assert.equal(snapshot.integrityStatus, COMMERCE_INTEGRITY_OK);
+  assert.equal(snapshot.requestedWindowComplete, false);
+  assert.equal(snapshot.requestedWindowCoverage, COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW);
+  assert.equal(snapshot.actorContinuity.distinctPeople, null);
+  assert.equal(snapshot.actorContinuity.newUsers, null);
+  assert.equal(snapshot.byResult.paid_success ?? 0, 0);
+  assert.equal(snapshot.paidSuccessActors, 0);
+  assert.equal(snapshot.independentPaidSuccessActors, 0);
+  assert.equal(snapshot.externalEvents, 2);
+  assert.equal(snapshot.constructedRequestByRoute[route], 1);
+  assert.equal(snapshot.agentDiscoveryByRoute[route], 1);
+  const customerCounterKeys = [];
+  JSON.stringify(snapshot, (key, value) => {
+    if (/^customers?$/i.test(key) || /customerCount|newCustomers|customerActors/i.test(key)) {
+      customerCounterKeys.push(key);
+    }
+    if (key === "customerDemand") assert.equal(value, "unknown");
+    return value;
+  });
+  assert.deepEqual(customerCounterKeys, []);
+
+  const proofContract = callerResultFeedbackPublicContract();
+  assert.equal(proofContract.optional, true);
+  assert.equal(proofContract.charged, false);
+  assert.equal(proofContract.payerIdentity, false);
+  assert.equal(proofContract.usefulness, "unknown");
+  assert.equal(classifyCommerceRoute(proofContract.path).kind, "excluded");
+  const proofKey = "later-agent-proof-share-key-32bx";
+  const shared = issueCallerResultFeedbackToken({
+    key: proofKey,
+    eventId: external.id,
+    method: "GET",
+    route: "/extract",
+    requestDigest: "ab".repeat(32),
+    responseDigest: "cd".repeat(32),
+  });
+  assert.equal(typeof shared, "string");
+  const readBack = readCallerResultFeedbackToken(shared, proofKey);
+  assert.equal(readBack.ok, true);
+  assert.equal(readBack.claims.eventId, external.id);
+  assert.equal(readBack.claims.route, "/extract");
+  assert.equal(readBack.claims.channel, "http");
+  assert.equal(raw.includes(shared), false);
+  assert.equal(rare.includes(shared), false);
+  assert.equal(issueCallerResultFeedbackToken({
+    key: proofKey,
+    eventId: external.id,
+    method: "GET",
+    route,
+    requestDigest: "ab".repeat(32),
+    responseDigest: "cd".repeat(32),
+  }), null);
   await rm(dataDir, { recursive: true, force: true });
 });
