@@ -1,6 +1,8 @@
-import { decodePaymentRequiredHeader } from "@x402/core/http";
+import { decodePaymentRequiredHeader, encodePaymentRequiredHeader } from "@x402/core/http";
 import { PaymentRequiredV2Schema } from "@x402/core/schemas";
-import { x402HTTPResourceServer } from "@x402/core/server";
+import { x402HTTPResourceServer, x402ResourceServer } from "@x402/core/server";
+import { isDeepStrictEqual } from "node:util";
+import { getDiscoveryQuoteOutput } from "./discovery-contract.mjs";
 
 const UNPAID_ERROR = "Payment required";
 
@@ -55,8 +57,10 @@ function legacyInputFields(discovery, schema) {
 
 export function buildLegacyCompatiblePaymentRequired(value) {
   const decoded = decodePaymentRequired(value);
-  if (!decoded) return null;
+  return decoded ? legacyPaymentRequired(decoded) : null;
+}
 
+function legacyPaymentRequired(decoded) {
   const { resource } = decoded;
   const discovery = decoded.extensions?.bazaar?.info;
   const outputSchema = discovery && typeof discovery === "object"
@@ -83,9 +87,29 @@ export function buildLegacyCompatiblePaymentRequired(value) {
   };
 }
 
+function projectBazaarQuote(quote) {
+  const { info, schema } = quote.extensions?.bazaar || {};
+  const properties = schema?.properties?.output?.properties;
+  if (info?.output?.type !== "json" || !properties || !Object.hasOwn(properties, "example")) return quote;
+
+  const hasExample = Object.hasOwn(info.output, "example");
+  const partial = hasExample && getDiscoveryQuoteOutput(quote.resource.url, info.input?.method);
+  if (hasExample && !partial) return quote;
+
+  const projected = structuredClone(quote);
+  const bazaar = projected.extensions.bazaar;
+  if (partial) {
+    bazaar.info.output = partial.info;
+    bazaar.schema.properties.output.properties.example = partial.schema;
+  } else {
+    delete bazaar.schema.properties.output.properties.example;
+  }
+  return projected;
+}
+
 // Scope the legacy projection to the SDK's own unpaid response. Core 2.16
 // used an empty body and 2.29 adds a single error field to the placeholder.
-// Registry clients need the body projection; the v2 header stays authoritative.
+// Registry clients need the full body projection; the v2 header stays authoritative.
 export function mirrorLegacyX402Body(response) {
   const { status, body, headers } = response;
   if (status !== 402 || headers?.["Content-Type"] !== "application/json"
@@ -93,8 +117,32 @@ export function mirrorLegacyX402Body(response) {
   const keys = Object.keys(body);
   if (keys.length !== 0 && !(keys.length === 1 && keys[0] === "error" && body.error === UNPAID_ERROR)) return response;
 
-  const compatible = buildLegacyCompatiblePaymentRequired(headers["PAYMENT-REQUIRED"]);
-  return compatible?.error === UNPAID_ERROR ? { ...response, body: compatible } : response;
+  const decoded = decodePaymentRequired(headers["PAYMENT-REQUIRED"]);
+  if (decoded?.error !== UNPAID_ERROR) return response;
+  const compatible = legacyPaymentRequired(decoded);
+  // Keep the full declaration in the legacy body. Clients echo the header's
+  // Bazaar extension in PAYMENT-SIGNATURE, so this also bounds the retry.
+  const quote = projectBazaarQuote(decoded);
+  return {
+    ...response,
+    headers: quote === decoded ? headers : { ...headers, "PAYMENT-REQUIRED": encodePaymentRequiredHeader(quote) },
+    body: compatible,
+  };
+}
+
+export class QuoteX402ResourceServer extends x402ResourceServer {
+  validateExtensions(paymentRequired, paymentPayload) {
+    const result = super.validateExtensions(paymentRequired, paymentPayload);
+    if (result.valid || result.extensionKey !== "bazaar") return result;
+
+    // Accept either the original declaration or the exact partial example we
+    // advertise. The SDK still checks the input and all other extension info.
+    const projected = projectBazaarQuote(paymentRequired);
+    const output = projected.extensions?.bazaar?.info?.output;
+    if (projected === paymentRequired || output?.format !== "partial-example"
+        || !isDeepStrictEqual(paymentPayload.extensions?.bazaar?.info?.output, output)) return result;
+    return super.validateExtensions(projected, paymentPayload);
+  }
 }
 
 export class LegacyBodyX402HTTPResourceServer extends x402HTTPResourceServer {

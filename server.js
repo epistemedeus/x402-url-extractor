@@ -31,7 +31,7 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import { mountScopedRepairCommerce } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/mount.mjs";
 import { isScopedRepairPath } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/paths.mjs";
-import { paymentMiddlewareFromHTTPServer, x402ResourceServer } from "@x402/express";
+import { paymentMiddlewareFromHTTPServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import {
   declareDiscoveryContract,
@@ -309,7 +309,7 @@ import {
   acquisitionIndexSkill,
   mountMachineAcquisition,
 } from "./machine-acquisition.mjs";
-import { LegacyBodyX402HTTPResourceServer } from "./x402-legacy-body.mjs";
+import { LegacyBodyX402HTTPResourceServer, QuoteX402ResourceServer } from "./x402-legacy-body.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
   VIBES_DISCOVERABILITY_SLUG,
@@ -504,7 +504,7 @@ const { mode: FACILITATOR, client: configuredFacilitator } = createMerchantFacil
 const facilitatorClient = trackReplaySettlementAttempts(configuredFacilitator);
 
 // Register the EVM "exact" scheme for our network. This is what settles USDC.
-const resourceServer = new x402ResourceServer(facilitatorClient).register(
+const resourceServer = new QuoteX402ResourceServer(facilitatorClient).register(
   NETWORK,
   new ExactEvmScheme()
 );
@@ -1111,6 +1111,9 @@ const PAYMENT_OFFER_PREFLIGHT_OUTPUT_EXAMPLE = {
 function declarePaymentOfferPreflightGetContract(routeKey) {
   return declareDiscoveryContract({
     routeKey,
+    ...(routeKey === "GET /commerce/payment-offer-preflight" ? {
+      quoteOutputFields: { decision: true, offers: ["protocol", "network", "amountAtomic", "valid"] },
+    } : {}),
     input: {
       url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e",
     },
@@ -3536,6 +3539,7 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
           ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryContract({
             routeKey: "GET /commerce/contract-qualified-search",
+            quoteOutputFields: { decision: true, qualified: ["route", "guaranteedPaths"] },
             input: {
               query: "service domain ownership code provenance",
               requiredPaths: "data.sourceRepository",
@@ -3567,6 +3571,11 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
           ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryContract({
             routeKey: "GET /distribution/agent-surface-budget-audit",
+            quoteOutputFields: {
+              decision: true,
+              mcp: ["bytes", "withinBudget"],
+              openapi: ["bytes", "withinBudget"],
+            },
             input: { origin: "https://agents.samedaydesk.com", surfaceMode: "both", mcpPath: "/mcp", openApiPath: "/openapi.json", mcpBudgetBytes: 65536, openApiBudgetBytes: 524288 },
             inputSchema: {
               type: "object",
@@ -3595,6 +3604,7 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
           ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryContract({
             routeKey: "GET /commerce/settlement-proof",
+            quoteOutputFields: { decision: true, settlement: ["verified", "exactTransferCount"] },
             input: {
               transactionHash: "0xcfcbb367fecf27052db9ca855e5146e99cacbce1cab94f20f9f95a74170a8987",
               recipient: PAY_TO,
@@ -3658,6 +3668,7 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
           ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryContract({
             routeKey: "GET /chain/transaction-receipt",
+            quoteOutputFields: { decision: true, transaction: ["status", "blockNumber"] },
             input: {
               transactionHash: "0xcfcbb367fecf27052db9ca855e5146e99cacbce1cab94f20f9f95a74170a8987",
               network: "base",
@@ -3719,6 +3730,7 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
           ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryContract({
             routeKey: "GET /chain/solana-transaction-receipt",
+            quoteOutputFields: { decision: true, transaction: ["status", "slot"] },
             input: {
               signature: "3CjY38avdggKZbKfu2BmFYN4MUTiiNX27c8dHzPW79PrAx3huB9Pa6AfwW6sT4biax3y22z8toyLzmjtCc2QGNZn",
               mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
@@ -3821,6 +3833,7 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
           ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryContract({
             routeKey: `GET ${CAREERS_BOARD_PATH}`,
+            quoteOutputFields: { board: true, outcome: true, rows: ["title", "location"] },
             input: { board: "acxiom" },
             inputSchema: {
               type: "object",

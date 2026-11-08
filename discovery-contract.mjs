@@ -6,6 +6,36 @@ import {
 
 const outputContracts = new Map();
 const requestContracts = new Map();
+const quoteOutputs = new Map();
+
+function pickExampleFields(example, fields) {
+  return Object.fromEntries(fields.map((field) => {
+    if (!Object.hasOwn(example, field)) throw new Error(`Missing discovery example field ${field}`);
+    return [field, example[field]];
+  }));
+}
+
+function declareQuoteOutput(example, fields) {
+  const selected = pickExampleFields(example, Object.keys(fields));
+  for (const [field, children] of Object.entries(fields)) {
+    if (children === true) continue;
+    const value = selected[field];
+    selected[field] = Array.isArray(value)
+      ? value.map((item) => pickExampleFields(item, children))
+      : pickExampleFields(value, children);
+  }
+  return {
+    info: { type: "json", format: "partial-example", example: selected },
+    schema: {
+      type: "object",
+      properties: Object.fromEntries(Object.entries(selected).map(([field, value]) => [field, {
+        type: Array.isArray(value) ? "array" : value === null ? "null" : typeof value,
+      }])),
+      required: Object.keys(selected),
+      additionalProperties: false,
+    },
+  };
+}
 
 /**
  * Preserve the local explicit `outputSchema` authoring shape while adapting it
@@ -14,7 +44,10 @@ const requestContracts = new Map();
  * from silently degrading to an untyped example object.
  */
 export function declareDiscoveryContract(config = {}) {
-  const { output, outputSchema, routeKey, publishOutputExample = true, ...rest } = config;
+  const { output, outputSchema, routeKey, publishOutputExample = true, quoteOutputFields, ...rest } = config;
+  if (quoteOutputFields && (!routeKey?.startsWith("GET ") || !publishOutputExample)) {
+    throw new Error("Partial quote examples require a GET route with a full discovery example");
+  }
   let routeMethod;
   if (routeKey !== undefined) {
     const match = /^(GET|POST) \/[^?#]+$/.exec(routeKey);
@@ -22,7 +55,6 @@ export function declareDiscoveryContract(config = {}) {
     routeMethod = match[1];
     if (!output?.example || !outputSchema) throw new Error(`Discovery route ${routeKey} requires an example and output schema`);
     if (outputContracts.has(routeKey)) throw new Error(`Duplicate discovery route key: ${routeKey}`);
-    outputContracts.set(routeKey, structuredClone({ example: output.example, schema: outputSchema }));
   }
   const declared = declareDiscoveryExtension({
     ...rest,
@@ -43,15 +75,34 @@ export function declareDiscoveryContract(config = {}) {
     const specResult = validateDiscoveryExtensionSpec(extension);
     const errors = [...(schemaResult.errors || []), ...(specResult.errors || [])];
     if (!schemaResult.valid || !specResult.valid) {
-      outputContracts.delete(routeKey);
       throw new Error(`Invalid Bazaar discovery contract for ${routeKey}: ${errors.join("; ")}`);
     }
-    requestContracts.set(routeKey, structuredClone({
-      example: extension.info.input,
-      schema: extension.schema.properties.input,
-    }));
+    if (quoteOutputFields) {
+      const compact = declareQuoteOutput(output.example, quoteOutputFields);
+      const fullOutputBytes = Buffer.byteLength(JSON.stringify([extension.info.output, outputSchema]));
+      if (Buffer.byteLength(JSON.stringify([compact.info, compact.schema])) >= fullOutputBytes) {
+        throw new Error(`Partial quote example does not reduce ${routeKey}`);
+      }
+      extension.info.output = compact.info;
+      extension.schema.properties.output.properties.example = compact.schema;
+      const result = validateDiscoveryExtension(extension);
+      if (!result.valid) throw new Error(`Invalid partial quote example for ${routeKey}: ${result.errors.join("; ")}`);
+      quoteOutputs.set(routeKey, structuredClone(compact));
+    }
+    outputContracts.set(routeKey, structuredClone({ example: output.example, schema: outputSchema }));
+    requestContracts.set(routeKey, structuredClone({ example: extension.info.input, schema: extension.schema.properties.input }));
   }
   return declared;
+}
+
+export function getDiscoveryQuoteOutput(resourceUrl, method) {
+  if (method !== "GET") return undefined;
+  try {
+    const path = decodeURI(new URL(resourceUrl).pathname).replace(/\/+/g, "/").replace(/\/$/, "").toLowerCase();
+    return quoteOutputs.get(`GET ${path}`);
+  } catch {
+    return undefined;
+  }
 }
 
 export function getDiscoveryRequestContract(routeKey) {

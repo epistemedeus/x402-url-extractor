@@ -1,21 +1,31 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { createServer } from "node:net";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 import Ajv from "ajv";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { x402Client } from "@x402/core/client";
+import { encodePaymentRequiredHeader } from "@x402/core/http";
+import { x402ResourceServer } from "@x402/core/server";
+import { extractDiscoveryInfo } from "@x402/extensions/bazaar";
+import { createOfferReceiptExtension } from "@x402/extensions/offer-receipt";
+import { validateBazaarContract } from "agent-payment-integrity";
 
 import { mcpToolNameForRoute, parseLlmsPaidRoutes, validateMachineSurfaceParity } from "./machine-surface-parity.mjs";
 import { compareMcpCatalog } from "./mcp-catalog-projection.mjs";
 import { listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { opportunityPreflight } from "./opportunity-preflight.mjs";
 import { CDP_RESOURCE_DESCRIPTION_MAX_CODE_POINTS } from "./x402-resource-compat.mjs";
+import { validatePaymentRequiredHeader } from "./bazaar-contract-audit.mjs";
+import { SELLER_INTEGRITY_AUDIT_EXAMPLE, sellerIntegrityAuditOutputSchema } from "./seller-integrity-audit.mjs";
+import { mirrorLegacyX402Body } from "./x402-legacy-body.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const SNAPSHOT_MISSING_FROM_LLMS = [
@@ -27,6 +37,90 @@ const SNAPSHOT_MISSING_FROM_LLMS = [
 ];
 const CIRCLE_ROUTE = "/gateway/commerce/payment-offer-preflight";
 const SELLER_INTEGRITY_ROUTE = "/commerce/seller-integrity-audit";
+const COMPLETE_AUDIT = `${SELLER_INTEGRITY_ROUTE}?origin=https%3A%2F%2Fagents.samedaydesk.com&route=%2Fcommerce%2Fpayment-offer-preflight&requiredPaths=decision%2Coffers`;
+const EXTRACT_CONTROL = "/extract?url=https%3A%2F%2Fexample.com";
+const PAYMENT_REQUIRED_LINE_BUDGET = 7500; // Includes framing, 690 bytes below aiohttp's 8190-byte default.
+
+function paymentRequiredLineBytes(encoded) {
+  return Buffer.byteLength(`PAYMENT-REQUIRED: ${encoded}\r\n`);
+}
+
+async function receiptExtensionForBudget(quote) {
+  // Exercise the installed extension's actual envelope and schema with a
+  // prebuilt 65-byte signature placeholder. No private key or signer is used.
+  const { enrichPaymentRequiredResponse } = createOfferReceiptExtension({
+    issueOffer: async (resourceUrl, { acceptIndex, scheme, network, asset, payTo, amount }) => ({
+      format: "eip712", acceptIndex,
+      payload: { version: 1, resourceUrl, scheme, network, asset, payTo, amount, validUntil: 1_800_000_000 },
+      signature: `0x${"00".repeat(65)}`,
+    }),
+  });
+  return enrichPaymentRequiredResponse({ includeTxHash: true }, {
+    paymentRequiredResponse: quote, requirements: quote.accepts,
+  });
+}
+
+async function checkAuditQuote(base, route, t) {
+  const response = await fetch(base + route);
+  assert.equal(response.status, 402);
+  const encoded = response.headers.get("payment-required");
+  assert.ok(encoded);
+  const quote = JSON.parse(Buffer.from(encoded, "base64"));
+  const legacy = await response.json();
+  const bytes = paymentRequiredLineBytes(encoded);
+  t.diagnostic(`Node ${route}: ${response.status}; PAYMENT-REQUIRED value=${encoded.length}, line=${bytes}`);
+  assert.ok(bytes <= PAYMENT_REQUIRED_LINE_BUDGET, `audit quote line is ${bytes} bytes`);
+  assert.equal(quote.resource.url, base + route);
+  assert.deepEqual(legacy.resource, quote.resource);
+  assert.deepEqual(quote.accepts.map(exactPaymentTerm), [{
+    scheme: "exact", network: "eip155:8453", asset: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    amount: "10000", payTo: "0x8904df3de6dfee6a7c8cc38619d2f17806213cee", maxTimeoutSeconds: 300,
+    extra: { name: "USD Coin", version: "2" },
+  }]);
+  assert.equal(legacy.accepts[0].maxAmountRequired, quote.accepts[0].amount);
+  assert.deepEqual(validatePaymentRequiredHeader(encoded), { valid: true, errors: [] });
+
+  const bazaar = quote.extensions.bazaar;
+  const fullBazaar = legacy.extensions.bazaar;
+  const fullQuote = { ...quote, extensions: { ...quote.extensions, bazaar: fullBazaar } };
+  assert.deepEqual(fullBazaar.schema.properties.output.properties.example, sellerIntegrityAuditOutputSchema());
+  assert.deepEqual(bazaar.info.output, { type: "json" });
+  assert.deepEqual(validateBazaarContract(bazaar), { valid: true, findings: [] });
+  const [accepted] = quote.accepts;
+  const client = x402Client.fromConfig({
+    schemes: [{ network: accepted.network, client: {
+      scheme: "exact",
+      createPaymentPayload: async (x402Version) => ({ x402Version, payload: { fixture: true } }),
+    } }],
+    spendControls: { allowedAssets: [{ network: accepted.network, asset: accepted.asset, maxAmountPerPayment: "10000" }] },
+  });
+  const echo = await client.createPaymentPayload(quote);
+  assert.deepEqual(echo.extensions, quote.extensions);
+  const indexed = extractDiscoveryInfo(echo, accepted);
+  const fullIndexed = extractDiscoveryInfo({ ...echo, extensions: fullQuote.extensions }, accepted);
+  assert.equal(indexed.resourceUrl, base + SELLER_INTEGRITY_ROUTE);
+  assert.equal(indexed.method, "GET");
+  assert.deepEqual(indexed.discoveryInfo, fullIndexed.discoveryInfo);
+  assert.deepEqual(indexed.extensions.bazaar.schema.properties.input, fullIndexed.extensions.bazaar.schema.properties.input);
+  assert.deepEqual(new x402ResourceServer().validateExtensions(fullQuote, echo), { valid: true });
+
+  const offerReceipt = await receiptExtensionForBudget(quote);
+  const withReceipt = { ...fullQuote, extensions: { ...fullQuote.extensions, "offer-receipt": offerReceipt } };
+  const mirrored = mirrorLegacyX402Body({
+    status: 402, body: {}, headers: {
+      "Content-Type": "application/json", "PAYMENT-REQUIRED": encodePaymentRequiredHeader(withReceipt),
+    },
+  });
+  const encodedWithReceipt = mirrored.headers["PAYMENT-REQUIRED"];
+  const receiptBytes = paymentRequiredLineBytes(encodedWithReceipt);
+  t.diagnostic(`Audit line with synthetic receipt envelope: ${receiptBytes} bytes`);
+  assert.ok(receiptBytes <= PAYMENT_REQUIRED_LINE_BUDGET, `audit quote with receipt is ${receiptBytes} bytes`);
+  assert.deepEqual(JSON.parse(Buffer.from(encodedWithReceipt, "base64")), {
+    ...quote, extensions: { ...quote.extensions, "offer-receipt": offerReceipt },
+  });
+  assert.deepEqual(mirrored.body, { ...legacy, extensions: withReceipt.extensions });
+  return { quote, legacy, bytes };
+}
 
 function unusedPort() {
   return new Promise((resolve, reject) => {
@@ -153,28 +247,24 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
 
   assert.equal(await listening, true);
   const base = `http://127.0.0.1:${port}`;
-  const challengeResponse = await fetch(`${base}/extract?url=https%3A%2F%2Fexample.com`);
+  const challengeResponse = await fetch(base + EXTRACT_CONTROL);
   assert.equal(challengeResponse.status, 402);
   const encodedChallenge = challengeResponse.headers.get("payment-required");
   assert.ok(encodedChallenge);
+  const extractBytes = paymentRequiredLineBytes(encodedChallenge);
+  t.diagnostic(`Node extract control: ${challengeResponse.status}; PAYMENT-REQUIRED value=${encodedChallenge.length}, line=${extractBytes}`);
   const challenge = JSON.parse(Buffer.from(encodedChallenge, "base64").toString("utf8"));
   assert.equal(challenge.extensions?.["builder-code"]?.info?.a, "bc_samedaydesk_test");
   assert.equal(challenge.extensions?.["builder-code"]?.schema?.additionalProperties, false);
-  const sellerIntegrityChallenge = await fetch(`${base}${SELLER_INTEGRITY_ROUTE}`);
-  assert.equal(sellerIntegrityChallenge.status, 402);
-  const encodedSellerIntegrityChallenge = sellerIntegrityChallenge.headers.get("payment-required");
-  assert.ok(encodedSellerIntegrityChallenge);
-  assert.ok(
-    Buffer.byteLength(encodedSellerIntegrityChallenge) < 14_000,
-    `seller-integrity payment-required header exceeds the Node-compatible budget: ${Buffer.byteLength(encodedSellerIntegrityChallenge)} bytes`,
-  );
-  const sellerIntegrityTerms = JSON.parse(Buffer.from(encodedSellerIntegrityChallenge, "base64").toString("utf8"));
-  assert.equal(sellerIntegrityTerms.resource.url, `${base}${SELLER_INTEGRITY_ROUTE}`);
-  assert.equal(sellerIntegrityTerms.accepts[0].amount, "10000");
+  const bareAudit = await checkAuditQuote(base, SELLER_INTEGRITY_ROUTE, t);
+  const completeAudit = await checkAuditQuote(base, COMPLETE_AUDIT, t);
+  const { quote: sellerIntegrityTerms, legacy: legacyChallenge } = bareAudit;
+  assert.deepEqual(completeAudit.quote.extensions, sellerIntegrityTerms.extensions);
+  assert.deepEqual(sellerIntegrityTerms.extensions["builder-code"], challenge.extensions["builder-code"]);
+  assert.deepEqual(sellerIntegrityTerms.extensions["payment-identifier"], challenge.extensions["payment-identifier"]);
   const bazaar = sellerIntegrityTerms.extensions.bazaar;
   const queryExample = bazaar.info.input.queryParams;
   assert.equal(Object.hasOwn(queryExample, "referral"), false, "Bazaar must not supply a referral ID");
-  const legacyChallenge = await sellerIntegrityChallenge.json();
   const legacyReferral = legacyChallenge.accepts[0].outputSchema.input.queryParams.referral;
   assert.equal(legacyReferral.required, false);
   assert.equal(Object.hasOwn(legacyReferral, "default"), false);
@@ -193,6 +283,16 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(callerTerms.resource.url, callerUrl.href);
   assert.deepEqual(callerTerms.accepts, sellerIntegrityTerms.accepts);
   assert.deepEqual(callerTerms.extensions.bazaar.info.input.queryParams, queryExample);
+
+  // Run explicitly with a Python environment containing aiohttp 3.14.5.
+  if (process.env.AIOHTTP_QUOTE_PYTHON) {
+    const { stdout } = await promisify(execFile)(process.env.AIOHTTP_QUOTE_PYTHON, [
+      "python/aiohttp-quote-budget.py", base, EXTRACT_CONTROL, SELLER_INTEGRITY_ROUTE, COMPLETE_AUDIT,
+    ], { cwd, timeout: 15_000 });
+    const measured = JSON.parse(stdout);
+    t.diagnostic(`Python ${measured.python}, aiohttp ${measured.aiohttp}: ${JSON.stringify(measured.responses)}`);
+    assert.deepEqual(measured.responses, [extractBytes, bareAudit.bytes, completeAudit.bytes].map((lineBytes) => ({ status: 402, lineBytes })));
+  }
 
   const humanBefore = await (await fetch(base + "/", { headers: { Accept: "text/html" } })).text();
   const [llms, skill, catalog, gateway, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor, commerceDemand] = await Promise.all([
@@ -276,6 +376,12 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const sellerIntegritySummary = openapi.paths[SELLER_INTEGRITY_ROUTE].get.summary;
   assert.equal(sellerIntegritySummary.length, 469);
   const sellerIntegrityAction = catalog.actions.find((action) => action.route === SELLER_INTEGRITY_ROUTE);
+  const sellerIntegrityOutput = openapi.paths[SELLER_INTEGRITY_ROUTE].get.responses["200"].content["application/json"].schema;
+  assert.deepEqual(sellerIntegrityOutput, sellerIntegrityAuditOutputSchema());
+  assert.deepEqual(sellerIntegrityAction.response, {
+    mimeType: "application/json", schema: sellerIntegrityOutput, example: SELLER_INTEGRITY_AUDIT_EXAMPLE,
+  });
+  assert.deepEqual(sellerIntegrityAction.request.schema.properties.queryParams, bazaar.schema.properties.input.properties.queryParams);
   assert.deepEqual(sellerIntegrityAction.request.example.queryParams, queryExample);
   assert.equal(new URL(sellerIntegrityAction.request.exampleUrl).searchParams.has("referral"), false);
   const sellerIntegrityManifest = manifest.items.find((item) => item.resource.routeTemplate === SELLER_INTEGRITY_ROUTE);
