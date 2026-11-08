@@ -1,4 +1,4 @@
-import { decodePaymentRequiredHeader } from "@x402/core/http";
+import { decodePaymentRequiredHeader, encodePaymentRequiredHeader } from "@x402/core/http";
 import { PaymentRequiredV2Schema } from "@x402/core/schemas";
 import { x402HTTPResourceServer } from "@x402/core/server";
 
@@ -55,8 +55,10 @@ function legacyInputFields(discovery, schema) {
 
 export function buildLegacyCompatiblePaymentRequired(value) {
   const decoded = decodePaymentRequired(value);
-  if (!decoded) return null;
+  return decoded ? legacyPaymentRequired(decoded) : null;
+}
 
+function legacyPaymentRequired(decoded) {
   const { resource } = decoded;
   const discovery = decoded.extensions?.bazaar?.info;
   const outputSchema = discovery && typeof discovery === "object"
@@ -85,7 +87,7 @@ export function buildLegacyCompatiblePaymentRequired(value) {
 
 // Scope the legacy projection to the SDK's own unpaid response. Core 2.16
 // used an empty body and 2.29 adds a single error field to the placeholder.
-// Registry clients need the body projection; the v2 header stays authoritative.
+// Registry clients need the full body projection; the v2 header stays authoritative.
 export function mirrorLegacyX402Body(response) {
   const { status, body, headers } = response;
   if (status !== 402 || headers?.["Content-Type"] !== "application/json"
@@ -93,8 +95,25 @@ export function mirrorLegacyX402Body(response) {
   const keys = Object.keys(body);
   if (keys.length !== 0 && !(keys.length === 1 && keys[0] === "error" && body.error === UNPAID_ERROR)) return response;
 
-  const compatible = buildLegacyCompatiblePaymentRequired(headers["PAYMENT-REQUIRED"]);
-  return compatible?.error === UNPAID_ERROR ? { ...response, body: compatible } : response;
+  const decoded = decodePaymentRequired(headers["PAYMENT-REQUIRED"]);
+  if (decoded?.error !== UNPAID_ERROR) return response;
+  const compatible = legacyPaymentRequired(decoded);
+  const { info, schema } = decoded.extensions?.bazaar || {};
+  const outputProperties = schema?.properties?.output?.properties;
+  if (info?.output?.type !== "json" || Object.hasOwn(info.output, "example")
+      || !outputProperties || !Object.hasOwn(outputProperties, "example")) {
+    return { ...response, body: compatible };
+  }
+
+  // An explicitly omitted example has no value to validate in the header.
+  // Keep its full schema in the legacy body and in the route declaration.
+  const quote = structuredClone(decoded);
+  delete quote.extensions.bazaar.schema.properties.output.properties.example;
+  return {
+    ...response,
+    headers: { ...headers, "PAYMENT-REQUIRED": encodePaymentRequiredHeader(quote) },
+    body: compatible,
+  };
 }
 
 export class LegacyBodyX402HTTPResourceServer extends x402HTTPResourceServer {
