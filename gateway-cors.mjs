@@ -15,6 +15,7 @@ export const BROWSER_AGENT_CORS_PATHS = Object.freeze([
 export const BROWSER_AGENT_CORS_ALLOW_ORIGIN = "*";
 export const BROWSER_AGENT_CORS_ALLOW_METHODS = "GET, POST, OPTIONS";
 export const BROWSER_AGENT_CORS_ALLOW_HEADERS = "content-type";
+const MCP_PROTOCOL_VERSION_HEADER = "mcp-protocol-version";
 export const BROWSER_AGENT_CORS_MAX_AGE = "86400";
 
 // Response headers this gateway actually writes or replays for x402 and MPP.
@@ -72,7 +73,12 @@ export function browserAgentCorsMiddleware(req, res, next) {
   res.setHeader("Access-Control-Expose-Headers", policy.exposeHeaders);
   if (String(req.method || "GET").toUpperCase() !== "OPTIONS") return next();
   res.setHeader("Access-Control-Allow-Methods", policy.allowMethods);
-  res.setHeader("Access-Control-Allow-Headers", policy.allowHeaders);
+  // The stateless MCP transport still negotiates the version in initialize.
+  // The normal client sends that version on later requests; do not authorize
+  // credential or payment headers here (MCP payment stays in JSON-RPC _meta).
+  res.setHeader("Access-Control-Allow-Headers", req.path === "/mcp"
+    ? `${policy.allowHeaders}, ${MCP_PROTOCOL_VERSION_HEADER}`
+    : policy.allowHeaders);
   res.setHeader("Access-Control-Max-Age", policy.maxAge);
   res.status(204);
   res.setHeader("Content-Length", "0");
