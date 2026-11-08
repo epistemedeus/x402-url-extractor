@@ -1,6 +1,8 @@
 import { decodePaymentRequiredHeader, encodePaymentRequiredHeader } from "@x402/core/http";
 import { PaymentRequiredV2Schema } from "@x402/core/schemas";
-import { x402HTTPResourceServer } from "@x402/core/server";
+import { x402HTTPResourceServer, x402ResourceServer } from "@x402/core/server";
+import { isDeepStrictEqual } from "node:util";
+import { getDiscoveryQuoteOutput } from "./discovery-contract.mjs";
 
 const UNPAID_ERROR = "Payment required";
 
@@ -85,6 +87,26 @@ function legacyPaymentRequired(decoded) {
   };
 }
 
+function projectBazaarQuote(quote) {
+  const { info, schema } = quote.extensions?.bazaar || {};
+  const properties = schema?.properties?.output?.properties;
+  if (info?.output?.type !== "json" || !properties || !Object.hasOwn(properties, "example")) return quote;
+
+  const hasExample = Object.hasOwn(info.output, "example");
+  const partial = hasExample && getDiscoveryQuoteOutput(quote.resource.url, info.input?.method);
+  if (hasExample && !partial) return quote;
+
+  const projected = structuredClone(quote);
+  const bazaar = projected.extensions.bazaar;
+  if (partial) {
+    bazaar.info.output = partial.info;
+    bazaar.schema.properties.output.properties.example = partial.schema;
+  } else {
+    delete bazaar.schema.properties.output.properties.example;
+  }
+  return projected;
+}
+
 // Scope the legacy projection to the SDK's own unpaid response. Core 2.16
 // used an empty body and 2.29 adds a single error field to the placeholder.
 // Registry clients need the full body projection; the v2 header stays authoritative.
@@ -98,22 +120,29 @@ export function mirrorLegacyX402Body(response) {
   const decoded = decodePaymentRequired(headers["PAYMENT-REQUIRED"]);
   if (decoded?.error !== UNPAID_ERROR) return response;
   const compatible = legacyPaymentRequired(decoded);
-  const { info, schema } = decoded.extensions?.bazaar || {};
-  const outputProperties = schema?.properties?.output?.properties;
-  if (info?.output?.type !== "json" || Object.hasOwn(info.output, "example")
-      || !outputProperties || !Object.hasOwn(outputProperties, "example")) {
-    return { ...response, body: compatible };
-  }
-
-  // An explicitly omitted example has no value to validate in the header.
-  // Keep its full schema in the legacy body and in the route declaration.
-  const quote = structuredClone(decoded);
-  delete quote.extensions.bazaar.schema.properties.output.properties.example;
+  // Keep the full declaration in the legacy body. Clients echo the header's
+  // Bazaar extension in PAYMENT-SIGNATURE, so this also bounds the retry.
+  const quote = projectBazaarQuote(decoded);
   return {
     ...response,
-    headers: { ...headers, "PAYMENT-REQUIRED": encodePaymentRequiredHeader(quote) },
+    headers: quote === decoded ? headers : { ...headers, "PAYMENT-REQUIRED": encodePaymentRequiredHeader(quote) },
     body: compatible,
   };
+}
+
+export class QuoteX402ResourceServer extends x402ResourceServer {
+  validateExtensions(paymentRequired, paymentPayload) {
+    const result = super.validateExtensions(paymentRequired, paymentPayload);
+    if (result.valid || result.extensionKey !== "bazaar") return result;
+
+    // Accept either the original declaration or the exact partial example we
+    // advertise. The SDK still checks the input and all other extension info.
+    const projected = projectBazaarQuote(paymentRequired);
+    const output = projected.extensions?.bazaar?.info?.output;
+    if (projected === paymentRequired || output?.format !== "partial-example"
+        || !isDeepStrictEqual(paymentPayload.extensions?.bazaar?.info?.output, output)) return result;
+    return super.validateExtensions(projected, paymentPayload);
+  }
 }
 
 export class LegacyBodyX402HTTPResourceServer extends x402HTTPResourceServer {

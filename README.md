@@ -830,6 +830,16 @@ otherwise-empty 402 JSON body for registries that still index the legacy body.
 The payment-offer preflight also exposes an equivalent JSON-body POST route for
 workflow builders while preserving the validated GET route.
 
+Selected Base GET quotes label their smaller Bazaar output sample with
+`info.output.format: "partial-example"`. The installed catalog extractor keeps
+that sample and its example schema. Use the canonical response schema and
+example in the action catalog and the full legacy 402 body for response
+construction. The Bazaar request example and validation schema are the same
+in both representations. The x402 client echoes the header extension in
+`PAYMENT-SIGNATURE`, so the smaller sample also reduces the retry. The tested
+budget includes the exact request target and other request headers. Large
+valid inputs can still exceed a client's or intermediary's header limits.
+
 Version 1.11.40 adds x402.jobs as a tenth public search view. The adapter uses a
 deterministic, disclosed compact keyword query because x402.jobs search is
 lexical rather than semantic, then preserves its public popularity order and
