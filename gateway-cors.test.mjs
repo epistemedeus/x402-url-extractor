@@ -175,7 +175,8 @@ test("live gateway preflight, discovery GET, and unpaid 402 stay intact", { time
     assert.equal(preflight.status, 204, route);
     assert.equal(preflight.headers.get("access-control-allow-origin"), "*");
     assert.equal(preflight.headers.get("access-control-allow-methods"), "GET, POST, OPTIONS");
-    assert.equal(preflight.headers.get("access-control-allow-headers"), "content-type");
+    const allowedHeaders = preflight.headers.get("access-control-allow-headers");
+    assert.equal(route === "/mcp" ? allowedHeaders.split(",")[0] : allowedHeaders, "content-type");
     assert.equal(preflight.headers.get("access-control-max-age"), "86400");
     assert.equal(preflight.headers.get("access-control-allow-credentials"), null, route);
     const exposed = preflight.headers.get("access-control-expose-headers") || "";
@@ -199,12 +200,41 @@ test("live gateway preflight, discovery GET, and unpaid 402 stay intact", { time
   const alias = await fetch(`${base}/.well-known/x402.json`, { method: "OPTIONS" });
   assert.equal(alias.headers.get("access-control-allow-origin"), null);
 
-  const mcp = await fetch(`${base}/mcp`, {
-    method: "POST",
-    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+  const origin = "https://browser.example";
+  const post = (message, headers = {}) => fetch(`${base}/mcp`, {
+    method: "POST", headers: { origin, "content-type": "application/json",
+      accept: "application/json, text/event-stream", ...headers }, body: JSON.stringify(message),
   });
+  async function readRpc(response) {
+    const body = await response.text();
+    if (!response.headers.get("content-type")?.includes("text/event-stream")) return JSON.parse(body);
+    const data = body.split(/\r?\n/).find((line) => line.startsWith("data: "));
+    assert.ok(data, "a complete SSE JSON-RPC response must be present");
+    return JSON.parse(data.slice(6));
+  }
+  const init = await post({ jsonrpc: "2.0", id: 1, method: "initialize", params: {
+    protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "cors-receiving", version: "1" },
+  } });
+  assert.equal(init.status, 200);
+  assert.equal(init.headers.get("access-control-allow-origin"), "*");
+  assert.equal(init.headers.get("mcp-session-id"), null);
+  const negotiated = (await readRpc(init)).result.protocolVersion;
+  assert.equal(negotiated, "2025-11-25");
+  const requestedHeaders = ["content-type", "mcp-protocol-version"];
+  const browserPreflight = await fetch(`${base}/mcp`, { method: "OPTIONS", headers: {
+    origin, "access-control-request-method": "POST", "access-control-request-headers": requestedHeaders.join(","),
+  } });
+  assert.equal(browserPreflight.status, 204);
+  const allowed = browserPreflight.headers.get("access-control-allow-headers").toLowerCase().split(/,\s*/);
+  assert.deepEqual(allowed, requestedHeaders);
+  assert.equal(browserPreflight.headers.get("access-control-allow-credentials"), null);
+  const unrelated = await fetch(`${base}/extract`, { method: "OPTIONS", headers: {
+    origin, "access-control-request-method": "GET", "access-control-request-headers": "payment-signature",
+  } });
+  assert.equal(unrelated.headers.get("access-control-allow-origin"), null);
+  const mcp = await post({ jsonrpc: "2.0", id: 2, method: "tools/list" }, { "mcp-protocol-version": negotiated });
   assert.equal(mcp.headers.get("access-control-allow-origin"), "*");
   assert.equal(mcp.headers.get("access-control-allow-credentials"), null);
-  assert.notEqual(mcp.status, 204);
+  assert.equal(mcp.status, 200);
+  assert.ok((await readRpc(mcp)).result.tools.length > 0);
 });
