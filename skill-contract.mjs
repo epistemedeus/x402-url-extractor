@@ -1,4 +1,5 @@
 import { renderCallerResultClientGuide } from "./caller-result-client-entry.mjs";
+import { renderSellerPreviewGuide } from "./seller-preview-guide.mjs";
 
 function actionLines(actions) {
   if (!Array.isArray(actions) || actions.length === 0) {
@@ -27,6 +28,7 @@ export function buildSkillContract(publicUrl, actions, callerResultClient = null
   const actionsMarkdown = actionLines(actions);
   const mppAvailable = actions.some((action) => action.paymentProtocols?.includes("mpp"));
   const callerGuide = renderCallerResultClientGuide(callerResultClient);
+  const previewGuide = renderSellerPreviewGuide(origin, actions);
   return `# SameDayDesk machine commerce gateway
 
 Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, exact-action or stateful delegated-signer policy conformance, work-opportunity economics, cross-registry discoverability, x402 and MPP offer preflight, Morpho borrower risk, market underwriting, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through ${mppAvailable ? "x402 or native MPP Payment authentication on eligible actions" : "x402"}.
@@ -42,7 +44,7 @@ ${mppAvailable ? `- MPP discovery: ${origin}/mpp-openapi.json (currently eligibl
 - A2A agent card: ${origin}/.well-known/agent-card.json
 - Purchase evidence: ${origin}/.well-known/agent-payment-evidence.json
 
-## AgentCash
+${previewGuide ? `${previewGuide}\n` : ""}## AgentCash
 
 - Discover: \`npx -y agentcash@latest discover ${origin}\`. AgentCash reads the canonical OpenAPI surface at ${origin}/openapi.json.
 - Fallback manifest: if OpenAPI discovery is unavailable, inspect \`npx -y agentcash@latest fetch ${origin}/.well-known/x402\` before calling the selected route.

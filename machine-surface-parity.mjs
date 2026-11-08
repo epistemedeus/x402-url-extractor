@@ -14,6 +14,7 @@
 
 import { renderCallerResultClientGuide } from "./caller-result-client-entry.mjs";
 import { renderFreePageCompareLlmsSection } from "./page-change-free-surface.mjs";
+import { renderSellerPreviewGuide } from "./seller-preview-guide.mjs";
 
 export const CIRCLE_ALTERNATE_KIND = "circle-alternate";
 
@@ -140,13 +141,14 @@ export function renderLlmsTxt({
   const freeSection = freeLines.length ? `\n## Free recipes\n${freeLines.join("\n")}\n` : "\n";
   const compareSection = freePageCompare ? renderFreePageCompareLlmsSection(publicOrigin) : "";
   const callerGuide = renderCallerResultClientGuide(callerResultClient);
+  const previewGuide = renderSellerPreviewGuide(publicOrigin, actions);
   return `# SameDayDesk machine commerce gateway
 
 > Machine-discoverable HTTP capabilities settle USDC on Base through ${mppAvailable ? "x402 or native MPP Payment authentication on eligible actions" : "x402"}.${alternate ? " Payment-offer preflight also has a Circle Gateway x402 path for gasless batched USDC Nanopayments." : ""} MCP remains Base x402-gated. No account or subscription is required. Current standard facilitator: ${facilitator}. payTo ${payTo}.
 
 ## Endpoints
 ${lines.join("\n")}
-${freeSection}${compareSection}## How to pay
+${freeSection}${compareSection}${previewGuide ? `${previewGuide}\n` : ""}## How to pay
 1. GET an endpoint such as ${publicOrigin}/enrich?domain=stripe.com. Inspect its HTTP 402 for the currently available payment protocols.
 2. For x402, use PAYMENT-REQUIRED with an x402 v2 client and replay with PAYMENT-SIGNATURE. A successful response carries PAYMENT-RESPONSE.
 ${mppAvailable ? "3. For an action advertising MPP, use WWW-Authenticate: Payment with an mppx EVM charge client and replay with Authorization: Payment. A successful response carries Payment-Receipt." : "3. Select x402 from the current action catalog."}
