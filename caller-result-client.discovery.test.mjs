@@ -107,6 +107,10 @@ test("draft caller client entry matches the committed draft archive and the shar
   assert.match(skill, new RegExp(entry.feedbackArchive.archiveUrl.replaceAll(".", "\\.")));
   assert.match(skill, /Feedback is optional and free\./);
   assert.match(skill, /node bin\/recover-mcp\.mjs/);
+  assert.match(skill, /start operation\.json checkpoint\.json grant\.json.*may settle the original purchase/);
+  assert.match(skill, /Do not run start after a lost response/);
+  assert.match(skill, /resume checkpoint\.json grant\.json.*read-only/);
+  assert.match(skill, /If the checkpoint or current read grant is missing or unusable, keep the outcome unresolved and do not send another paid call/);
   assert.match(skill, /explicit payment authorization/);
   assert.match(skill, /0\.1\.0 archive does not contain/);
   assert.match(skill, /archive URL above is the download/);
@@ -226,6 +230,10 @@ test("a local machine entry serves the draft client and an offline caller can in
     assert.match(document, /resumePaidMcpResult/);
     assert.match(document, /samedaydesk-caller-result\/recovery/);
     assert.match(document, /node bin\/recover-mcp\.mjs/);
+    assert.match(document, /start operation\.json checkpoint\.json grant\.json.*may settle the original purchase/);
+    assert.match(document, /Do not run start after a lost response/);
+    assert.match(document, /resume checkpoint\.json grant\.json.*read-only/);
+    assert.match(document, /If the checkpoint or current read grant is missing or unusable, keep the outcome unresolved and do not send another paid call/);
     assert.equal(document.includes(entry.feedbackArchive.archiveUrl), true);
     assert.equal(document.includes(entry.feedbackArchive.sha256), true);
     assert.match(document, /callTool omits _meta/);
