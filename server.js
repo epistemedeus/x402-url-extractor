@@ -3507,7 +3507,6 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
               method: "GET",
               requiredPaths: "decision,offers",
               requireBazaar: true,
-              referral: "r1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
             },
             inputSchema: {
               type: "object",
