@@ -428,11 +428,30 @@ test("mounted POST /extract/batch records settlement error without unmatched fal
   const challenge = decodePaymentRequired(await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(body)));
   const payment = testPayment(challenge, { id: "batch_error_1234567890ab" });
   const paid = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(body, { "payment-signature": payment }));
-  assert.notEqual(paid.status, 200);
+  assert.equal(paid.status, 402);
   await paid.text();
+  const responseHeader = paid.headers.get("payment-response");
+  if (responseHeader) {
+    const settlement = JSON.parse(Buffer.from(responseHeader, "base64").toString("utf8"));
+    assert.equal(settlement.success, false, "a refusal must not be presented as settled");
+    assert.equal(settlement.transaction, "", "the fixture produced no settlement transaction");
+  }
+  const fetchCount = async () => (await readFile(fetchLogPath, "utf8").catch((error) => {
+    if (error.code === "ENOENT") return "";
+    throw error;
+  })).split("\n").filter(Boolean).length;
+  // The initial authorization flow may perform a bounded read. The same
+  // uncertain authorization must not reach verification, settlement or the
+  // source again. Do not pin the initial read as required payment ordering.
+  const first = { fetches: await fetchCount(), verify: facilitator.calls.verify, settle: facilitator.calls.settle };
+  assert.ok(first.fetches <= 1);
+  assert.equal(first.verify, 1);
+  assert.equal(first.settle, 1);
   const retry = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(body, { "payment-signature": payment }));
   assert.equal(retry.status, 503);
+  assert.equal(retry.headers.has("payment-response"), false);
   await retry.text();
+  assert.deepEqual({ fetches: await fetchCount(), verify: facilitator.calls.verify, settle: facilitator.calls.settle }, first);
   await stopChild(merchant.child);
   merchant = null;
   const { http } = await readEvents(dataDir);
