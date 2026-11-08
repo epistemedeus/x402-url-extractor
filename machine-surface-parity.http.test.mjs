@@ -208,6 +208,22 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     readJson(base, "/v0/commerce-demand.json?days=90"),
   ]);
 
+  const preflightSource = "https://github.com/epistemedeus/agent-payment-integrity/tree/f6acc1c56c6fd977608fb6c97c088d36ea27f955";
+  const previewHeading = "## Free seller preview";
+  const preview = (doc) => doc.split(previewHeading)[1]?.split("\n## ")[0];
+  const llmsPreview = preview(llms);
+  assert.ok(llmsPreview, "llms.txt must offer a free seller preview before payment");
+  assert.equal(preview(skill)?.trim(), llmsPreview.trim(), "machine entry points must agree");
+  assert.ok(llms.indexOf(previewHeading) < llms.indexOf("## How to pay"));
+  assert.ok(skill.indexOf(previewHeading) < skill.indexOf("## AgentCash"));
+  assert.ok(llmsPreview.includes(preflightSource));
+  assert.match(llmsPreview, /node cli\.mjs audit --origin \S+ --method GET --route \/commerce\/seller-integrity-audit --required-paths report\.findings,report\.repairPlan\.actions --max-routes 1 --format json --public-dns/);
+  assert.match(llmsPreview, /No wallet, credentials, signing, or payment/);
+  assert.match(llmsPreview, /does not validate required query values or the paid response/);
+  assert.match(llmsPreview, /does not authorize spending/);
+  assert.equal(humanBefore.includes(preflightSource), false);
+  assert.equal(catalog.actions.filter((action) => action.route === SELLER_INTEGRITY_ROUTE).length, 1);
+
   const client = new Client({ name: "surface-parity", version: "0" });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/mcp`)));
   let mcpToolNames;

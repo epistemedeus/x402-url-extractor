@@ -200,7 +200,11 @@ Import ${mcp.exportName} from ${mcp.specifier} (package export ${mcp.packageExpo
 
 Optional continuation of one delivered result uses this archive. \`report_result\` and \`retrieve_entitled\` are uncharged and bound to that result. A charged \`new_paid_task\` is not one of those next actions. Entitled retrieval does not settle again.
 
-The ${entry.feedbackArchive.version} archive does not contain ${recovery.specifier} or ${recovery.bin}. Optional recovery of an already authorized paid result uses this archive. In a second process, with the original merchant checkout absent, run \`node ${recovery.bin} start operation.json checkpoint.json grant.json\` or \`node ${recovery.bin} resume checkpoint.json grant.json\`. Exit 0 is a decoded retained result. Exit 2 is unresolved or denied. The command does not create a wallet, sign, or settle again.
+The ${entry.feedbackArchive.version} archive does not contain ${recovery.specifier} or ${recovery.bin}. Use this archive to prepare and later recover an explicitly authorized native MCP call.
+
+Before the original paid call, \`node ${recovery.bin} start operation.json checkpoint.json grant.json\` writes a private checkpoint and can send the supplied payment authorization. It may settle the original purchase. It does not create a wallet or sign. Do not run start after a lost response.
+
+After a lost response, \`node ${recovery.bin} resume checkpoint.json grant.json\` is read-only. Use the same private checkpoint and a current grant for reading that result. No merchant checkout is needed. Exit 0 returns the retained result; exit 2 means unresolved or denied. If the checkpoint or current read grant is missing or unusable, keep the outcome unresolved and do not send another paid call.
 
 Use your existing configured payment client. This package does not create a wallet, sign, or decide to pay. Pass an explicit payment authorization to payWithPayment. Official @x402/mcp callTool omits _meta, so a raw SDK ${feedback.mcp.method} association is not visible on the wrapper result. The helper reads the sealed capability from onAfterPayment and keeps it with that result content array. Reporting calls the wrapper raw SDK client at .client and does not pay again. A tool that advertises an output schema rejects an unpaid probe after listTools.
 
