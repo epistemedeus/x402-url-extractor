@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { z } from "zod";
-import { zod3JsonSchema, zod3StandardSchema } from "../../mcp-zod3-json-schema.mjs";
+import { merchantMcpJsonSchema, merchantMcpStandardSchema } from "../../mcp-zod4-wire.mjs";
+import { merchantInteger } from "../../merchant-zod4-values.mjs";
 
 const catalogs = [
   ["./extract.mjs", ["extractMcpOutputSchema", "readMcpOutputSchema"]],
@@ -20,13 +21,13 @@ const catalogs = [
   ["./extraction-trial.mjs", ["trialReadMcpOutputSchema"]],
 ];
 
-test("merchant output schemas project to JSON Schema and keep Zod 3 validation", async () => {
+test("merchant output schemas project to JSON Schema and keep native Zod 4 validation", async () => {
   for (const [href, names] of catalogs) {
     const mod = await import(`../../${href.slice(2)}`);
     for (const name of names) {
       const schema = mod[name];
       assert.ok(schema, name);
-      const standard = zod3StandardSchema(schema);
+      const standard = merchantMcpStandardSchema(schema);
       const json = standard["~standard"].jsonSchema.output();
       assert.equal(json.type, "object");
       assert.equal(typeof standard["~standard"].validate, "function");
@@ -37,23 +38,34 @@ test("merchant output schemas project to JSON Schema and keep Zod 3 validation",
 });
 
 test("raw shapes, defaults, strict objects, and discriminated unions stay distinct", () => {
-  const input = zod3StandardSchema({
+  const input = merchantMcpStandardSchema({
     note: z.string().min(1).max(20),
     limit: z.number().int().min(1).max(8).default(5),
   });
   const parsed = input["~standard"].validate({ note: "alpha", extra: true });
   assert.deepEqual(parsed.value, { note: "alpha", limit: 5 });
-  const json = zod3JsonSchema(z.object({
+  const json = merchantMcpJsonSchema(z.object({
     mode: z.enum(["mcp", "openapi"]),
     child: z.object({ kind: z.literal("exact") }).strict(),
   }).strict());
   assert.equal(json.additionalProperties, false);
   assert.equal(json.properties.child.additionalProperties, false);
   assert.deepEqual(json.properties.mode.enum, ["mcp", "openapi"]);
-  const union = zod3JsonSchema(z.discriminatedUnion("protocol", [
+  const union = merchantMcpJsonSchema(z.discriminatedUnion("protocol", [
     z.object({ protocol: z.literal("x402"), amount: z.string() }).strict(),
     z.object({ protocol: z.literal("mpp"), amount: z.string() }).strict(),
   ]));
   assert.equal(union.anyOf.length, 2);
-  assert.equal(zod3JsonSchema(z.object({})).additionalProperties, true);
+  assert.equal(merchantMcpJsonSchema(z.object({})).additionalProperties, true);
+});
+
+test("native integer and optional values preserve the merchant's declared ranges and errors", () => {
+  const schema = z.object({ count: merchantInteger(), maybe: z.unknown().optional() }).strict();
+  const standard = merchantMcpStandardSchema(schema)["~standard"];
+  assert.deepEqual(standard.validate({ count: 1e20 }).value, { count: 1e20 });
+  assert.equal(standard.validate({ count: 0.5 }).issues[0].message, "Expected integer, received float");
+  assert.equal(standard.validate({}).issues[0].message, "Required");
+  assert.match(standard.validate({ count: 0, extra: true }).issues[0].message, /Unrecognized key\(s\)/);
+  assert.equal(standard.jsonSchema.input().properties.count.type, "integer");
+  assert.deepEqual(standard.jsonSchema.output().required, ["count"]);
 });

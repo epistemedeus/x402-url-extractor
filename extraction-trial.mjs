@@ -4,6 +4,7 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import express from "express";
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 import { assertPublicHttpUrl, extract, readMarkdownWithOptions, readMcpOutputSchema } from "./extract.mjs";
 import { buildCapture, fetchFailureCode, parseTextExcerptLimit, READ_MARKDOWN_MAX_CHARS, EXTRACT_MAX_BODY_BYTES, EXTRACT_TIMEOUT_MS } from "./extract-capture.mjs";
 import { trialFetchFailureReason, trialRefusalReason, trialSourceHttpReason } from "./extraction-trial-reason.mjs";
@@ -177,7 +178,7 @@ export function trialReadMcpInputSchema() {
   const limit = extractionTrialContract({}).reader.markdownLimitChars;
   return z.object({
     url: z.string().min(1).max(2048).describe("Caller public http(s) URL. Private, loopback, and non-public hosts are refused."),
-    markdownLimitChars: z.number().int().min(limit.minimum).max(limit.maximum).optional()
+    markdownLimitChars: merchantInteger().min(limit.minimum).max(limit.maximum).optional()
       .describe(`Optional Markdown character limit from ${limit.minimum} through ${limit.maximum}. Omitted calls use ${limit.default}.`),
   }).strict();
 }

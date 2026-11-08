@@ -1,6 +1,6 @@
 /** Test support for unpaid discovery, not a runtime router or payment client. */
 import assert from "node:assert/strict";
-import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-schema-compat.js";
+import { legacyMcpJsonSchema } from "./mcp-zod4-wire.mjs";
 import { EXTRACT_TEXT_EXCERPT_MAX_CHARS } from "./extract-capture.mjs";
 import { extractMcpOutputSchema } from "./extract.mjs";
 import { extractBatchInputSchema, extractBatchMcpOutputSchema } from "./extract-batch.mjs";
@@ -37,11 +37,11 @@ export function assertExtractDiscoveryInventory(tools) {
         required: ["url"],
         additionalProperties: false,
       },
-      outputSchema: toJsonSchemaCompat(extractMcpOutputSchema, { strictUnions: true, pipeStrategy: "output" }),
+      outputSchema: legacyMcpJsonSchema(extractMcpOutputSchema, "output"),
     },
     extract_batch: {
       inputSchema: batchInput,
-      outputSchema: toJsonSchemaCompat(extractBatchMcpOutputSchema, { strictUnions: true, pipeStrategy: "output" }),
+      outputSchema: legacyMcpJsonSchema(extractBatchMcpOutputSchema, "output"),
     },
   };
   const found = {};

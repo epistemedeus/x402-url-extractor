@@ -2,6 +2,7 @@ import { maxAdmittedBatchExcerptChars as sharedBatchExcerptCeiling } from "./ext
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 import { PAYMENT_IDENTIFIER, declarePaymentIdentifierExtension } from "@x402/extensions/payment-identifier";
 
 import { BAZAAR_SERVICE_ICON_URL } from "./bazaar-resource-metadata.mjs";
@@ -568,17 +569,17 @@ export const extractBatchMcpOutputSchema = z.object({
     id: z.string(),
     source: z.string(),
     status: z.enum(["pending", "success", "partial", "failure", "unknown", "skipped_duplicate"]),
-    data: z.record(z.any()).nullable(),
+    data: z.record(z.string(), z.any()).nullable(),
     notes: z.array(z.any()),
-    error: z.record(z.any()).nullable(),
-    provenance: z.record(z.any()).nullable(),
+    error: z.record(z.string(), z.any()).nullable(),
+    provenance: z.record(z.string(), z.any()).nullable(),
     finalUrl: z.string().nullable().optional(),
-    httpStatus: z.number().int().nullable().optional(),
+    httpStatus: merchantInteger().nullable().optional(),
   }).passthrough()).min(1).max(EXTRACT_BATCH_MAX_URLS),
-  accounting: z.record(z.any()),
-  costInputs: z.record(z.any()),
+  accounting: z.record(z.string(), z.any()),
+  costInputs: z.record(z.string(), z.any()),
   charged: z.boolean(),
-  boundary: z.record(z.any()),
+  boundary: z.record(z.string(), z.any()),
   error: z.string().optional(),
 }).strict();
 

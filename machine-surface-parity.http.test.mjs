@@ -168,6 +168,32 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     Buffer.byteLength(encodedSellerIntegrityChallenge) < 14_000,
     `seller-integrity payment-required header exceeds the Node-compatible budget: ${Buffer.byteLength(encodedSellerIntegrityChallenge)} bytes`,
   );
+  const sellerIntegrityTerms = JSON.parse(Buffer.from(encodedSellerIntegrityChallenge, "base64").toString("utf8"));
+  assert.equal(sellerIntegrityTerms.resource.url, `${base}${SELLER_INTEGRITY_ROUTE}`);
+  assert.equal(sellerIntegrityTerms.accepts[0].amount, "10000");
+  const bazaar = sellerIntegrityTerms.extensions.bazaar;
+  const queryExample = bazaar.info.input.queryParams;
+  assert.equal(Object.hasOwn(queryExample, "referral"), false, "Bazaar must not supply a referral ID");
+  const legacyChallenge = await sellerIntegrityChallenge.json();
+  const legacyReferral = legacyChallenge.accepts[0].outputSchema.input.queryParams.referral;
+  assert.equal(legacyReferral.required, false);
+  assert.equal(Object.hasOwn(legacyReferral, "default"), false);
+
+  const referral = `r1_${"a".repeat(64)}`;
+  const validateQuery = new Ajv({ strict: false, validateFormats: false })
+    .compile(bazaar.schema.properties.input.properties.queryParams);
+  assert.equal(validateQuery(queryExample), true);
+  assert.equal(validateQuery({ ...queryExample, referral }), true);
+  assert.equal(validateQuery({ ...queryExample, referral: "invalid" }), false);
+  const callerUrl = new URL(`${base}${SELLER_INTEGRITY_ROUTE}`);
+  callerUrl.search = new URLSearchParams({ ...queryExample, referral });
+  const callerResponse = await fetch(callerUrl);
+  assert.equal(callerResponse.status, 402);
+  const callerTerms = JSON.parse(Buffer.from(callerResponse.headers.get("payment-required"), "base64").toString("utf8"));
+  assert.equal(callerTerms.resource.url, callerUrl.href);
+  assert.deepEqual(callerTerms.accepts, sellerIntegrityTerms.accepts);
+  assert.deepEqual(callerTerms.extensions.bazaar.info.input.queryParams, queryExample);
+
   const humanBefore = await (await fetch(base + "/", { headers: { Accept: "text/html" } })).text();
   const [llms, skill, catalog, gateway, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor, commerceDemand] = await Promise.all([
     readText(base, "/llms.txt"),
@@ -233,12 +259,12 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(receipt.ok, true);
   const sellerIntegritySummary = openapi.paths[SELLER_INTEGRITY_ROUTE].get.summary;
   assert.equal(sellerIntegritySummary.length, 469);
+  const sellerIntegrityAction = catalog.actions.find((action) => action.route === SELLER_INTEGRITY_ROUTE);
+  assert.deepEqual(sellerIntegrityAction.request.example.queryParams, queryExample);
+  assert.equal(new URL(sellerIntegrityAction.request.exampleUrl).searchParams.has("referral"), false);
   const sellerIntegrityManifest = manifest.items.find((item) => item.resource.routeTemplate === SELLER_INTEGRITY_ROUTE);
   assert.equal(sellerIntegrityManifest.resource.description, sellerIntegritySummary);
-  assert.equal(
-    JSON.parse(Buffer.from(encodedSellerIntegrityChallenge, "base64").toString("utf8")).resource.description,
-    sellerIntegritySummary,
-  );
+  assert.equal(sellerIntegrityTerms.resource.description, sellerIntegritySummary);
   assert.equal(receipt.actionCount, 23);
   assert.equal(receipt.llmsCanonicalCount, 23);
   assert.equal(receipt.llmsAlternateCount, 1);

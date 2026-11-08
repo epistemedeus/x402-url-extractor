@@ -8,6 +8,7 @@ import {
 } from "viem";
 import { base } from "viem/chains";
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const TRANSACTION_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
@@ -259,8 +260,8 @@ export const settlementProofMcpOutputSchema = z.object({
   }).strict(),
   settlement: z.object({
     verified: z.boolean(),
-    exactTransferCount: z.number().int().nonnegative(),
-    recipientTransferCount: z.number().int().nonnegative(),
+    exactTransferCount: merchantInteger().nonnegative(),
+    recipientTransferCount: merchantInteger().nonnegative(),
     observed: settlementProofObservedSchema.nullable().optional(),
   }).strict(),
   findings: z.array(settlementProofFindingSchema),

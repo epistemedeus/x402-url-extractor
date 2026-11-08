@@ -13,22 +13,22 @@ import { scanRepo, scanRepoMcpOutputSchema } from "./scan.mjs";
 import { encodeAbiParameters, encodeEventTopics, encodeFunctionData, encodeFunctionResult, keccak256 } from "viem";
 
 function schemaType(schema) {
-  return schema?._def?.typeName;
+  return schema?.def?.type;
 }
 
 function isOptional(schema) {
-  return schemaType(schema) === "ZodOptional" || schemaType(schema) === "ZodDefault";
+  return schemaType(schema) === "optional" || schemaType(schema) === "default";
 }
 
 function requiredPathsFromSchema(schema, prefix = "") {
   const type = schemaType(schema);
-  if (type === "ZodOptional" || type === "ZodDefault") {
+  if (type === "optional" || type === "default") {
     return [];
   }
-  if (type === "ZodNullable" || type === "ZodEffects") {
-    return requiredPathsFromSchema(type === "ZodEffects" ? schema._def.schema : schema._def.innerType, prefix);
+  if (type === "nullable" || type === "pipe") {
+    return requiredPathsFromSchema(type === "pipe" ? schema.def.in : schema.def.innerType, prefix);
   }
-  if (type === "ZodObject") {
+  if (type === "object") {
     const paths = [];
     for (const [key, child] of Object.entries(schema.shape)) {
       const path = prefix ? `${prefix}.${key}` : key;
@@ -38,8 +38,8 @@ function requiredPathsFromSchema(schema, prefix = "") {
     }
     return paths;
   }
-  if (type === "ZodUnion" || type === "ZodDiscriminatedUnion") {
-    const sets = (schema._def.options || []).map((option) => new Set(requiredPathsFromSchema(option, prefix)));
+  if (type === "union") {
+    const sets = (schema.def.options || []).map((option) => new Set(requiredPathsFromSchema(option, prefix)));
     if (!sets.length) return [];
     return [...sets[0]].filter((path) => sets.every((set) => set.has(path)));
   }
@@ -48,17 +48,17 @@ function requiredPathsFromSchema(schema, prefix = "") {
 
 function assertRequiredPaths(schema, value, path = "$") {
   const type = schemaType(schema);
-  if (type === "ZodOptional") {
+  if (type === "optional") {
     if (value === undefined) return;
-    return assertRequiredPaths(schema._def.innerType, value, path);
+    return assertRequiredPaths(schema.def.innerType, value, path);
   }
-  if (type === "ZodNullable") {
+  if (type === "nullable") {
     if (value === null) return;
-    return assertRequiredPaths(schema._def.innerType, value, path);
+    return assertRequiredPaths(schema.def.innerType, value, path);
   }
-  if (type === "ZodDefault") return assertRequiredPaths(schema._def.innerType, value, path);
-  if (type === "ZodEffects") return assertRequiredPaths(schema._def.schema, value, path);
-  if (type === "ZodObject") {
+  if (type === "default") return assertRequiredPaths(schema.def.innerType, value, path);
+  if (type === "pipe") return assertRequiredPaths(schema.def.in, value, path);
+  if (type === "object") {
     assert.equal(Boolean(value) && typeof value === "object" && !Array.isArray(value), true, `${path} must be an object`);
     for (const [key, child] of Object.entries(schema.shape)) {
       const childPath = `${path}.${key}`;
@@ -71,15 +71,15 @@ function assertRequiredPaths(schema, value, path = "$") {
     }
     return;
   }
-  if (type === "ZodArray") {
+  if (type === "array") {
     assert.equal(Array.isArray(value), true, `${path} must be an array`);
     for (const [index, item] of value.entries()) {
-      assertRequiredPaths(schema._def.type, item, `${path}[${index}]`);
+      assertRequiredPaths(schema.def.element, item, `${path}[${index}]`);
     }
     return;
   }
-  if (type === "ZodUnion" || type === "ZodDiscriminatedUnion") {
-    const match = (schema._def.options || []).find((option) => option.safeParse(value).success);
+  if (type === "union") {
+    const match = (schema.def.options || []).find((option) => option.safeParse(value).success);
     assert.ok(match, `${path} did not match a declared union option`);
     return assertRequiredPaths(match, value, path);
   }

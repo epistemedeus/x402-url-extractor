@@ -1,5 +1,6 @@
 import { encodeAbiParameters, encodeFunctionData, keccak256 } from "viem";
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 import { morphoPosition, MORPHO_POSITION_CONSTANTS } from "./morpho-position.mjs";
 
 const WAD = 10n ** 18n;
@@ -344,7 +345,7 @@ const protectionQuoteCommon = {
     oraclePriceRaw: z.string(),
   }).strict(),
   stateBasis: z.object({
-    blockNumber: z.number().int().nullable(),
+    blockNumber: merchantInteger().nullable(),
     collateralAndBorrowShares: z.literal("direct_rpc_exact_match"),
     oraclePrice: z.literal("direct_rpc_fresh_read"),
     borrowAssets: z.literal("indexed amount with explicit execution buffer"),
@@ -358,7 +359,7 @@ export const morphoProtectionMcpOutputSchema = z.object({
   version: z.literal("1.0.0"),
   address: z.string(),
   chain: z.object({
-    id: z.number().int(),
+    id: merchantInteger(),
     name: z.string(),
   }).strict(),
   fetchedAt: z.string().datetime(),
@@ -366,11 +367,11 @@ export const morphoProtectionMcpOutputSchema = z.object({
   inputs: z.object({
     targetHealthFactor: z.number(),
     protectAgainstShockPct: z.number(),
-    executionBufferBps: z.number().int(),
+    executionBufferBps: merchantInteger(),
   }).strict(),
-  positionCount: z.number().int().nonnegative(),
-  actionableCount: z.number().int().nonnegative(),
-  unverifiedCount: z.number().int().nonnegative(),
+  positionCount: merchantInteger().nonnegative(),
+  actionableCount: merchantInteger().nonnegative(),
+  unverifiedCount: merchantInteger().nonnegative(),
   quotes: z.array(z.discriminatedUnion("status", [
     z.object({
       marketId: z.string(),

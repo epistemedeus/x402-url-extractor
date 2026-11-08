@@ -4,7 +4,8 @@
 // results omit structuredContent, so they stay outside this contract.
 
 import { z } from "zod";
-import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-schema-compat.js";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
+import { legacyMcpJsonSchema } from "./mcp-zod4-wire.mjs";
 import { PAGE_CHANGE_HTTP_PRODUCT, PAGE_CHANGE_HTTP_SCHEMA } from "./page-change-http.mjs";
 import {
   ALL_FIELDS,
@@ -41,7 +42,7 @@ function snapshotSide(role) {
     mediaType: z.literal("application/json").nullable(),
     observedAt: z.string().regex(SNAPSHOT_TIME).nullable(),
     truncated: z.boolean(),
-    byteLength: z.number().int().nonnegative(),
+    byteLength: merchantInteger().nonnegative(),
     sha256: sha256OrNull,
     source: closed({
       kind: z.literal("supplied"),
@@ -114,24 +115,24 @@ const rowIdentity = closed({
 const rowOutcome = closed({
   id: z.string().nullable(),
   status: z.enum(ROW_STATUS_NAMES),
-  error: z.unknown(),
+  error: z.unknown().optional(),
 });
 
 const observationRow = closed({
   sourceKey: z.string(),
   itemId: z.string().nullable(),
-  requestedAt: z.unknown(),
-  completedAt: z.unknown(),
-  fetchedAt: z.unknown(),
+  requestedAt: z.unknown().optional(),
+  completedAt: z.unknown().optional(),
+  fetchedAt: z.unknown().optional(),
   requestedAtIsNotFreshness: z.literal(true),
   fetchedAtIsNotFreshness: z.literal(true),
 });
 
 const observationSide = closed({
-  jobId: z.unknown(),
-  jobStatus: z.unknown(),
-  charged: z.unknown(),
-  ok: z.unknown(),
+  jobId: z.unknown().optional(),
+  jobStatus: z.unknown().optional(),
+  charged: z.unknown().optional(),
+  ok: z.unknown().optional(),
   snapshotObservedAt: z.string().regex(SNAPSHOT_TIME).nullable(),
   artifactObservedAt: z.string().nullable(),
   rows: z.array(observationRow),
@@ -168,14 +169,14 @@ const reportSchema = closed({
     limitsHit: z.array(z.enum(LIMIT_HITS)),
   }),
   summary: closed({
-    matched: z.number().int().nonnegative(),
-    missing: z.number().int().nonnegative(),
-    failed: z.number().int().nonnegative(),
-    unknown: z.number().int().nonnegative(),
-    duplicates: z.number().int().nonnegative(),
-    coverageUnknown: z.number().int().nonnegative(),
-    semantic: z.number().int().nonnegative(),
-    order: z.number().int().nonnegative(),
+    matched: merchantInteger().nonnegative(),
+    missing: merchantInteger().nonnegative(),
+    failed: merchantInteger().nonnegative(),
+    unknown: merchantInteger().nonnegative(),
+    duplicates: merchantInteger().nonnegative(),
+    coverageUnknown: merchantInteger().nonnegative(),
+    semantic: merchantInteger().nonnegative(),
+    order: merchantInteger().nonnegative(),
   }),
   rows: closed({
     matched: z.array(closed({
@@ -252,8 +253,5 @@ export const pageChangeMcpOutputSchema = closed({
 });
 
 export function pageChangeMcpOutputJsonSchema() {
-  return toJsonSchemaCompat(pageChangeMcpOutputSchema, {
-    strictUnions: true,
-    pipeStrategy: "output",
-  });
+  return legacyMcpJsonSchema(pageChangeMcpOutputSchema, "output");
 }

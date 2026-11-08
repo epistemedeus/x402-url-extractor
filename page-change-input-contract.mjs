@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 import {
   ALL_FIELDS, C1_REQUIRED_KEYS, DEFAULT_LIMITS, MERCHANT_REQUIRED_KEYS,
   MERCHANT_SOURCE_REQUIRED_KEYS, ROW_STATUSES,
@@ -159,7 +160,7 @@ function mcpSchema(schema, cache) {
     if (schema.minLength !== undefined) value = value.min(schema.minLength);
     if (schema.pattern) value = value.regex(new RegExp(schema.pattern));
   } else if (schema.type === "integer") {
-    value = z.number().int();
+    value = merchantInteger();
     if (schema.minimum !== undefined) value = value.min(schema.minimum);
   }
   else if (schema.type === "boolean") value = z.boolean();

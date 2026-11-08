@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { auditOrigin } from "agent-payment-integrity";
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 
 const AGENT402_ROUTE_URL = "https://agent402.tools/api/route";
 const MPP_SERVICES_URL = "https://mpp.dev/api/services";
@@ -417,7 +418,7 @@ export const CONTRACT_QUALIFIED_SEARCH_EXAMPLE = Object.freeze({
 const contractQualifiedPriceSchema = z.object({
   amountDisplayUnits: z.number(),
   currency: z.string(),
-  decimals: z.number().int(),
+  decimals: merchantInteger(),
   amountAtomic: z.string(),
 }).strict();
 
@@ -432,8 +433,8 @@ const contractQualifiedIdentity = {
 
 const contractQualifiedSourceSchema = z.object({
   status: z.enum(["ok", "unavailable"]),
-  discovered: z.number().int().nonnegative(),
-  audited: z.number().int().nonnegative(),
+  discovered: merchantInteger().nonnegative(),
+  audited: merchantInteger().nonnegative(),
 }).strict();
 
 export const contractQualifiedSearchMcpOutputSchema = z.object({
@@ -446,7 +447,7 @@ export const contractQualifiedSearchMcpOutputSchema = z.object({
     queryDigest: z.string().regex(/^sha256:[0-9a-f]{64}$/),
     requiredPaths: z.array(z.string()).min(1).max(16),
     maxPriceDisplayUnits: z.number(),
-    limit: z.number().int(),
+    limit: merchantInteger(),
   }).strict(),
   sources: z.object({
     agent402: contractQualifiedSourceSchema,
@@ -474,8 +475,8 @@ export const contractQualifiedSearchMcpOutputSchema = z.object({
     paidResponseBodyRead: z.literal(false),
     queryRetained: z.literal(false),
     querySentTo: z.array(z.literal("agent402")),
-    directoryRequests: z.number().int(),
-    sellerAudits: z.number().int(),
+    directoryRequests: merchantInteger(),
+    sellerAudits: merchantInteger(),
   }).strict(),
 }).strict();
 

@@ -4,6 +4,7 @@ import {
   encodeFunctionData,
 } from "viem";
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 
 const BASE_CHAIN_ID = 8453;
 const ORACLE_PRICE_SCALE = 10n ** 36n;
@@ -277,7 +278,7 @@ export const morphoPreLiquidationReplayMcpOutputSchema = z.object({
   }).strict(),
   transaction: z.object({
     hash: z.string().regex(/^0x[0-9a-f]{64}$/),
-    blockNumber: z.number().int().nonnegative(),
+    blockNumber: merchantInteger().nonnegative(),
     blockTimestamp: z.string().datetime(),
     from: z.string(),
     to: z.string().nullish(),
@@ -287,7 +288,7 @@ export const morphoPreLiquidationReplayMcpOutputSchema = z.object({
     gasCostWei: z.string(),
     gasCostEth: z.string(),
   }).strict(),
-  eventCount: z.number().int().positive(),
+  eventCount: merchantInteger().positive(),
   events: z.array(z.object({
     contract: z.string(),
     marketId: z.string(),

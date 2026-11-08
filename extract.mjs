@@ -5,6 +5,7 @@
 // caps and errors handled. Saves agents the fetch+parse+guard work.
 
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 import { performance } from "node:perf_hooks";
 import { markdownWithTables } from "./markdown-table.mjs";
 import {
@@ -175,10 +176,10 @@ const extractErrorSchema = z.object({
 const extractCaptureSchema = z.object({
   method: z.literal("http-get-no-javascript"),
   javascriptExecuted: z.literal(false),
-  maxBodyBytes: z.number().int(),
-  textExcerptLimitChars: z.number().int().nullable(),
-  markdownLimitChars: z.number().int().nullable(),
-  bodyBytes: z.number().int().nonnegative(),
+  maxBodyBytes: merchantInteger(),
+  textExcerptLimitChars: merchantInteger().nullable(),
+  markdownLimitChars: merchantInteger().nullable(),
+  bodyBytes: merchantInteger().nonnegative(),
   bodyTruncated: z.boolean(),
   textTruncated: z.boolean(),
   charset: z.string().nullable(),
@@ -261,7 +262,7 @@ export const extractMcpOutputSchema = z.object({
   requestedUrl: z.string(),
   finalUrl: z.string(),
   url: z.string(),
-  status: z.number().int(),
+  status: merchantInteger(),
   sourceOk: z.boolean(),
   error: extractErrorSchema,
   contentType: z.string().nullable(),
@@ -269,8 +270,8 @@ export const extractMcpOutputSchema = z.object({
   description: z.string().nullable(),
   canonical: z.string().nullable(),
   lang: z.string().nullable(),
-  openGraph: z.record(z.string()),
-  twitter: z.record(z.string()),
+  openGraph: z.record(z.string(), z.string()),
+  twitter: z.record(z.string(), z.string()),
   jsonLd: z.array(z.unknown()),
   headings: z.object({
     h1: z.array(z.string()),
@@ -375,12 +376,12 @@ export const readMcpOutputSchema = z.object({
   requestedUrl: z.string(),
   finalUrl: z.string(),
   url: z.string(),
-  status: z.number().int(),
+  status: merchantInteger(),
   sourceOk: z.boolean(),
   error: extractErrorSchema,
   title: z.string(),
   markdown: z.string(),
-  wordCount: z.number().int().nonnegative(),
+  wordCount: merchantInteger().nonnegative(),
   truncated: z.boolean(),
   capture: extractCaptureSchema,
   fetchedAt: z.string().datetime(),

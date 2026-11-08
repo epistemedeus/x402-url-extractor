@@ -3,6 +3,7 @@
 // a Claude/MCP skill, an MCP server). Zero deps. STATIC ONLY: reads files via the
 // GitHub API + raw CDN, NEVER clones or runs the target code.
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 //
 // Differentiated: no x402 competitor does pre-use supply-chain scanning. Plays to our
 // security domain. DANGER requires a genuine exfil destination (low false positives).
@@ -119,7 +120,7 @@ export const scanRepoMcpOutputSchema = z.object({
   ok: z.literal(true),
   repo: z.string(),
   branch: z.string(),
-  filesScanned: z.number().int().nonnegative(),
+  filesScanned: merchantInteger().nonnegative(),
   risk: z.enum(["clean", "suspicious", "dangerous"]),
   summary: z.string(),
   findings: z.array(z.object({

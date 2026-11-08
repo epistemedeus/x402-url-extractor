@@ -237,7 +237,12 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
     report = await auditImpl({ ...auditRequest, maxRoutes: 1, publicDns: true });
   } catch (error) {
     const message = String(error?.message || error);
-    const failureCode = /not declared/.test(message)
+    const ingress = error?.code === "document_ingress_route_unavailable"
+      ? ["seller_ingress_route_unavailable", "Check that the advertised hostname routes to an active seller deployment. Once it does, rerun the same-origin OpenAPI and unpaid challenge checks."]
+      : error?.code === "document_ingress_upstream_unavailable"
+        ? ["seller_ingress_upstream_unavailable", "Check that the seller deployment behind the advertised hostname is running and reachable. Once it responds, rerun the same-origin OpenAPI and unpaid challenge checks."]
+        : null;
+    const failureCode = ingress?.[0] ?? (/not declared/.test(message)
       ? "exact_route_not_declared"
       : /document returned HTTP/.test(message)
         ? "openapi_unavailable"
@@ -245,7 +250,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
           ? "openapi_invalid"
           : /route count exceeds/.test(message)
             ? "route_ceiling_exceeded"
-            : "bounded_transport_failure";
+            : "bounded_transport_failure");
     return {
       ok: false,
       product: "samedaydesk-seller-integrity-audit",
@@ -269,11 +274,11 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
         responseContract: null,
         repairPlan: null,
       },
-      nextActions: [failureCode === "exact_route_not_declared"
+      nextActions: [ingress?.[1] ?? (failureCode === "exact_route_not_declared"
         ? `Declare the exact paid ${request.method} route in the seller OpenAPI document.`
         : failureCode.startsWith("openapi_")
           ? `Publish a valid same-origin /openapi.json document with the exact paid ${request.method} operation.`
-          : "Restore the seller declaration and unpaid challenge surfaces, then rerun the bounded audit."],
+          : "Restore the seller declaration and unpaid challenge surfaces, then rerun the bounded audit.")],
       referralOffer: createReceiptReferralOffer({ referralId: referral, decision: "repair_required" }),
       boundary: {
         credentialsUsed: false,

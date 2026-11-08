@@ -1,14 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { encodePaymentRequiredHeader } from "@x402/core/http";
 import {
   buildLegacyCompatiblePaymentRequired,
-  legacyCompatibleX402Body,
+  mirrorLegacyX402Body,
 } from "./x402-legacy-body.mjs";
 
 const paymentRequired = {
   x402Version: 2,
   error: "Payment required",
   resource: {
+    url: "https://example.com/extract-batch?view=full",
     description: "Inspect one payment offer",
     mimeType: "application/json",
     serviceName: "SameDayDesk",
@@ -20,6 +22,7 @@ const paymentRequired = {
     amount: "5000",
     asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     payTo: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    maxTimeoutSeconds: 300,
     extra: { name: "USD Coin" },
   }],
   extensions: {
@@ -33,12 +36,13 @@ const paymentRequired = {
 };
 
 function encoded(value = paymentRequired) {
-  return Buffer.from(JSON.stringify(value)).toString("base64url");
+  return encodePaymentRequiredHeader(value);
 }
 
 test("mirrors v2 payment data with legacy aliases without changing the offer", () => {
   const body = buildLegacyCompatiblePaymentRequired(encoded());
   assert.equal(body.x402Version, 2);
+  assert.deepEqual(body.resource, paymentRequired.resource);
   assert.equal(body.accepts[0].amount, "5000");
   assert.equal(body.accepts[0].maxAmountRequired, "5000");
   assert.equal(body.accepts[0].description, "Inspect one payment offer");
@@ -96,25 +100,40 @@ test("fails closed for malformed or non-v2 values", () => {
   assert.equal(buildLegacyCompatiblePaymentRequired(encoded({ x402Version: 1, accepts: [] })), null);
 });
 
-test("middleware replaces only an empty 402 JSON body", () => {
-  const writes = [];
-  const res = {
-    statusCode: 402,
-    getHeader(name) {
-      return name === "payment-required" ? encoded() : undefined;
-    },
-    json(value) {
-      writes.push(value);
-      return this;
-    },
-  };
-  let nextCalled = false;
-  legacyCompatibleX402Body({}, res, () => { nextCalled = true; });
-  res.json({});
-  assert.equal(nextCalled, true);
-  assert.equal(writes[0].accepts[0].maxAmountRequired, "5000");
+test("mirrors the canonical header for both known unpaid 402 placeholders", () => {
+  const headers = { "PAYMENT-REQUIRED": encoded(), "Content-Type": "application/json", "Cache-Control": "no-store" };
+  for (const body of [{}, { error: "Payment required" }]) {
+    const original = { status: 402, headers, body };
+    const mirrored = mirrorLegacyX402Body(original);
+    assert.equal(mirrored.headers, headers);
+    assert.equal(mirrored.status, 402);
+    assert.equal(mirrored.body.accepts[0].maxAmountRequired, "5000");
+    assert.deepEqual(mirrored.body.resource, paymentRequired.resource);
+    assert.equal(original.body, body);
+  }
+});
 
-  res.statusCode = 400;
-  res.json({ error: "bad input" });
-  assert.deepEqual(writes[1], { error: "bad input" });
+test("preserves unrelated errors, non-402 statuses, HTML and unvalidated challenges", () => {
+  const body = { error: "Payment required" };
+  const headers = (header) => ({ "Content-Type": "application/json", "PAYMENT-REQUIRED": header });
+  const challenge = { status: 402, body, headers: headers(encoded()) };
+  for (const [name, override] of [
+    ["settlement failure", { body: { error: "settlement_failed" } }],
+    ["extra error fields", { body: { ...body, retry: false } }],
+    ["HTML", { body: "<html></html>", isHtml: true }],
+    ["precondition status", { status: 412 }],
+    ["successful response", { status: 200 }],
+    ["different content type", { headers: { ...headers(encoded()), "Content-Type": "text/plain" } }],
+    ["no header", { headers: headers(undefined) }],
+    ["duplicate header", { headers: headers([encoded(), encoded()]) }],
+    ["malformed header", { headers: headers(`${encoded()}, invalid`) }],
+    ["oversize header", { headers: headers("A".repeat(131_073)) }],
+    ["different challenge error", { headers: headers(encoded({ ...paymentRequired, error: "No matching payment requirements" })) }],
+    ["no resource", { headers: headers(encoded({ ...paymentRequired, resource: undefined })) }],
+    ["no offers", { headers: headers(encoded({ ...paymentRequired, accepts: [] })) }],
+    ["invalid offer", { headers: headers(encoded({ ...paymentRequired, accepts: [{ ...paymentRequired.accepts[0], maxTimeoutSeconds: 0 }] })) }],
+  ]) {
+    const response = { ...challenge, ...override };
+    assert.equal(mirrorLegacyX402Body(response), response, name);
+  }
 });

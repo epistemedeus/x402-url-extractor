@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 
 import { platformHealthEvidenceRequiresRefresh } from "./platform-health.mjs";
 
@@ -390,8 +391,8 @@ export const opportunityPreflightMcpOutputSchema = z.object({
     mandatorySpendUsd: z.number(),
     reusableValueUsd: z.number(),
     selectionProbabilityPct: z.number().nullable(),
-    competition: z.number().int(),
-    slots: z.number().int(),
+    competition: merchantInteger(),
+    slots: merchantInteger(),
     agentAccess: z.enum(AGENT_ACCESS_VALUES),
     acceptance: z.enum(ACCEPTANCE_VALUES),
     settlement: z.enum(SETTLEMENT_VALUES),
@@ -421,7 +422,7 @@ export const opportunityPreflightMcpOutputSchema = z.object({
     freshness: z.string(),
     observedAt: z.string(),
     freshUntil: z.string(),
-    sampleCount: z.number().int(),
+    sampleCount: merchantInteger(),
     settlementMechanism: z.array(z.string()),
     rightsClass: z.string(),
     evidence: z.array(opportunityEvidenceItemMcpSchema),

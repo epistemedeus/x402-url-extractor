@@ -1,9 +1,14 @@
+import { decodePaymentRequiredHeader } from "@x402/core/http";
+import { PaymentRequiredV2Schema } from "@x402/core/schemas";
+import { x402HTTPResourceServer } from "@x402/core/server";
+
+const UNPAID_ERROR = "Payment required";
+
 function decodePaymentRequired(value) {
   if (typeof value !== "string" || !value || value.length > 131_072) return null;
   try {
-    const decoded = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
-    if (decoded?.x402Version !== 2 || !Array.isArray(decoded.accepts)) return null;
-    return decoded;
+    const decoded = decodePaymentRequiredHeader(value);
+    return PaymentRequiredV2Schema.safeParse(decoded).success ? decoded : null;
   } catch {
     return null;
   }
@@ -52,9 +57,7 @@ export function buildLegacyCompatiblePaymentRequired(value) {
   const decoded = decodePaymentRequired(value);
   if (!decoded) return null;
 
-  const resource = decoded.resource && typeof decoded.resource === "object"
-    ? decoded.resource
-    : {};
+  const { resource } = decoded;
   const discovery = decoded.extensions?.bazaar?.info;
   const outputSchema = discovery && typeof discovery === "object"
     ? {
@@ -80,27 +83,24 @@ export function buildLegacyCompatiblePaymentRequired(value) {
   };
 }
 
-// x402 v2 uses the Payment-Required header and intentionally emits `{}` as
-// the HTTP body. Some live registries still index only the legacy JSON body.
-// Preserve the canonical v2 header while mirroring its public offer data into
-// the otherwise-empty body, including v1 field aliases those indexers expect.
-export function legacyCompatibleX402Body(_req, res, next) {
-  const originalJson = res.json.bind(res);
-  res.json = function compatibleJson(body) {
-    if (
-      res.statusCode === 402 &&
-      body &&
-      typeof body === "object" &&
-      !Array.isArray(body) &&
-      Object.keys(body).length === 0
-    ) {
-      const header = res.getHeader("payment-required");
-      const compatible = buildLegacyCompatiblePaymentRequired(
-        Array.isArray(header) ? header[0] : header,
-      );
-      if (compatible) return originalJson(compatible);
-    }
-    return originalJson(body);
-  };
-  return next();
+// Scope the legacy projection to the SDK's own unpaid response. Core 2.16
+// used an empty body and 2.29 adds a single error field to the placeholder.
+// Registry clients need the body projection; the v2 header stays authoritative.
+export function mirrorLegacyX402Body(response) {
+  const { status, body, headers } = response;
+  if (status !== 402 || headers?.["Content-Type"] !== "application/json"
+      || !body || Object.getPrototypeOf(body) !== Object.prototype) return response;
+  const keys = Object.keys(body);
+  if (keys.length !== 0 && !(keys.length === 1 && keys[0] === "error" && body.error === UNPAID_ERROR)) return response;
+
+  const compatible = buildLegacyCompatiblePaymentRequired(headers["PAYMENT-REQUIRED"]);
+  return compatible?.error === UNPAID_ERROR ? { ...response, body: compatible } : response;
+}
+
+export class LegacyBodyX402HTTPResourceServer extends x402HTTPResourceServer {
+  async processHTTPRequest(context, paywallConfig) {
+    const result = await super.processHTTPRequest(context, paywallConfig);
+    if (context.paymentHeader || result.type !== "payment-error") return result;
+    return { ...result, response: mirrorLegacyX402Body(result.response) };
+  }
 }

@@ -6,6 +6,7 @@ import { createServer as createHttpServer, request as httpRequest } from "node:h
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { createRequire } from "node:module";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -19,19 +20,15 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { createFacilitatorConfig } from "@coinbase/x402";
 import { PaymentRequiredV2Schema } from "@x402/core/schemas";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import {
-  COINBASE_X402_POSTINSTALL_SHA256,
   FINDINGS,
   ORIGINAL_AUDIT_COUNTS,
   ORIGINAL_AUDIT_SHA256,
-  REVIEWED_REMAINDER,
   REVIEWED_SOURCE,
   advisoryUrl,
   assertInapplicableImportsStayUncalled,
-  assertPostinstallNotice,
   assertReviewedClosure,
   loadOriginalAudit,
   merchantProductionImports,
@@ -111,23 +108,50 @@ test("reviewed lockfile keeps the patched closure and the payment pins", () => {
   assert.equal(body.version, "1.20.9");
   body.version = "1.20.6";
   assert.throws(() => assertReviewedClosure(broken), /body-parser node_modules\/body-parser 1\.20\.6/);
+  const duplicateCore = structuredClone(lock);
+  duplicateCore.packages["node_modules/@x402/express/node_modules/@x402/core"] = { version: "2.16.0" };
+  assert.throws(() => assertReviewedClosure(duplicateCore), /@x402\/core must resolve from one root installation/);
+  const duplicateZod = structuredClone(lock);
+  duplicateZod.packages["node_modules/@x402/extensions/node_modules/zod"] = { version: "3.25.76" };
+  assert.throws(() => assertReviewedClosure(duplicateZod), /zod must resolve to 4\.6\.7/);
+  const sdk = structuredClone(lock);
+  sdk.packages["node_modules/@coinbase/cdp-sdk"] = { version: "1.61.0" };
+  assert.throws(() => assertReviewedClosure(sdk), /@coinbase\/cdp-sdk must be absent/);
 });
 
-test("current npm audit stays inside the reviewed remainder", { timeout: 120_000 }, () => {
-  const result = spawnSync("npm", ["audit", "--json"], {
-    cwd: root,
-    encoding: "utf8",
-    env: process.env,
-  });
-  assert.ok(result.status === 0 || result.status === 1, result.stderr);
-  const report = JSON.parse(result.stdout);
-  assert.deepEqual(Object.keys(report.vulnerabilities).sort(), [...REVIEWED_REMAINDER]);
-  assert.equal(report.metadata.vulnerabilities.critical, 0);
-  assert.equal(report.metadata.vulnerabilities.moderate, 2);
-  assert.equal(report.metadata.vulnerabilities.high, 11);
-  assert.equal(report.metadata.vulnerabilities.total, 13);
-  for (const name of ["proxy-addr", "body-parser", "qs", "express", "fast-uri", "@modelcontextprotocol/sdk"]) {
-    assert.equal(report.vulnerabilities[name], undefined, name);
+test("installed payment entry points bind the selected core and schema dependencies", () => {
+  const local = createRequire(import.meta.url);
+  const installedCore = local.resolve("@x402/core/schemas");
+  for (const entry of ["@x402/express", "@x402/evm/exact/server", "@x402/extensions/bazaar", "@x402/mcp", "@x402/fetch", "agent-payment-integrity", "@circle-fin/x402-batching/server"]) {
+    const fromEntry = createRequire(import.meta.resolve(entry));
+    assert.equal(fromEntry.resolve("@x402/core/schemas"), installedCore, entry);
+  }
+  const fromAuditor = createRequire(import.meta.resolve("agent-payment-integrity"));
+  assert.equal(fromAuditor.resolve("@x402/extensions/bazaar"), local.resolve("@x402/extensions/bazaar"));
+  const fromExpress = createRequire(import.meta.resolve("@x402/express"));
+  assert.equal(fromExpress.resolve("@x402/extensions/bazaar"), local.resolve("@x402/extensions/bazaar"));
+  const fromCircle = createRequire(import.meta.resolve("@circle-fin/x402-batching/server"));
+  assert.equal(fromCircle.resolve("@x402/evm/exact/server"), local.resolve("@x402/evm/exact/server"));
+  for (const entry of ["@x402/core/schemas", "@x402/evm/exact/server", "@x402/extensions/bazaar", "@x402/mcp", "@modelcontextprotocol/server", "@modelcontextprotocol/sdk/server/mcp.js", "mppx"]) {
+    const fromEntry = createRequire(import.meta.resolve(entry));
+    assert.equal(fromEntry("zod/package.json").version, "4.6.7", entry);
+  }
+  assert.equal(local("zod/package.json").version, "4.6.7");
+  const auth = createRequire(import.meta.resolve("./merchant-facilitator.mjs"));
+  assert.equal(auth.resolve("jose"), local.resolve("jose"));
+});
+
+test("full and production npm audit require zero findings", { timeout: 120_000 }, () => {
+  for (const scope of [[], ["--omit=dev"]]) {
+    const result = spawnSync("npm", ["audit", "--json", ...scope], {
+      cwd: root,
+      encoding: "utf8",
+      env: process.env,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const report = JSON.parse(result.stdout);
+    assert.deepEqual(report.vulnerabilities, {});
+    assert.deepEqual(report.metadata.vulnerabilities, { info: 0, low: 0, moderate: 0, high: 0, critical: 0, total: 0 });
   }
 });
 
@@ -338,13 +362,6 @@ test("payment packages still refuse an empty charge without a live call", async 
   assert.deepEqual(await stack.authorize({}), { kind: "disabled" });
   assert.equal(PaymentRequiredV2Schema.safeParse({}).success, false);
   assert.equal(typeof ExactEvmScheme, "function");
-  const config = createFacilitatorConfig();
-  assert.equal(config.url, "https://api.cdp.coinbase.com/platform/v2/x402");
-  assert.equal(typeof config.createAuthHeaders, "function");
-});
-
-test("@coinbase/x402 postinstall remains the reviewed notice", () => {
-  assert.equal(assertPostinstallNotice(root), COINBASE_X402_POSTINSTALL_SHA256);
 });
 
 test("production source does not call the inapplicable advisory packages", () => {

@@ -5,6 +5,7 @@ import { BlockList, isIP } from "node:net";
 import { Challenge } from "mppx";
 import { SCHEMAS, evaluateOfferCoherence, evaluateResponseContract } from "agent-payment-policy";
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 
 const MAX_URL_LENGTH = 2_048;
 const MAX_HEADER_VALUE_BYTES = 64 * 1024;
@@ -618,7 +619,7 @@ const paymentOfferCommon = {
   network: z.string().nullable(),
   asset: z.string().nullable(),
   amountAtomic: z.string().nullable(),
-  decimals: z.number().int().nullable(),
+  decimals: merchantInteger().nullable(),
   amountDisplay: z.string().nullable(),
   recipient: z.string().nullable(),
   expiresAt: z.string().nullable(),
@@ -633,11 +634,11 @@ export const paymentOfferPreflightMcpOutputSchema = z.object({
   target: z.object({
     method: z.literal("GET"),
     url: z.string(),
-    httpStatus: z.number().int(),
+    httpStatus: merchantInteger(),
   }).strict(),
   decision: z.enum(["parseable_offer", "review_required", "no_parseable_offer"]),
   protocols: z.array(z.enum(["mpp", "x402"])),
-  offerCount: z.number().int().nonnegative(),
+  offerCount: merchantInteger().nonnegative(),
   offers: z.array(z.discriminatedUnion("protocol", [
     z.object({
       protocol: z.literal("x402"),
@@ -665,7 +666,7 @@ export const paymentOfferPreflightMcpOutputSchema = z.object({
     attempted: z.literal(true),
     sameOrigin: z.literal(true),
     path: z.literal("/openapi.json"),
-    maxBytes: z.number().int().positive(),
+    maxBytes: merchantInteger().positive(),
     documentRead: z.boolean(),
     targetResponseBodyRead: z.literal(false),
     credentialsUsed: z.literal(false),
