@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { auditOrigin } from "agent-payment-integrity";
 
 import {
   SellerIntegrityAuditError,
@@ -146,4 +147,33 @@ test("maps bounded seller-contract and transport failures", async () => {
 
   const transport = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, { auditImpl: async () => { throw new Error("request timed out"); } });
   assert.equal(transport.report.failureCode, "bounded_transport_failure");
+});
+
+test("uses typed ingress evidence from the pinned auditor without exposing transport data", async () => {
+  for (const [status, message, marker, code, advice] of [
+    [404, "Application not found", true, "seller_ingress_route_unavailable", /hostname routes to an active seller deployment/],
+    [502, "Application failed to respond", true, "seller_ingress_upstream_unavailable", /deployment behind the advertised hostname/],
+    [404, "Application not found", false, "openapi_unavailable", /Publish a valid same-origin/],
+  ]) {
+    const calls = [];
+    const result = await sellerIntegrityAudit({ origin: "https://seller.example", method: "POST", route: "/rpc/polygon" }, {
+      auditImpl: (options) => auditOrigin({ ...options, requestImpl: async (url) => {
+        calls.push(url.href);
+        return {
+          status,
+          headers: marker ? { "x-railway-fallback": "true", "x-railway-request-id": "never-export-this" } : {},
+          body: Buffer.from(JSON.stringify({ status: "error", code: status, message, request_id: "never-export-this" })),
+        };
+      } }),
+    });
+    assert.deepEqual(calls, ["https://seller.example/openapi.json"]);
+    assert.equal(result.decision, "repair_required");
+    assert.equal(result.report.failureCode, code);
+    assert.equal(result.report.status, null);
+    assert.equal(result.report.runtimeChallengeVerified, false);
+    assert.equal(result.boundary.targetRequestSent, false);
+    assert.equal(result.boundary.targetPaymentSigned, false);
+    assert.match(result.nextActions[0], advice);
+    assert.doesNotMatch(JSON.stringify(result), /never-export-this|Application not found|Application failed to respond/);
+  }
 });
