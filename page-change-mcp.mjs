@@ -1,3 +1,4 @@
+import { asMerchantZodObject, merchantWireDescriptor, setLegacyMcpToolList } from "./mcp-zod4-wire.mjs";
 // Stateless Streamable HTTP profile for the existing free page comparison.
 // One tool, compare_page_observations. It calls the same admission and
 // compare core as POST /recipes/page-change. It does not proxy through the
@@ -135,6 +136,7 @@ export function pageChangeMcpToolConfig() {
 
 export function mountPageChangeMcp(app, { env = process.env, observe = null } = {}) {
   const toolConfig = pageChangeMcpToolConfig();
+  merchantWireDescriptor(asMerchantZodObject(toolConfig.inputSchema));
   const limits = pageChangeHttpLimits(env);
 
   app.post(PAGE_CHANGE_MCP_PATH, async (req, res) => {
@@ -229,7 +231,7 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
         instructions: PAGE_CHANGE_MCP_INSTRUCTIONS,
         ...MCP_SERVER_INPUT_LIMITS,
       });
-      server.registerTool(PAGE_CHANGE_MCP_TOOL, toolConfig, async () => {
+      const registered = server.registerTool(PAGE_CHANGE_MCP_TOOL, toolConfig, async () => {
         try {
           const output = await executePageChangeComparison(suppliedArguments, env, {
             abortSignal: exchange.abort.signal,
@@ -258,6 +260,7 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
           return toolText(failureBody(bounded), true);
         }
       });
+      setLegacyMcpToolList(server, [[PAGE_CHANGE_MCP_TOOL, registered]]);
       transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       res.on("close", () => {
         transport.close().catch(() => {});

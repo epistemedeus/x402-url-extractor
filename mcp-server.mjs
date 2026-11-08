@@ -18,7 +18,7 @@
 //  - POST /mcp is exempt from the ordinary 16 KiB JSON parser. This route's
 //    parser is the authoritative MCP JSON-RPC byte limit.
 //
-// Payment calls stay on @x402/mcp@2.16.0. The streamable HTTP server SDK is
+// Payment calls use @x402/mcp@2.29.0. The streamable HTTP server SDK is
 // @modelcontextprotocol/sdk@1.32.2.
 
 import { pageChangeServiceOutcome } from "./page-change-http.mjs";
@@ -26,6 +26,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { request as requestHttp } from "node:http";
 import express from "express";
 import { z } from "zod";
+import { merchantMcpStandardSchema, setLegacyMcpToolList } from "./mcp-zod4-wire.mjs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { x402ResourceServer } from "@x402/core/server";
@@ -49,7 +50,6 @@ import {
   productSkuForTool,
   resourceForTool,
 } from "./mcp-typed-telemetry-producer.mjs";
-import { zod3StandardSchema } from "./mcp-zod3-json-schema.mjs";
 
 const mcpTypedAttemptAls = new AsyncLocalStorage();
 const nativePaymentAuthorityAls = new AsyncLocalStorage();
@@ -158,7 +158,7 @@ function isPaymentRequiredBody(body) {
     && Array.isArray(body.accepts);
 }
 
-// SettleResponse from @x402/core@2.16.0 requires boolean success, a string
+// SettleResponse requires boolean success, a string
 // transaction, and a network. Only that success object authorizes delivery of
 // a priced native handler body. Boolean false is a known failure. Any other
 // facilitator object is unproven. Neither hold invents a charge, a rollback,
@@ -323,18 +323,12 @@ export function reviveJsonStructuredArgs(args, inputSchema = {}) {
     if (typeof value !== "string") continue;
     const trimmed = value.trim();
     if (!(trimmed.startsWith("[") || trimmed.startsWith("{"))) continue;
-    const expectsArray = Boolean(schema?._def?.typeName === "ZodArray" || schema?.constructor?.name === "ZodArray");
-    const expectsObject = Boolean(schema?._def?.typeName === "ZodObject" || schema?.constructor?.name === "ZodObject");
-    const unwrap = schema?._def?.typeName === "ZodOptional" || schema?._def?.typeName === "ZodDefault"
-      ? schema._def.innerType
-      : schema;
-    const innerArray = Boolean(unwrap?._def?.typeName === "ZodArray" || unwrap?.constructor?.name === "ZodArray");
-    const innerObject = Boolean(unwrap?._def?.typeName === "ZodObject" || unwrap?.constructor?.name === "ZodObject");
-    if (!(expectsArray || expectsObject || innerArray || innerObject)) continue;
+    const inner = schema instanceof z.ZodOptional || schema instanceof z.ZodDefault ? schema.unwrap() : schema;
+    if (!(inner instanceof z.ZodArray || inner instanceof z.ZodObject)) continue;
     try {
       const parsed = JSON.parse(trimmed);
-      if ((innerArray || expectsArray) && Array.isArray(parsed)) next[key] = parsed;
-      if ((innerObject || expectsObject) && parsed && typeof parsed === "object" && !Array.isArray(parsed)) next[key] = parsed;
+      if (inner instanceof z.ZodArray && Array.isArray(parsed)) next[key] = parsed;
+      if (inner instanceof z.ZodObject && parsed && typeof parsed === "object" && !Array.isArray(parsed)) next[key] = parsed;
     } catch {
       /* leave the original string for schema validation to reject */
     }
@@ -635,13 +629,33 @@ function registerOfficialLifecycleHooks(resourceServer) {
     return undefined;
   });
   resourceServer.onSettleFailure(() => {
-    mcpTypedAttemptAls.getStore()?.observeSettleOutcome({ success: false });
+    const refused = nativePaymentAuthorityAls.getStore()?.facilitatorRefused === true;
+    mcpTypedAttemptAls.getStore()?.observeSettleOutcome({ success: refused ? false : undefined });
     return undefined;
   });
   resourceServer.onVerifiedPaymentCanceled(() => {
     mcpTypedAttemptAls.getStore()?.observeVerifiedCancellation();
     return undefined;
   });
+}
+
+function observeNativeFacilitatorSettlement(client) {
+  return {
+    getSupported: (...args) => client.getSupported(...args),
+    verify: (...args) => client.verify(...args),
+    async settle(...args) {
+      const authority = nativePaymentAuthorityAls.getStore();
+      if (authority) {
+        authority.settlementAttempted = true;
+        authority.facilitatorRefused = false;
+      }
+      const reply = await client.settle(...args);
+      // Core 2.29 calls the same failure hook for false and indeterminate
+      // replies. Preserve that distinction before the SDK translates it.
+      if (authority) authority.facilitatorRefused = reply?.success === false && reply.errorReason !== "settlement_pending";
+      return reply;
+    },
+  };
 }
 
 function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) {
@@ -950,8 +964,9 @@ async function prepareMerchantMcp({
   }
 
   // Dedicated resource server for MCP, sharing the facilitator with the HTTP routes.
-  const resourceServer = new x402ResourceServer(nativeRecovery
-    ? trackReplaySettlementAttempts(facilitatorClient) : facilitatorClient).register(network, new ExactEvmScheme());
+  const nativeFacilitator = observeNativeFacilitatorSettlement(nativeRecovery
+    ? trackReplaySettlementAttempts(facilitatorClient) : facilitatorClient);
+  const resourceServer = new x402ResourceServer(nativeFacilitator).register(network, new ExactEvmScheme());
   await resourceServer.initialize();
   if (typeof configureResourceServer === "function") {
     await configureResourceServer(resourceServer);
@@ -965,7 +980,10 @@ async function prepareMerchantMcp({
 
   resourceServer.onSettleFailure(() => {
     const authority = nativePaymentAuthorityAls.getStore();
-    if (authority) authority.settlementAttempted = true;
+    if (authority) {
+      authority.settlementAttempted = true;
+      if (authority.facilitatorRefused) authority.settlement = { success: false };
+    }
     return undefined;
   });
 
@@ -1118,7 +1136,7 @@ async function prepareMerchantMcp({
     prepared.push({
       name: MCP_RECOVERY_TOOL, free: true,
       description: "Read the stored outcome of an earlier native paid call using its original input and credential. This call cannot execute or pay.",
-      inputSchema: { name: z.string(), arguments: z.record(z.any()) },
+      inputSchema: { name: z.string(), arguments: z.record(z.string(), z.any()) },
       paymentMeta: { samedaydesk: { charged: false, paymentRequired: false } },
       handler: async (args, extra) => {
         if (!nativeTools.has(args.name)) return { ...asToolResult({ ok: false, error: "recovery_tool_rejected", charged: false }), isError: true };
@@ -1179,8 +1197,8 @@ function compileModernCatalog(prepared, fromJsonSchema) {
   return prepared.map((tool) => ({
     tool,
     looseInput,
-    input: zod3StandardSchema(tool.inputSchema || {}),
-    output: tool.outputSchema ? zod3StandardSchema(tool.outputSchema) : undefined,
+    input: merchantMcpStandardSchema(tool.inputSchema),
+    output: tool.outputSchema ? merchantMcpStandardSchema(tool.outputSchema) : undefined,
   }));
 }
 
@@ -1275,6 +1293,7 @@ export async function mountMcp(app, cfg = {}) {
   // A fresh MCP server per request (stateless mode requires server+transport per call).
   const makeServer = (requestBody) => {
     const server = new McpServer(serverInfo, MCP_SERVER_INPUT_LIMITS);
+    const registrations = [];
     for (const t of prepared) {
       const operationMeta = t.operationIdentity
         ? { samedaydesk: { operation: t.operationIdentity } }
@@ -1287,7 +1306,7 @@ export async function mountMcp(app, cfg = {}) {
       // Discovery and every other call retain their advertised input schema.
       const guardedCall = t.guardedHttpInput && requestBody?.jsonrpc === "2.0"
         && requestBody?.method === "tools/call" && requestBody?.params?.name === t.name;
-      server.registerTool(t.name, {
+      const registered = server.registerTool(t.name, {
         title: t.title,
         description: t.description,
         inputSchema: guardedCall ? z.object(t.inputSchema).passthrough().catch({}) : t.inputSchema,
@@ -1295,7 +1314,9 @@ export async function mountMcp(app, cfg = {}) {
         ...(t.annotations ? { annotations: t.annotations } : {}),
         _meta: { ...t.paymentMeta, ...operationMeta, ...(t.inputRefusalMeta || {}) },
       }, t.handler);
+      registrations.push([t.name, registered]);
     }
+    setLegacyMcpToolList(server, registrations);
     return server;
   };
 

@@ -919,20 +919,23 @@ already know settlement to `0x8904…3Cee` works.
 See `server.js`. Current package line (NOT the legacy flat `x402-express@1.x`):
 
 ```
-@x402/express     2.16.0   paymentMiddleware, x402ResourceServer
-@x402/core        2.16.0   HTTPFacilitatorClient   (import from @x402/core/server)
-@x402/evm         2.16.0   ExactEvmScheme          (import from @x402/evm/exact/server)
-@x402/extensions  2.16.0   declareDiscoveryExtension (import from @x402/extensions/bazaar)
-@coinbase/x402    2.1.0    createFacilitatorConfig (only needed for CDP mainnet)
+@x402/express     2.29.0   paymentMiddlewareFromHTTPServer, x402ResourceServer
+@x402/core        2.29.0   HTTPFacilitatorClient   (import from @x402/core/server)
+@x402/evm         2.29.0   ExactEvmScheme          (import from @x402/evm/exact/server)
+@x402/extensions  2.29.0   declareDiscoveryExtension (import from @x402/extensions/bazaar)
+jose              6.2.3    CDP REST request authentication in merchant-facilitator.mjs
 mppx              0.8.15   native MPP EVM charge challenge, credential, and receipt support
 ```
+
+The CDP mode uses the existing `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET` settings.
+It accepts the deployed P-256 PKCS #8 PEM and CDP Ed25519 base64 secret formats.
+The adapter generates fresh 120-second JWTs (JSON Web Tokens) for the exact CDP
+verify, settle, and supported endpoints. [CDP authentication contract](https://docs.cdp.coinbase.com/api-reference/v2/authentication)
 
 Core wiring:
 
 ```js
-const facilitatorClient = new HTTPFacilitatorClient(
-  createFacilitatorConfig(process.env.CDP_API_KEY_ID, process.env.CDP_API_KEY_SECRET)
-);
+const { client: facilitatorClient } = createMerchantFacilitator();
 const resourceServer = new x402ResourceServer(facilitatorClient)
   .register("eip155:8453", new ExactEvmScheme());
 
@@ -1247,5 +1250,5 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - CDP network support (x402.org = testnet only; CDP = mainnet + keys): https://docs.cdp.coinbase.com/x402/network-support
 - CDP Bazaar: https://docs.cdp.coinbase.com/x402/bazaar
 - x402 monorepo: https://github.com/coinbase/x402
-- npm: `@x402/express`, `@x402/core`, `@x402/evm`, `@x402/extensions`, `@coinbase/x402`
+- npm: `@x402/express`, `@x402/core`, `@x402/evm`, `@x402/extensions`, `jose`
 - xpay public facilitator live `/supported` (Base mainnet, no key): https://facilitator.xpay.sh/supported

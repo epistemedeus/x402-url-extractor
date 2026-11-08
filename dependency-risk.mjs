@@ -26,40 +26,18 @@ export const ORIGINAL_AUDIT_COUNTS = Object.freeze({
   total: 19,
 });
 
-export const COINBASE_X402_POSTINSTALL_SHA256 = "17cf23e6004b9eee2711eb41a0f0d946dc581b4cfbb87912161e41c09c35e26d";
 
 export const PAYMENT_PINS = Object.freeze({
-  "@coinbase/x402": "2.1.0",
-  "@x402/core": "2.16.0",
-  "@x402/evm": "2.16.0",
-  "@x402/express": "2.16.0",
-  "@x402/extensions": "2.16.0",
-  "@x402/mcp": "2.16.0",
-  "@x402/fetch": "2.16.0",
+  "@x402/core": "2.29.0",
+  "@x402/evm": "2.29.0",
+  "@x402/express": "2.29.0",
+  "@x402/extensions": "2.29.0",
+  "@x402/mcp": "2.29.0",
+  "@x402/fetch": "2.29.0",
   axios: "1.20.0",
   mppx: "0.8.15",
-  zod: "3.25.76",
+  zod: "4.6.7",
 });
-
-// Packages still reported after the scoped amendment. A later npm audit that
-// adds a name, or that brings one of these back onto a patched package, has
-// to be classified again. Counts are the full tree, including devDependencies,
-// because that is the 19-advisory report on this source.
-export const REVIEWED_REMAINDER = Object.freeze([
-  "@coinbase/cdp-sdk",
-  "@coinbase/x402",
-  "@x402/core",
-  "@x402/evm",
-  "@x402/express",
-  "@x402/extensions",
-  "@x402/fetch",
-  "@x402/mcp",
-  "agent-payment-integrity",
-  "follow-redirects",
-  "hono",
-  "ip-address",
-  "zod",
-]);
 
 export const PRODUCTION_ENTRIES = Object.freeze([
   "server.js",
@@ -68,6 +46,9 @@ export const PRODUCTION_ENTRIES = Object.freeze([
 
 const INAPPLICABLE_BARE_PACKAGES = Object.freeze([
   "axios",
+  "@coinbase/x402",
+  "@coinbase/cdp-sdk",
+  "zod/v3",
   "follow-redirects",
   "hono",
   "ip-address",
@@ -379,40 +360,37 @@ export function assertReviewedClosure(lock) {
   if (one("@modelcontextprotocol/sdk").some((row) => row.version !== "1.32.2")) {
     errors.push("@modelcontextprotocol/sdk must resolve to 1.32.2");
   }
-  const zod = one("zod");
-  for (const row of zod) {
-    if (row.version.startsWith("3.") && row.version !== "3.25.76") errors.push(`zod 3 moved to ${row.version}`);
-    if (row.version.startsWith("4.")) {
-      const [major, minor, patch] = row.version.split(".").map(Number);
-      if (!(major === 4 && (minor > 6 || (minor === 6 && patch >= 6)))) errors.push(`zod 4 ${row.path} ${row.version} is below 4.6.6`);
-    }
+  for (const name of ["@coinbase/x402", "@coinbase/cdp-sdk"]) {
+    if (versionsOf(lock, name).length) errors.push(`${name} must be absent from the merchant lock`);
   }
+  const jose = lock.packages?.["node_modules/jose"];
+  if (jose?.version !== "6.2.3" || jose.dev) errors.push("production JOSE must resolve to 6.2.3");
+  if (!one("axios").every((row) => row.dev)) errors.push("axios must be dev-only");
   for (const [name, version] of Object.entries(PAYMENT_PINS)) {
     const rows = one(name);
-    if (name === "zod") {
-      const direct = rows.filter((row) => row.path === "node_modules/zod");
-      if (direct.length !== 1 || direct[0].version !== version) {
-        errors.push(`direct zod must stay ${version}`);
-      }
-      continue;
+    if (name === "zod" && !rows.some((row) => row.path === "node_modules/zod" && !row.dev)) {
+      errors.push("production zod must resolve at the root");
     }
-    if (rows.some((row) => row.version !== version)) errors.push(`${name} must stay ${version}`);
+    if (name.startsWith("@x402/") && (rows.length !== 1 || rows[0].path !== `node_modules/${name}`)) {
+      errors.push(`${name} must resolve from one root installation`);
+    }
+    if (rows.some((row) => row.version !== version)) errors.push(`${name} must resolve to ${version}`);
+  }
+  const auditor = lock.packages?.["node_modules/agent-payment-integrity"];
+  if (auditor?.resolved !== "https://github.com/epistemedeus/agent-payment-integrity/archive/91e920a22205c93773c70724b56bca7b6611542f.tar.gz"
+      || auditor.integrity !== "sha512-Rr28T1XOU8Gkt/vEXYSF8DCrdUAW1pLQMjqB3bjgexFuPbjP5rH3A9FdvmS3NOpH+SrpKOsKOQBmhfqIrjuN0w=="
+      || auditor.dependencies?.["@x402/core"] !== PAYMENT_PINS["@x402/core"]
+      || auditor.dependencies?.["@x402/extensions"] !== PAYMENT_PINS["@x402/extensions"]) {
+    errors.push("agent-payment-integrity must use the combined source and aligned payment packages");
   }
   const fetchRows = one("@x402/fetch");
   if (!fetchRows.every((row) => row.dev)) errors.push("@x402/fetch must stay a devDependency");
-  for (const row of one("follow-redirects")) {
-    const [major, minor, patch] = String(row.version).split(".").map(Number);
-    const reviewed = row.version === "1.16.0";
-    const patched = major > 1 || (major === 1 && (minor > 16 || (minor === 16 && patch >= 2)));
-    if (!reviewed && !patched) errors.push(`follow-redirects ${row.version} is neither the reviewed pin nor 1.16.2+`);
-  }
-  if (one("hono").some((row) => row.version !== "4.13.1")) errors.push("hono changed without a new entry-point review");
-  if (one("ip-address").some((row) => row.version !== "10.4.0")) {
-    errors.push("ip-address changed without a new trust-boundary review");
+  for (const [name, version] of Object.entries({ "follow-redirects": "1.16.2", hono: "4.13.11", "ip-address": "10.7.4" })) {
+    if (one(name).some((row) => row.version !== version)) errors.push(`${name} must resolve to ${version}`);
   }
   const express = one("express");
-  if (!express.some((row) => row.path === "node_modules/express" && row.version === "4.22.2")) {
-    errors.push("production express must stay 4.22.2");
+  if (!express.some((row) => row.path === "node_modules/express" && row.version === "4.22.3")) {
+    errors.push("production express must resolve to 4.22.3");
   }
   fail(errors);
 }
@@ -491,26 +469,11 @@ export function assertInapplicableImportsStayUncalled(graph = merchantProduction
     if (hit) errors.push(`production import uses ${hit}`);
   }
   if (!graph.bare.includes("express")) errors.push("production import walk did not reach express");
-  if (!graph.bare.includes("@coinbase/x402")) errors.push("production import walk did not reach @coinbase/x402");
+  if (!graph.bare.includes("jose")) errors.push("production import walk did not reach JOSE");
   if (!graph.bare.some((spec) => spec.startsWith("@modelcontextprotocol/sdk/"))) {
     errors.push("production import walk did not reach the MCP SDK");
   }
   if (graph.unresolved.length) errors.push(`unresolved production imports: ${graph.unresolved.join(", ")}`);
   fail(errors);
   return graph;
-}
-
-export function assertPostinstallNotice(base = root) {
-  const file = path.join(base, "node_modules/@coinbase/x402/scripts/postinstall.js");
-  const bytes = readFileSync(file);
-  const digest = createHash("sha256").update(bytes).digest("hex");
-  if (digest !== COINBASE_X402_POSTINSTALL_SHA256) {
-    throw new Error(`@coinbase/x402 postinstall changed: ${digest}`);
-  }
-  const source = bytes.toString("utf8");
-  if (/\brequire\s*\(|\bimport\s|child_process|node:fs|\beval\s*\(|process\.exit/.test(source)) {
-    throw new Error("@coinbase/x402 postinstall is no longer a notice");
-  }
-  if (!source.includes("console.log")) throw new Error("@coinbase/x402 postinstall no longer prints its notice");
-  return digest;
 }

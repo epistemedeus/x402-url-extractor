@@ -1,6 +1,7 @@
 // tools/list probe for the same compare_page_observations registration the HTTP
 // mount uses. This file is not a second product server.
 
+import { setLegacyMcpToolList } from "./mcp-zod4-wire.mjs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -19,8 +20,9 @@ const server = new McpServer({
   instructions: PAGE_CHANGE_MCP_INSTRUCTIONS,
   ...MCP_SERVER_INPUT_LIMITS,
 });
-server.registerTool(PAGE_CHANGE_MCP_TOOL, pageChangeMcpToolConfig(), async () => ({
+const registered = server.registerTool(PAGE_CHANGE_MCP_TOOL, pageChangeMcpToolConfig(), async () => ({
   content: [{ type: "text", text: JSON.stringify({ ok: false, charged: false, error: "stdio_probe_does_not_compare" }) }],
   isError: true,
 }));
+setLegacyMcpToolList(server, [[PAGE_CHANGE_MCP_TOOL, registered]]);
 await server.connect(new StdioServerTransport());

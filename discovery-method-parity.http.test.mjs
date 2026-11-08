@@ -9,7 +9,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-schema-compat.js";
+import { legacyMcpJsonSchema } from "./mcp-zod4-wire.mjs";
 
 import { assertExtractDiscoveryInventory } from "./extract-discovery-inventory.mjs";
 import { EXTRACT_BATCH_AMOUNT_ATOMIC, EXTRACT_BATCH_PATH } from "./extract-batch-config.mjs";
@@ -209,7 +209,7 @@ test("declared methods, tool text, catalogs, and output schemas stay aligned", {
   const lockfileTool = tools.find((tool) => tool.name === "lockfile_pin_delta");
   assert.deepEqual(
     contract(lockfileTool.outputSchema),
-    contract(toJsonSchemaCompat(lockfilePinDeltaMcpOutputSchema, { strictUnions: true, pipeStrategy: "output" })),
+    contract(legacyMcpJsonSchema(lockfilePinDeltaMcpOutputSchema, "output")),
   );
   for (const declared of DECLARED) {
     const tool = tools.find((entry) => entry.name === declared.name);

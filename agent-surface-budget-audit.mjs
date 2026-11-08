@@ -1,5 +1,6 @@
 import { request as httpsRequest } from "node:https";
 import { z } from "zod";
+import { merchantInteger } from "./merchant-zod4-values.mjs";
 
 import {
   createPinnedLookup,
@@ -40,15 +41,15 @@ const surfaceFailureSchema = z.object({
   requested: z.literal(true),
   available: z.literal(false),
   failureCode: z.enum(FAILURE_CODE_VALUES),
-  httpStatus: z.number().int().min(300).max(599).optional(),
+  httpStatus: merchantInteger().min(300).max(599).optional(),
 }).strict();
 
 const heavyToolSchema = z.object({
   name: z.string(),
-  bytes: z.number().int().nonnegative(),
-  descriptionBytes: z.number().int().nonnegative(),
-  inputSchemaBytes: z.number().int().nonnegative(),
-  outputSchemaBytes: z.number().int().nonnegative(),
+  bytes: merchantInteger().nonnegative(),
+  descriptionBytes: merchantInteger().nonnegative(),
+  inputSchemaBytes: merchantInteger().nonnegative(),
+  outputSchemaBytes: merchantInteger().nonnegative(),
   hasTitle: z.boolean(),
   hasDescription: z.boolean(),
   hasInputSchema: z.boolean(),
@@ -60,20 +61,20 @@ const mcpSurfaceSchema = z.union([
   surfaceFailureSchema,
   z.object({
     requested: z.literal(true),
-    available: z.literal(true), bytes: z.number().int().nonnegative(),
-    byteDerivedTokenEstimate: z.number().int().nonnegative(), budgetBytes: z.number().int().positive(),
+    available: z.literal(true), bytes: merchantInteger().nonnegative(),
+    byteDerivedTokenEstimate: merchantInteger().nonnegative(), budgetBytes: merchantInteger().positive(),
     withinBudget: z.boolean(), protocolVersion: z.string().nullable(),
     server: z.object({ name: z.string().nullable(), version: z.string().nullable() }).strict(),
-    toolCount: z.number().int().nonnegative(), pageCount: z.number().int().positive(),
-    selectionBytes: z.number().int().nonnegative(), missingTitleCount: z.number().int().nonnegative(),
-    missingDescriptionCount: z.number().int().nonnegative(), missingInputSchemaCount: z.number().int().nonnegative(),
-    missingOutputSchemaCount: z.number().int().nonnegative(), heaviestTools: z.array(heavyToolSchema).max(8),
+    toolCount: merchantInteger().nonnegative(), pageCount: merchantInteger().positive(),
+    selectionBytes: merchantInteger().nonnegative(), missingTitleCount: merchantInteger().nonnegative(),
+    missingDescriptionCount: merchantInteger().nonnegative(), missingInputSchemaCount: merchantInteger().nonnegative(),
+    missingOutputSchemaCount: merchantInteger().nonnegative(), heaviestTools: z.array(heavyToolSchema).max(8),
   }).strict(),
 ]);
 
 const heavyOperationSchema = z.object({
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]),
-  path: z.string(), bytes: z.number().int().nonnegative(), summaryBytes: z.number().int().nonnegative(),
+  path: z.string(), bytes: merchantInteger().nonnegative(), summaryBytes: merchantInteger().nonnegative(),
   hasOperationId: z.boolean(),
 }).strict();
 
@@ -82,10 +83,10 @@ const openApiSurfaceSchema = z.union([
   surfaceFailureSchema,
   z.object({
     requested: z.literal(true),
-    available: z.literal(true), bytes: z.number().int().nonnegative(),
-    byteDerivedTokenEstimate: z.number().int().nonnegative(), budgetBytes: z.number().int().positive(),
-    withinBudget: z.boolean(), operationCount: z.number().int().nonnegative(),
-    missingOperationIdCount: z.number().int().nonnegative(), heaviestOperations: z.array(heavyOperationSchema).max(8),
+    available: z.literal(true), bytes: merchantInteger().nonnegative(),
+    byteDerivedTokenEstimate: merchantInteger().nonnegative(), budgetBytes: merchantInteger().positive(),
+    withinBudget: z.boolean(), operationCount: merchantInteger().nonnegative(),
+    missingOperationIdCount: merchantInteger().nonnegative(), heaviestOperations: z.array(heavyOperationSchema).max(8),
   }).strict(),
 ]);
 
@@ -94,7 +95,7 @@ export const agentSurfaceBudgetAuditMcpOutputSchema = z.object({
   checkedAt: z.string().datetime(), decision: z.enum(["within_budget", "optimize", "surface_incomplete"]),
   request: z.object({
     origin: z.string().url(), surfaceMode: z.enum(["mcp", "openapi", "both"]), mcpPath: z.string(), openApiPath: z.string(),
-    mcpBudgetBytes: z.number().int().positive(), openApiBudgetBytes: z.number().int().positive(),
+    mcpBudgetBytes: merchantInteger().positive(), openApiBudgetBytes: merchantInteger().positive(),
   }).strict(),
   mcp: mcpSurfaceSchema, openapi: openApiSurfaceSchema, actions: z.array(z.string()).max(16),
   boundary: z.object({

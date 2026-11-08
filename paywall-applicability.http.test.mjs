@@ -11,7 +11,7 @@ import test from "node:test";
 // Existing extract.http tests cover paid execution; this fixture never accepts payment.
 test("actual merchant excludes upstream 3850/3852 producers for unpaid requests", { timeout: 30000 }, async (t) => {
   const scratch = await mkdtemp(path.join(tmpdir(), "root2191-paywall-"));
-  t.after(() => rm(scratch, { recursive: true, force: true }));
+  let child;
   const calls = [];
   const facilitator = createServer((req, res) => {
     calls.push(req.url);
@@ -19,9 +19,17 @@ test("actual merchant excludes upstream 3850/3852 producers for unpaid requests"
     res.statusCode = req.url === "/supported" ? 200 : 500;
     res.end(JSON.stringify({ kinds: [{ network: "eip155:8453", scheme: "exact", x402Version: 2 }], extensions: [], signers: {} }));
   });
+  t.after(async () => {
+    if (child?.exitCode === null && child.signalCode === null) {
+      const ended = once(child, "exit");
+      child.kill("SIGTERM");
+      await ended;
+    }
+    await new Promise(resolve => facilitator.close(resolve));
+    await rm(scratch, { recursive: true, force: true });
+  });
   facilitator.listen(0, "127.0.0.1");
   await once(facilitator, "listening");
-  t.after(() => new Promise(resolve => facilitator.close(resolve)));
   const reserve = createServer();
   reserve.listen(0, "127.0.0.1");
   await once(reserve, "listening");
@@ -41,17 +49,13 @@ test("actual merchant excludes upstream 3850/3852 producers for unpaid requests"
       return realFetch(input, init);
     };
     globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = () => { throw new Error('ROOT2191 protected extract reached'); };`);
-  const child = spawn(process.execPath, ["--import", hook, "server.js"], {
+  child = spawn(process.execPath, ["--import", hook, "server.js"], {
     cwd: process.env.ROOT2191_MERCHANT_CWD || new URL(".", import.meta.url),
     env: { PATH: process.env.PATH, HOME: scratch, PORT: String(port),
       COMMERCE_DATA_DIR: scratch, COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
       FACILITATOR: "xpay", FACILITATOR_URL: `http://127.0.0.1:${facilitator.address().port}`,
       PUBLIC_URL: "https://agents.samedaydesk.com", MPP_SECRET_KEY: "", EXTRACT_BATCH_ENABLED: "1" },
     stdio: ["ignore", "pipe", "pipe"],
-  });
-  t.after(async () => {
-    if (child.exitCode !== null || child.signalCode !== null) return;
-    const ended = once(child, "exit"); child.kill("SIGTERM"); await ended;
   });
   let output = "";
   await new Promise((resolve, reject) => {
@@ -60,11 +64,20 @@ test("actual merchant excludes upstream 3850/3852 producers for unpaid requests"
     child.stdout.on("data", collect); child.stderr.on("data", collect);
     child.once("exit", code => { clearTimeout(timer); reject(new Error(`startup ${code}: ${output}`)); });
   });
-  const send = (target, headers = {}) => new Promise((resolve, reject) => {
-    const req = request({ hostname: "127.0.0.1", port, path: target, headers: { "user-agent": "Mozilla/5.0 ROOT2191 owned fixture", ...headers } }, res => {
+  const send = (target, headers = {}, json) => new Promise((resolve, reject) => {
+    const body = json === undefined ? undefined : JSON.stringify(json);
+    const req = request({
+      hostname: "127.0.0.1", port, path: target,
+      method: body === undefined ? "GET" : "POST",
+      headers: {
+        "user-agent": "Mozilla/5.0 ROOT2191 owned fixture",
+        ...(body === undefined ? {} : { "content-type": "application/json", "content-length": Buffer.byteLength(body) }),
+        ...headers,
+      },
+    }, res => {
       let body = ""; res.setEncoding("utf8"); res.on("data", x => body += x);
       res.on("end", () => resolve({ status: res.statusCode, headers: res.headers, body }));
-    }); req.on("error", reject); req.end();
+    }); req.on("error", reject); req.end(body);
   });
   const marker = "</script><script>globalThis.ROOT2191=1</script>";
   let fallbackHtml;
@@ -102,7 +115,12 @@ test("actual merchant excludes upstream 3850/3852 producers for unpaid requests"
           assert.doesNotMatch(response.body, /<script[\s>]|\son\w+\s*=|javascript:/i);
           if (fallbackHtml === undefined) fallbackHtml = response.body;
           assert.equal(response.body, fallbackHtml, "browser body is request-independent static fallback");
-        } else assert.equal(JSON.parse(response.body).x402Version, 2);
+        } else {
+          const body = JSON.parse(response.body);
+          assert.equal(body.x402Version, 2);
+          assert.deepEqual(body.resource, challenge.resource);
+          assert.equal(body.accepts[0].maxAmountRequired, challenge.accepts[0].amount);
+        }
         // JSON can preserve the marker; no HTML script context is emitted.
         assert.equal(response.body.includes("window.x402"), false);
       });
@@ -120,6 +138,26 @@ test("actual merchant excludes upstream 3850/3852 producers for unpaid requests"
   const nonBrowserHtml = await send("/extract?url=https://fixture.invalid/", { accept: "text/html", "user-agent": "ROOT2191 CLI" });
   assert.equal(nonBrowserHtml.status, 402);
   assert.match(nonBrowserHtml.headers["content-type"], /^application\/json/);
+
+  const post = await send("/extract/batch?view=full", { accept: "application/json" }, { urls: ["https://fixture.invalid/"] });
+  assert.equal(post.status, 402);
+  const postChallenge = JSON.parse(Buffer.from(post.headers["payment-required"], "base64").toString());
+  const postBody = JSON.parse(post.body);
+  assert.equal(postChallenge.resource.url, `http://127.0.0.1:${port}/extract/batch?view=full`);
+  assert.deepEqual(postBody.resource, postChallenge.resource);
+  assert.equal(postBody.accepts[0].maxAmountRequired, postChallenge.accepts[0].amount);
+  assert.equal(postBody.accepts[0].outputSchema.input.method, "POST");
+  assert.equal(postBody.accepts[0].outputSchema.input.bodyFields.urls.required, true);
+
+  const invalidPost = await send("/extract/batch", {}, { urls: [] });
+  assert.equal(invalidPost.status, 400);
+  assert.equal(invalidPost.headers["payment-required"], undefined);
+  assert.equal(JSON.parse(invalidPost.body).charged, false);
+
+  const malformedHeader = await send("/extract?url=https://fixture.invalid/", { "payment-signature": "!" });
+  assert.equal(malformedHeader.status, 402);
+  assert.ok(malformedHeader.headers["payment-required"]);
+  assert.deepEqual(JSON.parse(malformedHeader.body), { error: "Payment required" });
   assert.ok(calls.length > 0);
   assert.ok(calls.every(x => x === "/supported"), JSON.stringify(calls));
   assert.doesNotMatch(output, /protected extract reached|protected handler or financial request reached/);

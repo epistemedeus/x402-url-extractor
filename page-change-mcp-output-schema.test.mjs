@@ -10,6 +10,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { setLegacyMcpToolList } from "./mcp-zod4-wire.mjs";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import { pageChangeRequestExample, pageChangeRequestExamples } from "./page-change-input-contract.mjs";
 import { comparePageBatches } from "./examples/customer-x402/src/page-change/compare.mjs";
@@ -477,10 +478,11 @@ test("a mutated success output fails validation and SDK enforcement", async () =
   reject(charged, "charged true");
 
   const server = new McpServer({ name: "page-change-schema", version: "test" });
-  server.registerTool(PAGE_CHANGE_MCP_TOOL, pageChangeMcpToolConfig(), async () => ({
+  const registered = server.registerTool(PAGE_CHANGE_MCP_TOOL, pageChangeMcpToolConfig(), async () => ({
     content: [{ type: "text", text: JSON.stringify(mutated) }],
     structuredContent: mutated,
   }));
+  setLegacyMcpToolList(server, [[PAGE_CHANGE_MCP_TOOL, registered]]);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "page-change-schema", version: "0" });
   await server.connect(serverTransport);

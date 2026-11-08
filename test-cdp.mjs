@@ -1,14 +1,14 @@
 // Verify CDP credentials authenticate against the CDP x402 facilitator and that
 // Base mainnet (eip155:8453) is supported — BEFORE we switch the live service.
 // Reads CDP_API_KEY_ID / CDP_API_KEY_SECRET from env. Prints NO secret values.
-import { createFacilitatorConfig } from "@coinbase/x402";
+import { createCdpFacilitatorConfig } from "./merchant-facilitator.mjs";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 
 const id = process.env.CDP_API_KEY_ID;
 const secret = process.env.CDP_API_KEY_SECRET;
 if (!id || !secret) { console.error("MISSING env CDP_API_KEY_ID / CDP_API_KEY_SECRET"); process.exit(1); }
 
-const cfg = createFacilitatorConfig(id, secret);
+const cfg = createCdpFacilitatorConfig(id, secret);
 console.log("facilitator url:", cfg.url);
 console.log("config keys:", Object.keys(cfg));
 
@@ -30,7 +30,7 @@ for (const m of ["supported", "getSupported", "listSupported", "supportedKinds"]
 if (!sup && typeof cfg.createAuthHeaders === "function") {
   await tryCall("GET /supported (direct auth)", async () => {
     const h = await cfg.createAuthHeaders();
-    const headers = h?.verify || h?.list || h || {};
+    const headers = h.supported;
     const res = await fetch(cfg.url.replace(/\/$/, "") + "/supported", { headers });
     return { status: res.status, body: (await res.text()).slice(0, 400) };
   });
