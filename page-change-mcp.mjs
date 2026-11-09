@@ -86,7 +86,10 @@ function unknownToolError(body) {
   return {
     jsonrpc: "2.0",
     id: body.id,
-    error: { code: -32602, message: "Unknown tool" },
+    error: {
+      code: -32602, message: "Unknown tool",
+      data: { nextMethod: "tools/list", availableTools: [PAGE_CHANGE_MCP_TOOL] },
+    },
   };
 }
 

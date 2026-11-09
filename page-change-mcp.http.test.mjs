@@ -456,10 +456,34 @@ test("malformed, oversized, wrong method, batch, and unknown tools never compare
     assert.deepEqual(refused.json, {
       jsonrpc: "2.0",
       id: name,
-      error: { code: -32602, message: "Unknown tool" },
+      error: {
+        code: -32602, message: "Unknown tool",
+        data: { nextMethod: "tools/list", availableTools: [PAGE_CHANGE_MCP_TOOL] },
+      },
     });
   }
   assert.equal(ownedPageChangeWorkerCount(), 0);
+});
+
+test("an ordinary client can recover from the wrong tool without a paid fallback", async () => {
+  const session = await connectClient(globalThis.pageChangeProfile.base);
+  try {
+    const request = pageChangeRequestExample();
+    const wrongName = "other-client-private-tool-name";
+    await assert.rejects(session.client.callTool({ name: wrongName, arguments: request }), (error) => {
+      assert.equal(error.code, -32602);
+      assert.deepEqual(error.data, { nextMethod: "tools/list", availableTools: [PAGE_CHANGE_MCP_TOOL] });
+      assert.doesNotMatch(JSON.stringify(error), new RegExp(wrongName));
+      return true;
+    });
+    const { tools } = await session.client.listTools();
+    assert.deepEqual(tools.map((tool) => tool.name), [PAGE_CHANGE_MCP_TOOL]);
+    const result = toolJson(await session.client.callTool({ name: tools[0].name, arguments: request }));
+    assert.equal(result.charged, false);
+    assert.equal(result.report.verdict, "changed");
+  } finally {
+    await session.close();
+  }
 });
 
 function deepToolsCall(depth) {
