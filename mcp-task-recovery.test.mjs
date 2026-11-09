@@ -18,6 +18,12 @@ const payer = `0x${"2".repeat(40)}`;
 const args = { rewardUsd: 10, hours: 1, hourlyCostUsd: 1, selectionProbabilityPct: 80,
   agentAccess: "agent_allowed", acceptance: "deterministic", settlement: "direct" };
 const listen = server => new Promise(resolve => server.listen(0, "127.0.0.1", () => resolve(server.address().port)));
+function testClockArgs(advanceMs) {
+  if (!advanceMs) return [];
+  assert.ok(Number.isSafeInteger(advanceMs) && advanceMs > 0);
+  const advance = `const actualNow = Date.now.bind(Date); Date.now = () => actualNow() + ${advanceMs};`;
+  return ["--import", `data:text/javascript,${encodeURIComponent(advance)}`];
+}
 async function stop(child) {
   if (!child || child.exitCode !== null || child.signalCode !== null) return;
   child.kill("SIGTERM");
@@ -65,14 +71,14 @@ async function fixture(t, { unknown = false } = {}) {
   });
   const proxyPort = await listen(proxy);
   const endpointUrl = `http://127.0.0.1:${proxyPort}/mcp`;
-  async function start(extra = {}) {
+  async function start(extra = {}, { clockAdvanceMs = 0 } = {}) {
     await stop(child);
     const probe = createServer(); const port = await listen(probe); await new Promise(resolve => probe.close(resolve));
     target = `http://127.0.0.1:${port}`;
     const configFile = path.join(directory, "receiver.json");
     await writeFile(configFile, JSON.stringify({ dataDir, port, endpointUrl, tenantId: "tenant-a",
       facilitatorUrl: `http://127.0.0.1:${facilitatorPort}`, ...extra }));
-    child = spawn(process.execPath, ["fixtures/mcp-task-recovery-loopback.mjs", configFile], {
+    child = spawn(process.execPath, [...testClockArgs(clockAdvanceMs), "fixtures/mcp-task-recovery-loopback.mjs", configFile], {
       cwd: root, env: { PATH: process.env.PATH }, stdio: ["ignore", "pipe", "pipe"],
     });
     let output = "";
@@ -89,7 +95,7 @@ async function fixture(t, { unknown = false } = {}) {
     await client.connect(new StreamableHTTPClientTransport(new URL(endpointUrl)));
     return client;
   }
-  async function operation(name = "opportunity_preflight", inputArgs = args) {
+  async function operation(name = "opportunity_preflight", inputArgs = args, { grantTtlMs = 300_000 } = {}) {
     const client = await open();
     const catalog = await client.listTools();
     assert.equal(client.getServerCapabilities().tasks, undefined);
@@ -104,14 +110,15 @@ async function fixture(t, { unknown = false } = {}) {
       maxAtomic: accepted.amount, operationId: `operation-${suffix}`, reservationId: `reservation-${suffix}`, grantId: `grant-${suffix}` };
     const grant = { ...Object.fromEntries(["endpointUrl", "tenantId", "principalId", "name", "maxAtomic", "operationId", "reservationId", "grantId"].map(key => [key, input[key]])),
       inputDigest: hash(inputArgs), termsDigest: hash(accepted), paymentDigest: hash(payment),
-      expiresAt: new Date(Date.now() + 300_000).toISOString(), execute: true, readResult: true, revoked: false };
+      expiresAt: new Date(Date.now() + grantTtlMs).toISOString(), execute: true, readResult: true, revoked: false };
     const inputFile = path.join(directory, `input-${suffix}.json`), checkpoint = path.join(directory, `checkpoint-${suffix}.json`), grantFile = path.join(directory, `grant-${suffix}.json`);
     await writeFile(inputFile, JSON.stringify(input), { mode: 0o600 }); await writeFile(grantFile, JSON.stringify(grant), { mode: 0o600 });
     return { input, grant, inputFile, checkpoint, grantFile };
   }
-  async function cli(action, op, { interruptOnReceipt = false, cwd: clientCwd = root, entry = "caller-result-client/bin/recover-mcp.mjs" } = {}) {
+  async function cli(action, op, { interruptOnReceipt = false, cwd: clientCwd = root,
+    entry = "caller-result-client/bin/recover-mcp.mjs", clockAdvanceMs = 0 } = {}) {
     const argv = action === "start" ? [action, op.inputFile, op.checkpoint, op.grantFile] : [action, op.checkpoint, op.grantFile];
-    const processChild = spawn(process.execPath, [entry, ...argv], {
+    const processChild = spawn(process.execPath, [...testClockArgs(clockAdvanceMs), entry, ...argv], {
       cwd: clientCwd, env: { PATH: process.env.PATH, HOME: process.env.HOME }, stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "", stderr = "";
@@ -163,6 +170,39 @@ test("ordinary cold CLI retrieves the same whole outcome after lost response and
   assert.equal(f.counts.settle, 1); assert.equal(f.counts.verify, 1);
   assert.deepEqual(await f.handlerCounts(), { opportunity: 0, receipt: 0 });
   t.diagnostic(JSON.stringify({ coldRecovery: true, synthetic: true, settle: 1, usefulAcceptance: "unknown", paidLiveCalls: 0 }));
+});
+
+test("a cold client recovers after payment authorization expires without renewing it", { timeout: 60000 }, async t => {
+  const f = await fixture(t);
+  const op = await f.operation("opportunity_preflight", args, { grantTtlMs: 600_000 });
+  f.proxyState.loseNextPaidResponse = true;
+  const first = await f.cli("start", op);
+  assert.equal(first.body.state, "unresolved");
+  assert.equal(f.proxyState.lost, 1);
+  assert.equal(f.counts.settle, 1);
+  assert.equal((await f.handlerCounts()).opportunity, 1);
+
+  const clockAdvanceMs = 360_000;
+  assert.ok(Date.now() + clockAdvanceMs >= Number(op.input.payment.payload.authorization.validBefore) * 1000);
+  assert.ok(Date.now() + clockAdvanceMs < Date.parse(op.grant.expiresAt));
+  await f.start({}, { clockAdvanceMs });
+  const cold = await f.cli("resume", op, { clockAdvanceMs });
+  assert.equal(cold.code, 0, cold.stderr);
+  assert.equal(cold.body.state, "completed");
+  assert.deepEqual(cold.body.output, opportunityPreflight(args));
+  assert.equal(cold.body.budget.newPaymentPermitted, false);
+  assert.equal(cold.body.budget.reportedSettledAtomic, op.input.payment.accepted.amount);
+  assert.deepEqual(f.proxyState.calls, ["opportunity_preflight", "recover_paid_result"]);
+  assert.deepEqual(await f.handlerCounts(), { opportunity: 0, receipt: 0 });
+  assert.equal(f.counts.settle, 1);
+  assert.equal(f.counts.verify, 1);
+
+  const requests = f.proxyState.requests;
+  const expiredGrant = await f.cli("resume", op, { clockAdvanceMs: 660_000 });
+  assert.equal(expiredGrant.code, 2);
+  assert.match(expiredGrant.stderr, /grant_expired/);
+  assert.equal(f.proxyState.requests, requests);
+  assert.equal(f.counts.settle, 1);
 });
 
 test("a completed ordinary cold client consumes its local output when the provider is unavailable", { timeout: 60000 }, async t => {
