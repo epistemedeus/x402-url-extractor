@@ -356,6 +356,30 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   } finally {
     await client.close();
   }
+  const extractOperation = openapi.paths["/extract"].get;
+  const extractOption = extractOperation.parameters.find((parameter) => parameter.name === "textExcerptLimitChars");
+  const extractTool = mcpTools.find((tool) => tool.name === "extract");
+  const extractResource = manifest.items.find((item) => item.resource.routeTemplate === "/extract").resource;
+  const extractTerms = await fetch(`${base}/extract?url=https%3A%2F%2Fexample.com%2F`);
+  const extractQuote = JSON.parse(Buffer.from(extractTerms.headers.get("payment-required"), "base64"));
+  await extractTerms.body.cancel();
+  const extractQuoteOption = extractQuote.extensions.bazaar.schema.properties.input.properties.queryParams.properties.textExcerptLimitChars;
+  assert.equal(extractOption.required, false);
+  assert.deepEqual(extractOption.schema, { type: "integer", minimum: 1, maximum: 40000 });
+  assert.equal(extractTool.inputSchema.required.includes("textExcerptLimitChars"), false);
+  assert.equal(extractQuoteOption.minimum, 1);
+  assert.equal(extractQuoteOption.maximum, 40000);
+  assert.match(extractOption.description, /default 1200.*Invalid values are rejected before payment/);
+  assert.equal(extractTool.inputSchema.properties.textExcerptLimitChars.description, extractOption.description);
+  assert.equal(extractQuoteOption.description, extractOption.description);
+  assert.ok(extractTool.description.includes(extractOption.description));
+  assert.match(extractTool.description, /Payment challenge and credentials are bound to GET/);
+  assert.equal(extractOperation.summary, extractQuote.resource.description);
+  assert.equal(extractOperation.summary, extractResource.description);
+  assert.ok(llms.includes(extractOperation.summary));
+  assert.ok(gateway.paidRoutes["GET /extract?url="].includes(extractOperation.summary));
+  assert.equal(humanBefore.includes(extractOperation.summary), false, "machine copy must not publish on the human landing page");
+
   const recoveryTool = mcpTools.find((tool) => tool.name === "recover_paid_result");
   assert.ok(recoveryTool, "mounted server lists the free recovery read");
   assert.equal(recoveryTool._meta?.samedaydesk?.charged, false);

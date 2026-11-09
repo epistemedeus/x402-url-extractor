@@ -10,6 +10,7 @@ export const READ_MARKDOWN_MAX_CHARS = 40_000;
 // EXTRACT_MAX_BODY_BYTES, so a larger excerpt does not fetch again and does
 // not promise rendered or full text. Omitted requests stay at the default.
 export const EXTRACT_TEXT_EXCERPT_MAX_CHARS = READ_MARKDOWN_MAX_CHARS;
+export const EXTRACT_EXCERPT_OPTION_DESCRIPTION = `Optional integer from 1 to ${EXTRACT_TEXT_EXCERPT_MAX_CHARS} (default ${EXTRACT_TEXT_EXCERPT_CHARS}). Invalid values are rejected before payment. Price unchanged.`;
 
 const EXCERPT_LIMIT_ERROR = `textExcerptLimitChars must be an integer from 1 through ${EXTRACT_TEXT_EXCERPT_MAX_CHARS}`;
 
