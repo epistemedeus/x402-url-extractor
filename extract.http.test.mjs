@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { validateDiscoveryExtension } from "@x402/extensions/bazaar";
 
 import { extractMcpOutputSchema, readMcpOutputSchema } from "./extract.mjs";
 
@@ -232,6 +233,17 @@ test("paid extract and read preserve source HTTP semantics without a second paym
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
 
+  const discovery = await fetch(`${merchant.base}/extract`);
+  assert.equal(discovery.status, 402, "bare discovery remains available without payment");
+  assert.equal(discovery.headers.get("payment-response"), null);
+  const discoveryQuote = decodePaymentRequired(discovery);
+  const bazaar = discoveryQuote.extensions.bazaar;
+  assert.equal(validateDiscoveryExtension(bazaar).valid, true);
+  const missingInput = structuredClone(bazaar);
+  delete missingInput.info.input.queryParams;
+  assert.equal(validateDiscoveryExtension(missingInput).valid, false);
+  await discovery.body.cancel();
+
   const requestUrl = `${merchant.base}/extract?url=${encodeURIComponent("https://ok.example/")}`;
   for (const suffix of ["", "&textExcerptLimitChars=1", "&textExcerptLimitChars=2000", "&textExcerptLimitChars=40000"]) {
     const response = await fetch(requestUrl + suffix);
@@ -239,6 +251,7 @@ test("paid extract and read preserve source HTTP semantics without a second paym
     assert.equal(response.headers.get("payment-response"), null);
     const quote = decodePaymentRequired(response);
     assert.equal(quote.resource.url, requestUrl + suffix);
+    assert.deepEqual(quote.extensions.bazaar, bazaar);
     assert.deepEqual(quote.accepts.map(({ scheme, network, amount, payTo }) => ({ scheme, network, amount, payTo })), [
       { scheme: "exact", network: NETWORK, amount: PRICE_ATOMIC, payTo: PAY_TO },
     ]);

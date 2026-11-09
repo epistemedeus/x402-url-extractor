@@ -39,9 +39,8 @@ function declareQuoteOutput(example, fields) {
 
 /**
  * Preserve the local explicit `outputSchema` authoring shape while adapting it
- * to the Bazaar v2 contract, which expects the JSON Schema at
- * `output.schema`. Keeping this at one boundary prevents response contracts
- * from silently degrading to an untyped example object.
+ * to the Bazaar v2 contract and keep required request input intact across
+ * the wire and the local projection.
  */
 export function declareDiscoveryContract(config = {}) {
   const { output, outputSchema, routeKey, publishOutputExample = true, quoteOutputFields, ...rest } = config;
@@ -65,6 +64,12 @@ export function declareDiscoveryContract(config = {}) {
       },
     } : {}),
   });
+  // The SDK preserves required query fields but does not require their
+  // container. Without this, omitting the whole query bypasses validation.
+  const input = declared.bazaar?.schema?.properties?.input;
+  if (input?.properties?.queryParams?.required?.length) {
+    input.required = [...new Set([...(input.required ?? []), "queryParams"])];
+  }
   if (!publishOutputExample && declared.bazaar?.info?.output) {
     delete declared.bazaar.info.output.example;
   }
