@@ -1,6 +1,6 @@
 const AUDIT_ROUTE = "/commerce/seller-integrity-audit";
-const PREVIEW_REPO = "https://github.com/epistemedeus/agent-payment-integrity";
-const PREVIEW_COMMIT = "f6acc1c56c6fd977608fb6c97c088d36ea27f955";
+const PREVIEW_INSTALL = "https://github.com/epistemedeus/agent-payment-integrity#try-it";
+const PREVIEW_INDEX = "https://neomorphic.io/api/v1/instruments";
 
 export function renderSellerPreviewGuide(origin, actions) {
   if (!actions.some((action) => (action.method || "GET").toUpperCase() === "GET" && action.route === AUDIT_ROUTE)) return "";
@@ -8,16 +8,12 @@ export function renderSellerPreviewGuide(origin, actions) {
   if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) return "";
   return `## Free seller preview
 
-Check whether a public HTTPS GET route declares the output fields your agent needs before considering payment. Use the [pinned integrity CLI](${PREVIEW_REPO}/tree/${PREVIEW_COMMIT}); this runs in your own workspace. No wallet, credentials, signing, or payment.
+Check whether a public HTTPS GET route declares the output fields your agent needs. Use the [publisher's clone-free installation](${PREVIEW_INSTALL}) with Node.js 22 or newer and npm. For machine discovery, read the [instrument index](${PREVIEW_INDEX}) and select the entry with id \`seller-conformance\`. Its \`source.url\` points to the exact release in \`epistemedeus/agent-payment-integrity\`. Use that release's CLI archive and checksum together, verify the archive, and run the command below. No Git checkout, wallet, credentials, signing, or payment.
 
 \`\`\`sh
-git clone ${PREVIEW_REPO}.git
-cd agent-payment-integrity
-git checkout --detach ${PREVIEW_COMMIT}
-npm ci --ignore-scripts
-node cli.mjs audit --origin ${url.origin} --method GET --route ${AUDIT_ROUTE} --required-paths report.findings,report.repairPlan.actions --max-routes 1 --format json --public-dns
+npm exec --yes --ignore-scripts --package="./$package" -- agent-payment-integrity audit --origin ${url.origin} --method GET --route ${AUDIT_ROUTE} --required-paths report.findings,report.repairPlan.actions --max-routes 1 --format json --public-dns
 \`\`\`
 
-Replace the origin, route, and required paths with your own task. A missing required field means this route is not a fit for that task. A positive preview does not validate required query values or the paid response, and does not authorize spending. The hosted seller audit is a separate paid operation.
+Here \`package\` is the local archive filename from the publisher's instructions. Replace the origin, route, and required paths for your task. The check builds its unsigned request from public OpenAPI examples. A missing required field means the route is not a fit. A verified challenge does not validate your private input or the paid response, and does not authorize spending. If the free check answers your question, stop there. The hosted seller audit is a separate paid operation.
 `;
 }
