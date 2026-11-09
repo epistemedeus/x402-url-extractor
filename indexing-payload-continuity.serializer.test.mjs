@@ -68,7 +68,13 @@ describe("official x402Client serializer + continuity", () => {
         },
       },
     };
-    const client = new x402Client().register(NETWORK, new UnsignedExactScheme());
+    // The unsigned fixture scheme supplies no built-in default asset metadata.
+    // Admit only this fixture's Base asset and cap, without bypassing spend controls.
+    const client = new x402Client()
+      .register(NETWORK, new UnsignedExactScheme())
+      .setSpendControls({
+        allowedAssets: [{ network: NETWORK, asset: paymentRequired.accepts[0].asset, maxAmountPerPayment: "10000" }],
+      });
     const complete = await client.createPaymentPayload(paymentRequired);
     assert.equal(complete.resource.url, paymentRequired.resource.url);
     assert.ok(complete.extensions.bazaar);

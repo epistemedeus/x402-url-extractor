@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { validateDiscoveryExtension } from "@x402/extensions/bazaar";
 
 import {
   classifyDiscoveryRequestConstruction,
@@ -9,6 +10,45 @@ import {
   isDiscoveryQueryValuePresent,
   projectDiscoveryRequest,
 } from "./discovery-contract.mjs";
+
+function validatesWithQuery(extension, query) {
+  const candidate = structuredClone(extension);
+  if (query === undefined) delete candidate.info.input.queryParams;
+  else candidate.info.input.queryParams = query;
+  return validateDiscoveryExtension(candidate).valid;
+}
+
+test("Bazaar and the request projection reject omission of required query input", () => {
+  const routeKey = "GET /required-query-contract";
+  const { bazaar } = declareDiscoveryContract({
+    routeKey,
+    input: { url: "https://example.com" },
+    inputSchema: {
+      type: "object",
+      properties: { url: { type: "string" }, limit: { type: "integer" } },
+      required: ["url"],
+    },
+    output: { example: { ok: true } },
+    outputSchema: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] },
+  });
+  bazaar.info.input.method = "GET";
+  assert.equal(validatesWithQuery(bazaar, undefined), false, "omitting the entire query must fail");
+  assert.equal(validatesWithQuery(bazaar, {}), false);
+  assert.equal(validatesWithQuery(bazaar, { limit: 2 }), false);
+  assert.equal(validatesWithQuery(bazaar, { url: "https://example.org" }), true);
+  assert.deepEqual(getDiscoveryRequestContract(routeKey).schema, bazaar.schema.properties.input);
+});
+
+test("Bazaar keeps query optional where no query field is required", () => {
+  const { bazaar } = declareDiscoveryContract({
+    input: { limit: 2 },
+    inputSchema: { type: "object", properties: { limit: { type: "integer" } } },
+  });
+  bazaar.info.input.method = "GET";
+  assert.equal(validatesWithQuery(bazaar, undefined), true);
+  assert.equal(validatesWithQuery(bazaar, { limit: 2 }), true);
+  assert.equal(validatesWithQuery(bazaar, { limit: "two" }), false);
+});
 
 test("places the authored output schema in the Bazaar v2 response contract", () => {
   const extension = declareDiscoveryContract({
