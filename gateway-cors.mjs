@@ -2,8 +2,11 @@
 // Wildcard origin is credential-free. Paid 402 headers stay on the response
 // and are listed in Access-Control-Expose-Headers so a browser can read them.
 
+const A2A_CATALOG_PATH = "/a2a/message:send";
+
 export const BROWSER_AGENT_CORS_PATHS = Object.freeze([
   "/mcp",
+  A2A_CATALOG_PATH,
   "/.well-known/agent-card.json",
   "/.well-known/agent.json",
   "/openapi.json",
@@ -16,6 +19,7 @@ export const BROWSER_AGENT_CORS_ALLOW_ORIGIN = "*";
 export const BROWSER_AGENT_CORS_ALLOW_METHODS = "GET, POST, OPTIONS";
 export const BROWSER_AGENT_CORS_ALLOW_HEADERS = "content-type";
 const MCP_PROTOCOL_VERSION_HEADER = "mcp-protocol-version";
+const A2A_VERSION_HEADER = "a2a-version";
 export const BROWSER_AGENT_CORS_MAX_AGE = "86400";
 
 // Response headers this gateway actually writes or replays for x402 and MPP.
@@ -68,17 +72,19 @@ function blockCredentialHeader(res) {
 export function browserAgentCorsMiddleware(req, res, next) {
   if (!isBrowserAgentCorsPath(req.path)) return next();
   const policy = BROWSER_AGENT_CORS_POLICY;
+  const isA2aCatalog = req.path === A2A_CATALOG_PATH;
   blockCredentialHeader(res);
   res.setHeader("Access-Control-Allow-Origin", policy.allowOrigin);
-  res.setHeader("Access-Control-Expose-Headers", policy.exposeHeaders);
+  if (!isA2aCatalog) res.setHeader("Access-Control-Expose-Headers", policy.exposeHeaders);
   if (String(req.method || "GET").toUpperCase() !== "OPTIONS") return next();
-  res.setHeader("Access-Control-Allow-Methods", policy.allowMethods);
+  res.setHeader("Access-Control-Allow-Methods", isA2aCatalog ? "POST, OPTIONS" : policy.allowMethods);
   // The stateless MCP transport still negotiates the version in initialize.
   // The normal client sends that version on later requests; do not authorize
   // credential or payment headers here (MCP payment stays in JSON-RPC _meta).
-  res.setHeader("Access-Control-Allow-Headers", req.path === "/mcp"
-    ? `${policy.allowHeaders}, ${MCP_PROTOCOL_VERSION_HEADER}`
-    : policy.allowHeaders);
+  const versionHeader = isA2aCatalog ? A2A_VERSION_HEADER
+    : req.path === "/mcp" ? MCP_PROTOCOL_VERSION_HEADER : null;
+  res.setHeader("Access-Control-Allow-Headers", versionHeader
+    ? `${policy.allowHeaders}, ${versionHeader}` : policy.allowHeaders);
   res.setHeader("Access-Control-Max-Age", policy.maxAge);
   res.status(204);
   res.setHeader("Content-Length", "0");
