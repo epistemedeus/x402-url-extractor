@@ -26,6 +26,7 @@ import { CDP_RESOURCE_DESCRIPTION_MAX_CODE_POINTS } from "./x402-resource-compat
 import { validatePaymentRequiredHeader } from "./bazaar-contract-audit.mjs";
 import { SELLER_INTEGRITY_AUDIT_EXAMPLE, sellerIntegrityAuditOutputSchema } from "./seller-integrity-audit.mjs";
 import { mirrorLegacyX402Body } from "./x402-legacy-body.mjs";
+import { activeNoHumansClaimProof } from "./nohumans-claim-proof.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const SNAPSHOT_MISSING_FROM_LLMS = [
@@ -195,6 +196,17 @@ async function readUnpaidChallenge(base, item) {
   return response.json();
 }
 
+test("NoHumans proof refuses missing, malformed, multiline and expired configuration", () => {
+  const now = 1_800_000_000_000;
+  const cfg = (token, expiresAt) => JSON.stringify({ token, expiresAt });
+  assert.equal(activeNoHumansClaimProof(undefined, now), null);
+  assert.equal(activeNoHumansClaimProof("{", now), null);
+  assert.equal(activeNoHumansClaimProof(cfg("fake-proof", now), now), null);
+  assert.equal(activeNoHumansClaimProof(cfg("fake-proof", now + 86_400_001), now), null);
+  assert.equal(activeNoHumansClaimProof(cfg("fake\nproof", now + 1), now), null);
+  assert.equal(activeNoHumansClaimProof(cfg("fake-proof", now + 1), now), "fake-proof");
+});
+
 test("live free surfaces keep canonical paid routes and kill Circle as a 23rd action", { timeout: 60_000 }, async (t) => {
   const dataDir = await mkdtemp(path.join(tmpdir(), "samedaydesk-surface-parity-"));
   const port = await unusedPort();
@@ -208,6 +220,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
       MPP_SECRET_KEY: "",
       PUBLIC_URL: "https://agents.samedaydesk.com",
       X402_BUILDER_CODE: "bc_samedaydesk_test",
+      NOHUMANS_PUBLIC_CLAIM_PROOF: JSON.stringify({ token: "fake-proof", expiresAt: Date.now() + 120_000 }),
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -247,6 +260,15 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
 
   assert.equal(await listening, true);
   const base = `http://127.0.0.1:${port}`;
+  const proofResponse = await fetch(base + "/.well-known/nohumans-claim");
+  assert.equal(proofResponse.status, 200);
+  assert.match(proofResponse.headers.get("content-type"), /^text\/plain\b/i);
+  assert.equal(proofResponse.headers.get("cache-control"), "no-store");
+  assert.equal(proofResponse.headers.get("payment-required"), null);
+  assert.equal(await proofResponse.text(), "fake-proof");
+  const wrongProofPath = await fetch(base + "/.well-known/nohumans-claim?token=other");
+  assert.equal(wrongProofPath.status, 404);
+  assert.equal(await wrongProofPath.text(), "");
   const challengeResponse = await fetch(base + EXTRACT_CONTROL);
   assert.equal(challengeResponse.status, 402);
   const encodedChallenge = challengeResponse.headers.get("payment-required");

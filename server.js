@@ -305,6 +305,7 @@ import {
   WELL_KNOWN_SKILLS_INDEX_PATH,
   mountWellKnownSkills,
 } from "./well-known-skills.mjs";
+import { activeNoHumansClaimProof } from "./nohumans-claim-proof.mjs";
 import {
   acquisitionIndexSkill,
   mountMachineAcquisition,
@@ -940,6 +941,14 @@ app.get("/.well-known/402index-verify.txt", (_req, res) => {
     process.env.INDEX402_VERIFY_HASH ||
       "a1d5312d7ee9189ae3cbb1eb74f0f3903001e373dab8dfb209a942a41be5a80b"
   );
+});
+
+app.get("/.well-known/nohumans-claim", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const proof = req.originalUrl === "/.well-known/nohumans-claim"
+    ? activeNoHumansClaimProof(process.env.NOHUMANS_PUBLIC_CLAIM_PROOF)
+    : null;
+  return proof === null ? res.status(404).end() : res.type("text/plain").end(proof);
 });
 
 // Project-owned verification for claiming the official-registry-propagated
