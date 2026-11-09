@@ -1,5 +1,5 @@
 // Ordinary consumer of compare_page_observations outputSchema.
-// @modelcontextprotocol/sdk 1.30.0 Client validates structuredContent
+// The locked @modelcontextprotocol/sdk Client validates structuredContent
 // against the outputSchema cached by listTools. Tampered structuredContent
 // is rejected by that client.
 import assert from "node:assert/strict";
@@ -32,6 +32,7 @@ import {
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const sdkVersion = JSON.parse(readFileSync(path.join(cwd, "node_modules/@modelcontextprotocol/sdk/package.json"), "utf8")).version;
+const lockedSdkVersion = JSON.parse(readFileSync(path.join(cwd, "package-lock.json"), "utf8")).packages["node_modules/@modelcontextprotocol/sdk"].version;
 const jsonSchema = pageChangeMcpOutputJsonSchema();
 const validate = new AjvJsonSchemaValidator().getValidator(jsonSchema);
 const origin = "https://agents.example";
@@ -151,7 +152,7 @@ test("SDK client accepts a mounted result and rejects tampered structuredContent
     } catch (error) {
       rejected = error;
     }
-    assert.equal(sdkVersion, "1.30.0");
+    assert.equal(sdkVersion, lockedSdkVersion);
     assert.equal(
       rejected instanceof McpError,
       true,
