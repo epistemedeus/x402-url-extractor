@@ -91,6 +91,7 @@ import {
 import { buildSkillContract } from "./skill-contract.mjs";
 import { exposeAgenticTradeProxyDiagnostics } from "./agentictrade-proxy-diagnostics.mjs";
 import { assertPublicHttpUrl, extract, extractMcpOutputSchema, readMarkdown, readMcpOutputSchema } from "./extract.mjs";
+import { EXTRACT_EXCERPT_OPTION_DESCRIPTION } from "./extract-excerpt-budget.mjs";
 import {
   buildCapture,
   fetchFailureCode,
@@ -1039,7 +1040,7 @@ mountDeliveryJournalCoverage(app, {
   internalToken: process.env.COMMERCE_INTERNAL_TOKEN || "",
 });
 const acceptsFor = createExactUsdcAcceptsFor({ network: NETWORK, payTo: PAY_TO });
-const EXTRACT_DISCOVERY_DESCRIPTION = `Extract a public HTTP(S) page into JSON: title, description, JSON-LD, Open Graph, headings, links, and AI-readiness signals. No JavaScript; 12-second timeout; 3 MB cap. Paid JSON keeps requestedUrl, finalUrl, status, sourceOk, error, and capture limits. Default excerpt ${EXTRACT_TEXT_EXCERPT_CHARS}. Optional textExcerptLimitChars 1-${EXTRACT_TEXT_EXCERPT_MAX_CHARS} is rejected before payment; price unchanged. Not the full page. Use /read for Markdown.`;
+const EXTRACT_DISCOVERY_DESCRIPTION = `Extract a public HTTP(S) page into JSON: title, description, JSON-LD, Open Graph, headings, links, and AI-readiness signals. No JavaScript; 12-second timeout; 3 MB cap. Check ok, sourceOk, status, error, and capture. Set textExcerptLimitChars to adjust the excerpt. ${EXTRACT_EXCERPT_OPTION_DESCRIPTION} Use /read for Markdown.`;
 const RESOURCES = [
   { url: `${PUBLIC_URL}/extract`, amount: priceToAtomic(EXTRACT_PRICE), description: EXTRACT_DISCOVERY_DESCRIPTION, mimeType: "application/json" },
   { url: `${PUBLIC_URL}/read`, amount: priceToAtomic(READ_PRICE), description: "URL -> bounded Markdown from a no-JavaScript HTTP capture. Inspect source status and truncation; missing discussion text is not proof of absence.", mimeType: "application/json" },
@@ -2029,7 +2030,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
             : agentCashPaymentInfoFor(RESOURCES[18]),
         },
       },
-      "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }, { name: "textExcerptLimitChars", in: "query", required: false, description: `Optional excerpt budget. Default ${EXTRACT_TEXT_EXCERPT_CHARS}. Maximum ${EXTRACT_TEXT_EXCERPT_MAX_CHARS}, the same returned-text ceiling as /read. Rejected before payment. Does not change the price or fetch /read.`, schema: { type: "integer", minimum: 1, maximum: EXTRACT_TEXT_EXCERPT_MAX_CHARS } }], responses: { "200": { description: "typed extract record after payment. HTTP 200 is merchant delivery, not source success. Source HTTP status is status; requestedUrl is the caller URL; finalUrl is the observed URL after redirects. sourceOk false plus error marks 4xx/5xx. capture labels the no-JS method and size/excerpt limits; text is not a completeness proof." }, "400": { description: "invalid url or textExcerptLimitChars; charged nothing" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
+      "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }, { name: "textExcerptLimitChars", in: "query", required: false, description: EXTRACT_EXCERPT_OPTION_DESCRIPTION, schema: { type: "integer", minimum: 1, maximum: EXTRACT_TEXT_EXCERPT_MAX_CHARS } }], responses: { "200": { description: "typed extract record after payment. HTTP 200 is merchant delivery, not source success. Source HTTP status is status; requestedUrl is the caller URL; finalUrl is the observed URL after redirects. sourceOk false plus error marks 4xx/5xx. capture labels the no-JS method and size/excerpt limits; text is not a completeness proof." }, "400": { description: "invalid url or textExcerptLimitChars; charged nothing" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "typed Markdown record after payment. HTTP 200 is merchant delivery. status is source HTTP status; truncated and capture label the 40,000-character and 3 MB no-JS limits. Missing discussion text is not proof of absence." }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
       "/schemaforge": { get: { summary: RESOURCES[3].description, parameters: [{ name: "site", in: "query", required: true, schema: { type: "string" } }, { name: "vertical", in: "query", required: false, schema: { type: "string" } }, { name: "city", in: "query", required: false, schema: { type: "string" } }], responses: { "200": { description: "paste-ready JSON-LD bundle + gap diff + fix list" }, "402": { description: `payment required (x402, ${SCHEMAFORGE_PRICE} USDC base)` } } } },
@@ -2857,7 +2858,7 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
                   type: "integer",
                   minimum: 1,
                   maximum: EXTRACT_TEXT_EXCERPT_MAX_CHARS,
-                  description: `Optional excerpt budget. Default ${EXTRACT_TEXT_EXCERPT_CHARS}. Does not change the price.`,
+                  description: EXTRACT_EXCERPT_OPTION_DESCRIPTION,
                 },
               },
               required: ["url"],
@@ -4442,7 +4443,8 @@ app.get("/", (req, res) => {
       flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt -> safely replay the same logical request",
     },
     paidRoutes: {
-      "GET /extract?url=": `${EXTRACT_PRICE} - ${EXTRACT_DISCOVERY_DESCRIPTION}`,
+      // Preserve the approved HTML copy. Machine JSON below projects its terms from the catalog.
+      "GET /extract?url=": `${EXTRACT_PRICE} - Extract a public HTTP(S) page into JSON: title, description, JSON-LD, Open Graph, headings, links, and AI-readiness signals. No JavaScript; 12-second timeout; 3 MB cap. Paid JSON keeps requestedUrl, finalUrl, status, sourceOk, error, and capture limits. Default excerpt ${EXTRACT_TEXT_EXCERPT_CHARS}. Optional textExcerptLimitChars 1-${EXTRACT_TEXT_EXCERPT_MAX_CHARS} is rejected before payment; price unchanged. Not the full page. Use /read for Markdown.`,
       ...(EXTRACT_BATCH_ENABLED ? {
         "POST /extract/batch": `${EXTRACT_BATCH_PRICE_USD} - ${EXTRACT_BATCH_DESCRIPTION}`,
       } : {}),
@@ -4619,7 +4621,7 @@ import("./mcp-server.mjs")
           },
           tags: ["careers", "job-board", "coverage"],
         },
-        { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a bounded text excerpt; use read for longer bounded Markdown. Content is fetched without JavaScript rendering. Check status/sourceOk/error/capture; ok means a typed extract record, not source completeness."), textExcerptLimitChars: merchantInteger().min(1).max(EXTRACT_TEXT_EXCERPT_MAX_CHARS).optional().describe(`Optional excerpt budget. Default ${EXTRACT_TEXT_EXCERPT_CHARS}. Maximum ${EXTRACT_TEXT_EXCERPT_MAX_CHARS}. Rejected before fetch. Does not purchase /read or change the price.`) }, outputSchema: extractMcpOutputSchema, run: (a) => extract(a.url, { textExcerptLimitChars: a.textExcerptLimitChars }), tags: ["web", "extract", "structured-data"] },
+        { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a bounded text excerpt; use read for longer bounded Markdown. Content is fetched without JavaScript rendering. Check status/sourceOk/error/capture; ok means a typed extract record, not source completeness."), textExcerptLimitChars: merchantInteger().min(1).max(EXTRACT_TEXT_EXCERPT_MAX_CHARS).optional().describe(EXTRACT_EXCERPT_OPTION_DESCRIPTION) }, outputSchema: extractMcpOutputSchema, run: (a) => extract(a.url, { textExcerptLimitChars: a.textExcerptLimitChars }), tags: ["web", "extract", "structured-data"] },
         ...(EXTRACT_BATCH_ENABLED ? [{
           name: "extract_batch",
           description: EXTRACT_BATCH_DESCRIPTION,

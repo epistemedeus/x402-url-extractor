@@ -206,14 +206,15 @@ function testPayment(challenge) {
   })).toString("base64");
 }
 
-async function paidGet(base, route, target) {
-  const unpaid = await fetch(`${base}${route}?url=${encodeURIComponent(target)}`);
+async function paidGet(base, route, target, query = {}) {
+  const requestUrl = `${base}${route}?${new URLSearchParams({ url: target, ...query })}`;
+  const unpaid = await fetch(requestUrl);
   assert.equal(unpaid.status, 402);
   const challenge = decodePaymentRequired(unpaid);
   const accepted = challenge.accepts.find((entry) => entry.network === NETWORK && entry.scheme === "exact");
   assert.equal(accepted.amount, PRICE_ATOMIC);
   assert.equal(accepted.payTo, PAY_TO);
-  const paid = await fetch(`${base}${route}?url=${encodeURIComponent(target)}`, {
+  const paid = await fetch(requestUrl, {
     headers: { "payment-signature": testPayment(challenge) },
   });
   const body = await paid.json();
@@ -231,13 +232,40 @@ test("paid extract and read preserve source HTTP semantics without a second paym
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
 
-  const ok = await paidGet(merchant.base, "/extract", "https://ok.example/");
+  const requestUrl = `${merchant.base}/extract?url=${encodeURIComponent("https://ok.example/")}`;
+  for (const suffix of ["", "&textExcerptLimitChars=1", "&textExcerptLimitChars=2000", "&textExcerptLimitChars=40000"]) {
+    const response = await fetch(requestUrl + suffix);
+    assert.equal(response.status, 402, suffix);
+    assert.equal(response.headers.get("payment-response"), null);
+    const quote = decodePaymentRequired(response);
+    assert.equal(quote.resource.url, requestUrl + suffix);
+    assert.deepEqual(quote.accepts.map(({ scheme, network, amount, payTo }) => ({ scheme, network, amount, payTo })), [
+      { scheme: "exact", network: NETWORK, amount: PRICE_ATOMIC, payTo: PAY_TO },
+    ]);
+    assert.match(quote.resource.description, /Invalid values are rejected before payment/);
+    await response.body.cancel();
+  }
+  for (const suffix of ["=0", "=40001", "=1.5", "=foo", "=1&textExcerptLimitChars=2"]) {
+    const response = await fetch(`${requestUrl}&textExcerptLimitChars${suffix}`, {
+      headers: { "payment-signature": "intentionally-invalid-fixture" },
+    });
+    assert.equal(response.status, 400, suffix);
+    assert.equal(response.headers.get("payment-required"), null);
+    assert.equal(response.headers.get("payment-response"), null);
+    assert.equal((await response.json()).charged, false);
+  }
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+
+  const ok = await paidGet(merchant.base, "/extract", "https://ok.example/", { textExcerptLimitChars: 3 });
   assert.equal(ok.paid.status, 200, JSON.stringify(ok.body));
   const okParsed = extractMcpOutputSchema.safeParse(ok.body);
   assert.equal(okParsed.success, true, okParsed.success ? "" : JSON.stringify(okParsed.error.issues));
   assert.equal(ok.body.sourceOk, true, JSON.stringify(ok.body));
   assert.equal(ok.body.status, 200);
   assert.equal(ok.body.requestedUrl, "https://ok.example/");
+  assert.equal(ok.body.capture.textExcerptLimitChars, 3);
+  assert.equal(ok.body.text, "hel");
   assert.equal(facilitator.calls.verify, 1);
   assert.equal(facilitator.calls.settle, 1);
 

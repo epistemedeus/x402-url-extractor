@@ -1,10 +1,11 @@
 import { pageChangeMcpDescription } from "./page-change-input-contract.mjs";
 import { trialReadMcpDescription } from "./extraction-trial.mjs";
+import { EXTRACT_EXCERPT_OPTION_DESCRIPTION } from "./extract-excerpt-budget.mjs";
 
 const TOOL_METADATA = Object.freeze({
   extract: {
     title: "Extract Web Page as Structured JSON",
-    description: "Fetch a public HTTP(S) page and return compact extraction signals for programmatic inspection: title, meta description, Open Graph/Twitter metadata, JSON-LD, headings, links, text excerpt, and AI-readiness flags. Use `read` instead when you need the page body as LLM-ready Markdown rather than metadata or a link inventory. Does not execute JavaScript; follows redirects and applies SSRF, timeout, and response-size guards.",
+    description: `Extract metadata, Open Graph/Twitter tags, JSON-LD, headings, links, a bounded excerpt, and AI-readiness flags from a public HTTP(S) page. Set textExcerptLimitChars to adjust the excerpt. ${EXTRACT_EXCERPT_OPTION_DESCRIPTION} Use \`read\` instead for Markdown. Follows redirects with SSRF, timeout, and size guards; no JavaScript.`,
   },
   page_change: {
     title: "Compare Held Page Extracts",
