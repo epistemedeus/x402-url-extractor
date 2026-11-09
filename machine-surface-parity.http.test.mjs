@@ -330,7 +330,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     readJson(base, "/v0/commerce-demand.json?days=90"),
   ]);
 
-  const preflightSource = "https://github.com/epistemedeus/agent-payment-integrity/tree/f6acc1c56c6fd977608fb6c97c088d36ea27f955";
+  const preflightSource = "https://github.com/epistemedeus/agent-payment-integrity#try-it";
   const previewHeading = "## Free seller preview";
   const preview = (doc) => doc.split(previewHeading)[1]?.split("\n## ")[0];
   const llmsPreview = preview(llms);
@@ -339,9 +339,13 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.ok(llms.indexOf(previewHeading) < llms.indexOf("## How to pay"));
   assert.ok(skill.indexOf(previewHeading) < skill.indexOf("## AgentCash"));
   assert.ok(llmsPreview.includes(preflightSource));
-  assert.match(llmsPreview, /node cli\.mjs audit --origin \S+ --method GET --route \/commerce\/seller-integrity-audit --required-paths report\.findings,report\.repairPlan\.actions --max-routes 1 --format json --public-dns/);
-  assert.match(llmsPreview, /No wallet, credentials, signing, or payment/);
-  assert.match(llmsPreview, /does not validate required query values or the paid response/);
+  assert.ok(llmsPreview.includes("https://neomorphic.io/api/v1/instruments"));
+  assert.match(llmsPreview, /id `seller-conformance`[\s\S]*`source\.url`[\s\S]*archive and checksum together/);
+  assert.doesNotMatch(llmsPreview, /git clone|git checkout|releases\/tag\/|candidate\.\d+/);
+  assert.match(llmsPreview, /npm exec --yes --ignore-scripts --package="\.\/\$package" -- agent-payment-integrity audit --origin \S+ --method GET --route \/commerce\/seller-integrity-audit --required-paths report\.findings,report\.repairPlan\.actions --max-routes 1 --format json --public-dns/);
+  assert.match(llmsPreview, /No Git checkout, wallet, credentials, signing, or payment/);
+  assert.match(llmsPreview, /unsigned request from public OpenAPI examples/);
+  assert.match(llmsPreview, /does not validate your private input or the paid response/);
   assert.match(llmsPreview, /does not authorize spending/);
   assert.equal(humanBefore.includes(preflightSource), false);
   assert.equal(catalog.actions.filter((action) => action.route === SELLER_INTEGRITY_ROUTE).length, 1);
