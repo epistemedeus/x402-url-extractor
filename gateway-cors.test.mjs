@@ -43,6 +43,7 @@ function listen(app) {
 test("browser agent CORS paths are the gateway discovery surfaces only", () => {
   assert.deepEqual(BROWSER_AGENT_CORS_PATHS, [
     "/mcp",
+    "/a2a/message:send",
     "/.well-known/agent-card.json",
     "/.well-known/agent.json",
     "/openapi.json",
@@ -56,6 +57,9 @@ test("browser agent CORS paths are the gateway discovery surfaces only", () => {
   assert.equal(isBrowserAgentCorsPath("/.well-known/x402.json"), false);
   assert.equal(isBrowserAgentCorsPath("/extract"), false);
   assert.equal(isBrowserAgentCorsPath("/mcp/extra"), false);
+  assert.equal(isBrowserAgentCorsPath("/a2a/message:send"), true);
+  assert.equal(isBrowserAgentCorsPath("/a2a/message:stream"), false);
+  assert.equal(isBrowserAgentCorsPath("/a2a/message:send/"), false);
 });
 
 test("seeded credentialed wildcard is rejected", () => {
@@ -174,15 +178,15 @@ test("live gateway preflight, discovery GET, and unpaid 402 stay intact", { time
     const preflight = await fetch(`${base}${route}`, { method: "OPTIONS" });
     assert.equal(preflight.status, 204, route);
     assert.equal(preflight.headers.get("access-control-allow-origin"), "*");
-    assert.equal(preflight.headers.get("access-control-allow-methods"), "GET, POST, OPTIONS");
+    const a2a = route === "/a2a/message:send";
+    assert.equal(preflight.headers.get("access-control-allow-methods"), a2a ? "POST, OPTIONS" : "GET, POST, OPTIONS");
     const allowedHeaders = preflight.headers.get("access-control-allow-headers");
-    assert.equal(route === "/mcp" ? allowedHeaders.split(",")[0] : allowedHeaders, "content-type");
+    assert.equal(allowedHeaders, a2a ? "content-type, a2a-version"
+      : route === "/mcp" ? "content-type, mcp-protocol-version" : "content-type");
     assert.equal(preflight.headers.get("access-control-max-age"), "86400");
     assert.equal(preflight.headers.get("access-control-allow-credentials"), null, route);
-    const exposed = preflight.headers.get("access-control-expose-headers") || "";
-    assert.equal(exposed.includes("PAYMENT-REQUIRED"), true, route);
-    assert.equal(exposed.includes("X-PAYMENT-RESPONSE"), true, route);
-    assert.equal(exposed.includes("PAYMENT-RESPONSE"), true, route);
+    const exposed = preflight.headers.get("access-control-expose-headers");
+    assert.equal(exposed, a2a ? null : GATEWAY_PAYMENT_EXPOSE_HEADERS.join(", "), route);
   }
 
   const card = await fetch(`${base}/.well-known/agent-card.json`);
@@ -201,6 +205,32 @@ test("live gateway preflight, discovery GET, and unpaid 402 stay intact", { time
   assert.equal(alias.headers.get("access-control-allow-origin"), null);
 
   const origin = "https://browser.example";
+  const a2aUrl = new URL(body.supportedInterfaces[0].url);
+  assert.equal(body.supportedInterfaces[0].protocolBinding, "HTTP+JSON");
+  const a2aPath = `${a2aUrl.pathname}/message:send`;
+  const a2aVersion = body.supportedInterfaces[0].protocolVersion;
+  const a2aPreflight = await fetch(base + a2aPath, { method: "OPTIONS", headers: {
+    origin, "access-control-request-method": "POST", "access-control-request-headers": "a2a-version,content-type",
+  } });
+  assert.equal(a2aPreflight.status, 204);
+  assert.equal(a2aPreflight.headers.get("access-control-allow-headers"), "content-type, a2a-version");
+  const send = (version) => fetch(base + a2aPath, { method: "POST", headers: {
+    origin, "a2a-version": version, "content-type": "application/a2a+json",
+  }, body: JSON.stringify({ message: { messageId: "public-browser-catalog", role: "ROLE_USER", parts: [{ text: "List paid actions" }] } }) });
+  const a2aResult = await send(a2aVersion);
+  assert.equal(a2aResult.status, 200);
+  assert.equal(a2aResult.headers.get("access-control-allow-origin"), "*");
+  assert.equal(a2aResult.headers.get("access-control-allow-credentials"), null);
+  assert.equal(a2aResult.headers.get("payment-response"), null);
+  assert.match(a2aResult.headers.get("content-type"), /^application\/a2a\+json\b/);
+  const a2aBody = await a2aResult.json();
+  assert.equal(a2aBody.message.role, "ROLE_AGENT");
+  assert.equal(a2aBody.message.parts[0].data.actions.find((action) => action.route === "/extract").priceAtomicUsdc, "5000");
+  const unsupported = await send("0.3");
+  assert.equal(unsupported.status, 400);
+  assert.equal(unsupported.headers.get("access-control-allow-origin"), "*");
+  assert.deepEqual((await unsupported.json()).supportedVersions, ["1.0"]);
+
   const post = (message, headers = {}) => fetch(`${base}/mcp`, {
     method: "POST", headers: { origin, "content-type": "application/json",
       accept: "application/json, text/event-stream", ...headers }, body: JSON.stringify(message),
