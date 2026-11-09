@@ -373,6 +373,15 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(Object.keys(gateway.paidRoutes).length, catalog.actions.length + (catalog.alternateAccess ? 1 : 0));
   assert.match(gateway.paidRoutes["GET /data/careers-board?board="], /^\$0\.005 - /);
   assert.equal(receipt.ok, true);
+  // These documents are acquired directly by agents that may not see the
+  // website or skill. Keep the support handoff consistent across profiles.
+  const contact = { email: "contact@neomorphic.io", url: "https://samedaydesk.com" };
+  assert.deepEqual(openapi.info.contact, contact);
+  assert.deepEqual(mppOpenapi.info.contact, contact);
+  for (const alias of ["/openapi.yaml", "/swagger.json", "/openapi.mpp.json"]) {
+    assert.deepEqual((await readJson(base, alias)).info.contact, contact, alias);
+  }
+
   const sellerIntegritySummary = openapi.paths[SELLER_INTEGRITY_ROUTE].get.summary;
   assert.equal(sellerIntegritySummary.length, 469);
   const sellerIntegrityAction = catalog.actions.find((action) => action.route === SELLER_INTEGRITY_ROUTE);

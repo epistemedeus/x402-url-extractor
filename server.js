@@ -1822,7 +1822,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       title: "SameDayDesk machine commerce gateway",
       version: SERVICE_VERSION,
       description: `Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, payment preflight and settlement proof, wallet context, and Morpho decision evidence. Pay per call through ${availablePaymentProtocols().includes("mpp") ? "Base x402 or native MPP on eligible operations" : "Base x402"}${circleGateway.enabled ? ", with a Circle Gateway Nanopayments path for gasless batched USDC" : ""}.`,
-      contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
+      contact: { email: "contact@neomorphic.io", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the currently advertised HTTP 402 offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
     },
     "x-service-info": {
