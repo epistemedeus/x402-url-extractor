@@ -1,0 +1,30 @@
+name: Receive stock nanoodle quote boundary
+on:
+  push:
+    branches: [codex/receive-nanoodle-quote-20261111]
+    paths: [.github/workflows/receive-nanoodle.yml, verification/nanoodle-quote/**]
+permissions:
+  contents: read
+jobs:
+  stock-executor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.22.1
+          package-manager-cache: false
+      - name: Receive exact public executor and stop before payment
+        shell: bash
+        run: |
+          set -euo pipefail
+          task_source=$(mktemp -d)
+          git -C "$task_source" init --quiet
+          git -C "$task_source" remote add origin https://github.com/nanoodlecom/nanoodle-js.git
+          git -C "$task_source" fetch --quiet --depth=1 origin edd757fe2d5185072a53e43fbfd861c9a5400158
+          git -C "$task_source" checkout --quiet --detach FETCH_HEAD
+          test "$(git -C "$task_source" rev-parse HEAD)" = edd757fe2d5185072a53e43fbfd861c9a5400158
+          node verification/nanoodle-quote/receive.mjs "$task_source"
