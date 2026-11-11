@@ -1,0 +1,14 @@
+Native Work, Node 24.22.1. No external model or paid completion.
+
+1. Received exact public nanoodle Git commit edd757fe2d5185072a53e43fbfd861c9a5400158 by anonymous bounded fetch, detached checkout, clean status. Exit 0.
+2. Installed exact @x402/core, @x402/fetch and @x402/evm 2.30.0 plus @nanogpt/sdk 0.1.0 in the isolated fixture. Lock and integrity retained.
+3. npm --prefix verification/nanoodle-quote/base ci --ignore-scripts --no-audit --no-fund --offline
+   Exit 0. Work used the received npm cache; normal CI omits --offline.
+4. NANOODLE_SOURCE="$EXACT_NANOODLE_CHECKOUT" npm --prefix verification/nanoodle-quote/base test
+   Exit 0. 20 passed, 0 failed, 0 skipped. native.tap is the complete final output.
+5. One read-only capability GET returned 200. Three separate corrected quote diagnostics each sent exactly one unsigned synthetic chat POST, received 402, and exited 1 before authorization. Their full sanitized outputs are preserved as live-01/02/03.json. The first two receivers did not expose enough safe structural evidence; the third identifies the missing legacy asset/timeout and resource mismatch. No further live probe was attempted.
+6. Installed SDK source maps were compared to five exact tagged Git blobs; both inspected npm archives passed their published SHA-512 integrity. First-party installed dist bytes match its archive.
+7. node --check probe.mjs; node --check quote-only.mjs
+   Exit 0.
+
+The handed-over original stock receiver remains byte-identical. The prior failed receiver trace remains at public run 43066541750; its correction remains at 43066895425. The changed branch workflow performs only the finite locked inert tests, not a live quote. No signup, real secret, wallet, broadcast, bid, deployment or financial mutation was made.

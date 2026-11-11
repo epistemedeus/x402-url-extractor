@@ -1,0 +1,71 @@
+{
+  "selectedSourceMapChecks": [
+    {
+      "package": "@x402/fetch",
+      "version": "2.30.0",
+      "sourceCommit": "3414a56618e94f5aeff1c03295f7d5879a56157a",
+      "path": "typescript/packages/http/fetch/src/index.ts",
+      "gitBlob": "8e8fe505aa01e6c673ac7d61886a24b444cf2fcc",
+      "matchingInstalledSourceMaps": [
+        "dist/esm/index.mjs.map"
+      ]
+    },
+    {
+      "package": "@x402/core",
+      "version": "2.30.0",
+      "sourceCommit": "3414a56618e94f5aeff1c03295f7d5879a56157a",
+      "path": "typescript/packages/core/src/client/x402Client.ts",
+      "gitBlob": "30b534b0966c7e3999c28b0e66d9bc4bdf233c34",
+      "matchingInstalledSourceMaps": [
+        "dist/esm/client/index.mjs.map"
+      ]
+    },
+    {
+      "package": "@x402/core",
+      "version": "2.30.0",
+      "sourceCommit": "3414a56618e94f5aeff1c03295f7d5879a56157a",
+      "path": "typescript/packages/core/src/http/x402HTTPClient.ts",
+      "gitBlob": "7f11c1ef39b4c61640313c681b810d809d102acf",
+      "matchingInstalledSourceMaps": [
+        "dist/esm/chunk-U5TAZTKB.mjs.map"
+      ]
+    },
+    {
+      "package": "@x402/evm",
+      "version": "2.30.0",
+      "sourceCommit": "3414a56618e94f5aeff1c03295f7d5879a56157a",
+      "path": "typescript/packages/mechanisms/evm/src/exact/client/register.ts",
+      "gitBlob": "5b8500806f0f2a045dff7658b0b4729d27f7cc04",
+      "matchingInstalledSourceMaps": [
+        "dist/esm/chunk-CJ62XFQ3.mjs.map"
+      ]
+    },
+    {
+      "package": "@x402/evm",
+      "version": "2.30.0",
+      "sourceCommit": "3414a56618e94f5aeff1c03295f7d5879a56157a",
+      "path": "typescript/packages/mechanisms/evm/src/exact/v1/client/scheme.ts",
+      "gitBlob": "7bc9fee2d368e5f1407a0260cfd9694cba33ab34",
+      "matchingInstalledSourceMaps": [
+        "dist/esm/chunk-7TZ3NXXP.mjs.map"
+      ]
+    },
+    {
+      "package": "x402-fetch@1.2.0",
+      "archiveIntegrity": "sha512-CxCgPO4H4/ADZC31gSUCS/CipkUyppzMJRU3jGrEuhO+2k0optszH+kwO0XJ6pVyDprIT6PvGbmNJ4TGKSCAcQ==",
+      "archiveSha256": "726c0bc8e3648236340773521fe6ad321339b3156f16cbccf7834f3bbe465ffb"
+    },
+    {
+      "package": "@nanogpt/sdk@0.1.0",
+      "archiveIntegrity": "sha512-sOjaLq2K2ZlXqfheN40NOTXKlAXGLiZ/1bdA//DW3rV8YfcldpDyjpzIKxj/V0AIMbu3Un3h4/hbAILFcTI39w==",
+      "archiveSha256": "bb863f90c84af6e0af3a6fd1fbbe1bf012a61d06189c079fa94c8d612550bdd7"
+    }
+  ],
+  "nanoodle": {
+    "repository": "nanoodlecom/nanoodle-js",
+    "commit": "edd757fe2d5185072a53e43fbfd861c9a5400158",
+    "version": "0.13.0",
+    "nativeGitCheckoutClean": true
+  },
+  "legacyReleaseCommit": "f78b268a76e739dd980ff26a50b981d1d3f0e4ef"
+}

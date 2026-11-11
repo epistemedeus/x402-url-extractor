@@ -1,0 +1,137 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test
+> node --test --test-reporter=tap composition.test.mjs
+
+TAP version 13
+# Subtest: actual stock graph and maintained legacy Base fetch client compose using an inert dummy authorization
+ok 1 - actual stock graph and maintained legacy Base fetch client compose using an inert dummy authorization
+  ---
+  duration_ms: 19.448698
+  type: 'test'
+  ...
+# Subtest: wrong network refuses before the inert signer boundary
+ok 2 - wrong network refuses before the inert signer boundary
+  ---
+  duration_ms: 3.597052
+  type: 'test'
+  ...
+# Subtest: wrong asset refuses before the inert signer boundary
+ok 3 - wrong asset refuses before the inert signer boundary
+  ---
+  duration_ms: 1.903344
+  type: 'test'
+  ...
+# Subtest: atomic amount exceeds budget despite cheap display estimate refuses before the inert signer boundary
+ok 4 - atomic amount exceeds budget despite cheap display estimate refuses before the inert signer boundary
+  ---
+  duration_ms: 1.949484
+  type: 'test'
+  ...
+# Subtest: expired quote refuses before the inert signer boundary
+ok 5 - expired quote refuses before the inert signer boundary
+  ---
+  duration_ms: 1.581358
+  type: 'test'
+  ...
+# Subtest: missing absolute expiry refuses before the inert signer boundary
+ok 6 - missing absolute expiry refuses before the inert signer boundary
+  ---
+  duration_ms: 1.21863
+  type: 'test'
+  ...
+# Subtest: authorization would outlive quote refuses before the inert signer boundary
+ok 7 - authorization would outlive quote refuses before the inert signer boundary
+  ---
+  duration_ms: 1.143797
+  type: 'test'
+  ...
+# Subtest: missing resource binding refuses before the inert signer boundary
+ok 8 - missing resource binding refuses before the inert signer boundary
+  ---
+  duration_ms: 1.064397
+  type: 'test'
+  ...
+# Subtest: wrong resource binding refuses before the inert signer boundary
+ok 9 - wrong resource binding refuses before the inert signer boundary
+  ---
+  duration_ms: 1.916164
+  type: 'test'
+  ...
+# Subtest: missing quote input hash refuses before the inert signer boundary
+ok 10 - missing quote input hash refuses before the inert signer boundary
+  ---
+  duration_ms: 1.655099
+  type: 'test'
+  ...
+# Subtest: changed quote input hash refuses before the inert signer boundary
+ok 11 - changed quote input hash refuses before the inert signer boundary
+  ---
+  duration_ms: 1.014562
+  type: 'test'
+  ...
+# Subtest: only the direct-deposit rail is present refuses before the inert signer boundary
+ok 12 - only the direct-deposit rail is present refuses before the inert signer boundary
+  ---
+  duration_ms: 0.749161
+  type: 'test'
+  ...
+# Subtest: stock missing graph input refuses before any quote or authorization
+ok 13 - stock missing graph input refuses before any quote or authorization
+  ---
+  duration_ms: 0.730052
+  type: 'test'
+  ...
+# Subtest: an interruption at authorization produces the normal embedded result and no paid retry
+ok 14 - an interruption at authorization produces the normal embedded result and no paid retry
+  ---
+  duration_ms: 1.009665
+  type: 'test'
+  ...
+# Subtest: counterexample: a stock run after a lost authorized response generates a new nonce, not original-operation recovery
+ok 15 - counterexample: a stock run after a lost authorized response generates a new nonce, not original-operation recovery
+  ---
+  duration_ms: 2.311681
+  type: 'test'
+  ...
+# Subtest: absent qualified provider body binding holds even with a valid inexpensive quote
+ok 16 - absent qualified provider body binding holds even with a valid inexpensive quote
+  ---
+  duration_ms: 1.326613
+  type: 'test'
+  ...
+# Subtest: received live structural shape has no legacy asset or timeout and is refused by the actual maintained client
+ok 17 - received live structural shape has no legacy asset or timeout and is refused by the actual maintained client
+  ---
+  duration_ms: 1.005057
+  type: 'test'
+  ...
+# {"syntheticSdkRefusal":"Failed to create payment payload: Cannot read properties of undefined (reading 'toLowerCase')"}
+# Synthetic structural reproduction only. No live quote identity, destination or token retained.
+# Subtest: the maintained HTTP client does not dispatch v2 response recovery hooks for a legacy v1 response
+ok 18 - the maintained HTTP client does not dispatch v2 response recovery hooks for a legacy v1 response
+  ---
+  duration_ms: 1.355157
+  type: 'test'
+  ...
+# Subtest: first-party NanoGPT SDK receives quotes and generates intent keys but supplies no Base payer
+ok 19 - first-party NanoGPT SDK receives quotes and generates intent keys but supplies no Base payer
+  ---
+  duration_ms: 1.790614
+  type: 'test'
+  ...
+# Subtest: first-party SDK does not automatically retry a payment-proof transport failure
+ok 20 - first-party SDK does not automatically retry a payment-proof transport failure
+  ---
+  duration_ms: 0.228625
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 574.990863

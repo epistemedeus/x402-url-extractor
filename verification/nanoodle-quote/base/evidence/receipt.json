@@ -1,0 +1,78 @@
+{
+  "schema": "nanoodle.base-composition.receipt.v1",
+  "decision": "no_fit_for_live_authorization_or_recovery",
+  "carrierRepository": "epistemedeus/x402-url-extractor",
+  "carrierBranch": "codex/receive-nanoodle-quote-20261111",
+  "base": "7e897b705ef8081043e4f05857fd10838a42a97b",
+  "executionSurface": "Native Linux Work",
+  "node": "v24.22.1",
+  "nanoodle": {
+    "version": "0.13.0",
+    "commit": "edd757fe2d5185072a53e43fbfd861c9a5400158",
+    "cleanGitSource": true
+  },
+  "selectedSdkCommit": "3414a56618e94f5aeff1c03295f7d5879a56157a",
+  "installedVersions": {
+    "@x402/core": "2.30.0",
+    "@x402/evm": "2.30.0",
+    "@x402/fetch": "2.30.0",
+    "@nanogpt/sdk": "0.1.0",
+    "viem": "2.57.18"
+  },
+  "nativeTests": {
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "log": "native.tap"
+  },
+  "liveDiagnosticCommands": [
+    {
+      "file": "live-01.json",
+      "exit": 1,
+      "unsignedQuotePosts": 1
+    },
+    {
+      "file": "live-02.json",
+      "exit": 1,
+      "unsignedQuotePosts": 1
+    },
+    {
+      "file": "live-03.json",
+      "exit": 1,
+      "unsignedQuotePosts": 1
+    }
+  ],
+  "capabilityGets": 1,
+  "totalLiveUnsignedQuotePosts": 3,
+  "liveSignerBoundaryCalls": 0,
+  "livePaidRequests": 0,
+  "validSignatures": 0,
+  "chainBroadcasts": 0,
+  "paidCompletions": 0,
+  "buyerTaskExecutions": 0,
+  "observedLegacyBase": {
+    "scheme": "exact",
+    "network": "base",
+    "amountAtomic": "1000",
+    "assetFieldPresent": false,
+    "maxTimeoutSecondsFieldPresent": false,
+    "resourceEqualsActualRequestTarget": false,
+    "selectionHookReached": false
+  },
+  "missingOwningGuarantees": [
+    "Seller-supported complete Base exact requirement shape or maintained documented adapter, preserving actual chain, asset, amount, expiry and resource/body binding",
+    "Caller-owned durable original request/quote/typed authorization before dispatch and readback of an unknown original result; rerunning stock workflow is not recovery"
+  ],
+  "limits": [
+    "The positive composition and all dummy authorization requests use isolated synthetic responses and a fixed inert signer object",
+    "The fixture server body-hash definition is not a claimed NanoGPT canonicalization algorithm",
+    "No live full quote, payment ID, destination, token or private context is exported",
+    "First-party SDK 0.1.0 receives quotes and does not pay invoices; no Base recovery is inferred from quote intent keys",
+    "Legacy x402-fetch 1.2.0 source was inspected, not selected or executed",
+    "The optional quote-only receiver is not a CI step; default branch and deployment remain unchanged"
+  ],
+  "preservedOriginalReceiverGitBlob": "481a4b297559172dd5cef03df84e2e8bcff8b569",
+  "priorPublicFailedRun": "https://github.com/epistemedeus/x402-url-extractor/actions/runs/43066541750",
+  "priorPublicReceivedRun": "https://github.com/epistemedeus/x402-url-extractor/actions/runs/43066895425"
+}

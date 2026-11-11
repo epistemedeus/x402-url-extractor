@@ -1,0 +1,13 @@
+{
+  "name": "nanoodle-base-composition-fixture",
+  "private": true,
+  "type": "module",
+  "engines": {"node": "24.22.1"},
+  "scripts": {"test": "node --test --test-reporter=tap composition.test.mjs"},
+  "dependencies": {
+    "@nanogpt/sdk": "0.1.0",
+    "@x402/core": "2.30.0",
+    "@x402/evm": "2.30.0",
+    "@x402/fetch": "2.30.0"
+  }
+}

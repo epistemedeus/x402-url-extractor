@@ -1,0 +1,106 @@
+TAP version 13
+# Subtest: actual stock graph and maintained legacy Base fetch client compose using an inert dummy authorization
+ok 1 - actual stock graph and maintained legacy Base fetch client compose using an inert dummy authorization
+  ---
+  duration_ms: 17.689371
+  type: 'test'
+  ...
+# Subtest: wrong network refuses before the inert signer boundary
+ok 2 - wrong network refuses before the inert signer boundary
+  ---
+  duration_ms: 3.771503
+  type: 'test'
+  ...
+# Subtest: wrong asset refuses before the inert signer boundary
+ok 3 - wrong asset refuses before the inert signer boundary
+  ---
+  duration_ms: 1.642089
+  type: 'test'
+  ...
+# Subtest: atomic amount exceeds budget despite cheap display estimate refuses before the inert signer boundary
+ok 4 - atomic amount exceeds budget despite cheap display estimate refuses before the inert signer boundary
+  ---
+  duration_ms: 1.473414
+  type: 'test'
+  ...
+# Subtest: expired quote refuses before the inert signer boundary
+ok 5 - expired quote refuses before the inert signer boundary
+  ---
+  duration_ms: 1.117367
+  type: 'test'
+  ...
+# Subtest: missing absolute expiry refuses before the inert signer boundary
+ok 6 - missing absolute expiry refuses before the inert signer boundary
+  ---
+  duration_ms: 1.118378
+  type: 'test'
+  ...
+# Subtest: authorization would outlive quote refuses before the inert signer boundary
+ok 7 - authorization would outlive quote refuses before the inert signer boundary
+  ---
+  duration_ms: 1.17883
+  type: 'test'
+  ...
+# Subtest: missing resource binding refuses before the inert signer boundary
+ok 8 - missing resource binding refuses before the inert signer boundary
+  ---
+  duration_ms: 0.859317
+  type: 'test'
+  ...
+# Subtest: wrong resource binding refuses before the inert signer boundary
+ok 9 - wrong resource binding refuses before the inert signer boundary
+  ---
+  duration_ms: 1.961671
+  type: 'test'
+  ...
+# Subtest: missing quote input hash refuses before the inert signer boundary
+ok 10 - missing quote input hash refuses before the inert signer boundary
+  ---
+  duration_ms: 1.261254
+  type: 'test'
+  ...
+# Subtest: changed quote input hash refuses before the inert signer boundary
+ok 11 - changed quote input hash refuses before the inert signer boundary
+  ---
+  duration_ms: 1.105178
+  type: 'test'
+  ...
+# Subtest: only the direct-deposit rail is present refuses before the inert signer boundary
+ok 12 - only the direct-deposit rail is present refuses before the inert signer boundary
+  ---
+  duration_ms: 1.061663
+  type: 'test'
+  ...
+# Subtest: stock missing graph input refuses before any quote or authorization
+ok 13 - stock missing graph input refuses before any quote or authorization
+  ---
+  duration_ms: 0.871265
+  type: 'test'
+  ...
+# Subtest: an interruption at authorization produces the normal embedded result and no paid retry
+ok 14 - an interruption at authorization produces the normal embedded result and no paid retry
+  ---
+  duration_ms: 1.005978
+  type: 'test'
+  ...
+# Subtest: counterexample: a stock run after a lost authorized response generates a new nonce, not original-operation recovery
+ok 15 - counterexample: a stock run after a lost authorized response generates a new nonce, not original-operation recovery
+  ---
+  duration_ms: 3.390608
+  type: 'test'
+  ...
+# Subtest: absent qualified provider body binding holds even with a valid inexpensive quote
+ok 16 - absent qualified provider body binding holds even with a valid inexpensive quote
+  ---
+  duration_ms: 0.78879
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 642.175044

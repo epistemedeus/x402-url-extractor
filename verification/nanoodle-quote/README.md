@@ -1,5 +1,9 @@
 # Stock graph execution: quote receiving, not paid delivery
 
+The original receiver below is preserved. Current branch CI runs only the
+[inert Base composition controls](base/README.md), with no live quote or paid
+request. That receiving ends in a bounded no-fit for live payment/recovery.
+
 This finite public acceptance fixture checks `nanoodle` source0.13.0 at
 `edd757fe2d5185072a53e43fbfd861c9a5400158`. It reuses the official executor,
 not a replacement graph implementation. The owner control uses a synthetic

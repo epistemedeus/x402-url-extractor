@@ -1,4 +1,4 @@
-name: Receive stock nanoodle quote boundary
+name: Receive nanoodle Base composition without payment
 on:
   push:
     branches: [codex/receive-nanoodle-quote-20261111]
@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 24.22.1
           package-manager-cache: false
-      - name: Receive exact public executor and stop before payment
+      - name: Receive exact public executor and run inert composition
         shell: bash
         run: |
           set -euo pipefail
@@ -27,4 +27,5 @@ jobs:
           git -C "$task_source" fetch --quiet --depth=1 origin edd757fe2d5185072a53e43fbfd861c9a5400158
           git -C "$task_source" checkout --quiet --detach FETCH_HEAD
           test "$(git -C "$task_source" rev-parse HEAD)" = edd757fe2d5185072a53e43fbfd861c9a5400158
-          node verification/nanoodle-quote/receive.mjs "$task_source"
+          npm --prefix verification/nanoodle-quote/base ci --ignore-scripts --no-audit --no-fund
+          NANOODLE_SOURCE="$task_source" npm --prefix verification/nanoodle-quote/base test

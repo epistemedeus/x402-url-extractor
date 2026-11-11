@@ -1,0 +1,25 @@
+{
+  "url": "https://nano-gpt.com/api/v1/x402/endpoints",
+  "status": 200,
+  "version": "2026-06-03",
+  "chat": {
+    "endpoint": "/api/v1/chat/completions",
+    "aliases": [
+      "/api/x402/v1/chat/completions"
+    ],
+    "method": "POST",
+    "supported": true,
+    "schemes": [
+      "nano",
+      "nano-exact",
+      "base-usdc",
+      "x402-exact",
+      "x402-solana-usdc",
+      "lightning-l402"
+    ],
+    "streaming": "beta",
+    "async": false,
+    "quoteType": "estimated-with-reconciliation",
+    "notes": "Non-streaming is the public contract. Streaming has x402 reconciliation code, but should remain beta until live end-to-end smoke tests cover provider stream failures."
+  }
+}
