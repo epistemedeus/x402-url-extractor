@@ -4,7 +4,8 @@ import {x402Client} from '@x402/core/client';
 import {registerExactEvmScheme} from '@x402/evm/exact/client';
 import {wrapFetchWithPayment} from '@x402/fetch';
 export const PIN='edd757fe2d5185072a53e43fbfd861c9a5400158';
-export const LIVE='https://nano-gpt.com/api/v1/chat/completions';
+export const LIVE='https://api.nano-gpt.com/api/v1/chat/completions';
+export const ALTERNATIVE='https://nano-gpt.com/api/v1/chat/completions';
 export const FIXTURE='https://fixture.example.test/api/v1/chat/completions';
 export const USDC='0x833589fcd6edb6e08f4c7c32d4f71b54bda02913';
 export const INPUT='Return exactly the text base-transport-control.';
@@ -16,7 +17,7 @@ const need=(ok,code)=>{if(!ok)throw Error(code);};
 const expiry=value=>typeof value==='number' ? (value<1e12?value*1000:value) : Date.parse(value);
 
 export function createInertProbe({transport,endpoint=FIXTURE,input=INPUT,budgetAtomic='1000',binding,boundary='dummy',onSelected=()=>{}}){
-  need([LIVE,FIXTURE].includes(endpoint),'endpoint_refused');
+  need([LIVE,ALTERNATIVE,FIXTURE].includes(endpoint),'endpoint_refused');
   need(typeof input==='string'&&input.trim(),'input_binding_required');
   need(/^[1-9][0-9]*$/.test(budgetAtomic),'atomic_budget_required');
   const stats={requests:0,paidFixtureRequests:0,signerBoundaryCalls:0,nanoCallbacks:0,selections:0};

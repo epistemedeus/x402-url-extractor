@@ -1,0 +1,8 @@
+{
+  "schema": "pilot.nanoodle-canonical-capability.v1",
+  "url": "https://api.nano-gpt.com/api/v1/x402/endpoints",
+  "requests": 1,
+  "status": 200,
+  "chat": null,
+  "code": "capability_shape_unreceived"
+}

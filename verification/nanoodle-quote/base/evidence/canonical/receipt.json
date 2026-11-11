@@ -1,0 +1,52 @@
+{
+  "schema": "pilot.nanoodle-canonical-receiving.v1",
+  "base": "4b9c2f4fa67433ab394b8fc1a4230b2b4dcdafdc",
+  "branch": "codex/receive-nanoodle-quote-20261111",
+  "executor": "edd757fe2d5185072a53e43fbfd861c9a5400158",
+  "paymentSdkSource": "3414a56618e94f5aeff1c03295f7d5879a56157a",
+  "paymentSdkVersion": "2.30.0",
+  "node": "v24.22.1",
+  "externalRequests": {
+    "canonicalCapabilityGET": 1,
+    "canonicalUnsignedQuotePOST": 1,
+    "paidRequests": 0,
+    "quoteExit": 1,
+    "capabilityExit": 0
+  },
+  "canonicalResult": "sdk_missing_legacy_asset",
+  "legacyBaseSafeFieldsEqualPriorAlternative": true,
+  "nativeTests": {
+    "exit": 0,
+    "tests": 27,
+    "pass": 27,
+    "fail": 0,
+    "skip": 0,
+    "cancelled": 0
+  },
+  "syntaxChecksExit": [
+    0,
+    0,
+    0
+  ],
+  "oneShotPolicy": "One run; stop on unknown authorization/response. No automatic fresh authorization or recovery claim.",
+  "unreceived": [
+    "compatible complete quote or documented adapter",
+    "provider request binding algorithm/contract",
+    "capability matrix container receiving",
+    "live payment/result"
+  ],
+  "observedScope": "This fixed canonical request and selected maintained client; not a provider-wide payment conclusion.",
+  "preservedEvidence": {
+    "capability.json": "14c4da21aa7ffb7f97e154a5bfac7d145766fa18c8e8eb3b2d6e3afdebf1ff82",
+    "commands.txt": "f94dd14e7adec55fefde1e9654dc28a0edbbedb0224b3d4808a178e462d692b7",
+    "initial-inert.tap": "199c5ecd5d30cfc5be62a57182cbe2f16876db65da300ae61fede76bc88d4d71",
+    "live-01.json": "19c8f659aaefabbdd3097cecab0d488fc99f234eba66494f095a7df623079f5c",
+    "live-02.json": "a6a9330b10bc7cb8e1e84cc26570d98ccbff3f6bf092f801cbe78ecb1df11147",
+    "live-03.json": "cae262715bb73a97e4526bc4ae6cca5d346f2fccf857bbb36020036cb3dd16ed",
+    "locked-ci.log": "ed84a91ebd93074f3a2ce47ac5c7e90959257a59b5befacadcfeb80d2e304e25",
+    "native.tap": "05913631963fabd6c5ac08a47a0292a123aca3244ad2bf06294dff5761d207f4",
+    "receipt.json": "7f18b95c3a0ce1f4ad8f5eead39f1e682e60a12f036650071972ce5dfa0d840b",
+    "source-receiving.json": "dfcf85bba4967e47e5e88f5a9180516689eb769ab68a97e1f0f982f03ef6a3de"
+  },
+  "externalFinancialEffects": 0
+}

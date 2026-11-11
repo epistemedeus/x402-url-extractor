@@ -2,7 +2,9 @@
 
 The original receiver below is preserved. Current branch CI runs only the
 [inert Base composition controls](base/README.md), with no live quote or paid
-request. That receiving ends in a bounded no-fit for live payment/recovery.
+request. The [canonical-host follow-up](base/CANONICAL-REPRO.md) preserves the
+original failed observations and distinguishes quote compatibility from one-shot
+retry policy. No paid route is admitted by either fixture.
 
 This finite public acceptance fixture checks `nanoodle` source0.13.0 at
 `edd757fe2d5185072a53e43fbfd861c9a5400158`. It reuses the official executor,

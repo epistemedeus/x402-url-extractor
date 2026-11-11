@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,spawnSync} from 'node:child_process';
 import test from 'node:test';
 import {NanoGPT,NanoGPTError} from '@nanogpt/sdk';
-import {PIN,FIXTURE,USDC,INPUT,graph,digest,createInertProbe} from './probe.mjs';
+import {PIN,LIVE,ALTERNATIVE,FIXTURE,USDC,INPUT,graph,digest,createInertProbe} from './probe.mjs';
+import {runUnsignedQuote,safeQuoteSurface} from './quote-only.mjs';
 const source=process.env.NANOODLE_SOURCE;
 assert(source,'NANOODLE_SOURCE must name the exact public Git checkout');
 assert.equal(execFileSync('git',['-C',source,'rev-parse','HEAD'],{encoding:'utf8'}).trim(),PIN);
@@ -118,4 +119,60 @@ test('first-party SDK does not automatically retry a payment-proof transport fai
   let calls=0;const sdk=new NanoGPT({apiKey:null,baseURL:new URL(FIXTURE).origin,fetch:async()=>{calls++;throw Error('fixture_response_lost');}});
   await assert.rejects(sdk.raw('/api/v1/chat/completions',{method:'POST',headers:{'x-x402':'true','x-payment':'fixture-invalid-not-a-payment'},body:{model:'fixture'}}),/fixture_response_lost/);
   assert.equal(calls,1);
+});
+
+// Canonical-host follow-up. Every transport below is synthetic. None can reach
+// either provider host, and the same actual consumer is used by quote-only.mjs.
+test('canonical normal host is distinct from the preserved IPv6 alternative',()=>{
+  assert.equal(LIVE,'https://api.nano-gpt.com/api/v1/chat/completions');
+  assert.equal(ALTERNATIVE,'https://nano-gpt.com/api/v1/chat/completions');
+  assert.throws(()=>createInertProbe({endpoint:'https://unreceived.example/api/v1/chat/completions',transport:assert.fail}),/endpoint_refused/);
+});
+test('canonical one-shot consumer selects a complete synthetic standard quote, then holds on unqualified provider binding',async()=>{
+  let calls=0;
+  const result=await runUnsignedQuote(Workflow,async(request,options)=>{
+    calls++;assert.equal(request.url,LIVE);assert.equal(options.redirect,'error');assert(options.signal instanceof AbortSignal);
+    assert(!request.headers.has('x-payment'));assert(!request.headers.has('payment-signature'));
+    const q=quote({bodySha256:digest(await request.clone().text())},(q,r)=>{r.resource=LIVE;});
+    return new Response(JSON.stringify(q),{status:402});
+  });
+  assert.equal(calls,1);assert(result.unsignedQuoteReceived);assert(result.maintainedSelectionReceived);assert(result.received);
+  assert.equal(result.selected.amountAtomic,'1000');assert.equal(result.refusal,'provider_body_binding_unqualified');
+  assert.equal(result.authorizationBoundaryCalls,0);assert.equal(result.livePaidRequests,0);assert.equal(result.liveAdmission,false);
+});
+test('canonical received structural counterexample refuses in the maintained client before selection',async()=>{
+  const result=await runUnsignedQuote(Workflow,async request=>{
+    const q=quote({bodySha256:digest(await request.clone().text())},(q,r)=>{delete r.asset;delete r.maxTimeoutSeconds;r.resource=LIVE+'?synthetic-only';});
+    return new Response(JSON.stringify(q),{status:402});
+  });
+  assert.equal(result.refusal,'sdk_missing_legacy_asset');assert(result.unsignedQuoteReceived);assert(!result.maintainedSelectionReceived);
+  assert.equal(result.requests,1);assert.equal(result.authorizationBoundaryCalls,0);assert.equal(result.livePaidRequests,0);
+});
+test('unknown unsigned response stops the normal one-shot consumer without retry or authorization',async()=>{
+  let calls=0;
+  const result=await runUnsignedQuote(Workflow,async()=>{calls++;throw Error('fixture_unknown_response_private_detail');});
+  assert.equal(calls,1);assert.equal(result.refusal,'unsigned_response_unknown');assert(result.embeddedResult);
+  assert.equal(result.authorizationBoundaryCalls,0);assert.equal(result.livePaidRequests,0);
+  assert(!JSON.stringify(result).includes('private_detail'));
+});
+test('one bounded stock run after a possibly authorized response loss stops without a second authorization',async()=>{
+  const h=lab({lost:true});assert.match(await failed(h.wf),/fixture_paid_response_lost/);
+  assert.equal(h.stats.requests,2);assert.equal(h.stats.signerBoundaryCalls,1);assert.equal(h.stats.paidFixtureRequests,1);
+  // The caller terminates here. The earlier counterexample explicitly reruns;
+  // automatic recovery is not claimed or required by this one-shot policy.
+});
+test('quote inventory publishes allowlisted labels and field presence, never provider identity or raw bodies',()=>{
+  const secret='fixture-private-marker';
+  const result=safeQuoteSurface({x402Version:1,payment:{requestHash:secret,accepted:[{scheme:'x402-exact',network:'base',amount:'1000',payTo:secret,paymentId:secret}]},
+    accepts:[{scheme:secret,network:secret,maxAmountRequired:secret,asset:secret,resource:secret,extra:{name:secret,version:secret}}]},new Headers());
+  assert(!JSON.stringify(result).includes(secret));assert.equal(result.legacyAccepts[0].scheme,'other');assert.equal(result.legacyAccepts[0].network,'other');
+  assert.equal(result.accepted[0].amountAtomic,'1000');assert(result.requestHashPresent);
+});
+test('actual quote-only executable receives a synthetic canonical refusal and exits once without live fetch',()=>{
+  const preload=`let calls=0;globalThis.fetch=async request=>{if(++calls!==1||request.url!==${JSON.stringify(LIVE)}||request.headers.has('x-payment')||request.headers.has('payment-signature'))throw Error('fixture_transport_refused');return new Response(JSON.stringify({x402Version:1,requestHash:'fixture-only',payment:{expiresAt:Date.now()+120000,accepted:[]},accepts:[{scheme:'exact',network:'base',maxAmountRequired:'1000',resource:request.url,extra:{name:'USD Coin',version:'2'}}]}),{status:402});};`;
+  const child=spawnSync(process.execPath,['--import','data:text/javascript,'+encodeURIComponent(preload),path.resolve('quote-only.mjs')],
+    {encoding:'utf8',env:{PATH:process.env.PATH,NANOODLE_SOURCE:source}});
+  assert.equal(child.status,1);assert.equal(child.stderr,'');
+  const result=JSON.parse(child.stdout);assert.equal(result.host,'api.nano-gpt.com');assert.equal(result.requests,1);
+  assert.equal(result.refusal,'sdk_missing_legacy_asset');assert.equal(result.authorizationBoundaryCalls,0);assert.equal(result.livePaidRequests,0);
 });

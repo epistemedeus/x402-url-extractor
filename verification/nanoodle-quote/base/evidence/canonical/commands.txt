@@ -1,0 +1,14 @@
+Native Work, Node v24.22.1, exact clean public nanoodle Git checkout at edd757fe2d5185072a53e43fbfd861c9a5400158. Existing locked dependencies reused; no install or client census repeated.
+
+1. Read official https://docs.nano-gpt.com/api-reference/miscellaneous/x402 through the web reader. Received documented canonical api.nano-gpt.com and IPv6 alternative nano-gpt.com.
+2. Native bounded GET https://api.nano-gpt.com/api/v1/x402/endpoints, redirect:error, AbortSignal.timeout(20000), no retries or credentials. HTTP 200, command exit 0. The sanitizer looked for an endpoints array and did not recognize the returned matrix container. capability.json preserves capability_shape_unreceived; no matrix membership is claimed and no repeat GET was made.
+3. NANOODLE_SOURCE=/workspace/scratch/7a8527411550/n11-base/nanoodle-git node n11-base/carrier/verification/nanoodle-quote/base/quote-only.mjs
+   Exit 1. Exactly one unsigned canonical POST, HTTP 402, sdk_missing_legacy_asset. Zero selections, authorization-boundary calls, paid requests and paid completions. quote.json is the full sanitized output. No raw body, ID, address, token or resource value was saved or printed.
+4. NANOODLE_SOURCE=/workspace/scratch/7a8527411550/n11-base/nanoodle-git npm --prefix n11-base/carrier/verification/nanoodle-quote/base test
+   Exit 0. 27 tests passed, 0 failed, 0 skipped, 0 cancelled. native.tap is the complete actual output. All test transports are synthetic. The executable subprocess test preloads an inert fetch before loading the unchanged stock executor.
+5. node --check n11-base/carrier/verification/nanoodle-quote/base/probe.mjs
+   node --check n11-base/carrier/verification/nanoodle-quote/base/quote-only.mjs
+   node --check n11-base/carrier/verification/nanoodle-quote/base/composition.test.mjs
+   Each exit 0.
+
+No further live probes. Earlier live-01/02/03.json, native.tap, receipt.json, source-receiving.json, locked dependency/source pins and original receive.mjs remain byte-identical. The finite workflow needs no change and performs only inert tests. A single possibly authorized response-loss control stops without a second authorization; original deliberate-rerun counterexample is retained separately. No valid signature, wallet, paid completion, transfer, buyer input, bid, PR, deployment or default change.

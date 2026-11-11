@@ -1,10 +1,45 @@
-# Maintained Base composition: inert compatibility, live no-fit
+# Maintained Base composition: canonical-host quote comparison
 
-Decision: keep live authorization closed. The stock graph executor and current
-official payment transport compose on a standard, complete legacy Base quote.
-The actual observed NanoGPT quote is not that complete SDK input, and the
-maintained caller does not durably recover the original authorization after a
-lost response. This fixture adds neither a signer nor a financial state machine.
+Decision: the one canonical-host observation still does not fit the selected
+maintained client. This is a bounded quote/SDK (software development kit)
+compatibility result for this fixed request, not a provider-wide payment claim.
+Live authorization remains closed. A bounded future one-shot trial may stop on
+an unknown outcome without recovering or buying another authorization. It does
+not require a universal exactly-once framework.
+
+## Canonical host received
+
+The [official accountless contract](https://docs.nano-gpt.com/api-reference/miscellaneous/x402)
+names `https://api.nano-gpt.com` as normal; `https://nano-gpt.com` is its IPv6
+alternative. It reports a Base exact payment on the canonical host as of
+November 7. That documented success and this client's input compatibility are
+separate observations. The original assignment used the alternative.
+
+One stock-executor unsigned POST was made to the canonical host, with the same
+synthetic input, `z-ai/glm-5.3-flash`, low effort, 400-token cap, `apiKey:null`
+and `x-x402:true`. It returned 402 and the normal `RunError.result`, with zero
+selection-hook calls, signer-boundary calls or paid requests.
+
+| Safe observed field | Earlier alternative host | Canonical normal host |
+| --- | --- | --- |
+| Legacy version / scheme / network | 1 / exact / base | 1 / exact / base |
+| Exact atomic amount | 1,000 | 1,000 |
+| Legacy `asset` / `maxTimeoutSeconds` present | no / no | no / no |
+| Legacy resource equals actual target | no | no |
+| Request hash / expiry present | yes / yes | yes / yes |
+| SDK selection / authorization calls | 0 / 0 | 0 / 0 |
+
+The canonical stable `payment.accepted[]` `x402-exact` / `base` option also
+lacks `asset` and `maxTimeoutSeconds`; its atomic amount is 1,000. It is not a
+complete alternate standard input. The cheaper unique-address rail is distinct.
+No missing field or provider hash algorithm is inferred.
+
+`evidence/live-01.json`, `live-02.json`, `live-03.json` and the original
+20-case TAP remain unchanged. New sanitized evidence is under
+`evidence/canonical/`. The single allowed canonical capability GET returned 200,
+but this receiver did not recognize its matrix container. It records
+`capability_shape_unreceived`, makes no membership claim and was not retried.
+There were exactly one capability GET and one quote POST in this follow-up.
 
 ## Recommended normal stack
 
@@ -33,41 +68,41 @@ wallet input. Its only signature-shaped output is 65 zero bytes for the fixed
 synthetic origin. A payment header targeting the live origin is refused before
 transport. All graphs and inputs here are synthetic, not a customer's work.
 
-## Why live admission remains closed
+## Exact remaining compatibility seam
 
-1. **Actual quote shape.** Three bounded unsigned diagnostic invocations each
-   made one stock-graph POST to the assigned chat endpoint and received 402,
-   with zero signer-boundary calls or paid retries. The final safe field
-   inventory records legacy `exact` / `base` at 1,000 atoms, but no `asset` or
-   `maxTimeoutSeconds` fields in that legacy option. Its resource string does
-   not equal the requested target. No resource URL, pay-to address, payment ID,
-   token or full quote is published. Current `@x402/core` spend filtering and
-   the EVM v1 mechanism need those fields. A synthetic structural reproduction
-   refuses before the hook/signer. No fields are invented from labels or a
-   cheaper direct-deposit amount.
-2. **Request binding.** The fixture checks the actual method, URL, body bytes,
-   graph input, model, low effort and 400-token maximum, plus quote resource,
-   expiry and input-hash presence. Mock-server body-hash equality is explicitly
-   synthetic. It is not the provider's canonical hash algorithm or proof that
-   an arbitrary advertised hash binds this body. The live probe cannot pass
-   that final binding gate. NanoGPT's [current contract](https://docs.nano-gpt.com/api-reference/miscellaneous/x402)
-   distinguishes exact replay from unique-address quote-and-complete flows.
-   The latter's completion URL is not a recovery API for the exact rail.
-3. **Original-operation recovery.** In the real maintained v1 mechanism,
-   `createNonce()` runs for every new payload. A synthetic paid-response loss
-   ends in the stock `RunError.result`; rerunning that same Workflow creates
-   another nonce and another dummy authorized request. The v1 HTTP result
-   path also bypasses v2 response-recovery hooks. SDK spend controls are per
-   payment, not a durable graph-wide reservation or pay-once authority.
-   Reconstructing a client or rerunning a graph is not readback.
+The immediate failure is in the selected `@x402/core` 2.30.0
+`findSpendControlAssetEntry`: `requirement.asset.toLowerCase()` cannot consume
+an absent legacy asset. It occurs before policies/selection hooks or signer
+access. Source: [`x402Client.ts`](https://github.com/x402-foundation/x402/blob/3414a56618e94f5aeff1c03295f7d5879a56157a/typescript/packages/core/src/client/x402Client.ts).
+The EVM (Ethereum Virtual Machine) v1 mechanism also needs an explicit asset
+and timeout. Disabling spend controls, inferring USDC from `base`, filling a
+timeout, or changing the quote's resource would hide the missing contract.
+A synthetic structural reproduction exercises this same actual SDK failure.
+The provider-ready reproduction and sanitized field inventory are in
+[CANONICAL-REPRO.md](CANONICAL-REPRO.md).
 
-The shortest missing owning integration is a seller-supported, complete Base
-exact quote/binding contract (or a maintained documented adapter), plus the
-caller's existing durable boundary that seals the exact request, quote and
-authorization before dispatch and receives the original outcome after loss.
-The seller's exact-result recovery semantics must also be received. Do not
-implement another ledger here or use a new authorization to discover what the
-old one did. Paid fulfillment and recovery remain unreceived.
+The fixture independently requires resource equality, absolute expiry and
+request-hash presence. Its mock-server body-hash equality is synthetic, not
+NanoGPT's canonicalization. A seller-supported complete Base exact requirement
+and request-binding contract, or a maintained documented adapter, is the useful
+next input. No additional live probe is needed to restate the present failure.
+
+## One-shot policy, separate from quote compatibility
+
+Invoke the stock workflow once. If authorization or its response is interrupted,
+stop and report unknown. Do not rerun that graph or create another authorization
+to learn what happened. No recovery guarantee or framework is claimed here.
+A new focused control executes one synthetic potentially authorized request,
+loses the response and proves no automatic second authorization. The original
+explicit-rerun counterexample remains: choosing to run again creates a new nonce.
+That is a warning about a retry choice, not a requirement for every bounded trial
+to implement durable recovery before it can be considered.
+
+The existing observation that the v1 HTTP path bypasses v2 response hooks also
+remains. Exact replay and unique-address quote-and-complete are different rails;
+the latter's completion URL is not an exact-result receiving API. These facts do
+not change quote conformance or authorize spending. A later separately budgeted
+one-shot trial would still need a compatible quote and qualified request binding.
 
 ## Other actual clients inspected
 
@@ -92,7 +127,7 @@ npm --prefix verification/nanoodle-quote/base ci --ignore-scripts --no-audit --n
 NANOODLE_SOURCE="$task_source" npm --prefix verification/nanoodle-quote/base test
 ```
 
-The 20 offline controls execute the actual selected packages and stock graph:
+The 27 offline controls execute the actual selected packages and stock graph:
 normal Base v1 selection, direct-rail separation, wrong chain/asset, actual
 atomic amount above the cap, expiry and authorization window, missing/changed
 input/resource bindings, interrupted authorization, unknown-response rerun,
@@ -100,7 +135,7 @@ v1 hook behavior and the first-party SDK quote-only boundary. No valid
 signature, broadcast, completion URL, live paid route or buyer task runs.
 
 `quote-only.mjs` is an optional, separate one-shot diagnostic, never run by CI.
-Its current receiving exits 1 because the composition is not admitted. It
+Its canonical receiving exits 1 with `sdk_missing_legacy_asset` before selection. It
 prints sanitized structure and coded refusals, never full quote identity.
 This is expected no-fit evidence, not a paid test failure to retry until green.
 
@@ -110,8 +145,7 @@ and [corrected receiving](https://github.com/epistemedeus/x402-url-extractor/act
 remain preserved. The correction receives `RunError.result`; it does not make
 the stock Nano payment callback a Base client.
 
-Next useful step: receive the missing Base exact quote/adapter and
-same-original-operation recovery contracts, then replay these inert controls.
-A later separately admitted live test needs its own original-request budget
-and receiving. No bid, award, paid completion, customer benefit or margin is
-established by this experiment.
+Next useful step: receive the complete canonical Base exact quote/binding
+contract or supported adapter, then replay the inert controls. Root owns any
+later separately budgeted one-shot live action. No bid, award, paid completion,
+customer benefit or margin is established by this experiment.
