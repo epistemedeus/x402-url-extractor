@@ -1,0 +1,82 @@
+{
+  "schema": "pilot.nanoodle-base-deposit-receiving.v1",
+  "base": "c91613867eaf605275c45e2bc947503b4496e470",
+  "branch": "codex/receive-nanoodle-quote-20261111",
+  "node": "v24.22.1",
+  "executor": "edd757fe2d5185072a53e43fbfd861c9a5400158",
+  "stockSourceBlobs": {
+    "src/client.mjs": "f87b8b7c093b3afe04321dd98daab64707f4c331",
+    "src/workflow.mjs": "954521e79bb5b6e2f9ae7bbef68b74edb704f6f3",
+    "src/x402.mjs": "d8a69b360b4e471987bce69b4adcef408237d0a0",
+    "tests/x402.test.mjs": "15b15df7308ecb9c67310459b59b669129f20693"
+  },
+  "externalRequests": {
+    "unsignedCanonicalQuotePOST": 1,
+    "capabilityGET": 0,
+    "statusGET": 0,
+    "completePOST": 0,
+    "deposit": 0
+  },
+  "quoteExit": 0,
+  "initialNative": {
+    "exit": 1,
+    "tests": 42,
+    "pass": 41,
+    "fail": 1,
+    "cause": "Expected one stock output-map value; executor publishes friendly and node-ID aliases. Corrected to normal get(n2) accessor."
+  },
+  "finalNative": {
+    "exit": 0,
+    "tests": 43,
+    "pass": 43,
+    "fail": 0,
+    "skip": 0,
+    "cancelled": 0
+  },
+  "syntaxExits": [
+    0,
+    0,
+    0
+  ],
+  "normalConsumer": "Workflow.fromJSON(originalGraph, createDepositFixture(inertPorts).workflowOptions).run({Idea: INPUT}); result.get(n2)",
+  "syntheticOutput": "base-transport-control",
+  "sourceDecision": "Conditional fetch-interface fit; live deposit identity and paid status/completion remain unqualified.",
+  "liveQuoteIdentity": "Declared base-usdc/base/USDC only. No wire token contract, chain-ID or decimal metadata.",
+  "unreceived": [
+    "independently qualified native token identity for label-only live deposit option",
+    "actual paid status and completion response/result contract",
+    "paid execution/recovery"
+  ],
+  "scope": "One synthetic graph, one in-memory invocation. Fixed synthetic-origin effect path only; no live financial port or restart/retry recovery.",
+  "preservedOriginalBlobs": {
+    "verification/nanoodle-quote/base/CANONICAL-REPRO.md": "c13e471c712eaa4a8a85df5d54149aa9d9fe18bc",
+    "verification/nanoodle-quote/base/README.md": "c4163f43f9c2a3654caaee07b850c09697610300",
+    "verification/nanoodle-quote/base/composition.test.mjs": "b57dda0ae04965313e1ca9cf3b0354a691133b68",
+    "verification/nanoodle-quote/base/evidence/canonical/capability.json": "2d92da4b174caf414f4580bfaadedaa1c0391a05",
+    "verification/nanoodle-quote/base/evidence/canonical/commands.txt": "d0f5496a17a27d94b7711c1b2c2195b4a0803228",
+    "verification/nanoodle-quote/base/evidence/canonical/native.tap": "98ce809d2674e2abd0fd7c78d8dce17b40ac47a4",
+    "verification/nanoodle-quote/base/evidence/canonical/quote.json": "7ba599823be8a0bacc3f6c4d4c26b7181fe6bee1",
+    "verification/nanoodle-quote/base/evidence/canonical/receipt.json": "a75265d49a9bef1c76a5d31648f7cdf4c902aa8d",
+    "verification/nanoodle-quote/base/evidence/capability.json": "66f89ba55237f41424a0ec2d71cb8e0c7d80298d",
+    "verification/nanoodle-quote/base/evidence/commands.txt": "150266adeba4a621d2db31dbcf2b4b2f0e36dd57",
+    "verification/nanoodle-quote/base/evidence/initial-inert.tap": "2ec406495d0ae34a33124552766e4b94b0aca7fb",
+    "verification/nanoodle-quote/base/evidence/live-01.json": "8acf1e911993e77b078ed60b705dff0398469bba",
+    "verification/nanoodle-quote/base/evidence/live-02.json": "ea63698fef23f5af3c58317e3c4af0a99d55b628",
+    "verification/nanoodle-quote/base/evidence/live-03.json": "633fa4e01306e5dde8461da5191905342c9f3ac0",
+    "verification/nanoodle-quote/base/evidence/locked-ci.log": "54e48cae012470f4f8c0e7a130f1bf8ac8586ddc",
+    "verification/nanoodle-quote/base/evidence/native.tap": "9e2e80a13150d1acca293d3303a0dc2b8d23472e",
+    "verification/nanoodle-quote/base/evidence/receipt.json": "ad820e012712ba740608c29ed7f3dce19c29163c",
+    "verification/nanoodle-quote/base/evidence/source-receiving.json": "9c5f3fd285c4bf54aea1b6de82195dbfaea079c4",
+    "verification/nanoodle-quote/base/package-lock.json": "96721123da6bffd8da6f0bd211f7f379112151f4",
+    "verification/nanoodle-quote/base/package.json": "6cfd4fdc6407f31b574b82fef79915dbfaeda0e3",
+    "verification/nanoodle-quote/base/probe.mjs": "1626d9583b93664aa2d7c11aae7f76721dfa20d1",
+    "verification/nanoodle-quote/base/quote-only.mjs": "77c593c092d87a2e2293a8f2fac78b5d48041919",
+    "verification/nanoodle-quote/receive.mjs": "481a4b297559172dd5cef03df84e2e8bcff8b569"
+  },
+  "evidenceSha256": {
+    "commands.txt": "b190916ce8943cca8665cc285bc55fef4024646a17d1b958f2cea95709f11026",
+    "initial-native.tap": "8737ac5479c6df4ed53a6072382d094bc2dce37bae27f9d13403e8b5d0932f48",
+    "live-quote.json": "26e9e9fc74424edfab385db52f1cb043c5d7d2db7e75fedc2685801ab6bd090a",
+    "native.tap": "46239f35780dbf257ef56abfd7cdafe4ba2e20d91d42e312f2c57ba180319e36"
+  }
+}

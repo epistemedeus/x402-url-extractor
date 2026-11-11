@@ -29,3 +29,4 @@ jobs:
           test "$(git -C "$task_source" rev-parse HEAD)" = edd757fe2d5185072a53e43fbfd861c9a5400158
           npm --prefix verification/nanoodle-quote/base ci --ignore-scripts --no-audit --no-fund
           NANOODLE_SOURCE="$task_source" npm --prefix verification/nanoodle-quote/base test
+          NANOODLE_SOURCE="$task_source" node --test --test-reporter=tap verification/nanoodle-quote/deposit/fixture.test.mjs

@@ -6,6 +6,10 @@ request. The [canonical-host follow-up](base/CANONICAL-REPRO.md) preserves the
 original failed observations and distinguishes quote compatibility from one-shot
 retry policy. No paid route is admitted by either fixture.
 
+The distinct [Base deposit/complete fixture](deposit/README.md) reaches the
+actual stock text output synthetically. Its canonical unsigned quote and remaining
+live identity/result qualification are separate from the exact-rail result.
+
 This finite public acceptance fixture checks `nanoodle` source0.13.0 at
 `edd757fe2d5185072a53e43fbfd861c9a5400158`. It reuses the official executor,
 not a replacement graph implementation. The owner control uses a synthetic

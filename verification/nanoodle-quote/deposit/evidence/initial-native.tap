@@ -1,0 +1,285 @@
+TAP version 13
+# Subtest: stock text graph consumes a distinct deposit completion result with one acknowledgement and no original replay
+not ok 1 - stock text graph consumes a distinct deposit completion result with one acknowledgement and no original replay
+  ---
+  duration_ms: 24.830365
+  type: 'test'
+  location: '/workspace/scratch/7a8527411550/n11-base/carrier/verification/nanoodle-quote/deposit/fixture.test.mjs:47:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+        'base-transport-control',
+    +   'base-transport-control'
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 'base-transport-control'
+  actual:
+    0: 'base-transport-control'
+    1: 'base-transport-control'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/scratch/7a8527411550/n11-base/carrier/verification/nanoodle-quote/deposit/fixture.test.mjs:49:53)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: wrong rail refuses before deposit acknowledgement or any poll/complete
+ok 2 - wrong rail refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 3.345595
+  type: 'test'
+  ...
+# Subtest: duplicate deposit offers refuses before deposit acknowledgement or any poll/complete
+ok 3 - duplicate deposit offers refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 2.124326
+  type: 'test'
+  ...
+# Subtest: wrong network refuses before deposit acknowledgement or any poll/complete
+ok 4 - wrong network refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.733783
+  type: 'test'
+  ...
+# Subtest: wrong asset refuses before deposit acknowledgement or any poll/complete
+ok 5 - wrong asset refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.51227
+  type: 'test'
+  ...
+# Subtest: missing explicit asset identity refuses before deposit acknowledgement or any poll/complete
+ok 6 - missing explicit asset identity refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.964071
+  type: 'test'
+  ...
+# Subtest: conflicting asset identities refuses before deposit acknowledgement or any poll/complete
+ok 7 - conflicting asset identities refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.595913
+  type: 'test'
+  ...
+# Subtest: wrong chain id refuses before deposit acknowledgement or any poll/complete
+ok 8 - wrong chain id refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.513656
+  type: 'test'
+  ...
+# Subtest: wrong decimals refuses before deposit acknowledgement or any poll/complete
+ok 9 - wrong decimals refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.68851
+  type: 'test'
+  ...
+# Subtest: ambiguous numeric atomic units refuses before deposit acknowledgement or any poll/complete
+ok 10 - ambiguous numeric atomic units refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.64973
+  type: 'test'
+  ...
+# Subtest: decimal atomic units refuses before deposit acknowledgement or any poll/complete
+ok 11 - decimal atomic units refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.179984
+  type: 'test'
+  ...
+# Subtest: over budget despite display refuses before deposit acknowledgement or any poll/complete
+ok 12 - over budget despite display refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.064635
+  type: 'test'
+  ...
+# Subtest: display/atomic mismatch refuses before deposit acknowledgement or any poll/complete
+ok 13 - display/atomic mismatch refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 0.960723
+  type: 'test'
+  ...
+# Subtest: too many fractional digits refuses before deposit acknowledgement or any poll/complete
+ok 14 - too many fractional digits refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.987781
+  type: 'test'
+  ...
+# Subtest: wrong destination refuses before deposit acknowledgement or any poll/complete
+ok 15 - wrong destination refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.693037
+  type: 'test'
+  ...
+# Subtest: expired option refuses before deposit acknowledgement or any poll/complete
+ok 16 - expired option refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.963446
+  type: 'test'
+  ...
+# Subtest: missing expiry refuses before deposit acknowledgement or any poll/complete
+ok 17 - missing expiry refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.116742
+  type: 'test'
+  ...
+# Subtest: unapproved origin refuses before deposit acknowledgement or any poll/complete
+ok 18 - unapproved origin refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.28532
+  type: 'test'
+  ...
+# Subtest: wrong operation URL refuses before deposit acknowledgement or any poll/complete
+ok 19 - wrong operation URL refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.659454
+  type: 'test'
+  ...
+# Subtest: tokenized URL refuses before deposit acknowledgement or any poll/complete
+ok 20 - tokenized URL refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 0.896753
+  type: 'test'
+  ...
+# Subtest: missing option URL refuses before deposit acknowledgement or any poll/complete
+ok 21 - missing option URL refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.151109
+  type: 'test'
+  ...
+# Subtest: missing primary request binding refuses before deposit acknowledgement or any poll/complete
+ok 22 - missing primary request binding refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 6.073415
+  type: 'test'
+  ...
+# Subtest: conflicting option request binding refuses before deposit acknowledgement or any poll/complete
+ok 23 - conflicting option request binding refuses before deposit acknowledgement or any poll/complete
+  ---
+  duration_ms: 1.09238
+  type: 'test'
+  ...
+# Subtest: missing graph input refuses without a quote; wrong target cannot enter the effect path
+ok 24 - missing graph input refuses without a quote; wrong target cannot enter the effect path
+  ---
+  duration_ms: 10.066361
+  type: 'test'
+  ...
+# Subtest: a malformed caller request descriptor cannot substitute a different original body
+ok 25 - a malformed caller request descriptor cannot substitute a different original body
+  ---
+  duration_ms: 0.328936
+  type: 'test'
+  ...
+# Subtest: unknown deposit stops once with no second acknowledgement or graph send
+ok 26 - unknown deposit stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 3.151687
+  type: 'test'
+  ...
+# Subtest: changed deposit acknowledgement stops once with no second acknowledgement or graph send
+ok 27 - changed deposit acknowledgement stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 2.38114
+  type: 'test'
+  ...
+# Subtest: unknown quote response stops once with no second acknowledgement or graph send
+ok 28 - unknown quote response stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 1.129039
+  type: 'test'
+  ...
+# Subtest: unknown status response stops once with no second acknowledgement or graph send
+ok 29 - unknown status response stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 1.309567
+  type: 'test'
+  ...
+# Subtest: unknown completion response stops once with no second acknowledgement or graph send
+ok 30 - unknown completion response stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 1.890179
+  type: 'test'
+  ...
+# Subtest: failed completion stops once with no second acknowledgement or graph send
+ok 31 - failed completion stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 3.271377
+  type: 'test'
+  ...
+# Subtest: settlement-only acknowledgement is not chat output stops once with no second acknowledgement or graph send
+ok 32 - settlement-only acknowledgement is not chat output stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 1.367936
+  type: 'test'
+  ...
+# Subtest: malformed text stops once with no second acknowledgement or graph send
+ok 33 - malformed text stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 2.436095
+  type: 'test'
+  ...
+# Subtest: wrong status operation stops once with no second acknowledgement or graph send
+ok 34 - wrong status operation stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 3.3158
+  type: 'test'
+  ...
+# Subtest: unknown status label stops once with no second acknowledgement or graph send
+ok 35 - unknown status label stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 2.624313
+  type: 'test'
+  ...
+# Subtest: already processing is not completion permission stops once with no second acknowledgement or graph send
+ok 36 - already processing is not completion permission stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 2.297135
+  type: 'test'
+  ...
+# Subtest: already completed is not result recovery stops once with no second acknowledgement or graph send
+ok 37 - already completed is not result recovery stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 3.647402
+  type: 'test'
+  ...
+# Subtest: underpaid is not another deposit instruction stops once with no second acknowledgement or graph send
+ok 38 - underpaid is not another deposit instruction stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 2.200154
+  type: 'test'
+  ...
+# Subtest: inconsistent readiness stops once with no second acknowledgement or graph send
+ok 39 - inconsistent readiness stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 2.524883
+  type: 'test'
+  ...
+# Subtest: poll limit stops once with no second acknowledgement or graph send
+ok 40 - poll limit stops once with no second acknowledgement or graph send
+  ---
+  duration_ms: 3.257706
+  type: 'test'
+  ...
+# Subtest: actual live deposit structure fails closed on absent identity without mixing primary/legacy envelopes
+ok 41 - actual live deposit structure fails closed on absent identity without mixing primary/legacy envelopes
+  ---
+  duration_ms: 2.826846
+  type: 'test'
+  ...
+# Subtest: quote-only executable uses one synthetic canonical request and never touches status/completion
+ok 42 - quote-only executable uses one synthetic canonical request and never touches status/completion
+  ---
+  duration_ms: 844.015808
+  type: 'test'
+  ...
+1..42
+# tests 42
+# suites 0
+# pass 41
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1710.74088

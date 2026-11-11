@@ -1,0 +1,16 @@
+Native Work VM, Node v24.22.1. Base c91613867eaf605275c45e2bc947503b4496e470 on the same codex/receive-nanoodle-quote-20261111 branch; exact ref independently received before writing.
+
+Sources read: official current x402 documentation; published first-party @nanogpt/sdk 0.1.0 README/dist from already locked archive; pinned stock nanoodle src/client.mjs, src/x402.mjs, src/workflow.mjs and tests/x402.test.mjs; older official direct-transfer example. No fresh client census or package installation. The provider's examples/x402 server-helper source is named by docs but no public immutable producer repository was supplied, so it is not claimed as inspected source.
+
+1. NANOODLE_SOURCE=/workspace/scratch/7a8527411550/n11-base/nanoodle-git node n11-base/carrier/verification/nanoodle-quote/deposit/quote-only.mjs
+   Exit 0. Exactly one canonical unsigned synthetic POST, HTTP 402. No capability GET, status, completion or acknowledgement call. Concrete missing facts were option-specific destination metadata, operation URL binding and expiry. Output is live-quote.json. Raw response existed only in process memory; no live IDs, destinations, resource/hash values or tokens were printed/exported.
+2. NANOODLE_SOURCE=/workspace/scratch/7a8527411550/n11-base/nanoodle-git node --test --test-reporter=tap n11-base/carrier/verification/nanoodle-quote/deposit/fixture.test.mjs
+   Initial exit 1: 41/42 pass; initial-native.tap preserved. The positive path reached both friendly-name/node-ID output aliases; the assertion wrongly expected one map value. Fixed the assertion to actual result.get('n2').
+   Second exit 0: 43/43 pass after adding expiry-during-acknowledgement coverage.
+   Final exit 0: 43 pass, 0 fail, 0 skip, 0 cancelled after self-review required the option's own expiry and removed wall-clock timing from the expiry test. native.tap is the complete final output. No live transport is used by tests.
+3. node --check n11-base/carrier/verification/nanoodle-quote/deposit/fixture.mjs
+   node --check n11-base/carrier/verification/nanoodle-quote/deposit/quote-only.mjs
+   node --check n11-base/carrier/verification/nanoodle-quote/deposit/fixture.test.mjs
+   Each exit 0.
+
+The exact-client experiment was not rerun natively. Existing pinned dependencies and exact-rail fixtures were not changed. Existing branch CI retains its prior 27 inert cases and adds the 43 deposit cases. No real private context, credential, registry, ledger, wallet, signing, payment, buyer graph, paid completion, bid, contact, merge, default change, deployment or resident process.
