@@ -31,7 +31,15 @@ function checkedRequest(url,init) {
 const mockNano={payment:{paymentId:'fixture-unpaid',amountUsd:'0.0002',expiresAt:new Date(Date.now()+60000).toISOString(),completeUrl:'https://nano-gpt.com/api/x402/complete/fixture-unpaid',accepted:[{scheme:'nano',network:'nano-mainnet',amount:'1000000000000000000000000000',payTo:'nano_fixture',paymentId:'fixture-unpaid',completeUrl:'https://nano-gpt.com/api/x402/complete/fixture-unpaid'}]}};
 async function attempt(fetch,payment) {
  const wf=Workflow.fromJSON(graph,{apiKey:null,fetch,payment});
- return wf.run({Idea:input});
+ try {return await wf.run({Idea:input});}
+ catch(error){
+   assert.equal(error.constructor?.name,'RunError');
+   assert(Array.isArray(error.result?.errors));
+   assert.equal(error.result.nodes.n1.status,'done');
+   assert.equal(error.result.nodes.n2.status,'error');
+   assert.equal(Object.keys(error.result.outputs).length,0);
+   return error.result;
+ }
 }
 const previousKey=process.env.NANOGPT_API_KEY;
 process.env.NANOGPT_API_KEY='synthetic-unused-owner-control';
