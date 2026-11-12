@@ -15,12 +15,7 @@ export const PREVIEW_SCHEMA = "samedaydesk.capability-provider.preview.v1";
 export const DIAGNOSTIC_SCHEMA = "samedaydesk.cli.diagnostic.v1";
 export const ENVELOPE_MAX_BYTES = 64 * 1024;
 
-export const ENV_PROTOCOL_KEYS = Object.freeze([
-  "MCP_PROTOCOL_VERSION",
-  "MCP_PROTOCOL",
-  "SAMEDAYDESK_MCP_PROTOCOL",
-  "CAPABILITY_COMPAT_PROTOCOL",
-]);
+export const ENV_PROTOCOL_KEY = "SAMEDAYDESK_MCP_PROTOCOL";
 
 export const RECOVERY_INSTRUCTIONS = Object.freeze({
   endpoint_unreachable: "Retry the loopback or recorded endpoint. Do not use a public host.",
@@ -108,17 +103,17 @@ function validateRequest(request) {
 
 export function protocolFromEnv(env) {
   if (!isPlainRecord(env)) return null;
-  for (const key of ENV_PROTOCOL_KEYS) {
-    const value = env[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  if (Object.hasOwn(env, refusedProtocol)) return refusedProtocol;
-  for (const [key, value] of Object.entries(env)) {
-    if (typeof value === "string" && value.trim() === refusedProtocol && /protocol|pin/i.test(key)) {
-      return refusedProtocol;
-    }
-  }
+  const value = env[ENV_PROTOCOL_KEY];
+  if (typeof value === "string" && value.trim()) return value.trim();
   return null;
+}
+
+export function formatObservedAt(now) {
+  const date = typeof now === "function" ? now() : new Date();
+  if (!(date instanceof Date) || Number.isNaN(date.valueOf())) {
+    throw programmerError("now must return a Date");
+  }
+  return date.toISOString();
 }
 
 export function endpointKind(url) {
@@ -143,10 +138,11 @@ export function installedVsHostedFacts(comparison) {
   };
 }
 
-function failureEnvelope(provider, code, retryable, recovery) {
+function failureEnvelope(provider, code, retryable, recovery, observedAt) {
   return {
     schema: PREVIEW_SCHEMA,
     ok: false,
+    observedAt,
     provider,
     error: {
       code,
@@ -173,13 +169,13 @@ function isProgrammer(error) {
   return error?.code === "programmer_error" || error?.name === "DescribeCapabilitiesError";
 }
 
-function boundEnvelope(envelope, provider) {
+function boundEnvelope(envelope, provider, observedAt = envelope?.observedAt) {
   const serialized = JSON.stringify(envelope);
   if (Buffer.byteLength(serialized, "utf8") <= ENVELOPE_MAX_BYTES) return envelope;
   return failureEnvelope(provider, "response_invalid", false, {
     action: "none",
     instruction: RECOVERY_INSTRUCTIONS.response_invalid,
-  });
+  }, observedAt);
 }
 
 export function exitCodeForEnvelope(envelope) {
@@ -196,16 +192,15 @@ export function diagnosticForEnvelope(envelope, exit = exitCodeForEnvelope(envel
 }
 
 /**
- * Adapter defined by SameDayDesk CLI SCHEMA.md section 10 (relay 79ddb381).
- * `fetch` is accepted in addition to the printed 10.1 JSDoc so the injected
- * fetch can be passed through to StreamableHTTPClientTransport. This function
- * never reads process.env and never writes to stdout or stderr.
+ * Adapter defined by SameDayDesk CLI SCHEMA.md section 10 (relay 79ddb381),
+ * plus confirmed `fetch?: typeof fetch` and top-level `observedAt`.
+ * This function never reads process.env and never writes to stdout or stderr.
  */
 export async function describeCapabilities(request) {
   validateRequest(request);
   const { endpoint, clientSdk, expectedSource, env, signal, now, fetch } = request;
   throwIfAborted(signal);
-  if (typeof now === "function") now();
+  const observedAt = formatObservedAt(now);
 
   const provider = { package: PIN.package, version: PIN.version };
   const merchant = PIN.sourcePins.merchant;
@@ -219,7 +214,7 @@ export async function describeCapabilities(request) {
     return boundEnvelope(failureEnvelope(provider, "unsupported_client_sdk", false, {
       action: "none",
       instruction: RECOVERY_INSTRUCTIONS.unsupported_client_sdk,
-    }), provider);
+    }, observedAt), provider);
   }
 
   const requestedProtocol = envProtocol
@@ -279,7 +274,7 @@ export async function describeCapabilities(request) {
         return boundEnvelope(failureEnvelope(provider, "response_invalid", false, {
           action: "none",
           instruction: RECOVERY_INSTRUCTIONS.response_invalid,
-        }), provider);
+        }, observedAt), provider);
       }
     }
 
@@ -292,12 +287,12 @@ export async function describeCapabilities(request) {
         return boundEnvelope(failureEnvelope(provider, "endpoint_unreachable", true, {
           action: "none",
           instruction: RECOVERY_INSTRUCTIONS.endpoint_unreachable,
-        }), provider);
+        }, observedAt), provider);
       }
       return boundEnvelope(failureEnvelope(provider, "protocol_unrecoverable", false, {
         action: "reconnect",
         instruction: RECOVERY_INSTRUCTIONS.protocol_unrecoverable,
-      }), provider);
+      }, observedAt), provider);
     }
 
     if (pinResult?.pinRefused) {
@@ -317,7 +312,7 @@ export async function describeCapabilities(request) {
         return boundEnvelope(failureEnvelope(provider, "protocol_unrecoverable", false, {
           action: "reconnect",
           instruction: RECOVERY_INSTRUCTIONS.protocol_unrecoverable,
-        }), provider);
+        }, observedAt), provider);
       }
     }
 
@@ -331,12 +326,12 @@ export async function describeCapabilities(request) {
         return boundEnvelope(failureEnvelope(provider, "endpoint_unreachable", true, {
           action: "none",
           instruction: RECOVERY_INSTRUCTIONS.endpoint_unreachable,
-        }), provider);
+        }, observedAt), provider);
       }
       return boundEnvelope(failureEnvelope(provider, "tool_missing", false, {
         action: "list_tools",
         instruction: RECOVERY_INSTRUCTIONS.tool_missing,
-      }), provider);
+      }, observedAt), provider);
     }
     try { await recovered.session.close(); } catch { /* already closed */ }
 
@@ -344,7 +339,7 @@ export async function describeCapabilities(request) {
       return boundEnvelope(failureEnvelope(provider, "response_invalid", false, {
         action: "none",
         instruction: RECOVERY_INSTRUCTIONS.response_invalid,
-      }), provider);
+      }, observedAt), provider);
     }
 
     changes.push({
@@ -360,19 +355,20 @@ export async function describeCapabilities(request) {
       return boundEnvelope(failureEnvelope(provider, "response_invalid", false, {
         action: "none",
         instruction: RECOVERY_INSTRUCTIONS.response_invalid,
-      }), provider);
+      }, observedAt), provider);
     }
     if (!unknown.listed.includes(FREE_PAGE_CHANGE.tool)) {
       return boundEnvelope(failureEnvelope(provider, "tool_missing", false, {
         action: "list_tools",
         instruction: RECOVERY_INSTRUCTIONS.tool_missing,
-      }), provider);
+      }, observedAt), provider);
     }
 
     const toolEntry = (unknown.tools || []).find((tool) => tool.name === FREE_PAGE_CHANGE.tool);
     const envelope = {
       schema: PREVIEW_SCHEMA,
       ok: true,
+      observedAt,
       provider,
       source: {
         repo: merchant.repo,
@@ -417,7 +413,7 @@ export async function describeCapabilities(request) {
       return boundEnvelope(failureEnvelope(provider, "endpoint_unreachable", true, {
         action: "none",
         instruction: RECOVERY_INSTRUCTIONS.endpoint_unreachable,
-      }), provider);
+      }, observedAt), provider);
     }
     throw error;
   }

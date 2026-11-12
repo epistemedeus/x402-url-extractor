@@ -15,11 +15,13 @@
     "./map": "./src/map.mjs",
     "./probe": "./src/probe.mjs",
     "./acquisition": "./src/acquisition.mjs",
-    "./pin": "./PIN.json"
+    "./pin": "./PIN.json",
+    "./schema/preview.v1": "./schema/capability-provider.preview.v1.schema.json"
   },
   "files": [
     "bin",
     "src",
+    "schema",
     "fixtures",
     "PIN.json",
     "README.md",

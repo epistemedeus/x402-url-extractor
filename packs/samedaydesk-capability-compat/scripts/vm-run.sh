@@ -11,22 +11,23 @@ ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 PACK="$ROOT/packs/samedaydesk-capability-compat"
 CONSUMER="$ROOT/packs/samedaydesk-capability-compat-consumer"
 TGZ="samedaydesk-capability-compat-0.1.0.tgz"
+SCHEMA="schema/capability-provider.preview.v1.schema.json"
 
 cd "$PACK"
 npm pack
 test -f "$PACK/$TGZ"
+test -f "$PACK/$SCHEMA"
 TGZ_SHA256="$(sha256sum "$PACK/$TGZ" | awk '{print $1}')"
+SCHEMA_SHA256="$(sha256sum "$PACK/$SCHEMA" | awk '{print $1}')"
 echo "tgz sha256 ${TGZ_SHA256}  ${TGZ}"
+echo "schema sha256 ${SCHEMA_SHA256}  ${SCHEMA}"
 
 cd "$CONSUMER"
 npm install --ignore-scripts --prefer-offline --no-fund --no-audit "file:../samedaydesk-capability-compat/${TGZ}"
 
 cd "$ROOT"
 export PAGE_CHANGE_HTTP_ENABLED=1
-node --test --test-concurrency=1 \
-  packs/samedaydesk-capability-compat/test/install-from-pack.test.mjs \
-  packs/samedaydesk-capability-compat/test/installed-vs-hosted.test.mjs \
-  packs/samedaydesk-capability-compat/test/describe-capabilities.test.mjs \
-  packs/samedaydesk-capability-compat-consumer/test/page-change-compat.test.mjs
+node --test --test-concurrency=1   packs/samedaydesk-capability-compat/test/install-from-pack.test.mjs   packs/samedaydesk-capability-compat/test/installed-vs-hosted.test.mjs   packs/samedaydesk-capability-compat/test/describe-capabilities.test.mjs   packs/samedaydesk-capability-compat-consumer/test/page-change-compat.test.mjs
 
 echo "tgz sha256 ${TGZ_SHA256}  ${TGZ}"
+echo "schema sha256 ${SCHEMA_SHA256}  ${SCHEMA}"

@@ -50,7 +50,8 @@ Usage:
 describe writes a samedaydesk.capability-provider.preview.v1 envelope to stdout.
 Diagnostics go to stderr as one samedaydesk.cli.diagnostic.v1 line on failure.
 The provider function itself never writes to stdout or stderr and never reads
-process.env; this bin passes only explicit flags as the env snapshot.
+process.env; this bin maps --protocol-pin to SAMEDAYDESK_MCP_PROTOCOL only
+and does not forward process.env.
 
 probe detects an explicit protocol pin refusal (SdkError ${OFFICIAL_CLIENT_NEGOTIATION.pinClientErrorCode},
 discover HTTP ${OFFICIAL_CLIENT_NEGOTIATION.discoverHttpStatus}, JSON-RPC ${OFFICIAL_CLIENT_NEGOTIATION.discoverJsonRpcCode}).
@@ -73,6 +74,7 @@ function emitPreview(envelope) {
     const refused = {
       schema: "samedaydesk.capability-provider.preview.v1",
       ok: false,
+      observedAt: envelope.observedAt || new Date().toISOString(),
       provider: envelope.provider || { package: PIN.package, version: PIN.version },
       error: {
         code: "response_invalid",
@@ -110,8 +112,8 @@ try {
   } else if (command === "describe") {
     if (!values.endpoint) throw new Error("--endpoint is required");
     const env = {};
-    const pin = values["protocol-pin"] || values.protocol;
-    if (pin) env.MCP_PROTOCOL_VERSION = pin;
+    const pin = values["protocol-pin"];
+    if (pin) env.SAMEDAYDESK_MCP_PROTOCOL = pin;
     const expectedSource = values["expected-source-sha"]
       ? {
           repo: values["expected-source-repo"] || PIN.sourcePins.merchant.repo,

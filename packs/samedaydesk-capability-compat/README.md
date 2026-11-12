@@ -74,23 +74,31 @@ does not claim a live host.
 
 The package root exports `describeCapabilities(request)` as the SameDayDesk CLI
 provider adapter (`samedaydesk.capability-provider.preview.v1`, SCHEMA.md
-section 10 at relay `79ddb381`). The request may also include an optional
-`fetch` function, which is passed through to `StreamableHTTPClientTransport`
-(`{ fetch }` is accepted by `@modelcontextprotocol/sdk` 1.32.2 and
-`@modelcontextprotocol/client` 2.4.0). The function never reads `process.env`,
-never writes to stdout or stderr, and never patches `globalThis.fetch`.
+section 10 at relay `79ddb381`, plus confirmed `fetch?: typeof fetch` and
+top-level `observedAt`). The optional `fetch` is passed through to
+`StreamableHTTPClientTransport` (`{ fetch }` is accepted by
+`@modelcontextprotocol/sdk` 1.32.2 and `@modelcontextprotocol/client` 2.4.0).
+The function never reads `process.env`, never writes to stdout or stderr, and
+never patches `globalThis.fetch`. The only env key read from the explicit
+snapshot is `SAMEDAYDESK_MCP_PROTOCOL`.
+
+The envelope includes `observedAt` as an ISO 8601 UTC string from `now()`,
+defaulting to `new Date()`. The authoritative schema ships at
+`schema/capability-provider.preview.v1.schema.json` and is exported as
+`samedaydesk-capability-compat/schema/preview.v1`. SameDayDesk CLI should
+reference that schema by version and sha256 rather than copy it. Envelopes
+and handbacks carry only nonsecret references.
 
 `capability-compat describe --endpoint <url>` writes that envelope to stdout.
 On `ok:false`, stderr gets one `samedaydesk.cli.diagnostic.v1` line and the
 process exits with the section 10.2 mapping (`endpoint_unreachable` and
 `response_invalid` to 2, `protocol_unrecoverable` and `tool_missing` to 8,
-`unsupported_client_sdk` to 1). An env snapshot is passed only from explicit
-flags such as `--protocol-pin 2026-07-28` (`MCP_PROTOCOL_VERSION`); the bin
-does not forward `process.env`.
+`unsupported_client_sdk` to 1). `--protocol-pin 2026-07-28` is mapped to
+`SAMEDAYDESK_MCP_PROTOCOL` in the env snapshot. The bin does not forward
+`process.env`.
 
 ## Tests
 
 On a Cursor VM, from a checkout of this feature branch with merchant lockfile
 dependencies already installed at `e90676f4`, run
-`packs/samedaydesk-capability-compat/scripts/vm-run.sh`. The script prints
-the sha256 of the packed tgz. Tests are pending that run. Do not merge, publish, or deploy from this pack alone.
+`packs/samedaydesk-capability-compat/scripts/vm-run.sh`. The script prints the sha256 of the packed tgz and of the preview.v1 schema file. Tests are pending that run. Do not merge, publish, or deploy from this pack alone.

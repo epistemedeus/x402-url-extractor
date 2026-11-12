@@ -20,5 +20,6 @@ export {
   FAILURE_EXIT,
   PREVIEW_SCHEMA,
   DIAGNOSTIC_SCHEMA,
-  ENV_PROTOCOL_KEYS,
+  ENV_PROTOCOL_KEY,
+  formatObservedAt,
 } from "./describe-capabilities.mjs";
