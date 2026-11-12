@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { operationIdentityFromAction } from "./operation-identity.mjs";
-import { freePageCompareAgentSkill } from "./page-change-free-surface.mjs";
+import { FREE_PAGE_COMPARE_ROUTE, FREE_PAGE_COMPARE_TOOL, freePageCompareAgentSkill } from "./page-change-free-surface.mjs";
+import { PAGE_CHANGE_CONTINUATION_META } from "./page-change-continuation.mjs";
 
 const A2A_VERSION = "1.0";
 const A2A_CATALOG_SKILL_ID = "discover-x402-paid-actions";
@@ -41,6 +42,68 @@ export function buildPaidActionSkills(actions = []) {
       inputModes: ["text/plain", "application/json"],
       outputModes: ["application/json"],
     };
+  });
+}
+
+// Machine recipe for continuing a free comparison from A2A. Not added to the
+// agent card. A2A terminal tasks are immutable: a continuation is a NEW task in
+// the same contextId that references the completed one. The caller keeps the
+// accepted artifact lineage and the bearer token; this server stores neither.
+export const FREE_PAGE_COMPARE_CONTINUATION_RECIPE_ID = "continue-held-page-observations";
+const A2A_TERMINAL_STATES = new Set(["TASK_STATE_COMPLETED", "TASK_STATE_FAILED", "TASK_STATE_CANCELED", "TASK_STATE_REJECTED"]);
+
+export function freePageCompareContinuationRecipe(publicUrl) {
+  const url = `${new URL(publicUrl).origin}${FREE_PAGE_COMPARE_ROUTE}`;
+  return {
+    id: FREE_PAGE_COMPARE_CONTINUATION_RECIPE_ID,
+    charged: false,
+    paymentRequired: false,
+    endpoint: { method: "POST", url, tool: FREE_PAGE_COMPARE_TOOL, meta: PAGE_CHANGE_CONTINUATION_META },
+    steps: [
+      { step: "save", send: "tools/call with before, after, fields and _meta {save:true}", keep: ["continuation.token", "continuation.correlationId", "after"] },
+      { step: "continue", send: "tools/call with before=kept after, a new after, the same fields and _meta {token}", keep: ["continuation.token", "continuation.correlationId", "after"] },
+    ],
+    a2a: {
+      contextId: "reuse",
+      taskId: "new_per_step",
+      referenceTaskIds: "previous_task",
+      completedTask: "immutable",
+      artifactLineage: "client_side",
+    },
+    fields: {
+      correlationId: "non-authorizing chain id for measurement",
+      token: "bearer capability, never log or share",
+      discovery: "observed | declared | unknown, never read from the token",
+    },
+  };
+}
+
+function frozenCopy(value) {
+  if (!value || typeof value !== "object") return value;
+  const copy = Array.isArray(value) ? value.map(frozenCopy) : Object.fromEntries(Object.entries(value).map(([key, child]) => [key, frozenCopy(child)]));
+  return Object.freeze(copy);
+}
+
+/**
+ * Client-side follow-up message for a terminal A2A task. Never mutates the
+ * completed task; returns a new taskId in the same contextId.
+ */
+export function buildFreeCompareContinuationTask(priorTask, { data, taskId = randomUUID(), messageId = randomUUID() } = {}) {
+  if (!priorTask || typeof priorTask !== "object" || typeof priorTask.id !== "string" || typeof priorTask.contextId !== "string") {
+    throw new Error("prior task needs id and contextId");
+  }
+  if (!A2A_TERMINAL_STATES.has(priorTask.status?.state)) throw new Error("prior task is not terminal");
+  if (taskId === priorTask.id) throw new Error("continuation needs a new taskId");
+  return frozenCopy({
+    taskId,
+    contextId: priorTask.contextId,
+    message: {
+      role: "ROLE_USER",
+      messageId,
+      contextId: priorTask.contextId,
+      referenceTaskIds: [priorTask.id],
+      parts: [{ data: data ?? null, mediaType: "application/json" }],
+    },
   });
 }
 

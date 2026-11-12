@@ -22,6 +22,18 @@ import {
   respondPageChangeError,
 } from "./page-change-http.mjs";
 import { MCP_SERVER_INPUT_LIMITS } from "./mcp-tool-input-ceiling.mjs";
+import {
+  PageChangeContinuationError,
+  bindPageChangeContinuation,
+  containsCredentialLikeInput,
+  issuePageChangeContinuation,
+  pageChangeContinuationEventId,
+  pageChangeContinuationKeyring,
+  pageChangeContinuationRefusalBody,
+  pageChangeDiscovery,
+  readPageChangeContinuationRequest,
+  verifyPageChangeContinuationToken,
+} from "./page-change-continuation.mjs";
 import { SERVICE_VERSION } from "./service-version.mjs";
 
 export const PAGE_CHANGE_MCP_PATH = "/mcp/page-change";
@@ -107,6 +119,33 @@ function methodNotAllowed(_req, res) {
   });
 }
 
+// Continuation refusals reuse an existing allowlisted journal label, so no
+// caller text and no token ever reaches the outcome row.
+const CONTINUATION_JOURNAL_CODE = "invalid_page_change_input";
+
+function continuationRefusal(error) {
+  const code = error instanceof PageChangeContinuationError ? error.code : "continuation_invalid";
+  return pageChangeContinuationRefusalBody(code, { product: PAGE_CHANGE_HTTP_PRODUCT, schemaVersion: PAGE_CHANGE_HTTP_SCHEMA });
+}
+
+// Runs only when the caller sent _meta samedaydesk/continuation. Verifies and
+// binds before any compare, so a refusal spends no worker time.
+function admitContinuation(request, suppliedArguments, env) {
+  if (request.invalid) throw new PageChangeContinuationError("continuation_invalid");
+  if (!pageChangeContinuationKeyring(env)) throw new PageChangeContinuationError("continuation_unavailable");
+  if (containsCredentialLikeInput(suppliedArguments)) throw new PageChangeContinuationError("continuation_credential_input");
+  if (request.token === null) {
+    const after = suppliedArguments?.after;
+    if (!after || typeof after !== "object" || Array.isArray(after) || after.missing === true) {
+      throw new PageChangeContinuationError("continuation_second_observation_incomplete");
+    }
+    return { previous: null };
+  }
+  const payload = verifyPageChangeContinuationToken(request.token, { env, correlationId: request.correlationId });
+  bindPageChangeContinuation(payload, suppliedArguments);
+  return { previous: payload };
+}
+
 function boundedToolError(error) {
   if (error instanceof RangeError) {
     return new PageChangeHttpError("request json depth exceeds server limit", { status: 400, code: "json_depth_limit" });
@@ -137,7 +176,7 @@ export function pageChangeMcpToolConfig() {
   };
 }
 
-export function mountPageChangeMcp(app, { env = process.env, observe = null } = {}) {
+export function mountPageChangeMcp(app, { env = process.env, observe = null, discoveryEvidence = null } = {}) {
   const toolConfig = pageChangeMcpToolConfig();
   merchantWireDescriptor(asMerchantZodObject(toolConfig.inputSchema));
   const limits = pageChangeHttpLimits(env);
@@ -159,7 +198,7 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
           try {
             if (typeof observe === "function") record = observe(req, res) || record;
           } catch { /* Optional measurement. */ }
-          note = (outcome, code) => { try { record(outcome, code); } catch { /* Optional measurement. */ } };
+          note = (outcome, code, meta) => { try { record(outcome, code, meta); } catch { /* Optional measurement. */ } };
         }
         return note;
       };
@@ -217,6 +256,8 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
       const suppliedArguments = parsed?.params?.arguments && typeof parsed.params.arguments === "object" && !Array.isArray(parsed.params.arguments)
         ? parsed.params.arguments
         : undefined;
+      // Absent for every caller that does not opt in, so their path is unchanged.
+      const continuationRequest = journalCompare ? readPageChangeContinuationRequest(parsed?.params?._meta) : null;
       if (journalCompare && suppliedArguments) {
         try {
           if (suppliedArguments.before !== undefined) assertPageChangeJsonDepth(suppliedArguments.before, limits, "before");
@@ -235,11 +276,44 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
         ...MCP_SERVER_INPUT_LIMITS,
       });
       const registered = server.registerTool(PAGE_CHANGE_MCP_TOOL, toolConfig, async () => {
+        let continued = null;
+        if (continuationRequest) {
+          try {
+            continued = admitContinuation(continuationRequest, suppliedArguments, env);
+          } catch (error) {
+            note("refused", CONTINUATION_JOURNAL_CODE);
+            return toolText(continuationRefusal(error), true);
+          }
+        }
         try {
-          const output = await executePageChangeComparison(suppliedArguments, env, {
+          let output = await executePageChangeComparison(suppliedArguments, env, {
             abortSignal: exchange.abort.signal,
             timeoutMs: exchange.remainingMs(),
           });
+          let eventMeta;
+          if (continued && output?.ok === true && output.charged === false && continuationRequest.save) {
+            let observed = null;
+            try { observed = typeof discoveryEvidence === "function" ? discoveryEvidence(req) : null; } catch { observed = null; }
+            const discovery = pageChangeDiscovery({ observed, declared: continuationRequest.declared });
+            try {
+              const continuation = issuePageChangeContinuation({
+                after: suppliedArguments.after,
+                fields: suppliedArguments.fields,
+                previous: continued.previous,
+                env,
+                discovery,
+              });
+              output = { ...output, continuation };
+            } catch (error) {
+              if (!(error instanceof PageChangeContinuationError)) throw error;
+              note("refused", CONTINUATION_JOURNAL_CODE);
+              return toolText(continuationRefusal(error), true);
+            }
+          }
+          // A retried step of one chain maps to one journal id, never the token.
+          if (continued?.previous) {
+            eventMeta = { eventId: pageChangeContinuationEventId(continued.previous.correlationId, continued.previous.step) };
+          }
           if (output?.ok === true) {
             if (Buffer.byteLength(JSON.stringify(output), "utf8") > limits.maxOutputBytes) {
               throw new PageChangeHttpError("response exceeds server ceiling", { status: 413, code: "output_too_large" });
@@ -249,7 +323,7 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null } = 
           if (journalCompare) {
             if (exchange.abort.signal.aborted) note("aborted", "request_aborted");
             else if (failed) note("refused", typeof output?.error === "string" ? output.error : undefined);
-            else note(pageChangeServiceOutcome(output));
+            else note(pageChangeServiceOutcome(output), undefined, eventMeta);
           }
           return toolText(output, failed);
         } catch (error) {

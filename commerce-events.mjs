@@ -1784,8 +1784,12 @@ function summarizePageChangeRefusals(rows) {
 }
 
 function summarizeFreePageChange(events, { capture, writerHealthy, requestedWindowCoverage, externalCutoffMs, generatedAtMs }) {
+  // A restored or retried continuation step reuses one deterministic row id.
+  // Count the first retained row for an id once. Random ids never collide.
+  const seenOutcomeIds = new Set();
   events = events.filter(event => eventTimestampMs(event) <= generatedAtMs
-    && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs));
+    && (event.originClass !== "external" || eventTimestampMs(event) >= externalCutoffMs)
+    && (!hasOwn(event, "pageChangeOutcome") || !seenOutcomeIds.has(event.id) && seenOutcomeIds.add(event.id)));
   const transports = {};
   for (const transport of ["http", "mcp"]) {
     const rows = events.filter(event => event.pageChangeOutcome?.transport === transport);
@@ -4151,6 +4155,7 @@ export function createCommerceTelemetry({
         .update(`${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`).digest("hex").slice(0, 24);
       let outcome = "refused";
       let evidenceCode;
+      let continuedEventId = null;
       let recorded = false;
       const record = (closed = false) => {
         if (recorded) return;
@@ -4164,7 +4169,7 @@ export function createCommerceTelemetry({
           ? (prior || pageChangeRefusalFromCode("aborted", "client_closed", outcomeTransport))
           : prior;
         const event = {
-          v: 3, id: randomUUID(), ts: new Date().toISOString(), actor, actorEpoch, originClass,
+          v: 3, id: (!closed && continuedEventId) || randomUUID(), ts: new Date().toISOString(), actor, actorEpoch, originClass,
           agentDiscoverySource: sourceSplit.agentDiscoverySource,
           declaredAgentDiscoverySource: sourceSplit.declaredAgentDiscoverySource,
           observedAgentDiscoverySource: sourceSplit.observedAgentDiscoverySource,
@@ -4187,7 +4192,7 @@ export function createCommerceTelemetry({
       const onClose = () => { try { record(true); } catch { /* Observational only. */ } };
       res.once("finish", onFinish);
       res.once("close", onClose);
-      return (observed, code) => {
+      return (observed, code, meta) => {
         // Protocol methods that are not comparisons must not become refusals.
         if (observed === "omit") {
           if (recorded) return;
@@ -4199,6 +4204,9 @@ export function createCommerceTelemetry({
         if (PAGE_CHANGE_OUTCOMES.has(observed)) {
           outcome = observed;
           evidenceCode = code;
+          // A continued step passes a deterministic, canonical id so a retry of
+          // the same step is one outcome. Anything else keeps a random id.
+          continuedEventId = isCanonicalEventId(meta?.eventId) ? meta.eventId : null;
         }
       };
     };
