@@ -14,6 +14,7 @@ import {
 import { MCP_SERVER_INPUT_LIMITS } from "./mcp-tool-input-ceiling.mjs";
 import { SERVICE_VERSION } from "./service-version.mjs";
 import {
+  MAX_COMPARE_RECORDS,
   PRODUCT,
   SCHEMA_VERSION,
   TOOL_COMPARE,
@@ -39,6 +40,67 @@ export const OPPORTUNITY_COMPARE_MCP_ANNOTATIONS = Object.freeze({
   idempotentHint: true,
   openWorldHint: false,
 });
+
+// Selects the installed hosted-compatibility profile. Without it the installed
+// direct entry keeps its behavior: no HTTP admission, records bound only.
+export const OPPORTUNITY_COMPARE_HOSTED_PROFILE = "hosted-compatible";
+
+/**
+ * Hosted admission limits for /mcp/opportunity-compare. Record count and the
+ * encoded request byte budget are separate limits. The byte budget and the
+ * JSON node and depth bounds are the shared free-route limits owned by
+ * pageChangeHttpLimits; this reads them and does not restate them.
+ *
+ * @param {NodeJS.ProcessEnv} [env]
+ */
+export function opportunityCompareHostedLimits(env = process.env) {
+  const limits = pageChangeHttpLimits(env);
+  return Object.freeze({
+    maxRecords: MAX_COMPARE_RECORDS,
+    maxRequestBytes: limits.maxRequestBytes,
+    maxJsonNodes: limits.maxJsonNodes,
+    maxJsonDepth: limits.maxJsonDepth,
+  });
+}
+
+/** The JSON-RPC tools/call envelope a client POSTs for one compare. */
+export function opportunityCompareRpcEnvelope(args, id = 1) {
+  return {
+    jsonrpc: "2.0",
+    id,
+    method: "tools/call",
+    params: { name: OPPORTUNITY_COMPARE_MCP_TOOL, arguments: args },
+  };
+}
+
+/**
+ * Would the hosted route admit this compact-encoded envelope? Applies the same
+ * checks, in the same order, as the POST handler before the SDK runs: the
+ * encoded request byte ceiling (413 payload_too_large), then the records JSON
+ * depth and node bounds (400). A refusal is a transport admission result, not
+ * a domain result. Nothing is truncated or chunked.
+ *
+ * @param {unknown} args
+ * @param {{ env?: NodeJS.ProcessEnv, id?: string | number }} [options]
+ */
+export function opportunityCompareHostedAdmission(args, { env = process.env, id = 1 } = {}) {
+  const limits = pageChangeHttpLimits(env);
+  const requestBytes = Buffer.byteLength(JSON.stringify(opportunityCompareRpcEnvelope(args, id)), "utf8");
+  const base = { requestBytes, maxRequestBytes: limits.maxRequestBytes };
+  if (requestBytes > limits.maxRequestBytes) {
+    return Object.freeze({ ...base, admitted: false, status: 413, code: "payload_too_large" });
+  }
+  if (args && typeof args === "object" && !Array.isArray(args) && args.records !== undefined) {
+    try {
+      assertPageChangeJsonDepth(args.records, limits, "records");
+    } catch (error) {
+      const bounded = boundedToolError(error);
+      if (!(bounded instanceof PageChangeHttpError)) throw bounded;
+      return Object.freeze({ ...base, admitted: false, status: bounded.status, code: bounded.code });
+    }
+  }
+  return Object.freeze({ ...base, admitted: true });
+}
 
 export function isOpportunityCompareMcpPath(pathname) {
   const path = String(pathname || "").split("?", 1)[0].toLowerCase().replace(/\/+$/, "");
@@ -128,6 +190,7 @@ export function mountOpportunityCompareMcp(app, { env = process.env, observe = n
   const compareDescriptor = toolDescriptors().find((d) => d.name === OPPORTUNITY_COMPARE_MCP_TOOL);
   merchantWireDescriptor(asMerchantZodObject(zodFromJsonSchema(z, compareDescriptor.inputSchema)));
   const limits = pageChangeHttpLimits(env);
+  const hostedLimits = opportunityCompareHostedLimits(env);
 
   app.post(OPPORTUNITY_COMPARE_MCP_PATH, async (req, res) => {
     res.set("Cache-Control", "no-store");
@@ -212,7 +275,12 @@ export function mountOpportunityCompareMcp(app, { env = process.env, observe = n
       });
       const host = {
         registerTool(name, config, handler) {
-          return server.registerTool(name, config, async (args) => {
+          // Advertise the real hosted limits next to the record bound.
+          const advertised = {
+            ...config,
+            _meta: { ...config._meta, samedaydesk: { ...config._meta?.samedaydesk, limits: hostedLimits } },
+          };
+          return server.registerTool(name, advertised, async (args) => {
             // A throw here would reach the SDK, which answers with plain
             // non-JSON text. Answer with the typed failure body instead, the
             // same way /mcp/page-change does. SDK input validation runs before
@@ -289,8 +357,17 @@ export function maybeMountOpportunityCompareMcp(app, options = {}) {
 
 // Direct installed-path entry used by tests and by Adoption and Learning on the
 // same caller-held records as the hosted handler. Fetches nothing.
+// With ctx.profile set to OPPORTUNITY_COMPARE_HOSTED_PROFILE, an input the
+// hosted route would not admit returns { transport } (status, code, bytes)
+// instead of a tool result; admitted input runs the same compare. Without the
+// profile the direct behavior is unchanged.
 export async function compareOpportunityRecords(args, ctx = {}) {
-  return callTool(OPPORTUNITY_COMPARE_MCP_TOOL, args, ctx);
+  const { profile, env, rpcId, ...toolCtx } = ctx ?? {};
+  if (profile === undefined) return callTool(OPPORTUNITY_COMPARE_MCP_TOOL, args, ctx);
+  if (profile !== OPPORTUNITY_COMPARE_HOSTED_PROFILE) throw new TypeError(`unknown opportunity_compare profile: ${String(profile).slice(0, 60)}`);
+  const admission = opportunityCompareHostedAdmission(args, { env: env ?? process.env, id: rpcId ?? 1 });
+  if (!admission.admitted) return { transport: admission };
+  return callTool(OPPORTUNITY_COMPARE_MCP_TOOL, args, toolCtx);
 }
 
 function safeJson(text) {

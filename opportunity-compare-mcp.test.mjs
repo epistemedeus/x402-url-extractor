@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { createServer as createHttpServer } from "node:http";
+import { createServer as createHttpServer, request as httpRequest } from "node:http";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 import express from "express";
 import {
+  OPPORTUNITY_COMPARE_HOSTED_PROFILE,
   OPPORTUNITY_COMPARE_MCP_ENV,
   OPPORTUNITY_COMPARE_MCP_FLAG_ON,
   OPPORTUNITY_COMPARE_MCP_PATH,
@@ -15,8 +17,12 @@ import {
   isOpportunityCompareMcpPath,
   maybeMountOpportunityCompareMcp,
   mountOpportunityCompareMcp,
+  opportunityCompareHostedAdmission,
+  opportunityCompareHostedLimits,
+  opportunityCompareRpcEnvelope,
 } from "./opportunity-compare-mcp.mjs";
-import { PRODUCT, SCHEMA_VERSION, TOOL_ELIGIBILITY } from "./vendor/opportunity-eligibility/eligibility-tool/tools.mjs";
+import { pageChangeHttpLimits } from "./page-change-http.mjs";
+import { MAX_COMPARE_RECORDS, PRODUCT, SCHEMA_VERSION, TOOL_ELIGIBILITY } from "./vendor/opportunity-eligibility/eligibility-tool/tools.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const fx = (...parts) => path.join(cwd, "fixtures/opportunity-compare", ...parts);
@@ -67,6 +73,35 @@ function toolOutcome(message) {
     return { kind: "wire", isError, text };
   }
   return { kind: "domain", isError, body, structuredContent: result.structuredContent };
+}
+
+// An HTTP reply that is not 200 is a transport admission refusal (413
+// payload_too_large, 400 json_node_limit, ...), even when its body is
+// product-shaped JSON. It is never a domain result or a semantic disagreement.
+function hostedOutcome(reply) {
+  const status = reply?.response?.status ?? reply?.status ?? null;
+  if (status !== 200) return { kind: "transport", status, code: reply?.json?.code ?? null };
+  return toolOutcome(reply.json);
+}
+
+function installedOutcome(result) {
+  if (result && typeof result === "object" && Object.hasOwn(result, "transport")) {
+    return { kind: "transport", status: result.transport.status, code: result.transport.code };
+  }
+  return toolOutcome({ jsonrpc: "2.0", id: 1, result });
+}
+
+// Domain parity is qualified only over inputs both halves admit.
+function parityOver(installed, hosted) {
+  const a = installedOutcome(installed);
+  const b = hostedOutcome(hosted);
+  if (a.kind === "transport" || b.kind === "transport") return { compared: false, installed: a, hosted: b };
+  return { compared: true, installed: a, hosted: b, equal: a.kind === b.kind && isDeepStrictEqual(a.body, b.body) };
+}
+
+function jsonNodes(value) {
+  if (!value || typeof value !== "object") return 1;
+  return 1 + (Array.isArray(value) ? value : Object.values(value)).reduce((n, child) => n + jsonNodes(child), 0);
 }
 
 function toolBody(message) {
@@ -122,11 +157,53 @@ async function postRpc(base, body, { rpcPath = OPPORTUNITY_COMPARE_MCP_PATH, hea
 }
 
 function callCompareRpc(arguments_) {
+  return opportunityCompareRpcEnvelope(arguments_, 1);
+}
+
+// Raw POST that keeps a response the server sends before it closes an
+// oversized upload; an error before any response is reported, not thrown.
+function postRaw(base, payload) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = (value) => { if (!settled) { settled = true; resolve(value); } };
+    const req = httpRequest(`${base}${OPPORTUNITY_COMPARE_MCP_PATH}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: ACCEPT, "content-length": Buffer.byteLength(payload) },
+    }, (res) => {
+      const chunks = [];
+      res.on("data", (chunk) => chunks.push(chunk));
+      res.on("error", () => {});
+      res.on("end", () => {
+        const text = Buffer.concat(chunks).toString("utf8");
+        let json = null;
+        try { json = JSON.parse(text); } catch { json = null; }
+        done({ status: res.statusCode, text, json });
+      });
+    });
+    req.on("error", (error) => done({ status: null, error: error.code || String(error) }));
+    req.end(payload);
+  });
+}
+
+// Pads one record's pass-through taskRef so the compact envelope is exactly
+// targetBytes. One string node, so only the byte size moves.
+function argsAtBytes(targetBytes) {
+  const build = (pad) => ({ records: [{ ...eligible, taskRef: "p".repeat(pad) }], now: NOW });
+  const baseBytes = Buffer.byteLength(JSON.stringify(callCompareRpc(build(0))));
+  const args = build(targetBytes - baseBytes);
+  assert.equal(Buffer.byteLength(JSON.stringify(callCompareRpc(args))), targetBytes);
+  return args;
+}
+
+function compactRecord(i) {
   return {
-    jsonrpc: "2.0",
-    id: 1,
-    method: "tools/call",
-    params: { name: OPPORTUNITY_COMPARE_MCP_TOOL, arguments: arguments_ },
+    consumer: "c",
+    jobId: `j${i}`,
+    decidedAt: eligible.decidedAt,
+    provenance: { source: "s", url: "u", httpStatus: 200, observedAt: eligible.provenance.observedAt, bodySha256: "a" },
+    decision: "eligible",
+    reasons: ["r"],
+    freshness: { evidenceAgeSeconds: 60, maxAgeSeconds: 3600, expiresAt: eligible.freshness.expiresAt },
   };
 }
 
@@ -251,6 +328,22 @@ test("tool outcome: SDK protocol text and non-JSON text are never a domain resul
   assert.equal(toolOutcome({ jsonrpc: "2.0", id: 1, result: { content: [{ type: "text", text: "{\"ok\":true}" }] } }).kind, "wire");
   assert.equal(toolOutcome({ jsonrpc: "2.0", id: 1, error: { code: -32602, message: "Unknown tool" } }).kind, "rpc_error");
   assert.equal(toolOutcome(null).kind, "wire");
+  // Transport admission refusals are classified by HTTP status, even when the
+  // body is product-shaped JSON, and are excluded from domain parity.
+  const typed = { ok: false, product: PRODUCT, schemaVersion: SCHEMA_VERSION, charged: false };
+  const tooLarge = hostedOutcome({ status: 413, json: { ...typed, error: "payload_too_large", code: "payload_too_large" } });
+  assert.deepEqual(tooLarge, { kind: "transport", status: 413, code: "payload_too_large" });
+  assert.equal(hostedOutcome({ status: 400, json: { ...typed, error: "json_node_limit", code: "json_node_limit" } }).kind, "transport");
+  assert.equal(hostedOutcome({ status: null, error: "ECONNRESET" }).kind, "transport");
+  const refusedInstalled = { transport: { admitted: false, status: 413, code: "payload_too_large" } };
+  assert.deepEqual(installedOutcome(refusedInstalled), { kind: "transport", status: 413, code: "payload_too_large" });
+  const domainOk = { content: [{ type: "text", text: JSON.stringify({ ...typed, ok: true }) }] };
+  const skipped = parityOver(domainOk, { status: 413, json: null });
+  assert.equal(skipped.compared, false);
+  assert.equal(Object.hasOwn(skipped, "equal"), false);
+  const compared = parityOver(domainOk, { status: 200, json: { jsonrpc: "2.0", id: 1, result: domainOk } });
+  assert.equal(compared.compared, true);
+  assert.equal(compared.equal, true);
   assert.throws(() => toolBody({ jsonrpc: "2.0", id: 1, result: { content: [{ type: "text", text: "MCP error -32602: x" }], isError: true } }), assert.AssertionError);
 });
 
@@ -349,6 +442,130 @@ test("bounded input size: oversized body is payload_too_large; over 500 records 
     assertProtocolRefusal(hosted.json);
   } finally {
     await route.close();
+  }
+});
+
+test("hosted limits: tools/list advertises maxRecords and the shared request byte budget", async () => {
+  const limits = pageChangeHttpLimits({});
+  assert.deepEqual(opportunityCompareHostedLimits({}), {
+    maxRecords: MAX_COMPARE_RECORDS,
+    maxRequestBytes: limits.maxRequestBytes,
+    maxJsonNodes: limits.maxJsonNodes,
+    maxJsonDepth: limits.maxJsonDepth,
+  });
+  assert.equal(MAX_COMPARE_RECORDS, 500);
+  for (const env of [
+    { [OPPORTUNITY_COMPARE_MCP_ENV]: "on" },
+    { [OPPORTUNITY_COMPARE_MCP_ENV]: "on", PAGE_CHANGE_HTTP_MAX_REQUEST_BYTES: "4096" },
+  ]) {
+    const profile = await listenRoute(env);
+    try {
+      const listed = await postRpc(profile.base, { jsonrpc: "2.0", id: 1, method: "tools/list", params: {} });
+      assert.equal(listed.response.status, 200);
+      const tool = listed.json.result.tools.find((entry) => entry.name === OPPORTUNITY_COMPARE_MCP_TOOL);
+      assert.deepEqual(tool._meta.samedaydesk.limits, { ...opportunityCompareHostedLimits(env) });
+      assert.equal(tool._meta.samedaydesk.limits.maxRequestBytes, pageChangeHttpLimits(env).maxRequestBytes);
+      assert.equal(tool._meta.samedaydesk.limits.maxRecords, MAX_COMPARE_RECORDS);
+      assert.equal(tool._meta.samedaydesk.charged, false);
+      assert.equal(tool.inputSchema.properties.records.maxItems, MAX_COMPARE_RECORDS);
+    } finally {
+      await profile.close();
+    }
+  }
+});
+
+test("byte boundary: envelopes just below and at the budget are admitted; one byte over is a transport 413", async () => {
+  const max = opportunityCompareHostedLimits({}).maxRequestBytes;
+  const hosted = { profile: OPPORTUNITY_COMPARE_HOSTED_PROFILE, env: {} };
+  const profile = await listenRoute();
+  try {
+    for (const bytes of [max - 1, max]) {
+      const args = argsAtBytes(bytes);
+      assert.deepEqual(opportunityCompareHostedAdmission(args, { env: {} }), { requestBytes: bytes, maxRequestBytes: max, admitted: true });
+      const installed = await compareOpportunityRecords(args, hosted);
+      const reply = await postRpc(profile.base, JSON.stringify(callCompareRpc(args)));
+      assert.equal(reply.response.status, 200);
+      const parity = parityOver(installed, reply);
+      assert.equal(parity.compared, true);
+      assert.equal(parity.hosted.kind, "domain");
+      assert.equal(parity.hosted.body.ok, true);
+      assert.equal(parity.hosted.body.result.eligible.length, 1);
+      assert.equal(parity.equal, true);
+    }
+
+    const over = argsAtBytes(max + 1);
+    const admission = opportunityCompareHostedAdmission(over, { env: {} });
+    assert.deepEqual(admission, { requestBytes: max + 1, maxRequestBytes: max, admitted: false, status: 413, code: "payload_too_large" });
+    const installed = await compareOpportunityRecords(over, hosted);
+    assert.deepEqual(installed, { transport: admission });
+    const reply = await postRaw(profile.base, JSON.stringify(callCompareRpc(over)));
+    assert.equal(reply.status, 413, `expected a 413 response, got ${reply.status ?? reply.error}`);
+    assert.equal(reply.json.code, "payload_too_large");
+    assert.equal(reply.json.charged, false);
+    assert.notEqual(reply.json.code, "invalid_input");
+    const parity = parityOver(installed, reply);
+    assert.equal(parity.compared, false);
+    assert.equal(parity.installed.kind, "transport");
+    assert.equal(parity.hosted.kind, "transport");
+    assert.equal(parity.hosted.status, 413);
+
+    // Installed direct behavior without the profile is unchanged: no byte limit.
+    const direct = await compareOpportunityRecords(over);
+    assert.equal(direct.isError, undefined);
+    assert.equal(direct.structuredContent.ok, true);
+    assert.equal(direct.structuredContent.result.eligible.length, 1);
+  } finally {
+    await profile.close();
+  }
+});
+
+test("compact high record count: inputs within the byte and node budgets are admitted with domain parity", async () => {
+  const limits = opportunityCompareHostedLimits({});
+  const hosted = { profile: OPPORTUNITY_COMPARE_HOSTED_PROFILE, env: {} };
+  const minimal = { records: Array.from({ length: MAX_COMPARE_RECORDS }, (_, i) => ({ jobId: `c${i}` })), now: NOW };
+  const perCompact = jsonNodes(compactRecord(0));
+  const compactCount = Math.floor((limits.maxJsonNodes - 1) / perCompact);
+  // The record ceiling a budget allows depends on record shape; it is not a
+  // fixed count. Compact records fit more than fixture-shaped ones do.
+  assert.ok(compactCount > Math.floor((limits.maxJsonNodes - 1) / jsonNodes(eligible)));
+  const compact = { records: Array.from({ length: compactCount }, (_, i) => compactRecord(i)), now: NOW };
+
+  const profile = await listenRoute();
+  try {
+    for (const [args, check] of [
+      [minimal, (body) => assert.equal(body.result.refused.length, MAX_COMPARE_RECORDS)],
+      [compact, (body) => assert.equal(body.result.eligible.length, compactCount)],
+    ]) {
+      const admission = opportunityCompareHostedAdmission(args, { env: {} });
+      assert.equal(admission.admitted, true);
+      assert.ok(admission.requestBytes < limits.maxRequestBytes);
+      assert.ok(jsonNodes(args.records) <= limits.maxJsonNodes);
+      const installed = await compareOpportunityRecords(args, hosted);
+      const reply = await postRpc(profile.base, callCompareRpc(args));
+      assert.equal(reply.response.status, 200);
+      const parity = parityOver(installed, reply);
+      assert.equal(parity.compared, true);
+      assert.equal(parity.hosted.kind, "domain");
+      assert.equal(parity.hosted.body.ok, true);
+      check(parity.hosted.body);
+      assert.equal(parity.equal, true);
+    }
+
+    // One more compact record crosses the shared node bound, not the byte
+    // budget: a transport 400 on both halves, excluded from parity.
+    const overNodes = { records: Array.from({ length: compactCount + 1 }, (_, i) => compactRecord(i)), now: NOW };
+    const admission = opportunityCompareHostedAdmission(overNodes, { env: {} });
+    assert.ok(admission.requestBytes < limits.maxRequestBytes);
+    assert.equal(admission.admitted, false);
+    assert.equal(admission.status, 400);
+    assert.equal(admission.code, "json_node_limit");
+    const installed = await compareOpportunityRecords(overNodes, hosted);
+    const reply = await postRpc(profile.base, callCompareRpc(overNodes));
+    assert.equal(reply.response.status, 400);
+    assert.equal(reply.json.code, "json_node_limit");
+    assert.equal(parityOver(installed, reply).compared, false);
+  } finally {
+    await profile.close();
   }
 });
 
