@@ -1,0 +1,18 @@
+{
+  "name": "task-continuation",
+  "version": "1.0.0",
+  "description": "Dependency-free caller-held continuation: signed bearer token with kid keyring and expiry, non-authorizing correlationId, discovery enum, refusal shape, deterministic step event id, 0600 caller file.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "files": ["index.mjs", "CONTRACT.md"],
+  "scripts": {
+    "test": "node --test test/index.test.mjs"
+  },
+  "license": "MIT"
+}
