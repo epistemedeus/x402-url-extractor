@@ -1,0 +1,23 @@
+{
+  "consumer": "opportunity-eligibility/0.1",
+  "jobId": "ffffffff-0000-0000-0000-000000000001",
+  "decidedAt": "2026-11-12T11:00:00.000Z",
+  "provenance": {
+    "source": "worq-public-api",
+    "url": "https://example.invalid/jobs/ffffffff-0000-0000-0000-000000000001",
+    "httpStatus": 200,
+    "observedAt": "2026-11-12T10:59:00.000Z",
+    "bodySha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "decision": "unknown",
+  "reasons": [
+    "status-unrecognized:paused_for_review"
+  ],
+  "freshness": {
+    "evidenceAgeSeconds": 60,
+    "maxAgeSeconds": 3600,
+    "expiresAt": "2026-11-12T11:59:00.000Z"
+  },
+  "correlationId": "ae:corr:v1:XyZabcDeFGH1234567890_",
+  "taskRef": "tsk_compareDemo0003"
+}

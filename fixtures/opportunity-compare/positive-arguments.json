@@ -1,0 +1,51 @@
+{
+  "records": [
+    {
+      "consumer": "opportunity-eligibility/0.1",
+      "jobId": "d9c069d8-4db1-4999-bf38-d1deebd63129",
+      "decidedAt": "2026-11-12T10:37:43.000Z",
+      "provenance": {
+        "source": "moltjobs-public-api",
+        "url": "https://example.invalid/jobs/d9c069d8-4db1-4999-bf38-d1deebd63129",
+        "httpStatus": 200,
+        "observedAt": "2026-11-12T10:36:43.000Z",
+        "bodySha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "decision": "eligible",
+      "reasons": [
+        "open-accepting-applications"
+      ],
+      "freshness": {
+        "evidenceAgeSeconds": 60,
+        "maxAgeSeconds": 3600,
+        "expiresAt": "2026-11-12T11:36:43.000Z"
+      },
+      "correlationId": "ae:corr:v1:AbCdefGhijkLMNOPQRstuv",
+      "taskRef": "tsk_compareDemo0001"
+    },
+    {
+      "consumer": "opportunity-eligibility/0.1",
+      "jobId": "c485dee7-69a9-463d-9014-8d2afd5bd00e",
+      "decidedAt": "2026-11-12T11:00:00.000Z",
+      "provenance": {
+        "source": "worq-public-api",
+        "url": "https://example.invalid/jobs/c485dee7-69a9-463d-9014-8d2afd5bd00e",
+        "httpStatus": 200,
+        "observedAt": "2026-11-12T10:59:00.000Z",
+        "bodySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "decision": "not-eligible",
+      "reasons": [
+        "status-cancelled"
+      ],
+      "freshness": {
+        "evidenceAgeSeconds": 60,
+        "maxAgeSeconds": 3600,
+        "expiresAt": "2026-11-12T11:59:00.000Z"
+      },
+      "correlationId": "ae:corr:v1:AbCdefGhijkLMNOPQRstuv",
+      "taskRef": "tsk_compareDemo0002"
+    }
+  ],
+  "now": "2026-11-12T11:05:00.000Z"
+}
