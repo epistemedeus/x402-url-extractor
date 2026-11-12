@@ -26,6 +26,9 @@ import * as portable from "./packages/task-continuation/index.mjs";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const C1 = path.join(ROOT, "examples/customer-x402/fixtures/page-change/c1");
 const ENV = Object.freeze({ PAGE_CHANGE_CONTINUATION_TEST_KEY: "1" });
+// The free page-change profile is off unless PAGE_CHANGE_HTTP_ENABLED is set
+// (page-change-http.mjs isPageChangeHttpEnabled), so a mounted server needs it.
+const MOUNT_ENV = Object.freeze({ ...ENV, PAGE_CHANGE_HTTP_ENABLED: "1" });
 const T0 = Date.UTC(2026, 10, 12, 12, 0, 0, 0);
 const after = JSON.parse(await readFile(path.join(C1, "after.json"), "utf8"));
 const FIELDS = ["title", "description"];
@@ -187,7 +190,7 @@ test("mounted: referer gives observed with a basis, the marker gives hosted, the
   const before = JSON.parse(await readFile(path.join(C1, "before.json"), "utf8"));
   const next = JSON.parse(await readFile(path.join(ROOT, "recipes/free-continuation/fixtures/next.json"), "utf8"));
   let clock = T0;
-  const post = await mounted(t, { env: { ...ENV, [PAGE_CHANGE_DEPLOYMENT_MARKER_ENV]: "d-1" }, now: () => clock });
+  const post = await mounted(t, { env: { ...MOUNT_ENV, [PAGE_CHANGE_DEPLOYMENT_MARKER_ENV]: "d-1" }, now: () => clock });
   const probe = await post(call(1, { before, after, fields: FIELDS }, { "samedaydesk/continuation": { save: true } }));
   const host = new URL(probe.base).host;
   const saved = await post(call(2, { before, after, fields: FIELDS }, { "samedaydesk/continuation": { save: true }, "samedaydesk/measurement": { discovery: "cli" } }), { referer: `http://${host}/llms.txt` });
@@ -213,7 +216,7 @@ test("mounted: referer gives observed with a basis, the marker gives hosted, the
 
 test("mounted: no marker is installed, and a foreign referer with a declared value stays declared", { skip: DEPS }, async (t) => {
   const before = JSON.parse(await readFile(path.join(C1, "before.json"), "utf8"));
-  const post = await mounted(t, { env: { ...ENV } });
+  const post = await mounted(t, { env: { ...MOUNT_ENV } });
   const saved = await post(call(1, { before, after, fields: FIELDS }, { "samedaydesk/continuation": { save: true }, "samedaydesk/measurement": { discovery: "llms" } }), { referer: "https://evil.example/llms.txt" });
   const measurement = saved.data.result.structuredContent.measurement;
   assert.deepEqual(measurement.discovery, { status: "declared", source: "llms" });

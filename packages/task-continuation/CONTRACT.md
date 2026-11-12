@@ -113,6 +113,8 @@ Codes added in 1.3.0 (appended; no 1.2.0 code changed meaning or exit row):
 
 `retryable: true` means the same call may succeed unchanged later. `false` means the caller must change something first (fix input, start a new chain, fix the file). A CLI may embed these numbers in its own exit scheme; 0 and 1 are left to the CLI.
 
+`continuation_result_unknown` is retryable only by reading back with the same stepEventId, never by a fresh dispatch.
+
 Refusal body (`refusal(code, { nextMethod, nextStep, ...extra })`): `{ ok: false, charged: false, paymentRequired: false, error, code, message, nextMethod, nextStep }`. The message is fixed per code. Never put caller input into `nextStep` or `extra`. From 1.3.0 the new codes carry a fixed default cue when the caller passes none: `start_new_chain` for `continuation_revoked`, `continuation_task_changed` and `continuation_handback_invalid`, and `readback` for `continuation_dispatch_pending` and `continuation_result_unknown`. 1.2.0 codes keep `null` cues.
 
 ## Measurement record

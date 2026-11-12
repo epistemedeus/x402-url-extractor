@@ -2,7 +2,7 @@
 
 Runtime: any shell with `curl`, `jq` and `sha256sum`. The endpoint is stateless: every `POST` is a complete JSON-RPC request, no session and no `initialize` are needed for `tools/call`. Send `content-type: application/json` and `accept: application/json, text/event-stream`. The reply is usually an SSE stream (`event: message` then `data: {...}`); take the last `data:` line.
 
-Hosted status: two stages. (a) Pending Root release: the hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement` until Root releases and deploys a build with this feature. (b) Done: the dedicated production continuation keyring is enrolled and its readback matched; Root owns it, and no key value appears in any recipe. Until (a) lands, run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
+Hosted status: two stages. (a) Pending Root release: the hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement` until Root releases and deploys a build with this feature. (b) Done: the dedicated production continuation keyring is enrolled and its readback matched; Root owns it, and no key value appears in any recipe. Until (a) lands, run these steps against a local server started with `PAGE_CHANGE_HTTP_ENABLED=1 PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
 
 Rules: no exactly-once delivery; the `correlationId` (`ae:corr:v1:`) is non-authorizing; discovery is sent separately in `_meta["samedaydesk/measurement"]`, never beside the token; the token is never logged (it only ever goes to a 0600 file, never to stdout).
 
