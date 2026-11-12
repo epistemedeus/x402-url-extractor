@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compareInstalledVsHosted } from "./acquisition.mjs";
 import { FREE_PAGE_CHANGE, OFFICIAL_CLIENT_NEGOTIATION, PIN, UNKNOWN_TOOL_RECOVERY, mapClientSdk } from "./map.mjs";
+import { compareSourceDrift, observedFactsFromPin } from "./source-drift.mjs";
 import {
   detectPinRefusal,
   recoverToSupportedProtocol,
@@ -82,6 +83,21 @@ function validateRequest(request) {
       || !request.expectedSource.repo
       || !request.expectedSource.sha) {
       throw programmerError("expectedSource must be { repo: string, sha: string } or null");
+    }
+    for (const key of ["sdkVersion", "serviceVersion"]) {
+      if (request.expectedSource[key] !== undefined && typeof request.expectedSource[key] !== "string") {
+        throw programmerError(`${key} must be a string when provided on expectedSource`);
+      }
+    }
+  }
+  if (request.sourceFacts !== undefined) {
+    if (!isPlainRecord(request.sourceFacts)) {
+      throw programmerError("sourceFacts must be a recorded fact object when provided");
+    }
+    for (const key of ["repo", "sha", "sdkVersion", "serviceVersion"]) {
+      if (request.sourceFacts[key] !== undefined && typeof request.sourceFacts[key] !== "string") {
+        throw programmerError(`${key} must be a string when provided on sourceFacts`);
+      }
     }
   }
   if (request.env !== undefined && !isPlainRecord(request.env)) {
@@ -224,14 +240,24 @@ export async function describeCapabilities(request) {
   const url = new URL(endpoint);
   const changes = [];
 
-  if (sourceChanged) {
-    changes.push({
-      kind: "source_version_changed",
-      detected: true,
-      recovered: false,
-      evidence: { expectedSha: expectedSource.sha, installedSha: merchant.sha, repo: merchant.repo },
-      recovery: { action: "re_pin" },
+  if (expectedSource) {
+    const observedFacts = request.sourceFacts || observedFactsFromPin();
+    const drift = compareSourceDrift({
+      expectedSource,
+      observed: {
+        repo: observedFacts.repo || merchant.repo,
+        sha: observedFacts.sha || merchant.sha,
+        sdkVersion: observedFacts.sdkVersion,
+        serviceVersion: observedFacts.serviceVersion,
+      },
     });
+    if (!drift.ok) {
+      return boundEnvelope(failureEnvelope(provider, drift.error.code, drift.error.retryable, {
+        action: drift.error.recovery.action,
+        instruction: drift.error.recovery.instruction,
+      }, observedAt), provider);
+    }
+    changes.push(...drift.changes);
   }
 
   if (envProtocol) {

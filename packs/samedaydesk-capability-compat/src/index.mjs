@@ -23,3 +23,10 @@ export {
   ENV_PROTOCOL_KEY,
   formatObservedAt,
 } from "./describe-capabilities.mjs";
+export {
+  compareSourceDrift,
+  loadSourceDriftFixture,
+  observedFactsFromPin,
+  observedFactsFromFixture,
+  recordedFactsAt,
+} from "./source-drift.mjs";

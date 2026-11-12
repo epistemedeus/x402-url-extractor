@@ -97,6 +97,22 @@ process exits with the section 10.2 mapping (`endpoint_unreachable` and
 `SAMEDAYDESK_MCP_PROTOCOL` in the env snapshot. The bin does not forward
 `process.env`.
 
+## Changed source
+
+The pack compares an `expectedSource` snapshot (`repo`, `sha`, optional
+`sdkVersion` and `serviceVersion`) to observed merchant facts from the
+installed pin or a recorded fixture (`fixtures/source-drift.json`). Those
+fixtures were taken from git history at exact commits. Official MCP sdk
+1.30.0 at H99110 (`53069cfc`) to 1.32.2 at the installed lock (`e90676f4`,
+first bumped at `498e4fb5`) is compatible-minor: recover by reconnecting on
+`2025-11-25` and keep the synchronous free page-change contract, then refresh
+the pin. The service-version bump 1.23.54 (`b309c6e2`) to 1.23.55
+(`cd0609e5`, still 1.23.55 at `e90676f4`) is also recorded. `ef846285`
+introduced `service-version.mjs` when the version was still 1.11.50; it did
+not introduce 1.23.55. Unmapped drift returns a preview.v1 `ok:false`
+refusal (`protocol_unrecoverable`) rather than throwing. The v1 schema is
+unchanged.
+
 ## Tests
 
 On a Cursor VM, from a checkout of this feature branch with merchant lockfile
