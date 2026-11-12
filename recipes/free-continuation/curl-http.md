@@ -2,7 +2,7 @@
 
 Runtime: any shell with `curl`, `jq` and `sha256sum`. The endpoint is stateless: every `POST` is a complete JSON-RPC request, no session and no `initialize` are needed for `tools/call`. Send `content-type: application/json` and `accept: application/json, text/event-stream`. The reply is usually an SSE stream (`event: message` then `data: {...}`); take the last `data:` line.
 
-Hosted status: two separate gaps. The hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement`; and after a build with the feature is deployed, it still answers `continuation_unavailable` until the production `PAGE_CHANGE_CONTINUATION_KEYS` is configured. Run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
+Hosted status: two stages. (a) Pending Root release: the hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement` until Root releases and deploys a build with this feature. (b) Done: the dedicated production continuation keyring is enrolled and its readback matched; Root owns it, and no key value appears in any recipe. Until (a) lands, run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
 
 Rules: no exactly-once delivery; the `correlationId` (`ae:corr:v1:`) is non-authorizing; discovery is sent separately in `_meta["samedaydesk/measurement"]`, never beside the token; the token is never logged (it only ever goes to a 0600 file, never to stdout).
 
@@ -12,6 +12,30 @@ NEXT=recipes/free-continuation/fixtures/next.json
 post() { curl -sS -X POST "$SDD_MCP_URL" -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' --data @"$1" -o reply.txt && { grep -q '^data: ' reply.txt && sed -n 's/^data: //p' reply.txt || cat reply.txt; } | tail -n 1 > reply.json; }
 digest() { jq -cj . "$1" | sha256sum | cut -d' ' -f1; }
 ```
+
+## Protocol selection
+
+Protocol selection: the client reads the `protocolVersion` the server advertised in its `initialize` result and proceeds only on an exact match with `["2025-11-25","2025-06-18"]`. Anything else, including `2026-07-28`, is refused with `protocol_version_unsupported` naming what was advertised. The list comes from the repo source (`caller-result-client/src/protocol-selection.mjs`: the server's pinned `@modelcontextprotocol/sdk` 1.32.2 lists 2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05 and 2024-10-07, and these recipes need `structuredContent`, which starts at 2025-06-18). There is no silent upgrade. Compatibility Knowledge owns the protocol corpus (`docs/reviews/h99110-mcp-current-client-compat/RESULT.md`). Send `initialize` once, before any `tools/call`:
+
+<!-- check: initialize-request -->
+```json
+{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"samedaydesk-free-continuation","version":"1"}}}
+```
+
+<!-- check: jq-protocol -->
+```sh
+select_protocol() {
+  PV=$(jq -r '.result.protocolVersion // empty' "$1")
+  case "$PV" in
+    2025-11-25|2025-06-18) echo "protocolVersion $PV" ;;
+    *) jq -cn --arg pv "$PV" '{ok:false,charged:false,code:"protocol_version_unsupported",advertised:(if $pv == "" then [] else [$pv] end),supported:["2025-11-25","2025-06-18"]}'; PV=; return 2 ;;
+  esac
+}
+jq -n '{jsonrpc:"2.0",id:0,method:"initialize",params:{protocolVersion:"2025-11-25",capabilities:{},clientInfo:{name:"samedaydesk-free-continuation",version:"1"}}}' > initialize.json
+post initialize.json && select_protocol reply.json
+```
+
+Stop when `select_protocol` returns 2. Otherwise add `-H "mcp-protocol-version: $PV"` to the `curl` in `post` for the calls below.
 
 ## Positive path
 

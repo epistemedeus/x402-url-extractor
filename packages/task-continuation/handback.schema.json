@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/epistemedeus/x402-url-extractor/packages/task-continuation/handback.schema.json",
+  "title": "task-continuation.handback.v1 portable non-secret handback (module 1.3.0)",
+  "description": "What exportHandback writes and importHandback accepts, in any runtime. Closed shape: every string is a hash, an id, an enum or a canonical time, so it cannot carry the token, a key or raw input. The token stays caller-held and is passed separately. Cross-field rules (pending only in execution and result_unknown, result only in result, acceptance and settlement, stepEventId derived from correlationId and step) are checked by checkHandback and documented in CONTRACT.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "v", "hashAlg", "task", "correlationId", "step", "expiresAt", "state", "pending", "result"],
+  "properties": {
+    "schema": { "const": "task-continuation.handback.v1" },
+    "v": { "const": 1 },
+    "hashAlg": { "const": "cj1" },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool", "origin", "subject", "termsVersion"],
+      "properties": {
+        "tool": { "type": "string", "pattern": "^[A-Za-z0-9_.:/-]{1,128}$" },
+        "origin": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "subject": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "termsVersion": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }] }
+      }
+    },
+    "correlationId": { "type": "string", "pattern": "^ae:corr:v1:[A-Za-z0-9_-]{22}$" },
+    "step": { "type": "integer", "minimum": 0 },
+    "expiresAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$" },
+    "state": { "enum": ["preview", "quote", "execution", "result_unknown", "result", "acceptance", "settlement"] },
+    "pending": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stepEventId", "step", "savedAt"],
+          "properties": {
+            "stepEventId": { "type": "string", "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$" },
+            "step": { "type": "integer", "minimum": 0 },
+            "savedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$" }
+          }
+        }
+      ]
+    },
+    "result": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stepEventId", "step", "digest"],
+          "properties": {
+            "stepEventId": { "type": "string", "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$" },
+            "step": { "type": "integer", "minimum": 0 },
+            "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        }
+      ]
+    }
+  }
+}

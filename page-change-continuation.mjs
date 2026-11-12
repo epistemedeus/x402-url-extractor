@@ -6,6 +6,15 @@
 // value. Old callers that send no continuation see no change.
 
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+// One source for the measurement field shapes: the portable task-continuation
+// module (1.3.0) owns the enums and the entry surface rule; this emitter reuses them.
+import {
+  DISCOVERY_BASIS_KINDS,
+  ENTRY_BASES,
+  ENTRY_SURFACES,
+  ENTRY_TRANSPORTS,
+  entrySurfaceFromRuntime,
+} from "./packages/task-continuation/index.mjs";
 
 export const PAGE_CHANGE_CONTINUATION_META = "samedaydesk/continuation";
 // Optional separate request key for a caller discovery declaration, so a
@@ -22,10 +31,10 @@ export const PAGE_CHANGE_DISCOVERY_STATUSES = Object.freeze(["observed", "declar
 export const PAGE_CHANGE_DISCOVERY_SOURCES = Object.freeze(["a2a", "mcp", "cli", "llms", "skill", "registry", "other"]);
 export const PAGE_CHANGE_CONTINUATION_TEST_KID = "test";
 // Additive measurement fields (Measurement consumer, neomorphic-io #473).
-export const PAGE_CHANGE_DISCOVERY_BASIS_KINDS = Object.freeze(["request_referer", "mount_hook", "caller_meta"]);
-export const PAGE_CHANGE_ENTRY_SURFACES = Object.freeze(["hosted", "installed"]);
-export const PAGE_CHANGE_ENTRY_BASES = Object.freeze(["deployment_marker", "no_deployment_marker", "local_cli"]);
-export const PAGE_CHANGE_ENTRY_TRANSPORTS = Object.freeze(["mcp_streamable_http", "cli"]);
+export const PAGE_CHANGE_DISCOVERY_BASIS_KINDS = DISCOVERY_BASIS_KINDS;
+export const PAGE_CHANGE_ENTRY_SURFACES = ENTRY_SURFACES;
+export const PAGE_CHANGE_ENTRY_BASES = ENTRY_BASES;
+export const PAGE_CHANGE_ENTRY_TRANSPORTS = ENTRY_TRANSPORTS;
 // Platform-set marker of the hosted SameDayDesk deployment. Only its presence
 // is read; the value is never copied into a record.
 export const PAGE_CHANGE_DEPLOYMENT_MARKER_ENV = "RAILWAY_DEPLOYMENT_ID";
@@ -359,10 +368,7 @@ export function pageChangeDiscoveryWithBasis({ observed = null, declared = null 
  * is present in its environment, otherwise installed (a self-run server).
  */
 export function pageChangeEntrySurface({ env = process.env, transport = "mcp_streamable_http" } = {}) {
-  if (transport === "cli") return { surface: "installed", basis: "local_cli", transport: "cli" };
-  const marker = env?.[PAGE_CHANGE_DEPLOYMENT_MARKER_ENV];
-  const hosted = typeof marker === "string" && marker.trim().length > 0;
-  return { surface: hosted ? "hosted" : "installed", basis: hosted ? "deployment_marker" : "no_deployment_marker", transport: "mcp_streamable_http" };
+  return entrySurfaceFromRuntime({ env, markerEnv: PAGE_CHANGE_DEPLOYMENT_MARKER_ENV, transport: transport === "cli" ? "cli" : "mcp_streamable_http" });
 }
 
 function occurredAtFrom(occurredAt, nowMs) {

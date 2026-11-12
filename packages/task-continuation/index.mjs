@@ -1,4 +1,4 @@
-// task-continuation v1 (module 1.2.0): portable caller-held continuation for one task chain.
+// task-continuation v1 (module 1.3.0): portable caller-held continuation for one task chain.
 // Dependency-free ESM. The issuer stores nothing. A continuation is an
 // HMAC-signed bearer token the caller keeps, plus a separate non-authorizing
 // correlationId. See CONTRACT.md for the stable v1 contract.
@@ -8,7 +8,7 @@ import { chmod, lstat, mkdir, open, rename, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
 export const CONTRACT_VERSION = 1;
-export const MODULE_VERSION = "1.2.0";
+export const MODULE_VERSION = "1.3.0";
 export const TOKEN_PREFIX = "tc1";
 export const TOKEN_MAX_CHARS = 1024;
 export const TOKEN_RE = /^tc1\.[A-Za-z0-9_-]{16,900}\.[A-Za-z0-9_-]{43}$/;
@@ -57,6 +57,15 @@ export const ERROR_MESSAGES = Object.freeze({
   continuation_hash_legacy: "continuation was issued before canonical hashing; start a new chain",
   continuation_file_hardlink: "continuation file has more than one hard link",
   continuation_file_io: "continuation file could not be read or written",
+  // 1.3.0 consumer contract.
+  continuation_revoked: "continuation key or chain has been revoked",
+  continuation_task_changed: "the task changed; start a new chain",
+  continuation_measurement_invalid: "measurement record is not a supported shape",
+  continuation_measurement_late: "measurement record occurred at or after the continuation expired",
+  continuation_handback_invalid: "handback is not a supported shape",
+  continuation_dispatch_pending: "a dispatch for this step may already have taken effect; read back, do not dispatch again",
+  continuation_result_unknown: "the result of the pending dispatch is unknown",
+  continuation_state_invalid: "this state change is not allowed",
 });
 
 const EXIT_CODES = Object.freeze({ usage: 2, auth: 3, not_found: 4, conflict: 5, integrity: 6, io: 7, expired: 8 });
@@ -90,6 +99,14 @@ export const ERROR_CODES = Object.freeze({
   continuation_hash_legacy: row("conflict", false),
   continuation_file_hardlink: row("integrity", false),
   continuation_file_io: row("io", true),
+  continuation_revoked: row("auth", false),
+  continuation_task_changed: row("conflict", false),
+  continuation_measurement_invalid: row("integrity", false),
+  continuation_measurement_late: row("expired", false),
+  continuation_handback_invalid: row("integrity", false),
+  continuation_dispatch_pending: row("conflict", false),
+  continuation_result_unknown: row("conflict", true),
+  continuation_state_invalid: row("usage", false),
 });
 export const EXIT_CATEGORIES = Object.freeze(Object.keys(EXIT_CODES));
 
@@ -218,7 +235,7 @@ export function issueContinuation({ keyring, tool, subject, bindings, previous =
  * correlationId. Returns { ...payload, correlationId } or throws ContinuationError.
  * Check order is part of the contract (CONTRACT.md).
  */
-export function verifyContinuation(token, { keyring, tool, subject, bindings, correlationId, nowMs = Date.now() }) {
+export function verifyContinuation(token, { keyring, tool, subject, bindings, correlationId, revoked = null, nowMs = Date.now() }) {
   if (!keyring?.current) fail("continuation_unavailable");
   if (typeof token !== "string") fail("continuation_token_invalid");
   if (token.length > TOKEN_MAX_CHARS) fail("continuation_token_oversized");
@@ -243,6 +260,15 @@ export function verifyContinuation(token, { keyring, tool, subject, bindings, co
   if (!isCorrelationId(correlationId)) fail("continuation_correlation_mismatch");
   const commitment = Buffer.from(correlationCommitment(key.secret, correlationId), "hex");
   if (!timingSafeEqual(commitment, Buffer.from(payload.crh, "hex"))) fail("continuation_correlation_mismatch");
+  // 1.3.0, check 12: issuer-side revocation of a key or of one chain. Runs
+  // last so a revoked token never reveals more than an authentic one would.
+  if (revoked !== null && revoked !== undefined) {
+    if (!plain(revoked)) fail("continuation_invalid");
+    const kids = revoked.kids ?? [];
+    const chains = revoked.correlationIds ?? [];
+    if (!Array.isArray(kids) || !Array.isArray(chains)) fail("continuation_invalid");
+    if (kids.includes(payload.kid) || chains.includes(correlationId)) fail("continuation_revoked");
+  }
   return { ...payload, correlationId };
 }
 
@@ -265,8 +291,8 @@ export function refusal(code, { nextMethod, nextStep, ...extra } = {}) {
     error: known,
     code: known,
     message: ERROR_MESSAGES[known],
-    nextMethod: typeof nextMethod === "string" ? nextMethod : null,
-    nextStep: typeof nextStep === "string" ? nextStep : null,
+    nextMethod: typeof nextMethod === "string" ? nextMethod : (NEXT_DEFAULTS[known]?.nextMethod ?? null),
+    nextStep: typeof nextStep === "string" ? nextStep : (NEXT_DEFAULTS[known]?.nextStep ?? null),
   };
 }
 
@@ -297,15 +323,30 @@ const MEASUREMENT_OUTCOME_RE = /^[a-z][a-z0-9_]{0,31}$/;
 
 /**
  * Separate measurement record: correlationId, explicit discovery, step, tool
- * and outcome only. Never a token, kid, or any token-derived field.
+ * and outcome, plus the optional 1.3.0 fields occurredAt, discoveryBasis and
+ * entrySurface. Never a token, kid, or any token-derived field.
+ *
+ * Without the 1.3.0 options the result is the 1.2.0 shape, unchanged. The
+ * optional fields appear only when supplied: occurredAt from occurredAt or
+ * nowMs, discoveryBasis (null allowed) and entrySurface (null allowed). When
+ * discoveryBasis is supplied it must agree with discovery (observed needs a
+ * server-side basis), and expiresAt, when supplied, refuses a late record.
  */
-export function measurementRecord({ correlationId, discovery: value, step, tool, outcome = null }) {
+export function measurementRecord({ correlationId, discovery: value, step, tool, outcome = null, occurredAt, nowMs, discoveryBasis, entrySurface, expiresAt }) {
   if (!isCorrelationId(correlationId) || !Number.isSafeInteger(step) || step < 0) fail("continuation_invalid");
   if (typeof tool !== "string" || !TOOL_RE.test(tool)) fail("continuation_invalid");
   const status = DISCOVERY_STATUSES.includes(value?.status) ? value.status : "unknown";
   const source = status === "unknown" || typeof value?.source !== "string" ? null : value.source;
   if (outcome !== null && (typeof outcome !== "string" || !MEASUREMENT_OUTCOME_RE.test(outcome))) fail("continuation_invalid");
-  return { v: CONTRACT_VERSION, kind: "measurement", tool, correlationId, step, discovery: { status, source }, outcome };
+  const record = { v: CONTRACT_VERSION, kind: "measurement", tool, correlationId, step, discovery: { status, source }, outcome };
+  if (occurredAt !== undefined || nowMs !== undefined) {
+    if (occurredAt !== undefined) record.occurredAt = occurredAt;
+    else if (Number.isFinite(nowMs)) record.occurredAt = new Date(nowMs).toISOString();
+    else fail("continuation_invalid");
+  }
+  if (discoveryBasis !== undefined) record.discoveryBasis = discoveryBasis;
+  if (entrySurface !== undefined) record.entrySurface = entrySurface;
+  return checkMeasurementRecord(record, { expiresAt, nowMs: occurredAt === undefined ? undefined : nowMs });
 }
 
 function storeFail(code) {
@@ -361,8 +402,12 @@ export async function saveContinuationFile(file, record) {
   if (!plain(record)) fail("continuation_file_invalid");
   if (Object.hasOwn(record, "discovery") && record.token !== undefined && record.token !== null) storeFail("continuation_file_record_mixed");
   checkRecord(record);
+  return writeOwnerFile(file, `${JSON.stringify({ ...record, schema: FILE_SCHEMA })}\n`);
+}
+
+// Shared owner-only atomic write kernel (caller file and, from 1.3.0, handback file).
+async function writeOwnerFile(file, body) {
   const path = resolve(file);
-  const body = `${JSON.stringify({ ...record, schema: FILE_SCHEMA })}\n`;
   if (Buffer.byteLength(body, "utf8") > FILE_MAX_BYTES) storeFail("continuation_file_oversized");
   const directory = dirname(path);
   try { await mkdir(directory, { recursive: true, mode: 0o700 }); } catch (error) { ioFail(error); }
@@ -409,6 +454,16 @@ export async function saveContinuationFile(file, record) {
  * Date.now()) refuses an expired record with continuation_expired.
  */
 export async function loadContinuationFile(file, { tool = null, nowMs = Date.now() } = {}) {
+  const bytes = await readOwnerFile(file);
+  let record;
+  try { record = JSON.parse(bytes.toString("utf8")); } catch { fail("continuation_file_invalid"); }
+  if (!plain(record) || record.schema !== FILE_SCHEMA) fail("continuation_file_invalid");
+  checkRecord(record, { tool, nowMs });
+  return record;
+}
+
+// Shared owner-only read kernel: lstat, O_NOFOLLOW open, same-inode fstat.
+async function readOwnerFile(file) {
   const path = resolve(file);
   let stats;
   try { stats = await lstat(path); } catch (error) {
@@ -433,9 +488,384 @@ export async function loadContinuationFile(file, { tool = null, nowMs = Date.now
   } finally {
     await handle?.close().catch(() => {});
   }
-  let record;
-  try { record = JSON.parse(bytes.toString("utf8")); } catch { fail("continuation_file_invalid"); }
-  if (!plain(record) || record.schema !== FILE_SCHEMA) fail("continuation_file_invalid");
-  checkRecord(record, { tool, nowMs });
-  return record;
+  return bytes;
+}
+
+// ---------------------------------------------------------------------------
+// 1.3.0: measurement fields, truthful discovery acquisition, task binding,
+// portable non-secret handback and the dispatch state kernel. See CONTRACT.md
+// "Consumer contract (1.3.0)". Nothing here stores, sends or pays anything.
+// ---------------------------------------------------------------------------
+
+/** Why discovery has its status. The SameDayDesk page-change emitter re-exports these. */
+export const DISCOVERY_BASIS_KINDS = Object.freeze(["request_referer", "mount_hook", "caller_meta"]);
+/** Basis kinds that only the issuer can produce from its own request evidence. */
+export const SERVER_EVIDENCE_KINDS = Object.freeze(["request_referer", "mount_hook"]);
+export const ENTRY_SURFACES = Object.freeze(["hosted", "installed"]);
+export const ENTRY_BASES = Object.freeze(["deployment_marker", "no_deployment_marker", "local_cli"]);
+export const ENTRY_TRANSPORTS = Object.freeze(["mcp_streamable_http", "cli"]);
+export const BASIS_MATCHED_MAX_CHARS = 128;
+export const DISCOVERY_SOURCE_RE = /^[a-z][a-z0-9_-]{0,31}$/;
+/** A record stamped more than this far ahead of the loader's clock is refused as malformed. */
+export const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
+export const HANDBACK_SCHEMA = "task-continuation.handback.v1";
+export const HANDBACK_MAX_BYTES = 16 * 1024;
+/**
+ * Distinct per-step states. preview and quote come before any effect;
+ * execution means a dispatch was saved as pending before it was sent;
+ * result_unknown means the reply was lost; result, acceptance and settlement
+ * follow a known result. The module records them and never moves money.
+ */
+export const HANDBACK_STATES = Object.freeze(["preview", "quote", "execution", "result_unknown", "result", "acceptance", "settlement"]);
+const PENDING_STATES = new Set(["execution", "result_unknown"]);
+const RESULT_STATES = new Set(["result", "acceptance", "settlement"]);
+const ORIGIN_HASH_RE = /^sha256:[a-f0-9]{64}$/;
+const STEP_EVENT_ID_RE = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
+const MEASUREMENT_KEYS = new Set(["v", "kind", "tool", "correlationId", "step", "discovery", "outcome", "occurredAt", "discoveryBasis", "entrySurface"]);
+const HANDBACK_KEYS = ["schema", "v", "hashAlg", "task", "correlationId", "step", "expiresAt", "state", "pending", "result"];
+const TASK_KEYS = ["tool", "origin", "subject", "termsVersion"];
+
+const NEXT_DEFAULTS = Object.freeze({
+  continuation_revoked: { nextMethod: "start_new_chain", nextStep: "This continuation was revoked by the issuer. Start a new chain; do not retry it." },
+  continuation_task_changed: { nextMethod: "start_new_chain", nextStep: "The tool, origin, terms or subject changed. Start a new chain for the new task; the old chain is not rebound." },
+  continuation_measurement_invalid: { nextMethod: null, nextStep: "Drop the record; it does not match the measurement shape." },
+  continuation_measurement_late: { nextMethod: null, nextStep: "Drop the record; it is stamped at or after the continuation expired." },
+  continuation_handback_invalid: { nextMethod: "start_new_chain", nextStep: "The handback does not validate. Start a new chain." },
+  continuation_dispatch_pending: { nextMethod: "readback", nextStep: "A dispatch for this step is pending. Read back its stepEventId; do not dispatch again." },
+  continuation_result_unknown: { nextMethod: "readback", nextStep: "Read back the same stepEventId later. Do not dispatch again. To give up, reconcile this stepEventId out of band and start a new chain." },
+  continuation_state_invalid: { nextMethod: null, nextStep: "Follow preview, quote, execution, result, acceptance, settlement in order." },
+});
+
+const measurementFail = () => fail("continuation_measurement_invalid");
+const handbackFail = () => fail("continuation_handback_invalid");
+const exactKeys = (value, keys) => {
+  const names = Object.keys(value);
+  return names.length === keys.length && keys.every((key) => Object.hasOwn(value, key));
+};
+const isoMs = (text) => {
+  if (typeof text !== "string" || !EXPIRES_AT_RE.test(text)) return null;
+  const ms = Date.parse(text);
+  return Number.isFinite(ms) && new Date(ms).toISOString() === text ? ms : null;
+};
+
+/**
+ * Truthful discovery acquisition. evidence is what the issuer saw on its own
+ * request ({ source, basis: { kind: "request_referer" | "mount_hook", matched } }),
+ * never anything the caller sent. declared is the caller's own claim (a bare
+ * string). Returns { discovery, discoveryBasis }. observed is only produced
+ * from server-side evidence; a caller value can at most be declared.
+ */
+export function acquireDiscovery({ evidence = null, declared = null, sources = [] } = {}) {
+  const allowed = new Set(sources);
+  if (plain(evidence) && typeof evidence.source === "string" && allowed.has(evidence.source) && plain(evidence.basis)) {
+    const { kind, matched } = evidence.basis;
+    if (kind === "request_referer" && typeof matched === "string" && matched.length >= 1 && matched.length <= BASIS_MATCHED_MAX_CHARS) {
+      return { discovery: { status: "observed", source: evidence.source }, discoveryBasis: { kind, matched } };
+    }
+    if (kind === "mount_hook") return { discovery: { status: "observed", source: evidence.source }, discoveryBasis: { kind, matched: null } };
+  }
+  if (typeof declared === "string" && allowed.has(declared)) {
+    return { discovery: { status: "declared", source: declared }, discoveryBasis: { kind: "caller_meta", matched: null } };
+  }
+  return { discovery: { status: "unknown", source: null }, discoveryBasis: null };
+}
+
+/**
+ * Entry surface from runtime facts only, never from a request. markerEnv names
+ * a platform-set deployment marker; only its presence is read, never its value.
+ */
+export function entrySurfaceFromRuntime({ env = process.env, markerEnv = null, transport = "mcp_streamable_http" } = {}) {
+  if (transport === "cli") return { surface: "installed", basis: "local_cli", transport: "cli" };
+  if (transport !== "mcp_streamable_http") fail("continuation_invalid");
+  const marker = typeof markerEnv === "string" && markerEnv ? env?.[markerEnv] : undefined;
+  const hosted = typeof marker === "string" && marker.trim().length > 0;
+  return { surface: hosted ? "hosted" : "installed", basis: hosted ? "deployment_marker" : "no_deployment_marker", transport };
+}
+
+function checkDiscoveryBasis(discoveryValue, basis) {
+  const { status } = discoveryValue;
+  if (basis === null) {
+    if (status !== "unknown") measurementFail();
+    return;
+  }
+  if (!plain(basis) || !exactKeys(basis, ["kind", "matched"]) || !DISCOVERY_BASIS_KINDS.includes(basis.kind)) measurementFail();
+  if (basis.kind === "request_referer") {
+    if (typeof basis.matched !== "string" || basis.matched.length < 1 || basis.matched.length > BASIS_MATCHED_MAX_CHARS) measurementFail();
+  } else if (basis.matched !== null) measurementFail();
+  // Truthful acquisition: observed only with a server-side basis, declared only from caller meta.
+  if (status === "observed" && !SERVER_EVIDENCE_KINDS.includes(basis.kind)) measurementFail();
+  if (status === "declared" && basis.kind !== "caller_meta") measurementFail();
+  if (status === "unknown") measurementFail();
+}
+
+function checkEntrySurface(value) {
+  if (value === null) return;
+  if (!plain(value) || !exactKeys(value, ["surface", "basis", "transport"])) measurementFail();
+  const { surface, basis, transport } = value;
+  if (!ENTRY_SURFACES.includes(surface) || !ENTRY_BASES.includes(basis) || !ENTRY_TRANSPORTS.includes(transport)) measurementFail();
+  if ((surface === "hosted") !== (basis === "deployment_marker")) measurementFail();
+  if ((basis === "local_cli") !== (transport === "cli")) measurementFail();
+}
+
+/**
+ * Validate a measurement record on load (for example one read back from a
+ * journal or another runtime). 1.2.0 records without the optional fields still
+ * load. Malformed -> continuation_measurement_invalid. Late, meaning occurredAt
+ * at or after expiresAt (when the loader passes expiresAt) ->
+ * continuation_measurement_late. An occurredAt that is not a canonical ISO
+ * time is malformed, not late: its moment cannot be placed. One stamped more
+ * than MAX_FUTURE_SKEW_MS ahead of nowMs (when passed) is malformed too.
+ * Returns a fresh copy.
+ */
+export function checkMeasurementRecord(record, { expiresAt, nowMs } = {}) {
+  if (!plain(record)) measurementFail();
+  for (const key of Object.keys(record)) if (!MEASUREMENT_KEYS.has(key)) measurementFail();
+  if (record.v !== CONTRACT_VERSION || record.kind !== "measurement") measurementFail();
+  if (typeof record.tool !== "string" || !TOOL_RE.test(record.tool)) measurementFail();
+  if (!isCorrelationId(record.correlationId) || !Number.isSafeInteger(record.step) || record.step < 0) measurementFail();
+  const value = record.discovery;
+  if (!plain(value) || !exactKeys(value, ["status", "source"]) || !DISCOVERY_STATUSES.includes(value.status)) measurementFail();
+  if (value.status === "unknown" ? value.source !== null : (typeof value.source !== "string" || !DISCOVERY_SOURCE_RE.test(value.source))) measurementFail();
+  if (record.outcome !== null && (typeof record.outcome !== "string" || !MEASUREMENT_OUTCOME_RE.test(record.outcome))) measurementFail();
+  const out = { v: record.v, kind: record.kind, tool: record.tool, correlationId: record.correlationId, step: record.step, discovery: { status: value.status, source: value.source }, outcome: record.outcome };
+  if (Object.hasOwn(record, "occurredAt")) {
+    const occurredMs = isoMs(record.occurredAt);
+    if (occurredMs === null) measurementFail();
+    if (nowMs !== undefined && nowMs !== null) {
+      if (!Number.isFinite(nowMs)) fail("continuation_invalid");
+      if (occurredMs - nowMs > MAX_FUTURE_SKEW_MS) measurementFail();
+    }
+    if (expiresAt !== undefined && expiresAt !== null) {
+      const expiresMs = isoMs(expiresAt);
+      if (expiresMs === null) fail("continuation_invalid");
+      if (occurredMs >= expiresMs) fail("continuation_measurement_late");
+    }
+    out.occurredAt = record.occurredAt;
+  }
+  if (Object.hasOwn(record, "discoveryBasis")) {
+    checkDiscoveryBasis(value, record.discoveryBasis);
+    out.discoveryBasis = record.discoveryBasis === null ? null : { kind: record.discoveryBasis.kind, matched: record.discoveryBasis.matched };
+  }
+  if (Object.hasOwn(record, "entrySurface")) {
+    checkEntrySurface(record.entrySurface);
+    out.entrySurface = record.entrySurface === null ? null : { ...record.entrySurface };
+  }
+  return out;
+}
+
+/** True only when a record's observed discovery rests on a server-side basis. 1.2.0-shaped observed records are unproven. */
+export function observedIsProven(record) {
+  return record?.discovery?.status === "observed" && SERVER_EVIDENCE_KINDS.includes(record?.discoveryBasis?.kind);
+}
+
+/** Canonical http(s) origin (scheme, host, non-default port). Paths, queries and credentials are dropped or refused. */
+export function normalizeOrigin(value) {
+  let url;
+  try { url = new URL(value); } catch { fail("continuation_invalid"); }
+  if ((url.protocol !== "https:" && url.protocol !== "http:") || url.username || url.password) fail("continuation_invalid");
+  return url.origin;
+}
+
+/**
+ * The binding of one eligible task: tool, origin, subject and terms. origin is
+ * kept only as a hash. Pass bindings(task) to issueContinuation and
+ * verifyContinuation so the token is bound to the same origin and terms.
+ */
+export function taskBinding({ tool, origin, subject, termsVersion = null }) {
+  if (typeof tool !== "string" || !TOOL_RE.test(tool)) fail("continuation_invalid");
+  if (typeof subject !== "string" || !HASH_RE.test(subject)) fail("continuation_invalid");
+  if (termsVersion !== null && (typeof termsVersion !== "string" || !TERMS_VERSION_RE.test(termsVersion))) fail("continuation_invalid");
+  const originHash = `sha256:${createHash("sha256").update(`task-continuation/origin|${normalizeOrigin(origin)}`).digest("hex")}`;
+  return Object.freeze({ tool, origin: originHash, subject, termsVersion });
+}
+
+/** Token bindings for a task: origin always, termsVersion when the task has terms. */
+export function taskBindings(task) {
+  checkTask(task);
+  return task.termsVersion ? { origin: task.origin, termsVersion: task.termsVersion } : { origin: task.origin };
+}
+
+function checkTask(task) {
+  if (!plain(task) || !exactKeys(task, TASK_KEYS)) handbackFail();
+  if (typeof task.tool !== "string" || !TOOL_RE.test(task.tool)) handbackFail();
+  if (typeof task.origin !== "string" || !ORIGIN_HASH_RE.test(task.origin)) handbackFail();
+  if (typeof task.subject !== "string" || !HASH_RE.test(task.subject)) handbackFail();
+  if (task.termsVersion !== null && (typeof task.termsVersion !== "string" || !TERMS_VERSION_RE.test(task.termsVersion))) handbackFail();
+}
+
+/** Which of tool, origin, terms, subject differ. Empty means the same task. */
+export function taskChanges(held, next) {
+  checkTask(held);
+  checkTask(next);
+  const changed = [];
+  if (held.tool !== next.tool) changed.push("tool");
+  if (held.origin !== next.origin) changed.push("origin");
+  if (held.termsVersion !== next.termsVersion) changed.push("terms");
+  if (held.subject !== next.subject) changed.push("subject");
+  return changed;
+}
+
+/** Throws continuation_task_changed (error.changed lists the fields) unless the task is the same. Never rebinds. */
+export function assertSameTask(handback, task) {
+  const changed = taskChanges(checkHandback(handback).task, task);
+  if (changed.length) {
+    const error = new ContinuationError("continuation_task_changed");
+    error.changed = changed;
+    throw error;
+  }
+}
+
+/**
+ * Validate a handback. Closed shape: every string field is a hash, an id, an
+ * enum or a canonical time, so a token, key or raw input cannot ride inside.
+ * Returns a fresh copy.
+ */
+export function checkHandback(value) {
+  if (!plain(value) || !exactKeys(value, HANDBACK_KEYS)) handbackFail();
+  if (value.schema !== HANDBACK_SCHEMA || value.v !== CONTRACT_VERSION) handbackFail();
+  if (value.hashAlg !== HASH_ALG) fail("continuation_hash_legacy");
+  checkTask(value.task);
+  if (!isCorrelationId(value.correlationId) || !Number.isSafeInteger(value.step) || value.step < 0) handbackFail();
+  if (isoMs(value.expiresAt) === null || !HANDBACK_STATES.includes(value.state)) handbackFail();
+  const eventId = stepEventId(value.correlationId, value.step);
+  let pending = null;
+  if (PENDING_STATES.has(value.state)) {
+    const p = value.pending;
+    if (!plain(p) || !exactKeys(p, ["stepEventId", "step", "savedAt"]) || p.stepEventId !== eventId || p.step !== value.step || isoMs(p.savedAt) === null) handbackFail();
+    pending = { stepEventId: p.stepEventId, step: p.step, savedAt: p.savedAt };
+  } else if (value.pending !== null) handbackFail();
+  let result = null;
+  if (RESULT_STATES.has(value.state)) {
+    const r = value.result;
+    if (!plain(r) || !exactKeys(r, ["stepEventId", "step", "digest"]) || r.stepEventId !== eventId || r.step !== value.step || typeof r.digest !== "string" || !HASH_RE.test(r.digest)) handbackFail();
+    result = { stepEventId: r.stepEventId, step: r.step, digest: r.digest };
+  } else if (value.result !== null) handbackFail();
+  return {
+    schema: HANDBACK_SCHEMA, v: CONTRACT_VERSION, hashAlg: HASH_ALG,
+    task: { tool: value.task.tool, origin: value.task.origin, subject: value.task.subject, termsVersion: value.task.termsVersion },
+    correlationId: value.correlationId, step: value.step, expiresAt: value.expiresAt, state: value.state, pending, result,
+  };
+}
+
+/**
+ * Start a handback from an issue result (or a loaded caller record) and the
+ * task it was issued for. The token is dropped: it stays caller-held and is
+ * passed separately.
+ */
+export function createHandback({ task, issued, state = "preview" }) {
+  if (!plain(issued)) fail("continuation_invalid");
+  if (state !== "preview" && state !== "quote") fail("continuation_state_invalid");
+  if (plain(task) && issued.tool !== task.tool) fail("continuation_wrong_tool");
+  return checkHandback({
+    schema: HANDBACK_SCHEMA, v: CONTRACT_VERSION, hashAlg: issued.hashAlg,
+    task, correlationId: issued.correlationId, step: issued.step, expiresAt: issued.expiresAt, state, pending: null, result: null,
+  });
+}
+
+/** Serialized handback (canonical JSON). The only export: it never holds a token, a key or raw input. */
+export function exportHandback(handback) {
+  return canonicalJson(checkHandback(handback));
+}
+
+/** Parse and validate a handback exported by any runtime. */
+export function importHandback(text) {
+  if (typeof text !== "string" || Buffer.byteLength(text, "utf8") > HANDBACK_MAX_BYTES) handbackFail();
+  let value;
+  try { value = JSON.parse(text); } catch { handbackFail(); }
+  return checkHandback(value);
+}
+
+/**
+ * Before continuing a held chain in a fresh process: same task, not expired,
+ * nothing pending. Returns what the next call needs except the token:
+ * { correlationId, step, bindings }.
+ */
+export function assertResumable(handback, task, { nowMs = Date.now() } = {}) {
+  const held = checkHandback(handback);
+  assertSameTask(held, task);
+  if (isoMs(held.expiresAt) <= nowMs) fail("continuation_expired");
+  if (PENDING_STATES.has(held.state)) fail("continuation_dispatch_pending");
+  return { correlationId: held.correlationId, step: held.step, bindings: taskBindings(held.task) };
+}
+
+/** preview -> quote, result -> acceptance, acceptance -> settlement. Nothing else. */
+export function advanceHandback(handback, to) {
+  const held = checkHandback(handback);
+  const allowed = { quote: "preview", acceptance: "result", settlement: "acceptance" };
+  if (!Object.hasOwn(allowed, to) || held.state !== allowed[to]) fail("continuation_state_invalid");
+  return checkHandback({ ...held, state: to });
+}
+
+/**
+ * Mark the step pending BEFORE the effectful call. Save the returned handback
+ * first (saveHandbackFile), then dispatch with its pending.stepEventId as the
+ * idempotency key. A step already pending or with an unknown result is refused
+ * with continuation_dispatch_pending: no second uncertain effect.
+ */
+export function beginDispatch(handback, { nowMs = Date.now() } = {}) {
+  const held = checkHandback(handback);
+  if (PENDING_STATES.has(held.state)) fail("continuation_dispatch_pending");
+  if (held.state !== "preview" && held.state !== "quote") fail("continuation_state_invalid");
+  if (isoMs(held.expiresAt) <= nowMs) fail("continuation_expired");
+  const pending = { stepEventId: stepEventId(held.correlationId, held.step), step: held.step, savedAt: new Date(nowMs).toISOString() };
+  return checkHandback({ ...held, state: "execution", pending });
+}
+
+/** The reply arrived: execution -> result with the result digest. */
+export function recordResult(handback, { digest }) {
+  const held = checkHandback(handback);
+  if (held.state !== "execution") fail("continuation_state_invalid");
+  return checkHandback({ ...held, state: "result", pending: null, result: { stepEventId: held.pending.stepEventId, step: held.step, digest } });
+}
+
+/** The reply was lost or ambiguous: execution -> result_unknown. The pending stepEventId is kept. */
+export function markResultUnknown(handback) {
+  const held = checkHandback(handback);
+  if (held.state !== "execution" && held.state !== "result_unknown") fail("continuation_state_invalid");
+  return checkHandback({ ...held, state: "result_unknown" });
+}
+
+/**
+ * Apply read-only evidence about a pending dispatch. readback is
+ * { found: true, stepEventId, digest } when the issuer holds a result for that
+ * exact stepEventId, otherwise anything else. Returns { handback, refusal }:
+ * the stored result (state result, refusal null), or state result_unknown with
+ * a typed continuation_result_unknown refusal. A readback never re-opens
+ * dispatch: the returned handback is never in a state beginDispatch accepts.
+ */
+export function applyReadback(handback, readback) {
+  const held = checkHandback(handback);
+  if (!PENDING_STATES.has(held.state)) fail("continuation_state_invalid");
+  if (plain(readback) && readback.found === true && readback.stepEventId === held.pending.stepEventId
+    && typeof readback.digest === "string" && HASH_RE.test(readback.digest)) {
+    return { handback: checkHandback({ ...held, state: "result", pending: null, result: { stepEventId: held.pending.stepEventId, step: held.step, digest: readback.digest } }), refusal: null };
+  }
+  return {
+    handback: checkHandback({ ...held, state: "result_unknown" }),
+    refusal: refusal("continuation_result_unknown", { stepEventId: held.pending.stepEventId, correlationId: held.correlationId, step: held.step }),
+  };
+}
+
+/**
+ * Move a finished step to the next step of the same chain, from a new issue
+ * result for the same correlationId at step + 1.
+ */
+export function nextHandbackStep(handback, issued) {
+  const held = checkHandback(handback);
+  if (!RESULT_STATES.has(held.state)) fail("continuation_state_invalid");
+  if (!plain(issued) || issued.tool !== held.task.tool) fail("continuation_wrong_tool");
+  if (issued.correlationId !== held.correlationId) fail("continuation_correlation_mismatch");
+  if (issued.step !== held.step + 1) fail("continuation_state_invalid");
+  return checkHandback({ ...held, step: issued.step, expiresAt: issued.expiresAt, hashAlg: issued.hashAlg, state: "preview", pending: null, result: null });
+}
+
+/** Save a handback with the same owner-only atomic write as the caller file. */
+export async function saveHandbackFile(file, handback) {
+  return writeOwnerFile(file, `${exportHandback(handback)}\n`);
+}
+
+/** Load a handback with the same owner-only read checks as the caller file. */
+export async function loadHandbackFile(file) {
+  const bytes = await readOwnerFile(file);
+  return importHandback(bytes.toString("utf8"));
 }

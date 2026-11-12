@@ -2,7 +2,17 @@
 
 Runtime: any A2A client. Discovery: `GET https://agents.samedaydesk.com/.well-known/agent-card.json` lists the skill `compare-held-page-observations`. Its description names the free Streamable HTTP endpoint (`POST /mcp/page-change`, tool `compare_page_observations`). The SameDayDesk `POST /a2a/message:send` returns the action catalog only; it does not run the comparison and stores no task. Each comparison runs as a `tools/call` on the MCP endpoint (see [curl-http.md](curl-http.md) or [node-mcp-sdk.md](node-mcp-sdk.md)), and the A2A task lineage is kept by the caller (`artifactLineage: "client_side"` in the recipe from `freePageCompareContinuationRecipe`).
 
-Hosted status: two separate gaps. The hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement`; and after a build with the feature is deployed, it still answers `continuation_unavailable` until the production `PAGE_CHANGE_CONTINUATION_KEYS` is configured. Run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
+Hosted status: two stages. (a) Pending Root release: the hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement` until Root releases and deploys a build with this feature. (b) Done: the dedicated production continuation keyring is enrolled and its readback matched; Root owns it, and no key value appears in any recipe. Until (a) lands, run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
+
+Protocol selection: read the agent card and proceed only when one `supportedInterfaces[].protocolVersion` is exactly `1.0` (the source is `a2a-storefront.mjs` `A2A_VERSION`); otherwise refuse with `protocol_version_unsupported` naming the advertised values. The MCP step that runs each comparison selects its own version as in [curl-http.md](curl-http.md). With the selection helper from the repo:
+
+<!-- check: a2a-protocol -->
+```js
+import { A2A_RECIPE_PROTOCOL_VERSIONS, advertisedA2aVersions, selectProtocolVersion } from "./caller-result-client/src/protocol-selection.mjs";
+const card = await (await fetch("https://agents.samedaydesk.com/.well-known/agent-card.json")).json();
+const selected = selectProtocolVersion(advertisedA2aVersions(card), A2A_RECIPE_PROTOCOL_VERSIONS);
+if (!selected.ok) throw Object.assign(new Error(selected.code), { refusal: selected });
+```
 
 Rules: no exactly-once delivery; the `correlationId` (`ae:corr:v1:`) is non-authorizing; discovery is sent separately in `_meta["samedaydesk/measurement"]` (use `{"discovery":"a2a"}`) and travels on its own measurement part, never beside the token; the token is never logged (the continuation part is a bearer capability: keep it out of logs, traces and shared task stores).
 

@@ -3,6 +3,8 @@
 //   start <endpointUrl> <before.json> <after.json> <fields> <continuation.json> [--discovery LABEL]
 //   continue <continuation.json> <after.json> [--discovery LABEL]
 // Prints the report and a token-free continuation view. Exit 2 on refusal.
+// Proceeds only when the server's negotiated protocolVersion exactly matches
+// MCP_RECIPE_PROTOCOL_VERSIONS; otherwise refuses with protocol_version_unsupported.
 // Never pays, signs, or fetches page URLs.
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -17,6 +19,7 @@ import {
   readFreeMeasurement,
   readFreeRefusal,
 } from "../src/free-continuation.mjs";
+import { MCP_RECIPE_PROTOCOL_VERSIONS, protocolRefusalFromSdkError, selectProtocolVersion } from "../src/protocol-selection.mjs";
 
 const argv = process.argv.slice(2);
 let discovery = null;
@@ -37,7 +40,16 @@ try {
   const after = await readJson(afterPath);
   if (saved && freeObservationDigest(before) !== saved.observationSha256) throw Object.assign(new Error("held_observation_changed"), { code: "held_observation_changed" });
   sdk = new Client({ name: "samedaydesk-free-continuation", version: "n12" });
-  await sdk.connect(new StreamableHTTPClientTransport(new URL(endpointUrl)));
+  const transport = new StreamableHTTPClientTransport(new URL(endpointUrl));
+  try {
+    await sdk.connect(transport);
+  } catch (error) {
+    const refused = protocolRefusalFromSdkError(error);
+    if (!refused) throw error;
+    throw Object.assign(new Error(refused.code), { code: refused.code, refusal: refused });
+  }
+  const selected = selectProtocolVersion(transport.protocolVersion ?? null, MCP_RECIPE_PROTOCOL_VERSIONS);
+  if (!selected.ok) throw Object.assign(new Error(selected.code), { code: selected.code, refusal: selected });
   await sdk.listTools();
   const result = await callFreeCompare(sdk, {
     before, after, fields,
@@ -72,6 +84,7 @@ try {
   }
 } catch (error) {
   await sdk?.close().catch(() => {});
+  if (error?.refusal) process.stdout.write(`${JSON.stringify({ state: "refused", refusal: error.refusal })}\n`);
   process.stderr.write(`${/^[a-z0-9_]{1,64}$/.test(error?.code || "") ? error.code : "continuation_failed"}\n`);
   process.exitCode = 2;
 }

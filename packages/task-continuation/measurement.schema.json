@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/epistemedeus/x402-url-extractor/packages/task-continuation/measurement.schema.json",
+  "title": "task-continuation measurement record v1 (module 1.3.0)",
+  "description": "What measurementRecord builds and checkMeasurementRecord accepts. The 1.2.0 shape (no occurredAt, discoveryBasis or entrySurface) stays valid. Never holds a token, kid or token-derived field. Rules a schema cannot express, checked by checkMeasurementRecord: observed needs a request_referer or mount_hook basis, declared needs caller_meta, unknown needs a null basis and null source; request_referer needs a matched string, other kinds a null matched; hosted pairs only with deployment_marker and local_cli only with cli; occurredAt must round-trip through Date and is refused as late at or after the continuation expiresAt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "kind", "tool", "correlationId", "step", "discovery", "outcome"],
+  "properties": {
+    "v": { "const": 1 },
+    "kind": { "const": "measurement" },
+    "tool": { "type": "string", "pattern": "^[A-Za-z0-9_.:/-]{1,128}$" },
+    "correlationId": { "type": "string", "pattern": "^ae:corr:v1:[A-Za-z0-9_-]{22}$" },
+    "step": { "type": "integer", "minimum": 0 },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "source"],
+      "properties": {
+        "status": { "enum": ["observed", "declared", "unknown"] },
+        "source": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^[a-z][a-z0-9_-]{0,31}$" }] }
+      }
+    },
+    "outcome": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,31}$" }] },
+    "occurredAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$" },
+    "discoveryBasis": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "matched"],
+          "properties": {
+            "kind": { "enum": ["request_referer", "mount_hook", "caller_meta"] },
+            "matched": { "anyOf": [{ "type": "null" }, { "type": "string", "minLength": 1, "maxLength": 128 }] }
+          }
+        }
+      ]
+    },
+    "entrySurface": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["surface", "basis", "transport"],
+          "properties": {
+            "surface": { "enum": ["hosted", "installed"] },
+            "basis": { "enum": ["deployment_marker", "no_deployment_marker", "local_cli"] },
+            "transport": { "enum": ["mcp_streamable_http", "cli"] }
+          }
+        }
+      ]
+    }
+  }
+}

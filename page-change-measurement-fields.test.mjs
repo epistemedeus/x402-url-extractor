@@ -21,6 +21,7 @@ import {
   verifyPageChangeContinuationToken,
 } from "./page-change-continuation.mjs";
 import { readFreeMeasurement } from "./caller-result-client/src/free-continuation.mjs";
+import * as portable from "./packages/task-continuation/index.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const C1 = path.join(ROOT, "examples/customer-x402/fixtures/page-change/c1");
@@ -159,6 +160,27 @@ async function mounted(t, options) {
 }
 
 const call = (id, args, meta) => ({ jsonrpc: "2.0", id, method: "tools/call", params: { name: "compare_page_observations", arguments: args, _meta: meta } });
+
+test("shared shapes: the page-change emitter reuses the portable 1.3.0 enums and its records load there", () => {
+  assert.equal(PAGE_CHANGE_DISCOVERY_BASIS_KINDS, portable.DISCOVERY_BASIS_KINDS);
+  for (const env of [{ [PAGE_CHANGE_DEPLOYMENT_MARKER_ENV]: "d-1" }, {}]) {
+    assert.deepEqual(pageChangeEntrySurface({ env }), portable.entrySurfaceFromRuntime({ env, markerEnv: PAGE_CHANGE_DEPLOYMENT_MARKER_ENV }));
+  }
+  assert.deepEqual(pageChangeEntrySurface({ transport: "cli" }), portable.entrySurfaceFromRuntime({ transport: "cli" }));
+  const issued = issuePageChangeContinuation({ env: ENV, after, fields: FIELDS, nowMs: T0 });
+  const cases = [
+    pageChangeDiscoveryWithBasis({ observed: { source: "llms", basis: { kind: "request_referer", matched: "/llms.txt" } } }),
+    pageChangeDiscoveryWithBasis({ observed: "mcp" }),
+    pageChangeDiscoveryWithBasis({ declared: "cli" }),
+    pageChangeDiscoveryWithBasis({}),
+  ];
+  for (const { discovery, discoveryBasis } of cases) {
+    for (const env of [{ [PAGE_CHANGE_DEPLOYMENT_MARKER_ENV]: "d-1" }, {}]) {
+      const record = pageChangeMeasurementRecord({ correlationId: issued.correlationId, step: issued.step, discovery, discoveryBasis, entrySurface: pageChangeEntrySurface({ env }), outcome: "changed", nowMs: T0 + 1000 });
+      assert.deepEqual(portable.checkMeasurementRecord(record, { expiresAt: issued.expiresAt, nowMs: T0 + 1000 }), record);
+    }
+  }
+});
 
 test("mounted: referer gives observed with a basis, the marker gives hosted, the clock is injected", { skip: DEPS }, async (t) => {
   const { pageChangeMcpOutputSchema } = await import("./page-change-mcp-output-schema.mjs");

@@ -11,6 +11,26 @@ C1=examples/customer-x402/fixtures/page-change/c1
 PY=recipes/free-continuation/free_continuation.py
 ```
 
+Hosted status: two stages. (a) Pending Root release: the hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement` until Root releases and deploys a build with this feature. (b) Done: the dedicated production continuation keyring is enrolled and its readback matched; Root owns it, and no key value appears in any recipe. Until (a) lands, run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
+
+## Protocol selection
+
+Protocol selection: the client reads the `protocolVersion` the server advertised in its `initialize` result and proceeds only on an exact match with `["2025-11-25","2025-06-18"]`. Anything else, including `2026-07-28`, is refused with `protocol_version_unsupported` naming what was advertised. The list comes from the repo source (`caller-result-client/src/protocol-selection.mjs`: the server's pinned `@modelcontextprotocol/sdk` 1.32.2 lists 2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05 and 2024-10-07, and these recipes need `structuredContent`, which starts at 2025-06-18). There is no silent upgrade. Compatibility Knowledge owns the protocol corpus (`docs/reviews/h99110-mcp-current-client-compat/RESULT.md`). `start` and `continue` send `initialize` first and stop with exit 2 and `{"state":"refused","refusal":{"code":"protocol_version_unsupported",...}}` before any `tools/call` when the advertised version is not listed. After a match every request carries `mcp-protocol-version`. Check one advertised value offline:
+
+<!-- check: python-args protocol -->
+```sh
+python3 $PY protocol-check 2026-07-28
+```
+
+<!-- check: python-protocol-refusal -->
+```json
+{"ok": false, "charged": false, "code": "protocol_version_unsupported", "advertised": ["2026-07-28"], "supported": ["2025-11-25", "2025-06-18"], "nextStep": "The server advertised no protocol version this client implements. Use a client release that lists the advertised version; do not force a version."}
+```
+
+## Portable handback
+
+`python3 $PY handback-check handback.json` validates a `task-continuation.handback.v1` file exported by any runtime (`exportHandback` in `packages/task-continuation`) with the same rules as the Node module and prints it as canonical JSON, byte for byte what Node writes. A handback holds no token, key or raw input: the token stays in the caller's own 0600 file and is passed separately.
+
 ## Positive path
 
 <!-- check: python-args start -->

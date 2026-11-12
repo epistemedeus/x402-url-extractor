@@ -449,6 +449,12 @@ test("live Streamable HTTP round trip: recipes, Python and the Node client again
     const response = await fetch(url, { method: "POST", headers: { "content-type": "application/json", accept: ACCEPT }, body: JSON.stringify(body) });
     return lastRpc(await response.text());
   };
+  // Protocol selection reads what this server actually advertises.
+  const { MCP_RECIPE_PROTOCOL_VERSIONS, advertisedMcpVersion, mcpInitializeRequest, selectProtocolVersion } = await import("../../caller-result-client/src/protocol-selection.mjs");
+  const init = await post(mcpInitializeRequest(0));
+  assert.deepEqual(selectProtocolVersion(advertisedMcpVersion(init), MCP_RECIPE_PROTOCOL_VERSIONS), { ok: true, protocolVersion: "2025-11-25" });
+  const asked = await post({ ...mcpInitializeRequest(0), params: { ...mcpInitializeRequest(0).params, protocolVersion: "2026-07-28" } });
+  assert.notEqual(advertisedMcpVersion(asked), "2026-07-28", "this source does not implement 2026-07-28");
   const save = await post(substitute(json(one("mcp-request", "save", "curl-http.md"))));
   const content = save.result.structuredContent;
   assert.equal(pageChangeMcpOutputSchema.safeParse(content).success, true);

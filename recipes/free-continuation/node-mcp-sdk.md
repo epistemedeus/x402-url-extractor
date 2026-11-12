@@ -2,7 +2,14 @@
 
 Runtime: Node 20.19 or later with `@modelcontextprotocol/sdk` (the repo's pinned version). Transport: Streamable HTTP to `$SDD_MCP_URL` (`POST /mcp/page-change`, stateless). Tool: `compare_page_observations`.
 
-Hosted status: two separate gaps. The hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement`; and after a build with the feature is deployed, it still answers `continuation_unavailable` until the production `PAGE_CHANGE_CONTINUATION_KEYS` is configured. Run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
+Hosted status: two stages. (a) Pending Root release: the hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement` until Root releases and deploys a build with this feature. (b) Done: the dedicated production continuation keyring is enrolled and its readback matched; Root owns it, and no key value appears in any recipe. Until (a) lands, run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
+
+Protocol selection: the client reads the `protocolVersion` the server advertised in its `initialize` result and proceeds only on an exact match with `["2025-11-25","2025-06-18"]`. Anything else, including `2026-07-28`, is refused with `protocol_version_unsupported` naming what was advertised. The list comes from the repo source (`caller-result-client/src/protocol-selection.mjs`: the server's pinned `@modelcontextprotocol/sdk` 1.32.2 lists 2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05 and 2024-10-07, and these recipes need `structuredContent`, which starts at 2025-06-18). There is no silent upgrade. Compatibility Knowledge owns the protocol corpus (`docs/reviews/h99110-mcp-current-client-compat/RESULT.md`). The shipped client checks the version the SDK negotiated (`transport.protocolVersion`) after `connect`, and maps the SDK's own unsupported-version error to the same refusal:
+
+<!-- check: protocol-refusal node -->
+```json
+{"state":"refused","refusal":{"ok":false,"charged":false,"code":"protocol_version_unsupported","advertised":["2025-03-26"],"supported":["2025-11-25","2025-06-18"],"nextStep":"The server advertised no protocol version this client implements. Use a client release that lists the advertised version; do not force a version."}}
+```
 
 Rules: no exactly-once delivery; the `correlationId` (`ae:corr:v1:`) is non-authorizing; discovery is sent separately in `_meta["samedaydesk/measurement"]`, never beside the token; the token is never logged (the client keeps it in a 0600 file and prints only a token-free view).
 

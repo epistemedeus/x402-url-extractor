@@ -1,6 +1,6 @@
 # task-continuation v1 contract
 
-Status: stable v1, module version 1.2.0. A dependency-free ESM module (`index.mjs`, Node 20.19 or later). It gives any CLI or server a caller-held continuation for one task chain. Intended consumers: EIN, SameDayDesk and Neomorphic CLIs.
+Status: stable v1, module version 1.3.0. A dependency-free ESM module (`index.mjs`, Node 20.19 or later). It gives any CLI or server a caller-held continuation for one task chain. Intended consumers: EIN, SameDayDesk and Neomorphic CLIs.
 
 Place in the CLI architecture: under Root's accepted CLI revision 3 (epistemedeus/pilot@e597252f446e46eba10fb30d4c7cb1e51a6f8779, `overview/self-evaluations/2026-11-12-participant-economy/INTEGRATED-DECISIONS.md` section "Revision3" and the owning `THREE-SITE-AGENT-CLI-PLAN.md`), `task-continuation` is a component wire ID. Each CLI's thin task manifest maps its curated task IDs onto component wire operations, and this module is one of those components. It is not a task manifest, not a quote and not a reservation. See "Revision 3 compliance" below.
 
@@ -13,7 +13,8 @@ Place in the CLI architecture: under Root's accepted CLI revision 3 (epistemedeu
 - Derives a deterministic step event id for journal dedup.
 - Maps every refusal code to an exit category, a retryable flag and an exit code (`ERROR_CODES`).
 - Saves and loads a caller-held record in an owner-only 0600 file, hardened to the EIN activation-continuation store standard (see Store), and gives a token-free public view.
-- Builds a separate measurement record (`measurementRecord`) that carries correlationId and discovery and never the token.
+- Builds a separate measurement record (`measurementRecord`) that carries correlationId and discovery and never the token. From 1.3.0 it can also carry `occurredAt`, `discoveryBasis` and `entrySurface`, and `checkMeasurementRecord` validates one on load.
+- From 1.3.0: binds a task to its tool, origin, subject and terms (`taskBinding`), exports a portable non-secret handback (`exportHandback`, `handback.schema.json`), and keeps the per-step states and the pre-dispatch and lost-reply rules in one small kernel. See "Consumer contract (1.3.0)".
 
 ## What it does NOT do
 
@@ -64,6 +65,7 @@ The verify check order is fixed:
 9. `continuation_subject_mismatch`
 10. `continuation_binding_mismatch`
 11. `continuation_correlation_mismatch`
+12. `continuation_revoked` (1.3.0, only when the issuer passes `revoked: { kids, correlationIds }`; checked last, after the token is proven authentic and in scope)
 
 1.2.0 inserts `continuation_hash_legacy` between 6 and 7: an authentic token (signature verified) without `h: "cj1"` is refused before expiry is checked. A forged token is still `continuation_token_invalid`.
 
@@ -84,23 +86,34 @@ Codes added in 1.2.0:
 - `continuation_file_hardlink` (file has more than one link)
 - `continuation_file_io` (a filesystem error other than a missing file; 1.1.0 gave `continuation_file_invalid` on read and threw the raw error on write)
 
+Codes added in 1.3.0 (appended; no 1.2.0 code changed meaning or exit row):
+- `continuation_revoked` (issuer revoked the key or the chain)
+- `continuation_task_changed` (tool, origin, terms or subject changed; the error carries `changed`)
+- `continuation_measurement_invalid` (malformed measurement record, including an unparseable `occurredAt` or observed discovery without a server-side basis)
+- `continuation_measurement_late` (`occurredAt` at or after the continuation's `expiresAt`)
+- `continuation_handback_invalid` (handback does not validate)
+- `continuation_dispatch_pending` (the step is already pending or its result is unknown)
+- `continuation_result_unknown` (readback found no stored result for the pending step)
+- `continuation_state_invalid` (a state change out of order)
+
 ### Exit map (`ERROR_CODES`)
 
 `ERROR_CODES` is a frozen table of `code -> { exitCategory, retryable, exitCode }` covering every code the module throws (a test scans the source to keep it complete). The messages moved to `ERROR_MESSAGES`. Exit codes are one per category:
 
 | exitCategory | exitCode | Codes | retryable |
 | --- | --- | --- | --- |
-| usage | 2 | `continuation_invalid`, `continuation_token_oversized`, `continuation_wrong_tool`, `continuation_file_record_mixed` | false |
-| auth | 3 | `continuation_unavailable`, `continuation_unknown_key`, `continuation_file_owner` | false |
+| usage | 2 | `continuation_invalid`, `continuation_token_oversized`, `continuation_wrong_tool`, `continuation_file_record_mixed`, `continuation_state_invalid` | false |
+| auth | 3 | `continuation_unavailable`, `continuation_unknown_key`, `continuation_file_owner`, `continuation_revoked` | false |
 | not_found | 4 | `continuation_file_missing` | false |
-| conflict | 5 | `continuation_subject_mismatch`, `continuation_binding_mismatch`, `continuation_correlation_mismatch`, `continuation_hash_legacy` | false |
-| integrity | 6 | `continuation_token_invalid`, `continuation_file_invalid`, `continuation_file_symlink`, `continuation_file_not_regular`, `continuation_file_mode`, `continuation_file_oversized`, `continuation_file_parent_writable`, `continuation_file_hardlink` | false |
+| conflict | 5 | `continuation_subject_mismatch`, `continuation_binding_mismatch`, `continuation_correlation_mismatch`, `continuation_hash_legacy`, `continuation_task_changed`, `continuation_dispatch_pending` | false |
+| conflict | 5 | `continuation_result_unknown` | true (the same readback may find the result later) |
+| integrity | 6 | `continuation_token_invalid`, `continuation_file_invalid`, `continuation_file_symlink`, `continuation_file_not_regular`, `continuation_file_mode`, `continuation_file_oversized`, `continuation_file_parent_writable`, `continuation_file_hardlink`, `continuation_measurement_invalid`, `continuation_handback_invalid` | false |
 | io | 7 | `continuation_file_io` | true |
-| expired | 8 | `continuation_expired` | false |
+| expired | 8 | `continuation_expired`, `continuation_measurement_late` | false |
 
 `retryable: true` means the same call may succeed unchanged later. `false` means the caller must change something first (fix input, start a new chain, fix the file). A CLI may embed these numbers in its own exit scheme; 0 and 1 are left to the CLI.
 
-Refusal body (`refusal(code, { nextMethod, nextStep, ...extra })`): `{ ok: false, charged: false, paymentRequired: false, error, code, message, nextMethod, nextStep }`. The message is fixed per code. Never put caller input into `nextStep` or `extra`.
+Refusal body (`refusal(code, { nextMethod, nextStep, ...extra })`): `{ ok: false, charged: false, paymentRequired: false, error, code, message, nextMethod, nextStep }`. The message is fixed per code. Never put caller input into `nextStep` or `extra`. From 1.3.0 the new codes carry a fixed default cue when the caller passes none: `start_new_chain` for `continuation_revoked`, `continuation_task_changed` and `continuation_handback_invalid`, and `readback` for `continuation_dispatch_pending` and `continuation_result_unknown`. 1.2.0 codes keep `null` cues.
 
 ## Measurement record
 
@@ -108,6 +121,20 @@ Refusal body (`refusal(code, { nextMethod, nextStep, ...extra })`): `{ ok: false
 - A measurement record never has a key named `token`, `continuation` or `kid`, and contains no token substring.
 - The object that holds the token (the issue result or the caller file) never has a `discovery` field. `saveContinuationFile` and `loadContinuationFile` refuse one with `continuation_file_record_mixed`.
 - `publicView` (stdout and logs) carries no discovery.
+
+### Optional fields (1.3.0)
+
+Same names and shapes as the SameDayDesk page-change emitter (`page-change-continuation.mjs` imports the enums and the entry-surface rule from this module, so they cannot drift). Schema: `measurement.schema.json`.
+
+| Field | Shape | Rule |
+| --- | --- | --- |
+| `occurredAt` | ISO 8601 UTC with ms and `Z` | Emitter clock when the step was handled: `occurredAt` or `nowMs` (injectable). A retried or continued step gets a new one; the `correlationId` stays. |
+| `discoveryBasis` | `{ kind: "request_referer" \| "mount_hook" \| "caller_meta", matched: string(1..128) \| null }` or `null` | Why discovery has its status. `request_referer` needs `matched`; the others need `matched: null`. |
+| `entrySurface` | `{ surface: "hosted" \| "installed", basis: "deployment_marker" \| "no_deployment_marker" \| "local_cli", transport: "mcp_streamable_http" \| "cli" }` or `null` | Runtime facts only (`entrySurfaceFromRuntime`): `hosted` pairs only with `deployment_marker`, `local_cli` only with `cli`. Only the marker's presence is read. |
+
+Truthful acquisition: `acquireDiscovery({ evidence, declared, sources })` returns `{ discovery, discoveryBasis }`. `observed` comes only from `evidence`, which the issuer builds from its own request (`request_referer` or `mount_hook`). A caller value can at most be `declared` with `caller_meta`; with nothing usable it is `unknown` with a `null` basis. When a record carries `discoveryBasis`, `measurementRecord` and `checkMeasurementRecord` refuse a status that disagrees with it (`continuation_measurement_invalid`): observed without a server-side basis, declared without `caller_meta`, unknown with any basis. A 1.2.0-shaped record without `discoveryBasis` still builds and loads; `observedIsProven(record)` is false for it, so Measurement should count observed only when it returns true.
+
+Late and malformed: `checkMeasurementRecord(record, { expiresAt, nowMs })` refuses unknown keys, a token or kid, bad enums and bad pairs as `continuation_measurement_invalid`. An `occurredAt` that does not parse and round-trip is malformed, not late, because its moment cannot be placed. With `expiresAt`, an `occurredAt` at or after it is `continuation_measurement_late` (the token was not valid at that instant). With `nowMs`, an `occurredAt` more than 5 minutes (`MAX_FUTURE_SKEW_MS`) ahead is malformed. `measurementRecord` applies the same checks to what it builds.
 
 ## Store
 
@@ -164,6 +191,28 @@ A caller with no issuer (no keyring, offline, or a different product) may mint i
 
 `discovery.status` takes exactly three values: `observed` (issuer-side request evidence), `declared` (the caller says so) and `unknown`. Nothing else. Any other status, including a missing one, is recorded as `unknown` with `source: null`. `source` is a caller string naming the channel (for example `cli`, `mcp`, `a2a`); the module does not interpret it, and `discovery()` only returns a source that appears in the caller's allowlist.
 
+## Consumer contract (1.3.0)
+
+For a consumer (CLI, journey, or another runtime) that resumes in a new process or meets a changed task. It reuses the 1.2.0 token, `stepEventId`, `refusal`, `ERROR_CODES` and the owner-only file kernel; it adds no wrapper, protocol or account layer.
+
+Task binding. `taskBinding({ tool, origin, subject, termsVersion })` returns `{ tool, origin: "sha256:<hex>", subject, termsVersion }`. The origin is canonicalised (scheme, host, non-default port; credentials refused) and kept only as a hash. Pass `taskBindings(task)` to `issueContinuation` and `verifyContinuation` so the token is bound to the origin and the terms: a token from one origin fails `continuation_binding_mismatch` on another, even for the same tool and subject.
+
+Changed task. `assertSameTask(handback, task)` (also inside `assertResumable`) throws `continuation_task_changed` with `error.changed` listing `tool`, `origin`, `terms` and or `subject`. The cue is `start_new_chain`. Nothing is ever rebound: the held handback keeps naming its original task.
+
+Portable handback. `exportHandback(handback)` writes canonical JSON in the closed shape `task-continuation.handback.v1` (`handback.schema.json`): `{ schema, v, hashAlg, task, correlationId, step, expiresAt, state, pending, result }`. Every string is a hash, an id, an enum or a canonical time, so the export cannot hold the token, a key, a kid or raw input; the token stays in the caller's 0600 file and is passed separately. `importHandback(text)` validates in any runtime (`recipes/free-continuation/free_continuation.py handback-check` applies the same rules and reproduces the bytes). `saveHandbackFile` and `loadHandbackFile` use the same owner-only store as the caller file.
+
+States. `preview`, `quote`, `execution`, `result_unknown`, `result`, `acceptance`, `settlement` stay distinct. Allowed moves: preview to quote (`advanceHandback`), preview or quote to execution (`beginDispatch`), execution to result (`recordResult`) or result_unknown (`markResultUnknown`), execution or result_unknown to result only through `applyReadback`, result to acceptance to settlement (`advanceHandback`), and a finished step to the next step's preview (`nextHandbackStep`). Anything else is `continuation_state_invalid`. The module records these states; it does not quote, pay, accept or settle anything.
+
+Fresh-process resume. `assertResumable(handback, task, { nowMs })` checks the same task, expiry (`continuation_expired`) and that nothing is pending (`continuation_dispatch_pending`), and returns `{ correlationId, step, bindings }`. With the token from the caller file, that is everything the next call needs.
+
+Recovery before dispatch. `beginDispatch` returns the handback in `execution` with `pending: { stepEventId, step, savedAt }`. Save it (`saveHandbackFile`) before the effectful call, and send `pending.stepEventId` as the idempotency key where the operation accepts one.
+
+Unknown result. On a lost reply, `markResultUnknown`. A later process calls the operation's read-only readback for `pending.stepEventId` and passes the answer to `applyReadback`. A stored result for that exact id moves the step to `result`. Anything else keeps `result_unknown` and returns a typed `continuation_result_unknown` refusal (cue `readback`). Readback is evidence only: `beginDispatch` refuses both `execution` and `result_unknown` with `continuation_dispatch_pending`, so no readback outcome authorizes a second uncertain effect. To give up on a step, reconcile its `stepEventId` out of band and start a new chain.
+
+Expired, revoked, wrong scope. `continuation_expired` (token, record, handback), `continuation_revoked` (issuer `revoked` list), and wrong scope as `continuation_wrong_tool`, `continuation_subject_mismatch`, `continuation_binding_mismatch` (origin or terms) or `continuation_task_changed` before any call.
+
+Source observations versus live emission. Records built in tests or recipes (fixtures, injected clocks, a local fixture issuer) are source observations. They are never presented as live hosted records.
+
 ## Revision 3 compliance
 
 Pin: epistemedeus/pilot@e597252f446e46eba10fb30d4c7cb1e51a6f8779 (`INTEGRATED-DECISIONS.md` Revision3, `THREE-SITE-AGENT-CLI-PLAN.md`).
@@ -174,9 +223,11 @@ Pin: epistemedeus/pilot@e597252f446e46eba10fb30d4c7cb1e51a6f8779 (`INTEGRATED-DE
 
 ## Runtime and test matrix
 
-`engines.node` is `>=20.19.0`. The module uses only `node:crypto`, `node:fs/promises`, `node:fs` constants and `node:path`; tests use `node:test` and `node:assert`. Run `node --test test/index.test.mjs` from this directory. Linux and macOS are the supported targets (POSIX modes, `O_NOFOLLOW`, `nlink`). Windows is not offered: mode bits and owner checks do not map. The 1.2.0 tests were run locally on Node 22 only. Node 20.19 and 24 runs belong on a VM and are not yet recorded. The owner-mismatch test needs root to chown a fixture and is skipped otherwise.
+`engines.node` is `>=20.19.0`. The module uses only `node:crypto`, `node:fs/promises`, `node:fs` constants and `node:path`; tests use `node:test` and `node:assert`. Run `node --test test/index.test.mjs test/consumer-contract.test.mjs` from this directory. Linux and macOS are the supported targets (POSIX modes, `O_NOFOLLOW`, `nlink`). Windows is not offered: mode bits and owner checks do not map. The 1.2.0 tests were run locally on Node 22 only. Node 20.19 and 24 runs belong on a VM and are not yet recorded. The owner-mismatch test needs root to chown a fixture and is skipped otherwise.
 
 ## Changelog
+
+- 1.3.0 (additive): optional measurement fields `occurredAt`, `discoveryBasis`, `entrySurface` with `acquireDiscovery`, `entrySurfaceFromRuntime`, `checkMeasurementRecord`, `observedIsProven` and `measurement.schema.json`; the shared enums `DISCOVERY_BASIS_KINDS`, `SERVER_EVIDENCE_KINDS`, `ENTRY_SURFACES`, `ENTRY_BASES`, `ENTRY_TRANSPORTS`; task binding (`normalizeOrigin`, `taskBinding`, `taskBindings`, `taskChanges`, `assertSameTask`); handback (`HANDBACK_SCHEMA`, `HANDBACK_STATES`, `checkHandback`, `createHandback`, `exportHandback`, `importHandback`, `saveHandbackFile`, `loadHandbackFile`, `handback.schema.json`); state kernel (`assertResumable`, `advanceHandback`, `beginDispatch`, `recordResult`, `markResultUnknown`, `applyReadback`, `nextHandbackStep`); `verifyContinuation` option `revoked`; eight appended codes. 1.2.0 tokens, files and measurement records load unchanged. One tightening: `measurementRecord` now refuses a `discovery.source` outside `^[a-z][a-z0-9_-]{0,31}$` with `continuation_measurement_invalid` (1.2.0 accepted any string).
 
 - 1.2.0: canonical `hashJson` (`canonicalJson`) with typed refusal of 1.1.0 tokens and files (`continuation_hash_legacy`); tokens carry `h: "cj1"`, issue results and files carry `hashAlg: "cj1"`. Load validates `tool`, `step`, `expiresAt` and refuses expired records (`continuation_expired`) and, given `{ tool }`, another tool's record (`continuation_wrong_tool`). Hard-link refusal (`continuation_file_hardlink`). Filesystem errors become `continuation_file_io`. `ERROR_CODES` is now the exit map (`{ exitCategory, retryable, exitCode }`) and the messages moved to `ERROR_MESSAGES`, which is non-additive for anyone who read `ERROR_CODES[code]` as a string. Published `record.schema.json`. Documented in-flight recovery, issuer-free correlation, discovery sources, /tmp behaviour, runtime matrix and revision 3 compliance.
 
@@ -198,4 +249,4 @@ Pin: epistemedeus/pilot@e597252f446e46eba10fb30d4c7cb1e51a6f8779 (`INTEGRATED-DE
 
 ## Relationship to page-change-continuation.mjs
 
-The SameDayDesk server module `page-change-continuation.mjs` predates this package. It uses the same design under its own `pc1` prefix with fixed `sub`, `obs` and `fld` fields. Moving it onto this package would change its wire token, so it is left as is. Both share the `correlationId` format and the refusal fields.
+The SameDayDesk server module `page-change-continuation.mjs` predates this package. It uses the same design under its own `pc1` prefix with fixed `sub`, `obs` and `fld` fields. Moving it onto this package would change its wire token, so its token stays on `pc1`. Both share the `correlationId` format and the refusal fields, and from 1.3.0 it imports the measurement enums and the entry-surface rule from this module, and its records pass `checkMeasurementRecord`.
