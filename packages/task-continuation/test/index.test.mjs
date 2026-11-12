@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
-import { chmod, chown, mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { chmod, chown, link, mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { createHash, createHmac } from "node:crypto";
 import {
   CORRELATION_ID_RE,
   ContinuationError,
+  ERROR_CODES,
+  ERROR_MESSAGES,
+  EXIT_CATEGORIES,
+  MODULE_VERSION,
+  canonicalJson,
   createKeyring,
   discovery,
   hashJson,
@@ -186,4 +192,173 @@ test("measurement record is separate from the token", async (t) => {
   assert.equal(Object.hasOwn(issued, "discovery"), false);
   const dir = await scratch(t);
   await refusedWith(saveContinuationFile(path.join(dir, "mixed.json"), { ...issued, discovery: record.discovery }), "continuation_file_record_mixed");
+});
+
+// ---- 1.2.0 ----
+
+const LEGACY_HASH = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+
+function legacyToken(secretEntry, payload) {
+  const body = `tc1.${Buffer.from(JSON.stringify(payload)).toString("base64url")}`;
+  return `${body}.${createHmac("sha256", secretEntry.secret).update(body).digest("base64url")}`;
+}
+
+test("module version is 1.2.0", () => {
+  assert.equal(MODULE_VERSION, "1.2.0");
+});
+
+test("hashJson is canonical: key order never changes the hash", () => {
+  const a = { url: "https://example.invalid/a", fields: { title: 1, body: [{ y: 2, x: 1 }] }, n: null };
+  const b = { n: null, fields: { body: [{ x: 1, y: 2 }], title: 1 }, url: "https://example.invalid/a" };
+  assert.equal(hashJson(a), hashJson(b));
+  assert.equal(canonicalJson(b), '{"fields":{"body":[{"x":1,"y":2}],"title":1},"n":null,"url":"https://example.invalid/a"}');
+  assert.notEqual(hashJson([1, 2]), hashJson([2, 1]));
+  // Same bytes as 1.1.0 for arrays and scalars; different for unsorted objects.
+  assert.equal(hashJson(["https://example.invalid/a"]), LEGACY_HASH(["https://example.invalid/a"]));
+  assert.notEqual(hashJson(b), LEGACY_HASH(b));
+  for (const bad of [{ a: undefined }, [undefined], Number.NaN, Infinity, 1n, new Date(0)]) {
+    assert.equal(code(() => hashJson(bad)), "continuation_invalid");
+  }
+});
+
+test("migration: a 1.1.0 token or file (no hash marker) is refused with continuation_hash_legacy", async (t) => {
+  const issued = issueContinuation({ keyring, tool, subject });
+  const payload = JSON.parse(Buffer.from(issued.token.split(".")[1], "base64url").toString("utf8"));
+  assert.equal(payload.h, "cj1");
+  const { h, ...oldPayload } = payload;
+  const old = legacyToken(NEW, oldPayload);
+  assert.equal(code(() => verifyContinuation(old, { keyring, tool, subject, correlationId: issued.correlationId })), "continuation_hash_legacy");
+  // A forged legacy token is still a signature failure, not a migration hint.
+  const forged = legacyToken({ secret: "q".repeat(40) }, oldPayload);
+  assert.equal(code(() => verifyContinuation(forged, { keyring, tool, subject, correlationId: issued.correlationId })), "continuation_token_invalid");
+  const dir = await scratch(t);
+  const file = path.join(dir, "old.json");
+  const { hashAlg, ...oldRecord } = issued;
+  await writeFile(file, `${JSON.stringify({ ...oldRecord, token: old, schema: "task-continuation.file.v1" })}\n`, { mode: 0o600 });
+  await chmod(file, 0o600);
+  await refusedWith(loadContinuationFile(file), "continuation_hash_legacy");
+  assert.equal(ERROR_CODES.continuation_hash_legacy.retryable, false);
+});
+
+test("load validates step, expiresAt and tool", async (t) => {
+  const dir = await scratch(t);
+  const issued = issueContinuation({ keyring, tool, subject });
+  const file = await saveContinuationFile(path.join(dir, "chain.json"), issued);
+  assert.equal((await loadContinuationFile(file, { tool })).tool, tool);
+  await refusedWith(loadContinuationFile(file, { tool: "extract" }), "continuation_wrong_tool");
+  await refusedWith(loadContinuationFile(file, { nowMs: Date.parse(issued.expiresAt) }), "continuation_expired");
+  const stale = issueContinuation({ keyring, tool, subject, nowMs: Date.now() - 400 * 86_400_000 });
+  const staleFile = await saveContinuationFile(path.join(dir, "stale.json"), stale);
+  await refusedWith(loadContinuationFile(staleFile), "continuation_expired");
+  const raw = async (name, record) => {
+    const target = path.join(dir, name);
+    await writeFile(target, `${JSON.stringify({ ...record, schema: "task-continuation.file.v1" })}\n`, { mode: 0o600 });
+    await chmod(target, 0o600);
+    return target;
+  };
+  for (const [name, patch] of [
+    ["neg-step", { step: -1 }], ["frac-step", { step: 1.5 }], ["str-step", { step: "1" }], ["no-step", { step: undefined }],
+    ["bad-exp", { expiresAt: "tomorrow" }], ["exp-no-ms", { expiresAt: "2099-01-01T00:00:00Z" }], ["exp-feb30", { expiresAt: "2099-02-30T00:00:00.000Z" }],
+    ["empty-tool", { tool: "" }], ["num-tool", { tool: 7 }], ["no-tool", { tool: undefined }],
+  ]) {
+    await refusedWith(loadContinuationFile(await raw(`${name}.json`, { ...issued, ...patch })), "continuation_file_invalid");
+  }
+  await refusedWith(saveContinuationFile(path.join(dir, "neg.json"), { ...issued, step: -1 }), "continuation_file_invalid");
+});
+
+test("store refuses a hard-linked file on load and save", async (t) => {
+  const dir = await scratch(t);
+  const issued = issueContinuation({ keyring, tool, subject });
+  const file = await saveContinuationFile(path.join(dir, "chain.json"), issued);
+  const second = path.join(dir, "second.json");
+  await link(file, second);
+  await refusedWith(loadContinuationFile(file), "continuation_file_hardlink");
+  await refusedWith(loadContinuationFile(second), "continuation_file_hardlink");
+  await refusedWith(saveContinuationFile(file, { ...issued, step: 1 }), "continuation_file_hardlink");
+  await rm(second);
+  assert.equal((await loadContinuationFile(file)).step, 0);
+});
+
+test("/tmp-style sticky world-writable directory is refused as a parent", async (t) => {
+  const dir = await scratch(t);
+  const sticky = path.join(dir, "sticky");
+  await mkdir(sticky);
+  await chmod(sticky, 0o1777);
+  await refusedWith(saveContinuationFile(path.join(sticky, "chain.json"), issueContinuation({ keyring, tool, subject })), "continuation_file_parent_writable");
+});
+
+// Tiny dependency-free checker for the subset record.schema.json uses.
+function check(schema, value, at = "$") {
+  const errors = [];
+  if (Object.hasOwn(schema, "const") && value !== schema.const) errors.push(`${at}: const`);
+  if (schema.type === "object" && (typeof value !== "object" || value === null || Array.isArray(value))) return [`${at}: type object`];
+  if (schema.type === "string" && typeof value !== "string") return [`${at}: type string`];
+  if (schema.type === "integer" && !Number.isInteger(value)) return [`${at}: type integer`];
+  if (typeof schema.minimum === "number" && !(value >= schema.minimum)) errors.push(`${at}: minimum`);
+  if (typeof schema.maxLength === "number" && value.length > schema.maxLength) errors.push(`${at}: maxLength`);
+  if (schema.pattern && !new RegExp(schema.pattern, "u").test(value)) errors.push(`${at}: pattern`);
+  for (const key of schema.required ?? []) if (!Object.hasOwn(value, key)) errors.push(`${at}.${key}: required`);
+  for (const [key, sub] of Object.entries(schema.properties ?? {})) if (Object.hasOwn(value, key)) errors.push(...check(sub, value[key], `${at}.${key}`));
+  if (schema.not && check(schema.not, value, at).length === 0) errors.push(`${at}: not`);
+  return errors;
+}
+
+test("saved output validates against the published record.schema.json", async (t) => {
+  const schema = JSON.parse(await readFile(new URL("../record.schema.json", import.meta.url), "utf8"));
+  const known = new Set(["$schema", "$id", "title", "description", "type", "required", "properties", "not", "const", "pattern", "minimum", "maxLength"]);
+  const walk = (node) => { for (const [key, value] of Object.entries(node)) { if (!known.has(key)) assert.fail(`checker does not support ${key}`); if (key === "properties") Object.values(value).forEach(walk); if (key === "not") walk(value); } };
+  walk(schema);
+  const dir = await scratch(t);
+  const first = issueContinuation({ keyring, tool, subject, bindings: { termsVersion: terms } });
+  const verified = verifyContinuation(first.token, { keyring, tool, subject, bindings: { termsVersion: terms }, correlationId: first.correlationId });
+  for (const issued of [first, issueContinuation({ keyring, tool, subject, bindings: { termsVersion: terms }, previous: verified })]) {
+    const file = await saveContinuationFile(path.join(dir, `chain-${issued.step}.json`), issued);
+    const saved = JSON.parse(await readFile(file, "utf8"));
+    assert.deepEqual(check(schema, saved), []);
+    assert.deepEqual(check(schema, await loadContinuationFile(file)), []);
+  }
+  const saved = JSON.parse(await readFile(path.join(dir, "chain-0.json"), "utf8"));
+  assert.notDeepEqual(check(schema, { ...saved, step: -1 }), []);
+  assert.notDeepEqual(check(schema, { ...saved, hashAlg: undefined }), []);
+  assert.notDeepEqual(check(schema, { ...saved, discovery: { status: "declared", source: "cli" } }), []);
+  const { hashAlg, ...legacy } = saved;
+  assert.notDeepEqual(check(schema, legacy), []);
+});
+
+test("ERROR_CODES covers every code the module throws, with a valid exit row", async () => {
+  const source = await readFile(new URL("../index.mjs", import.meta.url), "utf8");
+  const thrown = new Set([...source.matchAll(/(?:fail|storeFail)\("([a-z_]+)"\)/g)].map((match) => match[1]));
+  assert.ok(thrown.size >= 20);
+  for (const name of thrown) assert.ok(Object.hasOwn(ERROR_CODES, name), `${name} missing from ERROR_CODES`);
+  assert.deepEqual(Object.keys(ERROR_CODES).sort(), Object.keys(ERROR_MESSAGES).sort());
+  assert.deepEqual([...EXIT_CATEGORIES].sort(), ["auth", "conflict", "expired", "integrity", "io", "not_found", "usage"]);
+  assert.ok(Object.isFrozen(ERROR_CODES));
+  const exitByCategory = new Map();
+  for (const [name, entry] of Object.entries(ERROR_CODES)) {
+    assert.ok(Object.isFrozen(entry), name);
+    assert.deepEqual(Object.keys(entry).sort(), ["exitCategory", "exitCode", "retryable"]);
+    assert.ok(EXIT_CATEGORIES.includes(entry.exitCategory), name);
+    assert.equal(typeof entry.retryable, "boolean");
+    assert.ok(Number.isInteger(entry.exitCode) && entry.exitCode > 1 && entry.exitCode < 64, name);
+    if (exitByCategory.has(entry.exitCategory)) assert.equal(exitByCategory.get(entry.exitCategory), entry.exitCode);
+    exitByCategory.set(entry.exitCategory, entry.exitCode);
+    assert.equal(new ContinuationError(name).code, name);
+    assert.equal(refusal(name).message, ERROR_MESSAGES[name]);
+  }
+  assert.equal(ERROR_CODES.continuation_expired.exitCategory, "expired");
+  assert.equal(ERROR_CODES.continuation_file_missing.exitCategory, "not_found");
+  assert.equal(ERROR_CODES.continuation_file_io.retryable, true);
+});
+
+test("a caller with no issuer may mint a declared, non-authorizing correlationId", () => {
+  const correlationId = mintCorrelationId();
+  const record = measurementRecord({ correlationId, discovery: { status: "declared", source: "cli" }, step: 0, tool });
+  assert.equal(record.discovery.status, "declared");
+  // It authorizes nothing: a token issued under another correlationId refuses it.
+  const issued = issueContinuation({ keyring, tool, subject });
+  assert.equal(code(() => verifyContinuation(issued.token, { keyring, tool, subject, correlationId })), "continuation_correlation_mismatch");
+  for (const status of ["observed", "declared", "unknown"]) {
+    assert.equal(measurementRecord({ correlationId, discovery: { status, source: "cli" }, step: 0, tool }).discovery.status, status);
+  }
+  assert.equal(measurementRecord({ correlationId, discovery: { status: "verified", source: "cli" }, step: 0, tool }).discovery.status, "unknown");
 });
