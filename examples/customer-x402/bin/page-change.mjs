@@ -157,9 +157,14 @@ async function continuationMain(input) {
     correlationId,
     step,
     expiresAt: null,
-    discovery: DISCOVERY_SOURCES.has(declared) ? { status: "declared", source: declared } : { status: "unknown", source: null },
   });
-  process.stderr.write(`${JSON.stringify({ continuation: { saved: true, correlationId, step } })}\n`);
+  // Separate measurement record: no token, no key, no file path.
+  const measurement = {
+    v: 1, kind: "measurement", tool: TOOL, correlationId, step,
+    discovery: DISCOVERY_SOURCES.has(declared) ? { status: "declared", source: declared } : { status: "unknown", source: null },
+    outcome: null,
+  };
+  process.stderr.write(`${JSON.stringify({ saved: true, measurement })}\n`);
   return 0;
 }
 

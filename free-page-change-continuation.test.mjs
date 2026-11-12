@@ -104,6 +104,22 @@ function assertRefusal(result, code, secrets = []) {
   assert.equal(/\u2014/.test(text), false);
 }
 
+// Measurement refuses any record where discovery sits beside a bearer token.
+function assertSeparated(structured) {
+  const { continuation, measurement } = structured;
+  assert.equal(Object.hasOwn(continuation, "discovery"), false);
+  assert.deepEqual(Object.keys(measurement).sort(), ["correlationId", "discovery", "kind", "outcome", "step", "tool", "v"]);
+  assert.equal(measurement.kind, "measurement");
+  assert.equal(measurement.correlationId, continuation.correlationId);
+  assert.equal(measurement.step, continuation.step);
+  assert.ok(["observed", "declared", "unknown"].includes(measurement.discovery.status));
+  const text = JSON.stringify(measurement);
+  assert.equal(text.includes(continuation.token), false);
+  for (const part of continuation.token.split(".").slice(1)) assert.equal(text.includes(part), false);
+  assert.equal(/"(token|continuation|kid)"\s*:/.test(text), false);
+  return measurement;
+}
+
 function decodePayload(token) {
   return JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf8"));
 }
@@ -130,6 +146,19 @@ test("old callers without a continuation get the unchanged output shape", { time
   assert.equal(ownedPageChangeWorkerCount(), 0);
 });
 
+test("measurement record is separate from the token, and the token object has no discovery", { timeout: 60_000 }, async (t) => {
+  const { first } = chain();
+  const profile = await listen(env);
+  t.after(() => profile.close());
+  const saved = await profile.call(first, save("registry"));
+  const measurement = assertSeparated(saved.structuredContent);
+  assert.match(measurement.correlationId, PAGE_CHANGE_CORRELATION_RE);
+  assert.deepEqual(measurement.discovery, { status: "declared", source: "registry" });
+  assert.equal(Object.hasOwn(measurement, "kid"), false);
+  assert.equal(Object.hasOwn(measurement, "expiresAt"), false);
+  assert.equal(pageChangeMcpOutputSchema.safeParse({ ...saved.structuredContent, continuation: { ...saved.structuredContent.continuation, discovery: measurement.discovery } }).success, false);
+});
+
 test("a cold caller saves, continues, and keeps one correlationId across steps", { timeout: 60_000 }, async (t) => {
   const { first, third } = chain();
   const profile = await listen(env);
@@ -142,7 +171,8 @@ test("a cold caller saves, continues, and keeps one correlationId across steps",
   assert.equal(step0.step, 0);
   assert.equal(step0.kid, "n12b");
   assert.match(step0.correlationId, PAGE_CHANGE_CORRELATION_RE);
-  assert.deepEqual(step0.discovery, { status: "declared", source: "a2a" });
+  assert.deepEqual(assertSeparated(saved.structuredContent).discovery, { status: "declared", source: "a2a" });
+  assert.equal(saved.structuredContent.measurement.outcome, "changed");
   assert.equal(step0.next.meta, PAGE_CHANGE_CONTINUATION_META);
   assert.ok(step0.token.length <= 1024);
   const payload = decodePayload(step0.token);
@@ -159,7 +189,7 @@ test("a cold caller saves, continues, and keeps one correlationId across steps",
   assert.equal(step1.correlationId, step0.correlationId);
   assert.notEqual(step1.token, step0.token);
   // A token restore never carries discovery forward.
-  assert.deepEqual(step1.discovery, { status: "unknown", source: null });
+  assert.deepEqual(assertSeparated(continued.structuredContent).discovery, { status: "unknown", source: null });
 
   const noNext = await profile.call({ before: first.after, after: third, fields: first.fields }, resume(step0, { save: false }));
   assert.notEqual(noNext.isError, true);
@@ -172,13 +202,18 @@ test("discovery is observed only from server request evidence, never from the to
   const observedProfile = await listen(env, { discoveryEvidence: (req) => (req.headers["x-test-surface"] === "mcp" ? "mcp" : null) });
   t.after(() => observedProfile.close());
   const saved = await observedProfile.call(first, save("cli"));
-  assert.deepEqual(saved.structuredContent.continuation.discovery, { status: "declared", source: "cli" });
+  assert.deepEqual(assertSeparated(saved.structuredContent).discovery, { status: "declared", source: "cli" });
+  const declaredOnContinue = await observedProfile.call({ before: first.after, after: third, fields: first.fields }, {
+    ...resume(saved.structuredContent.continuation),
+    "samedaydesk/measurement": { discovery: "a2a" },
+  });
+  assert.deepEqual(assertSeparated(declaredOnContinue.structuredContent).discovery, { status: "declared", source: "a2a" });
   const plainProfile = await listen(env, { discoveryEvidence: () => "registry" });
   t.after(() => plainProfile.close());
   const restored = await plainProfile.call({ before: first.after, after: third, fields: first.fields }, resume(saved.structuredContent.continuation));
-  assert.deepEqual(restored.structuredContent.continuation.discovery, { status: "observed", source: "registry" });
+  assert.deepEqual(assertSeparated(restored.structuredContent).discovery, { status: "observed", source: "registry" });
   const undeclared = await observedProfile.call(first, save("not-a-label"));
-  assert.deepEqual(undeclared.structuredContent.continuation.discovery, { status: "unknown", source: null });
+  assert.deepEqual(assertSeparated(undeclared.structuredContent).discovery, { status: "unknown", source: null });
 });
 
 test("key rotation keeps an old kid valid and refuses an unknown kid", { timeout: 60_000 }, async (t) => {
@@ -220,6 +255,8 @@ test("refusals echo no input, give a nextMethod cue, and never fall back to paym
     ["continuation_second_observation_incomplete", { before: first.before, after: { missing: true }, fields: first.fields }, save(), []],
     ["continuation_credential_input", credential, save(), ["abcdefghijklmnop"]],
     ["continuation_invalid", first, { [PAGE_CHANGE_CONTINUATION_META]: { save: true, extra: SYNTHETIC_URL } }, []],
+    ["continuation_invalid", next, resume(saved, { discovery: "a2a" }), [saved.token]],
+    ["continuation_invalid", first, { ...save(), "samedaydesk/measurement": { discovery: "a2a", token: "x" } }, []],
   ];
   for (const [code, args, meta, secrets] of cases) assertRefusal(await profile.call(args, meta), code, secrets);
   const off = await listen(plainEnv);
@@ -301,7 +338,16 @@ test("A2A continuation is a new task in the same context and leaves the complete
     artifacts: [{ artifactId: "a1", parts: [{ data: { verdict: "changed" } }] }],
   };
   const before = JSON.stringify(prior);
-  const next = buildFreeCompareContinuationTask(prior, { data: { tool: PAGE_CHANGE_MCP_TOOL } });
+  const measurement = { v: 1, kind: "measurement", tool: PAGE_CHANGE_MCP_TOOL, correlationId: newPageChangeCorrelationId(), step: 1, discovery: { status: "declared", source: "a2a" }, outcome: null };
+  const next = buildFreeCompareContinuationTask(prior, {
+    data: { continuation: { token: "pc1.redacted", correlationId: measurement.correlationId, step: 0 } },
+    measurement,
+  });
+  assert.equal(next.message.parts.length, 2);
+  assert.equal(Object.hasOwn(next.message.parts[0].data.continuation, "discovery"), false);
+  assert.deepEqual(next.message.parts[1].data.measurement.discovery, { status: "declared", source: "a2a" });
+  assert.throws(() => buildFreeCompareContinuationTask(prior, { data: { token: "pc1.redacted", discovery: measurement.discovery } }), /beside a token/);
+  assert.throws(() => buildFreeCompareContinuationTask(prior, { data: {}, measurement: { ...measurement, token: "pc1.redacted" } }), /must not carry/);
   assert.equal(JSON.stringify(prior), before);
   assert.notEqual(next.taskId, prior.id);
   assert.equal(next.contextId, prior.contextId);

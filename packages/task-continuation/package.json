@@ -1,6 +1,6 @@
 {
   "name": "task-continuation",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Dependency-free caller-held continuation: signed bearer token with kid keyring and expiry, non-authorizing correlationId, discovery enum, refusal shape, deterministic step event id, 0600 caller file.",
   "type": "module",
   "private": true,

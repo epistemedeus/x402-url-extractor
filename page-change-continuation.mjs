@@ -8,6 +8,9 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 export const PAGE_CHANGE_CONTINUATION_META = "samedaydesk/continuation";
+// Optional separate request key for a caller discovery declaration, so a
+// continue request never holds discovery beside its token.
+export const PAGE_CHANGE_MEASUREMENT_META = "samedaydesk/measurement";
 export const PAGE_CHANGE_CONTINUATION_TOOL = "compare_page_observations";
 export const PAGE_CHANGE_CONTINUATION_VERSION = 1;
 export const PAGE_CHANGE_CONTINUATION_TOKEN_MAX_CHARS = 1024;
@@ -204,8 +207,14 @@ export function readPageChangeContinuationRequest(meta) {
   if (request.token !== undefined && typeof request.token !== "string") return { invalid: true };
   if (request.token === undefined && request.save !== true) return { invalid: true };
   if (request.correlationId !== undefined && typeof request.correlationId !== "string") return { invalid: true };
-  const declared = typeof request.discovery === "string" && PAGE_CHANGE_DISCOVERY_SOURCES.includes(request.discovery)
-    ? request.discovery
+  // Discovery may never sit beside a token. Continue requests declare it on
+  // the separate samedaydesk/measurement key.
+  if (request.token !== undefined && request.discovery !== undefined) return { invalid: true };
+  const measurement = meta[PAGE_CHANGE_MEASUREMENT_META];
+  if (measurement !== undefined && (!plain(measurement) || Object.keys(measurement).some((key) => key !== "discovery"))) return { invalid: true };
+  const claimed = measurement?.discovery ?? request.discovery;
+  const declared = typeof claimed === "string" && PAGE_CHANGE_DISCOVERY_SOURCES.includes(claimed)
+    ? claimed
     : null;
   return { invalid: false, token: request.token ?? null, correlationId: request.correlationId ?? null, save: request.save !== false, declared };
 }
@@ -240,7 +249,7 @@ export function signPageChangeContinuationPayload(payload, key) {
 }
 
 /** Mint the next continuation for the observation the caller now holds. */
-export function issuePageChangeContinuation({ after, fields, previous = null, env = process.env, nowMs = Date.now(), discovery }) {
+export function issuePageChangeContinuation({ after, fields, previous = null, env = process.env, nowMs = Date.now() }) {
   const keyring = pageChangeContinuationKeyring(env);
   if (!keyring) refuse("continuation_unavailable");
   const sub = pageChangeSubjectDigest(after);
@@ -273,13 +282,29 @@ export function issuePageChangeContinuation({ after, fields, previous = null, en
     correlationId: cor,
     step,
     expiresAt: new Date(exp * 1000).toISOString(),
-    discovery: discovery || pageChangeDiscovery(),
     next: {
       method: "tools/call",
       tool: PAGE_CHANGE_CONTINUATION_TOOL,
       meta: PAGE_CHANGE_CONTINUATION_META,
       send: "before is the after observation you sent in this call, after is your new observation, fields stay the same, _meta carries {token}.",
     },
+  };
+}
+
+/**
+ * Separate measurement record. Measurement counts discovery only from here and
+ * refuses any object that holds discovery beside a bearer token, so this record
+ * carries no token, kid or other token-derived field.
+ */
+export function pageChangeMeasurementRecord({ correlationId, step, discovery, outcome = null }) {
+  return {
+    v: PAGE_CHANGE_CONTINUATION_VERSION,
+    kind: "measurement",
+    tool: PAGE_CHANGE_CONTINUATION_TOOL,
+    correlationId,
+    step,
+    discovery: discovery || pageChangeDiscovery(),
+    outcome: typeof outcome === "string" ? outcome : null,
   };
 }
 

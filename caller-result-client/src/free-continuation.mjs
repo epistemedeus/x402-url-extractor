@@ -1,7 +1,8 @@
 // Caller side of the free compare_page_observations continuation.
 // The token is a bearer capability: it is kept in a 0600 file and never
 // printed. correlationId is the non-authorizing chain id for measurement.
-// Discovery is a separate field and is never read from the token.
+// Discovery lives only on the separate measurement record, never beside the
+// token, and is never read from the token.
 // This module does not import merchant source, pay, sign, or fetch pages.
 import { createHash } from "node:crypto";
 import { constants } from "node:fs";
@@ -44,7 +45,23 @@ export function readFreeContinuation(result) {
     correlationId: continuation.correlationId,
     step: continuation.step,
     expiresAt: continuation.expiresAt,
-    discovery: continuation.discovery,
+  };
+}
+
+/** Separate measurement record from a result. Holds no token or key. */
+export function readFreeMeasurement(result) {
+  if (result?.isError === true) return null;
+  const measurement = toolBody(result)?.measurement;
+  if (!plain(measurement) || measurement.kind !== "measurement" || !FREE_CORRELATION_RE.test(measurement.correlationId || "")) return null;
+  const status = ["observed", "declared", "unknown"].includes(measurement.discovery?.status) ? measurement.discovery.status : "unknown";
+  return {
+    v: 1,
+    kind: "measurement",
+    tool: FREE_COMPARE_TOOL,
+    correlationId: measurement.correlationId,
+    step: Number.isSafeInteger(measurement.step) ? measurement.step : null,
+    discovery: { status, source: status === "unknown" ? null : (typeof measurement.discovery?.source === "string" ? measurement.discovery.source : null) },
+    outcome: typeof measurement.outcome === "string" ? measurement.outcome : null,
   };
 }
 
@@ -63,10 +80,13 @@ export function readFreeRefusal(result) {
   };
 }
 
+export const FREE_MEASUREMENT_META = "samedaydesk/measurement";
+
+// Token and discovery go on separate _meta keys, never one object.
 export function freeContinuationMeta({ token = null, correlationId = null, save = true, discovery = null } = {}) {
-  const request = token ? { token, correlationId, save } : { save: true };
-  if (typeof discovery === "string" && DISCOVERY_SOURCES.has(discovery)) request.discovery = discovery;
-  return { [FREE_CONTINUATION_META]: request };
+  const meta = { [FREE_CONTINUATION_META]: token ? { token, correlationId, save } : { save: true } };
+  if (typeof discovery === "string" && DISCOVERY_SOURCES.has(discovery)) meta[FREE_MEASUREMENT_META] = { discovery };
+  return meta;
 }
 
 /** One free call. Old callers can keep calling without _meta. */
@@ -85,7 +105,6 @@ export function freeContinuationPublicView(saved) {
     correlationId: saved.correlationId ?? null,
     step: saved.step ?? null,
     expiresAt: saved.expiresAt ?? null,
-    discovery: saved.discovery ?? { status: "unknown", source: null },
     tokenHeld: typeof saved.token === "string",
   };
 }
@@ -105,6 +124,7 @@ export function freeContinuationFileStore(file) {
       return saved;
     },
     async save(saved) {
+      if (Object.hasOwn(saved || {}, "discovery")) fail("continuation_record_mixed");
       await mkdir(dirname(path), { recursive: true });
       const temp = `${path}.${process.pid}.tmp`;
       const handle = await open(temp, constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC, 0o600);

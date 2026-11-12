@@ -4,10 +4,11 @@
 // correlationId. See CONTRACT.md for the stable v1 contract.
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { constants } from "node:fs";
-import { mkdir, open, readFile, rename } from "node:fs/promises";
+import { chmod, lstat, mkdir, open, rename, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
 export const CONTRACT_VERSION = 1;
+export const MODULE_VERSION = "1.1.0";
 export const TOKEN_PREFIX = "tc1";
 export const TOKEN_MAX_CHARS = 1024;
 export const TOKEN_RE = /^tc1\.[A-Za-z0-9_-]{16,900}\.[A-Za-z0-9_-]{43}$/;
@@ -20,12 +21,12 @@ export const BINDING_VALUE_RE = /^(sha256:)?[a-f0-9]{64}$/;
 export const TERMS_VERSION_RE = /^sha256:[a-f0-9]{64}$/;
 export const DISCOVERY_STATUSES = Object.freeze(["observed", "declared", "unknown"]);
 export const FILE_SCHEMA = "task-continuation.file.v1";
+export const FILE_MAX_BYTES = 64 * 1024;
 export const MIN_SECRET_CHARS = 32;
 export const DEFAULT_TTL_SECONDS = 7 * 24 * 60 * 60;
 export const MAX_TTL_SECONDS = 30 * 24 * 60 * 60;
 const MIN_TTL_SECONDS = 60;
 const MAX_BINDINGS = 8;
-const FILE_MAX_BYTES = 64 * 1024;
 
 export const ERROR_CODES = Object.freeze({
   continuation_unavailable: "continuation is not configured",
@@ -39,6 +40,15 @@ export const ERROR_CODES = Object.freeze({
   continuation_binding_mismatch: "continuation binding does not match",
   continuation_correlation_mismatch: "correlationId does not match this continuation token",
   continuation_file_invalid: "continuation file is not a supported shape",
+  // 1.1.0 store hardening (EIN activation-continuation store standard).
+  continuation_file_missing: "continuation file does not exist",
+  continuation_file_symlink: "continuation path is a symlink",
+  continuation_file_not_regular: "continuation path is not a regular file",
+  continuation_file_mode: "continuation file must be mode 0600 with no group or other bits",
+  continuation_file_owner: "continuation file is not owned by this user",
+  continuation_file_oversized: "continuation file exceeds 64 KiB",
+  continuation_file_parent_writable: "continuation directory is writable by group or other",
+  continuation_file_record_mixed: "continuation record must not hold discovery beside the token",
 });
 
 export class ContinuationError extends Error {
@@ -206,7 +216,10 @@ export function stepEventId(correlationId, step, namespace = "task-continuation"
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${variant}${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
 }
 
-/** Token-free view for stdout, logs, receipts and analytics. */
+/**
+ * Token-free view for stdout and logs. Carries no discovery: discovery belongs
+ * only on a separate measurement record (see measurementRecord).
+ */
 export function publicView(record) {
   if (!plain(record)) return null;
   return {
@@ -214,31 +227,121 @@ export function publicView(record) {
     correlationId: record.correlationId ?? null,
     step: record.step ?? null,
     expiresAt: record.expiresAt ?? null,
-    discovery: plain(record.discovery) ? record.discovery : { status: "unknown", source: null },
     tokenHeld: typeof record.token === "string",
   };
 }
 
-/** Atomic 0600 write of a caller-held record. */
+const MEASUREMENT_OUTCOME_RE = /^[a-z][a-z0-9_]{0,31}$/;
+
+/**
+ * Separate measurement record: correlationId, explicit discovery, step, tool
+ * and outcome only. Never a token, kid, or any token-derived field.
+ */
+export function measurementRecord({ correlationId, discovery: value, step, tool, outcome = null }) {
+  if (!isCorrelationId(correlationId) || !Number.isSafeInteger(step) || step < 0) fail("continuation_invalid");
+  if (typeof tool !== "string" || !TOOL_RE.test(tool)) fail("continuation_invalid");
+  const status = DISCOVERY_STATUSES.includes(value?.status) ? value.status : "unknown";
+  const source = status === "unknown" || typeof value?.source !== "string" ? null : value.source;
+  if (outcome !== null && (typeof outcome !== "string" || !MEASUREMENT_OUTCOME_RE.test(outcome))) fail("continuation_invalid");
+  return { v: CONTRACT_VERSION, kind: "measurement", tool, correlationId, step, discovery: { status, source }, outcome };
+}
+
+function storeFail(code) {
+  throw new ContinuationError(code);
+}
+
+async function checkParent(directory) {
+  const stats = await lstat(directory);
+  if (stats.isSymbolicLink()) storeFail("continuation_file_symlink");
+  if (!stats.isDirectory()) storeFail("continuation_file_not_regular");
+  if ((stats.mode & 0o022) !== 0) storeFail("continuation_file_parent_writable");
+}
+
+function checkFileStats(stats) {
+  if (stats.isSymbolicLink()) storeFail("continuation_file_symlink");
+  if (!stats.isFile()) storeFail("continuation_file_not_regular");
+  if (stats.size > FILE_MAX_BYTES) storeFail("continuation_file_oversized");
+  if ((stats.mode & 0o077) !== 0) storeFail("continuation_file_mode");
+  if (typeof process.getuid === "function" && stats.uid !== process.getuid()) storeFail("continuation_file_owner");
+}
+
+/**
+ * Atomic owner-only write. Refuses a symlinked target, a group/other writable
+ * parent, an oversized record, and a record that holds discovery beside the
+ * token. Temp file is O_CREAT|O_EXCL 0600 in the same directory, fsynced, then
+ * renamed; the directory is fsynced and the result re-checked.
+ */
 export async function saveContinuationFile(file, record) {
   if (!plain(record)) fail("continuation_file_invalid");
+  if (Object.hasOwn(record, "discovery") && record.token !== undefined && record.token !== null) storeFail("continuation_file_record_mixed");
   const path = resolve(file);
-  await mkdir(dirname(path), { recursive: true });
+  const body = `${JSON.stringify({ ...record, schema: FILE_SCHEMA })}\n`;
+  if (Buffer.byteLength(body, "utf8") > FILE_MAX_BYTES) storeFail("continuation_file_oversized");
+  const directory = dirname(path);
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  await checkParent(directory);
+  let existing = null;
+  try { existing = await lstat(path); } catch (error) { if (error?.code !== "ENOENT") throw error; }
+  if (existing?.isSymbolicLink()) storeFail("continuation_file_symlink");
+  if (existing && !existing.isFile()) storeFail("continuation_file_not_regular");
   const temp = `${path}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
-  const handle = await open(temp, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL, 0o600);
-  try { await handle.writeFile(`${JSON.stringify({ ...record, schema: FILE_SCHEMA })}\n`); } finally { await handle.close(); }
-  await rename(temp, path);
+  const handle = await open(temp, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW || 0), 0o600);
+  try {
+    await handle.writeFile(body);
+    await handle.sync();
+  } catch (error) {
+    await handle.close().catch(() => {});
+    await unlink(temp).catch(() => {});
+    throw error;
+  }
+  await handle.close();
+  await chmod(temp, 0o600);
+  try {
+    await rename(temp, path);
+  } catch (error) {
+    await unlink(temp).catch(() => {});
+    throw error;
+  }
+  const dirHandle = await open(directory, constants.O_RDONLY);
+  try { await dirHandle.sync(); } catch { /* Some filesystems refuse directory fsync. */ } finally { await dirHandle.close(); }
+  checkFileStats(await lstat(path));
   return path;
 }
 
+/**
+ * Owner-only read. lstat first (symlink, regular file, size, mode, owner),
+ * then open with O_NOFOLLOW and re-check the same inode with fstat.
+ */
 export async function loadContinuationFile(file) {
+  const path = resolve(file);
+  let stats;
+  try { stats = await lstat(path); } catch (error) {
+    if (error?.code === "ENOENT") storeFail("continuation_file_missing");
+    storeFail("continuation_file_invalid");
+  }
+  checkFileStats(stats);
+  let handle;
   let bytes;
-  try { bytes = await readFile(resolve(file)); } catch { fail("continuation_file_invalid"); }
-  if (bytes.length > FILE_MAX_BYTES) fail("continuation_file_invalid");
+  try {
+    handle = await open(path, constants.O_RDONLY | (constants.O_NOFOLLOW || 0));
+    const opened = await handle.stat();
+    if (opened.ino !== stats.ino || opened.dev !== stats.dev) storeFail("continuation_file_symlink");
+    checkFileStats(opened);
+    bytes = Buffer.alloc(opened.size);
+    const { bytesRead } = await handle.read(bytes, 0, bytes.length, 0);
+    bytes = bytes.subarray(0, bytesRead);
+  } catch (error) {
+    if (error instanceof ContinuationError) throw error;
+    if (error?.code === "ELOOP") storeFail("continuation_file_symlink");
+    storeFail("continuation_file_invalid");
+  } finally {
+    await handle?.close().catch(() => {});
+  }
   let record;
   try { record = JSON.parse(bytes.toString("utf8")); } catch { fail("continuation_file_invalid"); }
   if (!plain(record) || record.schema !== FILE_SCHEMA) fail("continuation_file_invalid");
   if (record.token !== null && record.token !== undefined && (typeof record.token !== "string" || !TOKEN_RE.test(record.token))) fail("continuation_file_invalid");
   if (record.correlationId !== undefined && !isCorrelationId(record.correlationId)) fail("continuation_file_invalid");
+  if (Object.hasOwn(record, "discovery") && typeof record.token === "string") storeFail("continuation_file_record_mixed");
   return record;
 }

@@ -70,10 +70,10 @@ export function freePageCompareContinuationRecipe(publicUrl) {
       completedTask: "immutable",
       artifactLineage: "client_side",
     },
-    fields: {
-      correlationId: "non-authorizing chain id for measurement",
-      token: "bearer capability, never log or share",
-      discovery: "observed | declared | unknown, never read from the token",
+    parts: {
+      continuation: "part 1 data: {continuation: {token, correlationId, step}}. Bearer token, never log or share. No discovery here.",
+      measurement: "part 2 data: {measurement: {kind, tool, correlationId, step, discovery, outcome}}. No token or key here.",
+      discovery: "observed | declared | unknown, only on the measurement part, never read from the token",
     },
   };
 }
@@ -84,16 +84,42 @@ function frozenCopy(value) {
   return Object.freeze(copy);
 }
 
+const MEASUREMENT_FORBIDDEN_KEYS = new Set(["token", "continuation", "kid"]);
+
+function walk(value, visit, depth = 0) {
+  if (!value || typeof value !== "object" || depth > 32) return;
+  visit(value);
+  for (const child of Object.values(value)) walk(child, visit, depth + 1);
+}
+
+function assertSeparated(data, measurement) {
+  walk(data, (node) => {
+    if (!Array.isArray(node) && Object.hasOwn(node, "token") && Object.hasOwn(node, "discovery")) {
+      throw new Error("discovery must not sit beside a token; send it on the measurement part");
+    }
+  });
+  walk(measurement, (node) => {
+    if (Array.isArray(node)) return;
+    for (const key of Object.keys(node)) {
+      if (MEASUREMENT_FORBIDDEN_KEYS.has(key)) throw new Error("measurement part must not carry a token or key");
+    }
+  });
+}
+
 /**
  * Client-side follow-up message for a terminal A2A task. Never mutates the
- * completed task; returns a new taskId in the same contextId.
+ * completed task; returns a new taskId in the same contextId. The continuation
+ * (token) and the measurement (discovery) travel as separate parts.
  */
-export function buildFreeCompareContinuationTask(priorTask, { data, taskId = randomUUID(), messageId = randomUUID() } = {}) {
+export function buildFreeCompareContinuationTask(priorTask, { data, measurement, taskId = randomUUID(), messageId = randomUUID() } = {}) {
   if (!priorTask || typeof priorTask !== "object" || typeof priorTask.id !== "string" || typeof priorTask.contextId !== "string") {
     throw new Error("prior task needs id and contextId");
   }
   if (!A2A_TERMINAL_STATES.has(priorTask.status?.state)) throw new Error("prior task is not terminal");
   if (taskId === priorTask.id) throw new Error("continuation needs a new taskId");
+  assertSeparated(data, measurement);
+  const parts = [{ data: data ?? null, mediaType: "application/json" }];
+  if (measurement !== undefined) parts.push({ data: { measurement }, mediaType: "application/json" });
   return frozenCopy({
     taskId,
     contextId: priorTask.contextId,
@@ -102,7 +128,7 @@ export function buildFreeCompareContinuationTask(priorTask, { data, taskId = ran
       messageId,
       contextId: priorTask.contextId,
       referenceTaskIds: [priorTask.id],
-      parts: [{ data: data ?? null, mediaType: "application/json" }],
+      parts,
     },
   });
 }

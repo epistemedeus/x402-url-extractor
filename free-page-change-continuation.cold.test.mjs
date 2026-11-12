@@ -80,8 +80,12 @@ test("fresh processes save, continue, recover, and continue offline", { timeout:
   assert.match(started.continuation.correlationId, CORRELATION);
   assert.equal(started.continuation.step, 0);
   assert.equal(started.continuation.tokenHeld, true);
-  assert.deepEqual(started.continuation.discovery, { status: "declared", source: "cli" });
+  assert.equal(Object.hasOwn(started.continuation, "discovery"), false);
+  assert.deepEqual(started.measurement.discovery, { status: "declared", source: "cli" });
+  assert.equal(started.measurement.correlationId, started.continuation.correlationId);
+  assert.equal(/"(token|continuation|kid|tokenHeld)"\s*:/.test(JSON.stringify(started.measurement)), false);
   const chain0 = JSON.parse(await readFile(file("chain.json"), "utf8"));
+  assert.equal(Object.hasOwn(chain0, "discovery"), false);
   assert.equal((await stat(file("chain.json"))).mode & 0o777, 0o600);
   assert.equal(start.stdout.includes(chain0.token), false);
   assert.equal(start.stderr.includes(chain0.token), false);
@@ -92,7 +96,7 @@ test("fresh processes save, continue, recover, and continue offline", { timeout:
   const continued = JSON.parse(cont.stdout);
   assert.equal(continued.continuation.correlationId, started.continuation.correlationId);
   assert.equal(continued.continuation.step, 1);
-  assert.deepEqual(continued.continuation.discovery, { status: "unknown", source: null });
+  assert.deepEqual(continued.measurement.discovery, { status: "unknown", source: null });
   const chain1 = JSON.parse(await readFile(file("chain.json"), "utf8"));
   assert.notEqual(chain1.token, chain0.token);
   assert.equal(cont.stdout.includes(chain1.token), false);
@@ -121,7 +125,10 @@ test("fresh processes save, continue, recover, and continue offline", { timeout:
   assert.equal(local.token, null);
   assert.equal(local.correlationId, started.continuation.correlationId);
   assert.equal(local.step, 2);
-  assert.deepEqual(local.discovery, { status: "declared", source: "cli" });
+  assert.equal(Object.hasOwn(local, "discovery"), false);
+  const savedLine = JSON.parse(offline.stderr.trim().split("\n").at(-1));
+  assert.deepEqual(savedLine.measurement.discovery, { status: "declared", source: "cli" });
+  assert.equal(savedLine.measurement.correlationId, local.correlationId);
   assert.equal(offline.stdout.includes(chain1.token), false);
   assert.equal(offline.stderr.includes(chain1.token), false);
 

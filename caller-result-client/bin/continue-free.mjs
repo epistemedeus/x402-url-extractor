@@ -14,6 +14,7 @@ import {
   freeContinuationPublicView,
   freeObservationDigest,
   readFreeContinuation,
+  readFreeMeasurement,
   readFreeRefusal,
 } from "../src/free-continuation.mjs";
 
@@ -61,12 +62,12 @@ try {
         correlationId: continuation.correlationId,
         step: continuation.step,
         expiresAt: continuation.expiresAt,
-        discovery: continuation.discovery,
       }
       : null;
     if (next) await store.save(next);
     const report = output ? { ok: output.ok, charged: output.charged, report: output.report } : null;
-    process.stdout.write(`${JSON.stringify({ state: "completed", output: report, continuation: freeContinuationPublicView(next) })}\n`);
+    // The measurement record is separate and carries no token state.
+    process.stdout.write(`${JSON.stringify({ state: "completed", output: report, continuation: freeContinuationPublicView(next), measurement: readFreeMeasurement(result) })}\n`);
     if (!next) process.exitCode = 2;
   }
 } catch (error) {

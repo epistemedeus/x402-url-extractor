@@ -31,6 +31,7 @@ import {
   pageChangeContinuationKeyring,
   pageChangeContinuationRefusalBody,
   pageChangeDiscovery,
+  pageChangeMeasurementRecord,
   readPageChangeContinuationRequest,
   verifyPageChangeContinuationToken,
 } from "./page-change-continuation.mjs";
@@ -301,9 +302,15 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null, dis
                 fields: suppliedArguments.fields,
                 previous: continued.previous,
                 env,
-                discovery,
               });
-              output = { ...output, continuation };
+              // Token and discovery never share an object.
+              const measurement = pageChangeMeasurementRecord({
+                correlationId: continuation.correlationId,
+                step: continuation.step,
+                discovery,
+                outcome: pageChangeServiceOutcome(output),
+              });
+              output = { ...output, continuation, measurement };
             } catch (error) {
               if (!(error instanceof PageChangeContinuationError)) throw error;
               note("refused", CONTINUATION_JOURNAL_CODE);

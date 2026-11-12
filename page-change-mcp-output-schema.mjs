@@ -255,8 +255,9 @@ const reportSchema = closed({
 });
 
 // Present only when the caller sent _meta samedaydesk/continuation. The token
-// is a caller-held bearer capability. correlationId never authorizes a restore,
-// and discovery is never read from the token.
+// is a caller-held bearer capability. correlationId never authorizes a restore.
+// Discovery lives only on the separate measurement record, never beside the
+// token, and is never read from the token.
 const continuationSchema = closed({
   v: z.literal(PAGE_CHANGE_CONTINUATION_VERSION),
   tool: z.literal(PAGE_CHANGE_CONTINUATION_TOOL),
@@ -265,16 +266,25 @@ const continuationSchema = closed({
   correlationId: z.string().regex(PAGE_CHANGE_CORRELATION_RE),
   step: merchantInteger().nonnegative(),
   expiresAt: z.string().regex(SNAPSHOT_TIME),
-  discovery: closed({
-    status: z.enum(PAGE_CHANGE_DISCOVERY_STATUSES),
-    source: z.enum(PAGE_CHANGE_DISCOVERY_SOURCES).nullable(),
-  }),
   next: closed({
     method: z.literal("tools/call"),
     tool: z.literal(PAGE_CHANGE_CONTINUATION_TOOL),
     meta: z.literal(PAGE_CHANGE_CONTINUATION_META),
     send: z.string().min(1),
   }),
+});
+
+const measurementSchema = closed({
+  v: z.literal(PAGE_CHANGE_CONTINUATION_VERSION),
+  kind: z.literal("measurement"),
+  tool: z.literal(PAGE_CHANGE_CONTINUATION_TOOL),
+  correlationId: z.string().regex(PAGE_CHANGE_CORRELATION_RE),
+  step: merchantInteger().nonnegative(),
+  discovery: closed({
+    status: z.enum(PAGE_CHANGE_DISCOVERY_STATUSES),
+    source: z.enum(PAGE_CHANGE_DISCOVERY_SOURCES).nullable(),
+  }),
+  outcome: z.string().regex(/^[a-z][a-z0-9_]{0,31}$/).nullable(),
 });
 
 export const pageChangeMcpOutputSchema = closed({
@@ -284,6 +294,7 @@ export const pageChangeMcpOutputSchema = closed({
   charged: z.literal(false),
   report: reportSchema,
   continuation: continuationSchema.optional(),
+  measurement: measurementSchema.optional(),
 });
 
 export function pageChangeMcpOutputJsonSchema() {

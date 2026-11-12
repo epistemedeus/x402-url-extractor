@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { chmod, chown, mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -13,6 +13,7 @@ import {
   issueContinuation,
   keyringFromString,
   loadContinuationFile,
+  measurementRecord,
   mintCorrelationId,
   publicView,
   refusal,
@@ -97,19 +98,92 @@ test("step event id is deterministic, v4-shaped and not the token", () => {
   assert.match(id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 });
 
-test("caller file is 0600 and the public view never carries the token", async (t) => {
+async function scratch(t) {
   const dir = await mkdtemp(path.join(tmpdir(), "task-continuation-"));
+  await chmod(dir, 0o700);
   t.after(() => rm(dir, { recursive: true, force: true }));
+  return dir;
+}
+
+async function refusedWith(promise, expected) {
+  await assert.rejects(promise, (error) => {
+    assert.ok(error instanceof ContinuationError);
+    assert.equal(error.code, expected);
+    return true;
+  });
+}
+
+test("happy path: caller file is 0600 and the public view never carries the token", async (t) => {
+  const dir = await scratch(t);
   const issued = issueContinuation({ keyring, tool, subject });
-  const file = await saveContinuationFile(path.join(dir, "chain.json"), { ...issued, discovery: { status: "declared", source: "cli" } });
+  const file = await saveContinuationFile(path.join(dir, "chain.json"), issued);
   assert.equal((await stat(file)).mode & 0o777, 0o600);
   const loaded = await loadContinuationFile(file);
   assert.equal(loaded.token, issued.token);
   const view = publicView(loaded);
   assert.equal(JSON.stringify(view).includes(issued.token), false);
+  assert.equal(Object.hasOwn(view, "discovery"), false);
   assert.equal(view.tokenHeld, true);
   assert.equal(view.correlationId, issued.correlationId);
   process.stdout.write(`# example correlationId ${view.correlationId}\n`);
-  await assert.rejects(loadContinuationFile(path.join(dir, "missing.json")), (error) => error.code === "continuation_file_invalid");
   assert.ok((await readFile(file, "utf8")).includes("task-continuation.file.v1"));
+  const again = await saveContinuationFile(file, { ...issued, step: 1 });
+  assert.equal((await loadContinuationFile(again)).step, 1);
+  assert.deepEqual((await readdir(dir)).filter((name) => name.endsWith(".tmp")), []);
+});
+
+test("store refuses missing, symlink, non-regular, wrong mode and oversized files", async (t) => {
+  const dir = await scratch(t);
+  const issued = issueContinuation({ keyring, tool, subject });
+  const real = await saveContinuationFile(path.join(dir, "real.json"), issued);
+  await refusedWith(loadContinuationFile(path.join(dir, "missing.json")), "continuation_file_missing");
+  const link = path.join(dir, "link.json");
+  await symlink(real, link);
+  await refusedWith(loadContinuationFile(link), "continuation_file_symlink");
+  await refusedWith(saveContinuationFile(link, issued), "continuation_file_symlink");
+  const folder = path.join(dir, "folder.json");
+  await mkdir(folder);
+  await refusedWith(loadContinuationFile(folder), "continuation_file_not_regular");
+  await refusedWith(saveContinuationFile(folder, issued), "continuation_file_not_regular");
+  const loose = path.join(dir, "loose.json");
+  await writeFile(loose, await readFile(real));
+  await chmod(loose, 0o640);
+  await refusedWith(loadContinuationFile(loose), "continuation_file_mode");
+  await chmod(loose, 0o604);
+  await refusedWith(loadContinuationFile(loose), "continuation_file_mode");
+  const big = path.join(dir, "big.json");
+  await writeFile(big, "x".repeat(70 * 1024), { mode: 0o600 });
+  await chmod(big, 0o600);
+  await refusedWith(loadContinuationFile(big), "continuation_file_oversized");
+  await refusedWith(saveContinuationFile(path.join(dir, "huge.json"), { ...issued, padding: "x".repeat(70 * 1024) }), "continuation_file_oversized");
+});
+
+test("store refuses a group or other writable parent directory", async (t) => {
+  const dir = await scratch(t);
+  const open = path.join(dir, "shared");
+  await mkdir(open);
+  await chmod(open, 0o777);
+  await refusedWith(saveContinuationFile(path.join(open, "chain.json"), issueContinuation({ keyring, tool, subject })), "continuation_file_parent_writable");
+});
+
+test("store refuses a file owned by another user", { skip: typeof process.getuid !== "function" || process.getuid() !== 0 ? "needs root to chown a fixture" : false }, async (t) => {
+  const dir = await scratch(t);
+  const file = await saveContinuationFile(path.join(dir, "chain.json"), issueContinuation({ keyring, tool, subject }));
+  await chown(file, 65534, 65534);
+  await refusedWith(loadContinuationFile(file), "continuation_file_owner");
+});
+
+test("measurement record is separate from the token", async (t) => {
+  const issued = issueContinuation({ keyring, tool, subject });
+  const record = measurementRecord({ correlationId: issued.correlationId, discovery: { status: "declared", source: "cli" }, step: issued.step, tool, outcome: "changed" });
+  assert.deepEqual(Object.keys(record).sort(), ["correlationId", "discovery", "kind", "outcome", "step", "tool", "v"]);
+  assert.deepEqual(record.discovery, { status: "declared", source: "cli" });
+  const text = JSON.stringify(record);
+  assert.equal(text.includes(issued.token), false);
+  assert.equal(text.includes(issued.token.split(".")[2]), false);
+  assert.equal(/"(token|continuation|kid)"/.test(text), false);
+  assert.deepEqual(measurementRecord({ correlationId: issued.correlationId, step: 0, tool }).discovery, { status: "unknown", source: null });
+  assert.equal(Object.hasOwn(issued, "discovery"), false);
+  const dir = await scratch(t);
+  await refusedWith(saveContinuationFile(path.join(dir, "mixed.json"), { ...issued, discovery: record.discovery }), "continuation_file_record_mixed");
 });

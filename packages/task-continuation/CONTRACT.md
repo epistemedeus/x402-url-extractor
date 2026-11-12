@@ -1,6 +1,6 @@
 # task-continuation v1 contract
 
-Status: stable v1. A dependency-free ESM module (`index.mjs`, Node 20.19 or later). It gives any CLI or server a caller-held continuation for one task chain. Intended consumers: EIN, SameDayDesk and Neomorphic CLIs.
+Status: stable v1, module version 1.1.0. A dependency-free ESM module (`index.mjs`, Node 20.19 or later). It gives any CLI or server a caller-held continuation for one task chain. Intended consumers: EIN, SameDayDesk and Neomorphic CLIs.
 
 ## What it does
 
@@ -8,7 +8,8 @@ Status: stable v1. A dependency-free ESM module (`index.mjs`, Node 20.19 or late
 - Mints and validates a non-authorizing `correlationId`.
 - Builds a discovery value and a fixed refusal body with a `nextMethod` cue.
 - Derives a deterministic step event id for journal dedup.
-- Saves and loads a caller-held record in a 0600 file, and gives a token-free public view.
+- Saves and loads a caller-held record in an owner-only 0600 file, hardened to the EIN activation-continuation store standard (see Store), and gives a token-free public view.
+- Builds a separate measurement record (`measurementRecord`) that carries correlationId and discovery and never the token.
 
 ## What it does NOT do
 
@@ -56,9 +57,50 @@ The verify check order is fixed:
 10. `continuation_binding_mismatch`
 11. `continuation_correlation_mismatch`
 
-Also: `continuation_invalid` (bad issue arguments or unknown code) and `continuation_file_invalid`.
+Also: `continuation_invalid` (bad issue arguments or unknown code) and `continuation_file_invalid` (unreadable, unparsable, or wrong schema).
+
+Store codes (added in 1.1.0):
+- `continuation_file_missing`
+- `continuation_file_symlink`
+- `continuation_file_not_regular`
+- `continuation_file_mode`
+- `continuation_file_owner`
+- `continuation_file_oversized`
+- `continuation_file_parent_writable`
+- `continuation_file_record_mixed` (discovery stored beside a token)
 
 Refusal body (`refusal(code, { nextMethod, nextStep, ...extra })`): `{ ok: false, charged: false, paymentRequired: false, error, code, message, nextMethod, nextStep }`. The message is fixed per code. Never put caller input into `nextStep` or `extra`.
+
+## Measurement record
+
+`measurementRecord({ correlationId, discovery, step, tool, outcome })` returns `{ v: 1, kind: "measurement", tool, correlationId, step, discovery: { status, source }, outcome }`. Measurement counts discovery only from this separate record. It refuses any record where discovery sits in the same object as a bearer token. So:
+- A measurement record never has a key named `token`, `continuation` or `kid`, and contains no token substring.
+- The object that holds the token (the issue result or the caller file) never has a `discovery` field. `saveContinuationFile` and `loadContinuationFile` refuse one with `continuation_file_record_mixed`.
+- `publicView` (stdout and logs) carries no discovery.
+
+## Store
+
+Standard matched: epistemedeus/ein-llc-lean@bb8be3107d6c4f8da264a33185c1ff2c6aed3cbe:tools/activation-continuation/src/store.mjs (`readContinuation`, `writeContinuation`).
+
+Read (`loadContinuationFile`):
+1. `lstat` the path. A missing path gives `continuation_file_missing`.
+2. Refuse a symlink (`continuation_file_symlink`), a non-regular file (`continuation_file_not_regular`), more than 64 KiB (`continuation_file_oversized`), any group or other mode bit (`continuation_file_mode`), and an owner uid other than `process.getuid()` where it exists (`continuation_file_owner`).
+3. Open with `O_RDONLY | O_NOFOLLOW`, `fstat`, require the same dev and inode, and re-run the checks.
+4. Parse, then check the schema and token shape.
+
+Write (`saveContinuationFile`):
+1. Refuse a record over 64 KiB, or one with discovery beside a token.
+2. `mkdir -p` the parent (mode 0700 when created). Refuse a parent that is a symlink, is not a directory, or is group or other writable.
+3. Refuse a target that is a symlink or not a regular file.
+4. Write to a temp file in the same directory, opened with `O_CREAT | O_EXCL | O_NOFOLLOW` and mode 0600. Then `fsync`, `chmod 0600`, and atomic `rename`.
+5. `fsync` the directory where the filesystem allows it. `lstat` the result and re-run the read checks.
+
+Differences from EIN: EIN returns `null` for a missing file and uses one code, `continuation_permissions`, for every permission failure. This module keeps distinct stable codes and refuses a group or other writable parent directory, which the EIN store does not check.
+
+## Changelog
+
+- 1.1.0: hardened store and new store codes (additive); `measurementRecord` (additive). `publicView` no longer returns `discovery`, because discovery moved to the measurement record so that no caller-facing view mixes it with token state. This is the one non-additive change; v1 wire fields and token format are unchanged. A missing file now gives `continuation_file_missing` instead of `continuation_file_invalid`.
+- 1.0.0: initial v1 contract.
 
 ## Versioning rules
 
