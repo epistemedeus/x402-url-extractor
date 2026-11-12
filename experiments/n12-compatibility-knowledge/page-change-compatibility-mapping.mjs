@@ -25,8 +25,21 @@ export const TASKS_EXTENSION = Object.freeze({
   id: "io.modelcontextprotocol/tasks",
   implementedOnFreeProfile: false,
   resultTypeTask: "task",
+  taskIdField: "taskId",
   mustNotReturnTaskWithoutDeclaration: true,
+  // Per-request declaration from ext-tasks specification/2026-07-28/tasks.md.
+  clientCapabilitiesMetaKey: "io.modelcontextprotocol/clientCapabilities",
 });
+
+export function tasksClientCapabilityMeta() {
+  return {
+    [TASKS_EXTENSION.clientCapabilitiesMetaKey]: {
+      extensions: {
+        [TASKS_EXTENSION.id]: {},
+      },
+    },
+  };
+}
 
 // PR 271 / live recovery 2026-11-09: tools/call of an unrecognized name used
 // to return only -32602 "Unknown tool", which left official clients with no
@@ -65,6 +78,19 @@ export const OFFICIAL_CLIENT_NEGOTIATION = Object.freeze({
   currentClient: "2.4.0",
   supportedFreeProtocol: FREE_PAGE_CHANGE.protocol,
   refusedFreeProtocol: FREE_PAGE_CHANGE.refusedProtocol,
+  // Exact refusal already asserted in mcp-current-client-compat.test.mjs at
+  // e90676f4: CurrentClient 2.4.0 with versionNegotiation mode { pin: "2026-07-28" }
+  // rejects connect with SdkError code "ERA_NEGOTIATION_FAILED"; watched
+  // server/discover to the free profile has status 400, errorCode -32000, and
+  // errorMessage matching /Unsupported protocol version: 2026-07-28/ and
+  // /2025-11-25/.
+  pinClientName: "current-pin",
+  pinClientVersion: "2.4.0",
+  pinClientErrorCode: "ERA_NEGOTIATION_FAILED",
+  discoverHttpStatus: 400,
+  discoverJsonRpcCode: -32000,
+  discoverMessageUnsupported: /Unsupported protocol version: 2026-07-28/,
+  discoverMessageSupported: /2025-11-25/,
 });
 
 // Existing caller-result recovery package, composed by contract only. This
