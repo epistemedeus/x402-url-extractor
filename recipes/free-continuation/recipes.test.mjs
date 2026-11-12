@@ -25,6 +25,7 @@ import {
   pageChangeContinuationEventId,
   pageChangeContinuationRefusalBody,
   pageChangeDiscovery,
+  pageChangeEntrySurface,
   pageChangeMeasurementRecord,
   readPageChangeContinuationRequest,
   verifyPageChangeContinuationToken,
@@ -249,8 +250,9 @@ test("success shape and A2A follow-up keep the token and discovery apart", () =>
   assert.deepEqual(success.continuation.next, issued.next);
   assert.equal(success.continuation.tool, issued.tool);
   assert.equal(success.continuation.v, issued.v);
-  const record = pageChangeMeasurementRecord({ correlationId: issued.correlationId, step: 0, discovery: pageChangeDiscovery({ declared: "mcp" }), outcome: "changed" });
+  const record = pageChangeMeasurementRecord({ correlationId: issued.correlationId, step: 0, discovery: pageChangeDiscovery({ declared: "mcp" }), outcome: "changed", occurredAt: success.measurement.occurredAt, entrySurface: pageChangeEntrySurface({ env: {} }) });
   assert.deepEqual(success.measurement, record);
+  assert.equal(record.occurredAt, success.measurement.occurredAt, "documented occurredAt is a valid emitter timestamp");
   assert.equal(Object.hasOwn(success.continuation, "discovery"), false);
 
   const followup = substitute(json(one("a2a-followup", null)), vars);
@@ -259,7 +261,7 @@ test("success shape and A2A follow-up keep the token and discovery apart", () =>
   assert.equal(followup.contextId, followup.message.contextId);
   assert.deepEqual(Object.keys(part1.data.continuation).sort(), ["correlationId", "step", "token"]);
   assert.equal(part1.data.continuation.token, issued.token);
-  assert.deepEqual(part2.data.measurement, pageChangeMeasurementRecord({ correlationId: issued.correlationId, step: 0, discovery: pageChangeDiscovery({ declared: "a2a" }), outcome: "changed" }));
+  assert.deepEqual(part2.data.measurement, pageChangeMeasurementRecord({ correlationId: issued.correlationId, step: 0, discovery: pageChangeDiscovery({ declared: "a2a" }), outcome: "changed", occurredAt: part2.data.measurement.occurredAt, entrySurface: pageChangeEntrySurface({ env: {} }) }));
   assert.equal(/"(token|kid|continuation)"/.test(JSON.stringify(part2)), false);
 });
 
@@ -282,7 +284,10 @@ test("node CLI recipe runs: save, continue, typed refusal, and recovery after a 
   assert.deepEqual(Object.keys(chain), Object.keys(json(one("saved-file", null, "node-cli.md"))));
   assert.equal(chain.token, null);
   const measurementLine = JSON.parse(saved.stderr.trim().split("\n").at(-1));
-  assert.deepEqual(measurementLine, substitute(json(one("cli-measurement", null, "node-cli.md")), { correlationId: chain.correlationId }));
+  assert.match(measurementLine.measurement.occurredAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  const documented = substitute(json(one("cli-measurement", null, "node-cli.md")), { correlationId: chain.correlationId });
+  documented.measurement.occurredAt = measurementLine.measurement.occurredAt;
+  assert.deepEqual(measurementLine, documented);
 
   const refused = run(process.execPath, cliArgs("refuse"), { cwd: dir });
   assert.equal(refused.status, 2);
@@ -449,6 +454,8 @@ test("live Streamable HTTP round trip: recipes, Python and the Node client again
   assert.equal(pageChangeMcpOutputSchema.safeParse(content).success, true);
   assert.equal(content.charged, false);
   assert.deepEqual(content.measurement.discovery, { status: "declared", source: "llms" });
+  assert.deepEqual(content.measurement.entrySurface, pageChangeEntrySurface({ env: {} }));
+  assert.deepEqual(content.measurement.discoveryBasis, { kind: "caller_meta", matched: null });
   assert.equal(content.measurement.outcome, json(one("success-shape", null)).measurement.outcome);
   const vars = { token: content.continuation.token, correlationId: content.continuation.correlationId };
   const continued = await post(substitute(json(one("mcp-request", "continue", "curl-http.md")), vars));

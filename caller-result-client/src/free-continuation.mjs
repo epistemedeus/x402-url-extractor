@@ -62,7 +62,27 @@ export function readFreeMeasurement(result) {
     step: Number.isSafeInteger(measurement.step) ? measurement.step : null,
     discovery: { status, source: status === "unknown" ? null : (typeof measurement.discovery?.source === "string" ? measurement.discovery.source : null) },
     outcome: typeof measurement.outcome === "string" ? measurement.outcome : null,
+    // Additive emitter fields, copied only in their documented shapes.
+    occurredAt: typeof measurement.occurredAt === "string" && OCCURRED_AT_RE.test(measurement.occurredAt) ? measurement.occurredAt : null,
+    discoveryBasis: readBasis(measurement.discoveryBasis),
+    entrySurface: readEntrySurface(measurement.entrySurface),
   };
+}
+
+const OCCURRED_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+const BASIS_KINDS = new Set(["request_referer", "mount_hook", "caller_meta"]);
+
+function readBasis(value) {
+  if (!plain(value) || !BASIS_KINDS.has(value.kind)) return null;
+  const matched = typeof value.matched === "string" && value.matched.length > 0 && value.matched.length <= 128 ? value.matched : null;
+  return { kind: value.kind, matched };
+}
+
+function readEntrySurface(value) {
+  if (!plain(value) || !["hosted", "installed"].includes(value.surface)
+    || !["deployment_marker", "no_deployment_marker", "local_cli"].includes(value.basis)
+    || !["mcp_streamable_http", "cli"].includes(value.transport)) return null;
+  return { surface: value.surface, basis: value.basis, transport: value.transport };
 }
 
 /** Bounded refusal view. Only server-owned codes and cues are copied. */

@@ -108,7 +108,7 @@ function assertRefusal(result, code, secrets = []) {
 function assertSeparated(structured) {
   const { continuation, measurement } = structured;
   assert.equal(Object.hasOwn(continuation, "discovery"), false);
-  assert.deepEqual(Object.keys(measurement).sort(), ["correlationId", "discovery", "kind", "outcome", "step", "tool", "v"]);
+  assert.deepEqual(Object.keys(measurement).sort(), ["correlationId", "discovery", "discoveryBasis", "entrySurface", "kind", "occurredAt", "outcome", "step", "tool", "v"]);
   assert.equal(measurement.kind, "measurement");
   assert.equal(measurement.correlationId, continuation.correlationId);
   assert.equal(measurement.step, continuation.step);

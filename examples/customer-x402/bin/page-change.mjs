@@ -159,10 +159,16 @@ async function continuationMain(input) {
     expiresAt: null,
   });
   // Separate measurement record: no token, no key, no file path.
+  const isDeclared = DISCOVERY_SOURCES.has(declared);
   const measurement = {
     v: 1, kind: "measurement", tool: TOOL, correlationId, step,
-    discovery: DISCOVERY_SOURCES.has(declared) ? { status: "declared", source: declared } : { status: "unknown", source: null },
+    discovery: isDeclared ? { status: "declared", source: declared } : { status: "unknown", source: null },
     outcome: null,
+    // Additive: local clock at handling time, why discovery has its status,
+    // and the entry surface, which for this CLI is always an installed copy.
+    occurredAt: new Date().toISOString(),
+    discoveryBasis: isDeclared ? { kind: "caller_meta", matched: null } : null,
+    entrySurface: { surface: "installed", basis: "local_cli", transport: "cli" },
   };
   process.stderr.write(`${JSON.stringify({ saved: true, measurement })}\n`);
   return 0;

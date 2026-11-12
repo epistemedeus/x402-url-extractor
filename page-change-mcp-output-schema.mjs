@@ -14,8 +14,12 @@ import {
   PAGE_CHANGE_CONTINUATION_TOOL,
   PAGE_CHANGE_CONTINUATION_VERSION,
   PAGE_CHANGE_CORRELATION_RE,
+  PAGE_CHANGE_DISCOVERY_BASIS_KINDS,
   PAGE_CHANGE_DISCOVERY_SOURCES,
   PAGE_CHANGE_DISCOVERY_STATUSES,
+  PAGE_CHANGE_ENTRY_BASES,
+  PAGE_CHANGE_ENTRY_SURFACES,
+  PAGE_CHANGE_ENTRY_TRANSPORTS,
 } from "./page-change-continuation.mjs";
 import {
   ALL_FIELDS,
@@ -285,6 +289,17 @@ const measurementSchema = closed({
     source: z.enum(PAGE_CHANGE_DISCOVERY_SOURCES).nullable(),
   }),
   outcome: z.string().regex(/^[a-z][a-z0-9_]{0,31}$/).nullable(),
+  // Additive. Optional so a record from an earlier emitter still validates.
+  occurredAt: z.string().regex(SNAPSHOT_TIME).optional(),
+  discoveryBasis: closed({
+    kind: z.enum(PAGE_CHANGE_DISCOVERY_BASIS_KINDS),
+    matched: z.string().min(1).max(128).nullable(),
+  }).nullable().optional(),
+  entrySurface: closed({
+    surface: z.enum(PAGE_CHANGE_ENTRY_SURFACES),
+    basis: z.enum(PAGE_CHANGE_ENTRY_BASES),
+    transport: z.enum(PAGE_CHANGE_ENTRY_TRANSPORTS),
+  }).nullable().optional(),
 });
 
 export const pageChangeMcpOutputSchema = closed({

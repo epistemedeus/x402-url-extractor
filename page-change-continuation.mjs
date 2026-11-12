@@ -21,6 +21,25 @@ export const PAGE_CHANGE_CORRELATION_RE = /^ae:corr:v1:[A-Za-z0-9_-]{22}$/;
 export const PAGE_CHANGE_DISCOVERY_STATUSES = Object.freeze(["observed", "declared", "unknown"]);
 export const PAGE_CHANGE_DISCOVERY_SOURCES = Object.freeze(["a2a", "mcp", "cli", "llms", "skill", "registry", "other"]);
 export const PAGE_CHANGE_CONTINUATION_TEST_KID = "test";
+// Additive measurement fields (Measurement consumer, neomorphic-io #473).
+export const PAGE_CHANGE_DISCOVERY_BASIS_KINDS = Object.freeze(["request_referer", "mount_hook", "caller_meta"]);
+export const PAGE_CHANGE_ENTRY_SURFACES = Object.freeze(["hosted", "installed"]);
+export const PAGE_CHANGE_ENTRY_BASES = Object.freeze(["deployment_marker", "no_deployment_marker", "local_cli"]);
+export const PAGE_CHANGE_ENTRY_TRANSPORTS = Object.freeze(["mcp_streamable_http", "cli"]);
+// Platform-set marker of the hosted SameDayDesk deployment. Only its presence
+// is read; the value is never copied into a record.
+export const PAGE_CHANGE_DEPLOYMENT_MARKER_ENV = "RAILWAY_DEPLOYMENT_ID";
+// Same-host discovery documents the server publishes, by exact path.
+const REFERER_DOCUMENTS = Object.freeze(new Map([
+  ["/llms.txt", "llms"],
+  ["/skill.md", "skill"],
+  ["/SKILL.md", "skill"],
+  ["/.well-known/agent-card.json", "a2a"],
+  ["/.well-known/agent.json", "a2a"],
+]));
+const REFERER_REGISTRY_HOSTS = Object.freeze(new Set(["registry.modelcontextprotocol.io"]));
+const REFERER_MAX_CHARS = 2048;
+const OCCURRED_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 // Publicly known. Used only when PAGE_CHANGE_CONTINUATION_TEST_KEY=1 and no
 // keyring is configured. Never a production secret.
@@ -292,19 +311,95 @@ export function issuePageChangeContinuation({ after, fields, previous = null, en
 }
 
 /**
+ * Server-side discovery evidence from the request's Referer header. Observed
+ * only when the referring page is one of this server's own discovery documents
+ * on the same Host the request was addressed to, or a known MCP registry host.
+ * Returns { source, basis } with a fixed matched path or host, never the raw
+ * header, query or fragment. Never reads caller _meta. Returns null otherwise.
+ * A Referer is request evidence the server sees, not an authenticated claim.
+ */
+export function pageChangeRefererEvidence(req) {
+  const headers = req?.headers;
+  const raw = typeof headers?.referer === "string" ? headers.referer : (typeof headers?.referrer === "string" ? headers.referrer : null);
+  if (!raw || raw.length > REFERER_MAX_CHARS) return null;
+  let url;
+  try { url = new URL(raw); } catch { return null; }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  const host = typeof headers.host === "string" ? headers.host.trim().toLowerCase() : "";
+  if (host && url.host.toLowerCase() === host && REFERER_DOCUMENTS.has(url.pathname)) {
+    return { source: REFERER_DOCUMENTS.get(url.pathname), basis: { kind: "request_referer", matched: url.pathname } };
+  }
+  const hostname = url.hostname.toLowerCase();
+  if (REFERER_REGISTRY_HOSTS.has(hostname)) return { source: "registry", basis: { kind: "request_referer", matched: hostname } };
+  return null;
+}
+
+/**
+ * Discovery plus its basis. observed is server evidence: { source, basis } from
+ * pageChangeRefererEvidence, or a bare source string from a mount hook (basis
+ * kind mount_hook). declared is the caller's _meta value and never becomes
+ * observed. Status order and values are the same as pageChangeDiscovery.
+ */
+export function pageChangeDiscoveryWithBasis({ observed = null, declared = null } = {}) {
+  const observedSource = typeof observed === "string" ? observed : (plain(observed) ? observed.source : null);
+  const discovery = pageChangeDiscovery({ observed: observedSource, declared });
+  if (discovery.status === "observed") {
+    const basis = plain(observed) && plain(observed.basis) && observed.basis.kind === "request_referer" && typeof observed.basis.matched === "string"
+      ? { kind: "request_referer", matched: observed.basis.matched }
+      : { kind: "mount_hook", matched: null };
+    return { discovery, discoveryBasis: basis };
+  }
+  if (discovery.status === "declared") return { discovery, discoveryBasis: { kind: "caller_meta", matched: null } };
+  return { discovery, discoveryBasis: null };
+}
+
+/**
+ * Entry surface from runtime facts only, never from the request. A CLI step is
+ * installed (local_cli). A server is hosted when the platform deployment marker
+ * is present in its environment, otherwise installed (a self-run server).
+ */
+export function pageChangeEntrySurface({ env = process.env, transport = "mcp_streamable_http" } = {}) {
+  if (transport === "cli") return { surface: "installed", basis: "local_cli", transport: "cli" };
+  const marker = env?.[PAGE_CHANGE_DEPLOYMENT_MARKER_ENV];
+  const hosted = typeof marker === "string" && marker.trim().length > 0;
+  return { surface: hosted ? "hosted" : "installed", basis: hosted ? "deployment_marker" : "no_deployment_marker", transport: "mcp_streamable_http" };
+}
+
+function occurredAtFrom(occurredAt, nowMs) {
+  if (typeof occurredAt === "string" && OCCURRED_AT_RE.test(occurredAt) && new Date(Date.parse(occurredAt)).toISOString() === occurredAt) return occurredAt;
+  const ms = Number.isFinite(nowMs) ? nowMs : Date.now();
+  return new Date(ms).toISOString();
+}
+
+function defaultBasis(discovery) {
+  if (discovery?.status === "declared") return { kind: "caller_meta", matched: null };
+  if (discovery?.status === "observed") return { kind: "mount_hook", matched: null };
+  return null;
+}
+
+/**
  * Separate measurement record. Measurement counts discovery only from here and
  * refuses any object that holds discovery beside a bearer token, so this record
  * carries no token, kid or other token-derived field.
+ *
+ * Additive fields: occurredAt (server clock when the step was handled; pass
+ * nowMs or occurredAt to inject), discoveryBasis (why discovery has its
+ * status; null when unknown) and entrySurface (installed or hosted, from
+ * runtime facts; null when the emitter did not state it).
  */
-export function pageChangeMeasurementRecord({ correlationId, step, discovery, outcome = null }) {
+export function pageChangeMeasurementRecord({ correlationId, step, discovery, outcome = null, occurredAt = null, nowMs = Date.now(), discoveryBasis = undefined, entrySurface = null }) {
+  const resolved = discovery || pageChangeDiscovery();
   return {
     v: PAGE_CHANGE_CONTINUATION_VERSION,
     kind: "measurement",
     tool: PAGE_CHANGE_CONTINUATION_TOOL,
     correlationId,
     step,
-    discovery: discovery || pageChangeDiscovery(),
+    discovery: resolved,
     outcome: typeof outcome === "string" ? outcome : null,
+    occurredAt: occurredAtFrom(occurredAt, nowMs),
+    discoveryBasis: discoveryBasis === undefined ? defaultBasis(resolved) : discoveryBasis,
+    entrySurface: plain(entrySurface) ? { surface: entrySurface.surface, basis: entrySurface.basis, transport: entrySurface.transport } : null,
   };
 }
 
