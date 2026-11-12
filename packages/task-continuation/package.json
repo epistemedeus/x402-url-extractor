@@ -1,16 +1,21 @@
 {
   "name": "task-continuation",
-  "version": "1.1.0",
-  "description": "Dependency-free caller-held continuation: signed bearer token with kid keyring and expiry, non-authorizing correlationId, discovery enum, refusal shape, deterministic step event id, 0600 caller file.",
+  "version": "1.2.0",
+  "description": "Dependency-free caller-held continuation: signed bearer token with kid keyring and expiry, canonical-JSON hashing, non-authorizing correlationId, discovery enum, refusal shape with exit map, deterministic step event id, validated 0600 caller file.",
   "type": "module",
   "private": true,
   "engines": {
     "node": ">=20.19.0"
   },
   "exports": {
-    ".": "./index.mjs"
+    ".": "./index.mjs",
+    "./record.schema.json": "./record.schema.json"
   },
-  "files": ["index.mjs", "CONTRACT.md"],
+  "files": [
+    "index.mjs",
+    "CONTRACT.md",
+    "record.schema.json"
+  ],
   "scripts": {
     "test": "node --test test/index.test.mjs"
   },
