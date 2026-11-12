@@ -17,7 +17,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SHA = /^[0-9a-f]{40}$/;
 // Built from parts so this file does not match itself.
 const INTERNAL_BRAND = new RegExp(["\\b", "Pi", "lot", "\\b"].join(""));
-const CERTIFIED = new RegExp(["\\b", "certi", "fied", "\\b"].join(""), "i");
+const CERT_CLAIM_WORDING = new RegExp(["\\b", "certi", "fied", "\\b"].join(""), "i");
 
 function walk(dir) {
   return readdirSync(dir).flatMap((name) => {
@@ -117,6 +117,6 @@ test("package text uses the SameDayDesk brand, no em dashes, no certification cl
     const name = relative(root, path);
     assert.equal(text.includes("\u2014"), false, `em dash in ${name}`);
     assert.equal(INTERNAL_BRAND.test(text), false, `internal brand in ${name}`);
-    assert.equal(CERTIFIED.test(text), false, `certification wording in ${name}`);
+    assert.equal(CERT_CLAIM_WORDING.test(text), false, `certification wording in ${name}`);
   }
 });
