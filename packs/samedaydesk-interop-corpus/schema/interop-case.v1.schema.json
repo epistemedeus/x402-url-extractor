@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "samedaydesk.interop-corpus.case.v1",
+  "title": "SameDayDesk interoperability corpus case",
+  "description": "One retained interoperability failure with its preserved author, allowed publication, fixture provenance, source versions, and earlier negative. src/corpus.mjs validateCase enforces the same required fields without a schema dependency.",
+  "type": "object",
+  "required": ["schema", "id", "title", "faultSurface", "author", "publication", "fixtureProvenance", "sourceVersions", "earlierNegative", "fix", "recovery", "outcomeClass", "replay", "consumer"],
+  "properties": {
+    "schema": { "const": "samedaydesk.interop-corpus.case.v1" },
+    "id": { "type": "string", "pattern": "^CK-N12-[0-9]{3}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "faultSurface": { "type": "string", "minLength": 1 },
+    "author": {
+      "type": "object",
+      "required": ["name", "role"],
+      "properties": { "name": { "type": "string", "minLength": 1 }, "role": { "type": "string", "minLength": 1 } }
+    },
+    "publication": {
+      "type": "object",
+      "required": ["allowed", "basis", "restrictions"],
+      "properties": {
+        "allowed": { "enum": ["public-repo-merged", "public-repo-draft-pr", "repo-internal"] },
+        "basis": { "type": "string", "minLength": 1 },
+        "restrictions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "fixtureProvenance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["role", "path"],
+        "oneOf": [
+          { "required": ["repo", "commit", "gitBlobSha"] },
+          { "required": ["package", "version", "quote"] }
+        ],
+        "properties": {
+          "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "gitBlobSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+        }
+      }
+    },
+    "sourceVersions": {
+      "type": "object",
+      "required": ["clientSdk", "serverProtocol", "serviceVersion", "merchantCommit"]
+    },
+    "earlierNegative": {
+      "type": "object",
+      "required": ["kind", "commit", "result", "cause", "evidence", "signature"],
+      "properties": {
+        "kind": { "enum": ["test-failure", "protocol-refusal", "detection-gap"] },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "fix": { "type": ["object", "null"] },
+    "recovery": { "type": "object", "required": ["action", "expected", "implementation"] },
+    "outcomeClass": {
+      "type": "object",
+      "required": ["earlierNegative", "changedImplementation"],
+      "properties": {
+        "earlierNegative": { "enum": ["successful", "known_failure", "unsupported", "not_applicable", "harness_failure"] },
+        "changedImplementation": { "enum": ["successful", "known_failure", "unsupported", "not_applicable", "harness_failure"] }
+      }
+    },
+    "replay": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": { "kind": { "enum": ["unknown-tool-mapper", "era-pin-refusal", "source-drift"] } }
+    },
+    "runnerMatch": {
+      "type": "object",
+      "required": ["revision", "scenario", "checkId", "errorPattern"]
+    },
+    "consumer": { "type": "string", "minLength": 1 }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "schema": "samedaydesk.interop-corpus.case.v1",
+  "id": "CK-N12-002",
+  "title": "Explicit 2026-07-28 client pin is refused on the free page-change profile",
+  "faultSurface": "protocol version negotiation (server/discover) on POST /mcp/page-change",
+  "author": {
+    "name": "epistemedeus (H99110 official client compatibility lock)",
+    "role": "original author of the merchant lock test that recorded the refusal"
+  },
+  "publication": {
+    "allowed": "public-repo-merged",
+    "basis": "Recorded in mcp-current-client-compat.test.mjs, introduced at 53069cfc and present on master at e90676f4 of a public repository.",
+    "restrictions": [
+      "No npm publish.",
+      "No certification or conformance claim.",
+      "Observation only: the live service is not migrated to 2026-07-28."
+    ]
+  },
+  "fixtureProvenance": [
+    {
+      "role": "refusal recorded",
+      "repo": "epistemedeus/x402-url-extractor",
+      "commit": "53069cfcb3094dc7f1b97ddfe4446dbe5c14c437",
+      "path": "mcp-current-client-compat.test.mjs",
+      "gitBlobSha": "595f83f3fb43c3ce1f85ddbbe8d605f1a5afe992"
+    },
+    {
+      "role": "refusal still recorded at the installed pin",
+      "repo": "epistemedeus/x402-url-extractor",
+      "commit": "e90676f48da875c5e0f475f57f7774de947b75a7",
+      "path": "mcp-current-client-compat.test.mjs",
+      "gitBlobSha": "a76585f03feaf5b8c2ca5445d790344885ac6f08"
+    },
+    {
+      "role": "changed implementation (detectPinRefusal, recoverToSupportedProtocol)",
+      "repo": "epistemedeus/x402-url-extractor",
+      "commit": "c060afcd1419cafff69d3e568ae7fc3d163c79b0",
+      "path": "packs/samedaydesk-capability-compat/src/probe.mjs",
+      "gitBlobSha": "80f36e8c423c935d9964664561cb539bf0953e9d"
+    }
+  ],
+  "sourceVersions": {
+    "clientSdk": [
+      {
+        "package": "@modelcontextprotocol/client",
+        "version": "2.4.0",
+        "kind": "current"
+      }
+    ],
+    "serverProtocol": "2025-11-25",
+    "refusedProtocol": "2026-07-28",
+    "serviceVersion": "1.23.55",
+    "merchantCommit": "e90676f48da875c5e0f475f57f7774de947b75a7"
+  },
+  "earlierNegative": {
+    "kind": "protocol-refusal",
+    "commit": "53069cfcb3094dc7f1b97ddfe4446dbe5c14c437",
+    "result": "Client connect rejects with SdkError ERA_NEGOTIATION_FAILED; every server/discover answers HTTP 400 with JSON-RPC -32000.",
+    "cause": "The free profile serves 2025-11-25 only. A client pinned to 2026-07-28 has no common version.",
+    "evidence": {
+      "kind": "merchant test assertions",
+      "lines": [
+        336,
+        382,
+        383
+      ],
+      "published": true
+    },
+    "signature": {
+      "sdkErrorCode": "ERA_NEGOTIATION_FAILED",
+      "discoverHttpStatus": 400,
+      "discoverJsonRpcCode": -32000,
+      "discoverMessagePattern": "Unsupported protocol version: 2026-07-28"
+    }
+  },
+  "fix": null,
+  "recovery": {
+    "action": "reconnect with default negotiation on 2025-11-25, then compare",
+    "expected": {
+      "charged": false,
+      "verdict": "changed",
+      "paymentSignature": null
+    },
+    "implementation": "samedaydesk-capability-compat detectPinRefusal and recoverToSupportedProtocol at c060afcd",
+    "protocol": "2025-11-25",
+    "note": "The current client may not report a negotiated protocol; when reported it must be 2025-11-25."
+  },
+  "outcomeClass": {
+    "earlierNegative": "unsupported",
+    "changedImplementation": "successful"
+  },
+  "replay": {
+    "kind": "era-pin-refusal"
+  },
+  "consumer": "samedaydesk-capability-compat-consumer"
+}

@@ -1,0 +1,110 @@
+{
+  "schema": "samedaydesk.interop-corpus.case.v1",
+  "id": "CK-N12-004",
+  "title": "Merchant service version moved from 1.23.54 to 1.23.55 and the earlier pack did not classify it",
+  "faultSurface": "changed source: merchant service version",
+  "author": {
+    "name": "Compatibility Knowledge Nov12",
+    "role": "author of the recorded drift fixture and the changed-source acceptance"
+  },
+  "publication": {
+    "allowed": "public-repo-draft-pr",
+    "basis": "Fixture authored in draft PR epistemedeus/x402-url-extractor#276; recorded facts come from public merchant git history.",
+    "restrictions": [
+      "No npm publish.",
+      "No certification or conformance claim.",
+      "No live service migration."
+    ]
+  },
+  "fixtureProvenance": [
+    {
+      "role": "recorded drift fixture",
+      "repo": "epistemedeus/x402-url-extractor",
+      "commit": "c060afcd1419cafff69d3e568ae7fc3d163c79b0",
+      "path": "packs/samedaydesk-capability-compat/fixtures/source-drift.json",
+      "gitBlobSha": "adb1f4f0e2c33bc4fd9e92f8177a0e7f0436d70c"
+    },
+    {
+      "role": "before: package.json declares 1.23.54 (parent of the bump)",
+      "repo": "epistemedeus/x402-url-extractor",
+      "commit": "b309c6e2a1e1794a324c1c422c1c841a76038686",
+      "path": "package.json",
+      "gitBlobSha": "588c50ccc2f73efab358f6099fab215b52d9fec4"
+    },
+    {
+      "role": "before: released as 1.23.54",
+      "repo": "epistemedeus/x402-url-extractor",
+      "commit": "8611f361801d0d958dc69335a2a319dd633e3db2",
+      "path": "package-lock.json",
+      "gitBlobSha": "8e896d5fd72703a0fdb4b193151e0dcbc149b7c2"
+    },
+    {
+      "role": "introduced: 1.23.55",
+      "repo": "epistemedeus/x402-url-extractor",
+      "commit": "cd0609e5ad68e0b5a9e0fa90e17d26a8998235e7",
+      "path": "package-lock.json",
+      "gitBlobSha": "001fa320adffe2dfb214e8651bcc379a2703c9b7"
+    },
+    {
+      "role": "earlier implementation (sha comparison only)",
+      "repo": "epistemedeus/x402-url-extractor",
+      "commit": "967ec6a29a593b41e846b7b9004cbd5ad4c6b908",
+      "path": "packs/samedaydesk-capability-compat/src/describe-capabilities.mjs",
+      "gitBlobSha": "323890f2bacf835cb7654fddcba9a87c71d1a779"
+    }
+  ],
+  "sourceVersions": {
+    "clientSdk": [
+      {
+        "package": "@modelcontextprotocol/sdk",
+        "version": "1.30.0",
+        "kind": "legacy",
+        "note": "unchanged across this bump"
+      }
+    ],
+    "serverProtocol": "2025-11-25",
+    "serviceVersion": {
+      "from": "1.23.54",
+      "to": "1.23.55"
+    },
+    "merchantCommit": "e90676f48da875c5e0f475f57f7774de947b75a7"
+  },
+  "earlierNegative": {
+    "kind": "detection-gap",
+    "commit": "967ec6a29a593b41e846b7b9004cbd5ad4c6b908",
+    "result": "describeCapabilities compared expectedSource.sha only (describe-capabilities.mjs line 207); a 1.23.54 expectation produced no service-version classification.",
+    "cause": "No recorded service-version facts before c060afcd.",
+    "evidence": {
+      "kind": "source at exact blob",
+      "published": true
+    },
+    "signature": {
+      "expectedServiceVersion": "1.23.54",
+      "observedServiceVersion": "1.23.55",
+      "earlierClassification": "sha-only"
+    }
+  },
+  "fix": {
+    "commit": "c060afcd1419cafff69d3e568ae7fc3d163c79b0",
+    "change": "compareSourceDrift classifies the recorded service bump as compatible-minor with a re_pin recovery."
+  },
+  "recovery": {
+    "action": "re_pin",
+    "expected": {
+      "classification": "compatible-minor",
+      "changeKind": "source_version_changed",
+      "keepContract": "synchronous-free-page-change"
+    },
+    "implementation": "samedaydesk-capability-compat compareSourceDrift at c060afcd"
+  },
+  "outcomeClass": {
+    "earlierNegative": "known_failure",
+    "changedImplementation": "successful"
+  },
+  "replay": {
+    "kind": "source-drift",
+    "beforeCommit": "b309c6e2a1e1794a324c1c422c1c841a76038686",
+    "afterCommit": "cd0609e5ad68e0b5a9e0fa90e17d26a8998235e7"
+  },
+  "consumer": "samedaydesk-capability-compat-consumer"
+}
