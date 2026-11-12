@@ -30,8 +30,10 @@ import {
   pageChangeContinuationEventId,
   pageChangeContinuationKeyring,
   pageChangeContinuationRefusalBody,
-  pageChangeDiscovery,
+  pageChangeDiscoveryWithBasis,
+  pageChangeEntrySurface,
   pageChangeMeasurementRecord,
+  pageChangeRefererEvidence,
   readPageChangeContinuationRequest,
   verifyPageChangeContinuationToken,
 } from "./page-change-continuation.mjs";
@@ -177,8 +179,10 @@ export function pageChangeMcpToolConfig() {
   };
 }
 
-export function mountPageChangeMcp(app, { env = process.env, observe = null, discoveryEvidence = null } = {}) {
+export function mountPageChangeMcp(app, { env = process.env, observe = null, discoveryEvidence = pageChangeRefererEvidence, now = Date.now } = {}) {
   const toolConfig = pageChangeMcpToolConfig();
+  // Runtime fact of this process, never read from a request.
+  const entrySurface = pageChangeEntrySurface({ env, transport: "mcp_streamable_http" });
   merchantWireDescriptor(asMerchantZodObject(toolConfig.inputSchema));
   const limits = pageChangeHttpLimits(env);
 
@@ -278,6 +282,9 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null, dis
       });
       const registered = server.registerTool(PAGE_CHANGE_MCP_TOOL, toolConfig, async () => {
         let continued = null;
+        // Server clock at handling time, injectable through the mount option.
+        let handledAtMs = Date.now();
+        try { const value = now(); if (Number.isFinite(value)) handledAtMs = value; } catch { /* Keep Date.now(). */ }
         if (continuationRequest) {
           try {
             continued = admitContinuation(continuationRequest, suppliedArguments, env);
@@ -295,13 +302,14 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null, dis
           if (continued && output?.ok === true && output.charged === false && continuationRequest.save) {
             let observed = null;
             try { observed = typeof discoveryEvidence === "function" ? discoveryEvidence(req) : null; } catch { observed = null; }
-            const discovery = pageChangeDiscovery({ observed, declared: continuationRequest.declared });
+            const { discovery, discoveryBasis } = pageChangeDiscoveryWithBasis({ observed, declared: continuationRequest.declared });
             try {
               const continuation = issuePageChangeContinuation({
                 after: suppliedArguments.after,
                 fields: suppliedArguments.fields,
                 previous: continued.previous,
                 env,
+                nowMs: handledAtMs,
               });
               // Token and discovery never share an object.
               const measurement = pageChangeMeasurementRecord({
@@ -309,6 +317,9 @@ export function mountPageChangeMcp(app, { env = process.env, observe = null, dis
                 step: continuation.step,
                 discovery,
                 outcome: pageChangeServiceOutcome(output),
+                nowMs: handledAtMs,
+                discoveryBasis,
+                entrySurface,
               });
               output = { ...output, continuation, measurement };
             } catch (error) {

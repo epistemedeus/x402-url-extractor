@@ -19,11 +19,11 @@ Compare and save step 0 (the file is written with mode 0600):
 node $CLI compare --before $C1/before.json --after $C1/after.json --fields title,description --save-continuation chain.json --discovery cli
 ```
 
-Stdout is the comparison report. Stderr carries the separate measurement record, with no token and no path:
+Stdout is the comparison report. Stderr carries the separate measurement record, with no token and no path. `occurredAt` is the local clock when the step ran, and `entrySurface` is always `installed` / `local_cli` here:
 
 <!-- check: cli-measurement -->
 ```json
-{"saved":true,"measurement":{"v":1,"kind":"measurement","tool":"compare_page_observations","correlationId":"$CORRELATION_ID","step":0,"discovery":{"status":"declared","source":"cli"},"outcome":null}}
+{"saved":true,"measurement":{"v":1,"kind":"measurement","tool":"compare_page_observations","correlationId":"$CORRELATION_ID","step":0,"discovery":{"status":"declared","source":"cli"},"outcome":null,"occurredAt":"$OCCURRED_AT","discoveryBasis":{"kind":"caller_meta","matched":null},"entrySurface":{"surface":"installed","basis":"local_cli","transport":"cli"}}}
 ```
 
 The saved record (`chain.json`):

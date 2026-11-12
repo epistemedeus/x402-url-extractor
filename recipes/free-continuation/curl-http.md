@@ -2,6 +2,8 @@
 
 Runtime: any shell with `curl`, `jq` and `sha256sum`. The endpoint is stateless: every `POST` is a complete JSON-RPC request, no session and no `initialize` are needed for `tools/call`. Send `content-type: application/json` and `accept: application/json, text/event-stream`. The reply is usually an SSE stream (`event: message` then `data: {...}`); take the last `data:` line.
 
+Hosted status: two separate gaps. The hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement`; and after a build with the feature is deployed, it still answers `continuation_unavailable` until the production `PAGE_CHANGE_CONTINUATION_KEYS` is configured. Run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
+
 Rules: no exactly-once delivery; the `correlationId` (`ae:corr:v1:`) is non-authorizing; discovery is sent separately in `_meta["samedaydesk/measurement"]`, never beside the token; the token is never logged (it only ever goes to a 0600 file, never to stdout).
 
 ```sh

@@ -2,6 +2,8 @@
 
 Runtime: Node 20.19 or later with `@modelcontextprotocol/sdk` (the repo's pinned version). Transport: Streamable HTTP to `$SDD_MCP_URL` (`POST /mcp/page-change`, stateless). Tool: `compare_page_observations`.
 
+Hosted status: two separate gaps. The hosted serving build (e90676f4) does not include `page-change-continuation.mjs`, so the hosted endpoint returns no `continuation` and no `measurement`; and after a build with the feature is deployed, it still answers `continuation_unavailable` until the production `PAGE_CHANGE_CONTINUATION_KEYS` is configured. Run these steps against a local server started with `PAGE_CHANGE_CONTINUATION_TEST_KEY=1`.
+
 Rules: no exactly-once delivery; the `correlationId` (`ae:corr:v1:`) is non-authorizing; discovery is sent separately in `_meta["samedaydesk/measurement"]`, never beside the token; the token is never logged (the client keeps it in a 0600 file and prints only a token-free view).
 
 ## stdio
@@ -37,7 +39,7 @@ The success `structuredContent` carries the comparison plus two separate objects
 
 <!-- check: success-shape -->
 ```json
-{"ok":true,"charged":false,"continuation":{"v":1,"tool":"compare_page_observations","token":"$TOKEN","kid":"test","correlationId":"$CORRELATION_ID","step":0,"expiresAt":"2026-11-19T11:47:18.000Z","next":{"method":"tools/call","tool":"compare_page_observations","meta":"samedaydesk/continuation","send":"before is the after observation you sent in this call, after is your new observation, fields stay the same, _meta carries {token}."}},"measurement":{"v":1,"kind":"measurement","tool":"compare_page_observations","correlationId":"$CORRELATION_ID","step":0,"discovery":{"status":"declared","source":"mcp"},"outcome":"changed"}}
+{"ok":true,"charged":false,"continuation":{"v":1,"tool":"compare_page_observations","token":"$TOKEN","kid":"test","correlationId":"$CORRELATION_ID","step":0,"expiresAt":"2026-11-19T11:47:18.000Z","next":{"method":"tools/call","tool":"compare_page_observations","meta":"samedaydesk/continuation","send":"before is the after observation you sent in this call, after is your new observation, fields stay the same, _meta carries {token}."}},"measurement":{"v":1,"kind":"measurement","tool":"compare_page_observations","correlationId":"$CORRELATION_ID","step":0,"discovery":{"status":"declared","source":"mcp"},"outcome":"changed","occurredAt":"2026-11-12T11:47:18.000Z","discoveryBasis":{"kind":"caller_meta","matched":null},"entrySurface":{"surface":"installed","basis":"no_deployment_marker","transport":"mcp_streamable_http"}}}
 ```
 
 `chain.json` (mode 0600) holds the token; stdout shows only `{"state":"completed","output":{...},"continuation":{"correlationId":"...","step":0,"expiresAt":"...","tokenHeld":true},"measurement":{...}}`.
