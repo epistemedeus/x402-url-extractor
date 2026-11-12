@@ -1,0 +1,179 @@
+{
+  "schema": "samedaydesk.interop-corpus.runner-fixture.v1",
+  "synthetic": true,
+  "shape": "ConformanceCheck[] per checks.json, from src/types.ts and src/runner/server.ts of modelcontextprotocol/conformance at f44482ba17df816d3176962a11cdf36aec9bda00 (package 0.2.0-alpha.12).",
+  "honesty": "Synthetic-shape fixture. It was not produced by running the official runner; no runner was run on the authoring host. The live run happens on a Cursor VM via scripts/vm-run.sh, and its checks.json files replace this fixture as evidence.",
+  "legs": [
+    {
+      "revision": "2025-11-25",
+      "exitCode": 1,
+      "scoredScenarios": [
+        "server-initialize",
+        "ping",
+        "tools-list",
+        "tools-call-simple-text",
+        "logging-set-level",
+        "dns-rebinding-protection"
+      ],
+      "expectedScenarios": [
+        "server-initialize",
+        "ping",
+        "tools-list",
+        "tools-call-simple-text",
+        "logging-set-level",
+        "dns-rebinding-protection",
+        "server-session-lifecycle"
+      ],
+      "scenarios": [
+        {
+          "scenario": "server-initialize",
+          "checks": [
+            {
+              "id": "server-initialize",
+              "name": "ServerInitialize",
+              "description": "ServerInitialize",
+              "status": "SUCCESS",
+              "timestamp": "2026-11-12T12:00:00.000Z"
+            },
+            {
+              "id": "wire-schema-valid",
+              "name": "WireSchemaValid",
+              "description": "WireSchemaValid",
+              "status": "SUCCESS",
+              "timestamp": "2026-11-12T12:00:00.000Z"
+            }
+          ]
+        },
+        {
+          "scenario": "ping",
+          "checks": [
+            {
+              "id": "ping",
+              "name": "Ping",
+              "description": "Ping",
+              "status": "SUCCESS",
+              "timestamp": "2026-11-12T12:00:00.000Z"
+            }
+          ]
+        },
+        {
+          "scenario": "tools-list",
+          "checks": [
+            {
+              "id": "tools-list",
+              "name": "ToolsList",
+              "description": "ToolsList",
+              "status": "SUCCESS",
+              "timestamp": "2026-11-12T12:00:00.000Z"
+            },
+            {
+              "id": "tools-name-format",
+              "name": "ToolsNameFormat",
+              "description": "ToolsNameFormat",
+              "status": "SUCCESS",
+              "timestamp": "2026-11-12T12:00:00.000Z"
+            }
+          ]
+        },
+        {
+          "scenario": "tools-call-simple-text",
+          "checks": [
+            {
+              "id": "tools-call-simple-text",
+              "name": "ToolsCallSimpleText",
+              "description": "ToolsCallSimpleText",
+              "status": "FAILURE",
+              "timestamp": "2026-11-12T12:00:00.000Z",
+              "errorMessage": "Failed: MCP error -32602: Unknown tool"
+            }
+          ]
+        },
+        {
+          "scenario": "logging-set-level",
+          "checks": [
+            {
+              "id": "logging-set-level",
+              "name": "LoggingSetLevel",
+              "description": "LoggingSetLevel",
+              "status": "FAILURE",
+              "timestamp": "2026-11-12T12:00:00.000Z",
+              "errorMessage": "Failed: MCP error -32601: Method not found"
+            }
+          ]
+        },
+        {
+          "scenario": "dns-rebinding-protection",
+          "checks": [
+            {
+              "id": "localhost-host-rebinding-rejected",
+              "name": "LocalhostHostRebindingRejected",
+              "description": "LocalhostHostRebindingRejected",
+              "status": "SUCCESS",
+              "timestamp": "2026-11-12T12:00:00.000Z"
+            },
+            {
+              "id": "localhost-host-valid-accepted",
+              "name": "LocalhostHostAccepted",
+              "description": "LocalhostHostAccepted",
+              "status": "SUCCESS",
+              "timestamp": "2026-11-12T12:00:00.000Z"
+            }
+          ]
+        },
+        {
+          "scenario": "server-session-lifecycle",
+          "checks": [
+            {
+              "id": "session-delete-accepted",
+              "name": "SessionDeleteAccepted",
+              "description": "SessionDeleteAccepted",
+              "status": "SKIPPED",
+              "timestamp": "2026-11-12T12:00:00.000Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "2026-07-28",
+      "exitCode": 1,
+      "scoredScenarios": [
+        "server-stateless",
+        "tools-list"
+      ],
+      "expectedScenarios": [
+        "server-stateless",
+        "tools-list",
+        "tasks-lifecycle"
+      ],
+      "scenarios": [
+        {
+          "scenario": "server-stateless",
+          "checks": [
+            {
+              "id": "sep-2575-server-implements-discover",
+              "name": "ServerImplementsDiscover",
+              "description": "ServerImplementsDiscover",
+              "status": "FAILURE",
+              "timestamp": "2026-11-12T12:00:00.000Z",
+              "errorMessage": "server/discover returned HTTP 400: Unsupported protocol version: 2026-07-28 (supported: 2025-11-25)"
+            }
+          ]
+        },
+        {
+          "scenario": "tools-list",
+          "checks": [
+            {
+              "id": "tools-list",
+              "name": "ToolsList",
+              "description": "ToolsList",
+              "status": "FAILURE",
+              "timestamp": "2026-11-12T12:00:00.000Z",
+              "errorMessage": "Failed: Unsupported protocol version: 2026-07-28"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "samedaydesk.interop-corpus.residuals.v1",
+  "note": "Only behavior the official runner does not cover on this profile. Each residual names its consumer and the test that asserts it. This is not a matrix engine: every row is a recorded pair or fault.",
+  "residuals": [
+    {
+      "id": "R-01",
+      "kind": "pairwise-version",
+      "title": "Client-visible unknown-tool message depends on the client SDK line",
+      "pairs": [
+        { "client": { "package": "@modelcontextprotocol/sdk", "version": "1.32.2" }, "serverProtocol": "2025-11-25", "expectedMessage": "MCP error -32602: Unknown tool", "recordedMapperAccepts": false },
+        { "client": { "package": "@modelcontextprotocol/client", "version": "2.4.0" }, "serverProtocol": "2025-11-25", "expectedMessage": "Unknown tool", "recordedMapperAccepts": true }
+      ],
+      "derivedFrom": "McpError constructor in sdk 1.32.2 dist/esm/types.js and ProtocolError constructor in client 2.4.0; confirmed live by the consumer test on a Cursor VM.",
+      "caseRef": "CK-N12-001",
+      "whyNotRunner": "The official runner drives the server with its own SDK client and has no unknown-tool scenario for a non-fixture tool name.",
+      "consumer": "samedaydesk-capability-compat-consumer",
+      "test": "packs/samedaydesk-capability-compat-consumer/test/interop-corpus.test.mjs"
+    },
+    {
+      "id": "R-02",
+      "kind": "fault",
+      "title": "2026-07-28 refusal uses JSON-RPC -32000, not the 2026-07-28 UnsupportedProtocolVersion code -32022",
+      "observed": { "discoverHttpStatus": 400, "jsonRpcCode": -32000 },
+      "specNote": "2026-07-28 keeps -32000 to -32019 implementation-defined and renumbers UnsupportedProtocolVersion to -32022. The free profile does not claim 2026-07-28, so this is classified unsupported, not a defect.",
+      "liveServiceMigration": false,
+      "caseRef": "CK-N12-002",
+      "whyNotRunner": "The runner's 2026-07-28 leg stops at server/discover on this profile and reports the whole leg as failing; it does not separate a declared refusal from a defect.",
+      "consumer": "samedaydesk-capability-compat-consumer",
+      "test": "packs/samedaydesk-capability-compat-consumer/test/interop-corpus.test.mjs"
+    },
+    {
+      "id": "R-03",
+      "kind": "fault",
+      "title": "Tasks capability declared per request still yields a synchronous CallToolResult on 2025-11-25",
+      "observed": { "resultTypeTask": false, "taskId": null, "content": true, "structuredContent": true },
+      "provenance": "epistemedeus/x402-url-extractor@b38dc14b:experiments/n12-compatibility-knowledge/page-change-compatibility.test.mjs blob efd6c252 (tasks-capability lock)",
+      "caseRef": null,
+      "whyNotRunner": "The runner's tasks-* scenarios are 2026-07-28 extension scenarios, not scored, and unsupported on this profile, so the 2025-11-25 synchronous lock is otherwise uncovered.",
+      "consumer": "samedaydesk-capability-compat-consumer",
+      "test": "packs/samedaydesk-capability-compat-consumer/test/interop-corpus.test.mjs"
+    }
+  ]
+}

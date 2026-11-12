@@ -1,0 +1,78 @@
+{
+  "schema": "samedaydesk.interop-corpus.pin.v1",
+  "package": "samedaydesk-interop-corpus",
+  "version": "0.1.0",
+  "private": true,
+  "publication": "draft-archive",
+  "charged": false,
+  "base": {
+    "repo": "epistemedeus/x402-url-extractor",
+    "branch": "codex/n12-compat-changed-source-20261112",
+    "commit": "c060afcd1419cafff69d3e568ae7fc3d163c79b0",
+    "stackedOn": "967ec6a29a593b41e846b7b9004cbd5ad4c6b908",
+    "changedImplementation": "samedaydesk-capability-compat@0.1.0 at c060afcd"
+  },
+  "merchant": {
+    "repo": "epistemedeus/x402-url-extractor",
+    "commit": "e90676f48da875c5e0f475f57f7774de947b75a7",
+    "serviceVersion": "1.23.55",
+    "sdk": { "package": "@modelcontextprotocol/sdk", "version": "1.32.2" },
+    "client": { "package": "@modelcontextprotocol/client", "version": "2.4.0" },
+    "path": "/mcp/page-change",
+    "tool": "compare_page_observations",
+    "servedProtocol": "2025-11-25",
+    "refusedProtocol": "2026-07-28"
+  },
+  "officialRunner": {
+    "repo": "modelcontextprotocol/conformance",
+    "package": "@modelcontextprotocol/conformance",
+    "version": "0.2.0-alpha.12",
+    "distTag": "alpha",
+    "gitHead": "f44482ba17df816d3176962a11cdf36aec9bda00",
+    "tarball": "https://registry.npmjs.org/@modelcontextprotocol/conformance/-/conformance-0.2.0-alpha.12.tgz",
+    "tarballSha256": "6cd489231fe6a90de07ce940b1945ffef7d11063d17558b0a4c12a00f0e6f41f",
+    "integrity": "sha512-eXtZFgmtZiU5SsvXty+RGXGnyIqEVm3GLU/HZmg1wMjtKOocPZZgD9HQKd30oJhio5UB0wFJmsc6r8u48Q+EYA==",
+    "entry": "dist/index.js",
+    "entrySha256": "b56fb575e61edaac83c2008af40a6a78b47815c4038a02a9b04cd336d38832a0",
+    "requirementSets": {
+      "2025-11-25": {
+        "path": "requirements/2025-11-25.yaml",
+        "gitBlobSha": "cc29607b78868a33563900f3fafd24af6c301a7a",
+        "sha256": "f33a304dfa2cbd999c24026a3453a64f377bba0c8aa80addadaf05862d212371",
+        "wire": "stateful initialize handshake",
+        "note": "The runner documents this set as a reconstruction from 0.2.0-alpha.10, not a contemporaneous snapshot."
+      },
+      "2026-07-28": {
+        "path": "requirements/2026-07-28.yaml",
+        "gitBlobSha": "b0c4f8560429e8f4b6c89833cc0b35405bc004ff",
+        "sha256": "ae2f4f6210fd729e2e318edd5bbfa31a43cee0bc608e48052fa26dbf1d939b57",
+        "wire": "stateless, per-request _meta, server/discover",
+        "note": "Frozen at 0.2.0-alpha.10, published 2026-07-27."
+      }
+    },
+    "checkStatuses": ["SUCCESS", "FAILURE", "WARNING", "SKIPPED", "INFO"],
+    "notSelected": {
+      "version": "0.1.16",
+      "distTag": "latest",
+      "gitHead": "21a9a2febd7100d7c17ac1021ee7f2ed9f66a1e0",
+      "reason": "No requirement sets and no 2026-07-28 wire in the published 0.1.16 package."
+    },
+    "mainObserved": {
+      "commit": "96a6f9478b7f2e125cf0360a213383cf57533893",
+      "committedAt": "2026-11-10T17:49:31Z",
+      "note": "Observation only. The adapter runs the published package, not main."
+    }
+  },
+  "specChangelog": {
+    "url": "https://modelcontextprotocol.io/specification/2026-07-28/changelog",
+    "readAt": "2026-11-12",
+    "relevant": [
+      "Stateless protocol: initialize handshake removed, per-request _meta, server/discover required (SEP-2575).",
+      "Tasks moved to the io.modelcontextprotocol/tasks extension (SEP-2663).",
+      "UnsupportedProtocolVersion renumbered -32004 to -32022; -32000 to -32019 stays implementation-defined.",
+      "ping and logging/setLevel removed."
+    ]
+  },
+  "liveServiceMigration": false,
+  "scope": "baseline-relative"
+}

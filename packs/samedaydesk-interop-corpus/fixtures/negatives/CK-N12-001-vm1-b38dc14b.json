@@ -1,0 +1,49 @@
+{
+  "schema": "samedaydesk.interop-corpus.negative.v1",
+  "caseId": "CK-N12-001",
+  "commit": "b38dc14b6212bbe3fda5e23a8552101e414f22d7",
+  "source": "Retained VM1 terminal transcription, section C (sha256 25e4fd329565d614697a4255d9d1cb60ab74db98a836d842ddc0e8b6e41e4082). Only the lines for this case are recorded here.",
+  "node": "v22.23.4",
+  "tap": {
+    "tests": 6,
+    "pass": 4,
+    "fail": 2
+  },
+  "failing": [
+    {
+      "ordinal": 3,
+      "name": "failure: unknown tool keeps the recovery mapping and does not take a paid fallback",
+      "error": "unknown_tool_recovery_unmapped",
+      "code": "ERR_TEST_FAILURE",
+      "location": "page-change-compatibility.test.mjs:214:1"
+    },
+    {
+      "ordinal": 4,
+      "name": "recovery: tools/list after a wrong-tool refusal completes the free compare",
+      "error": "unknown_tool_recovery_unmapped",
+      "code": "ERR_TEST_FAILURE",
+      "location": "page-change-compatibility.test.mjs:259:1",
+      "thrownAt": "mapUnknownToolRecovery (page-change-compatibility-mapping.mjs:135:11)"
+    }
+  ],
+  "passing": [
+    "tasks-capability lock: declaring ext-tasks on tools/call still returns a plain CallToolResult",
+    "failure: explicit 2026-07-28 pin is refused on the free profile without a paid fallback"
+  ],
+  "clientVisibleError": {
+    "client": {
+      "package": "@modelcontextprotocol/sdk",
+      "version": "1.32.2",
+      "class": "McpError"
+    },
+    "code": -32602,
+    "message": "MCP error -32602: Unknown tool",
+    "data": {
+      "nextMethod": "tools/list",
+      "availableTools": [
+        "compare_page_observations"
+      ]
+    },
+    "derivation": "Server JSON-RPC message Unknown tool at e90676f4, wrapped by the sdk 1.32.2 McpError constructor (super(`MCP error ${code}: ${message}`)). The live consumer test re-observes it."
+  }
+}

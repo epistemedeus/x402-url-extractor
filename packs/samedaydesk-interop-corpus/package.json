@@ -1,0 +1,39 @@
+{
+  "name": "samedaydesk-interop-corpus",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Maintained SameDayDesk interoperability corpus for the free page-change MCP profile, built from retained failures, plus an adapter that runs the official MCP conformance runner and classifies its results against the recorded profile baseline. No payment, signing, publish, or live merchant change.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "bin": {
+    "interop-corpus": "bin/interop-corpus.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./corpus": "./src/corpus.mjs",
+    "./classify": "./src/classify.mjs",
+    "./adapter": "./src/conformance-adapter.mjs",
+    "./replay": "./src/replay.mjs",
+    "./pin": "./PIN.json",
+    "./schema/case.v1": "./schema/interop-case.v1.schema.json"
+  },
+  "files": [
+    "bin",
+    "src",
+    "corpus",
+    "profile",
+    "schema",
+    "fixtures",
+    "PIN.json",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/conformance": "0.2.0-alpha.12"
+  },
+  "license": "MIT"
+}

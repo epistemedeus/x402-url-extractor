@@ -2,13 +2,14 @@
   "name": "samedaydesk-capability-compat-consumer",
   "version": "0.1.0",
   "private": true,
-  "description": "Cold consumer of the packed samedaydesk-capability-compat tarball. This package does not import merchant source. A test-only harness may start a loopback mountPageChangeMcp server from a merchant checkout.",
+  "description": "Cold consumer of the packed samedaydesk-capability-compat and samedaydesk-interop-corpus tarballs. It replays every corpus case against the changed implementation. This package does not import merchant source. A test-only harness may start a loopback mountPageChangeMcp server from a merchant checkout.",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
   },
   "dependencies": {
-    "samedaydesk-capability-compat": "file:../samedaydesk-capability-compat/samedaydesk-capability-compat-0.1.0.tgz"
+    "samedaydesk-capability-compat": "file:../samedaydesk-capability-compat/samedaydesk-capability-compat-0.1.0.tgz",
+    "samedaydesk-interop-corpus": "file:../samedaydesk-interop-corpus/samedaydesk-interop-corpus-0.1.0.tgz"
   },
   "scripts": {
     "test": "node --test --test-concurrency=1 test/*.test.mjs"

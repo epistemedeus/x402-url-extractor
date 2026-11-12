@@ -1,0 +1,22 @@
+{
+  "schema": "samedaydesk.interop-corpus.skipped.v1",
+  "skipped": [
+    {
+      "candidate": "Tasks not declared, synchronous CallToolResult lock",
+      "reason": "No retained negative. The lock test was added at b38dc14b and passed on VM1 (ok 5); the earlier state was missing coverage at 9abc11e4, not a recorded failing behavior. Covered as residual R-03 instead of a corpus case.",
+      "provenance": "epistemedeus/x402-url-extractor@b38dc14b:experiments/n12-compatibility-knowledge/page-change-compatibility.test.mjs blob efd6c252"
+    },
+    {
+      "candidate": "Free-continuation regression failures from the same VM1 session (full npm test, 8 failing)",
+      "reason": "Not ours. The material belongs to another owner's continuation branch and its HMAC/continuation files; rights to reuse were not granted, so it is excluded and not copied."
+    },
+    {
+      "candidate": "Product CLI consumer failures",
+      "reason": "Product CLI owners own their code; no CLI package code is copied. The CLI remains an independent consumer of the capability pack."
+    },
+    {
+      "candidate": "axios 1.20.0 environment pin (424c5fbc)",
+      "reason": "Recorded as a permitted counterexample only, with no retained failing observation on the free profile."
+    }
+  ]
+}

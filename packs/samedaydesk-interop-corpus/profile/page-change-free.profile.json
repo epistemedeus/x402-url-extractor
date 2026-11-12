@@ -1,0 +1,175 @@
+{
+  "schema": "samedaydesk.interop-corpus.profile.v1",
+  "profile": "samedaydesk-free-page-change",
+  "path": "/mcp/page-change",
+  "tool": "compare_page_observations",
+  "merchantCommit": "e90676f48da875c5e0f475f57f7774de947b75a7",
+  "runner": {
+    "package": "@modelcontextprotocol/conformance",
+    "version": "0.2.0-alpha.12"
+  },
+  "note": "Applicability is recorded per scenario for the pinned runner's requirement sets. A scenario not listed here is classified as unexplained when it fails, never silently excused.",
+  "revisions": {
+    "2025-11-25": {
+      "served": true,
+      "wire": "stateful initialize handshake",
+      "scenarios": {
+        "server-initialize": {
+          "applicability": "applicable"
+        },
+        "ping": {
+          "applicability": "applicable"
+        },
+        "tools-list": {
+          "applicability": "applicable"
+        },
+        "dns-rebinding-protection": {
+          "applicability": "applicable"
+        },
+        "server-session-lifecycle": {
+          "applicability": "applicable"
+        },
+        "tools-call-simple-text": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "tools-call-image": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "tools-call-audio": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "tools-call-embedded-resource": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "tools-call-mixed-content": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "tools-call-with-logging": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "tools-call-error": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "tools-call-with-progress": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "tools-call-sampling": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "tools-call-elicitation": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "elicitation-sep1034-defaults": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "elicitation-sep1330-enums": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "json-schema-2020-12": {
+          "applicability": "not_applicable",
+          "reason": "Requires a conformance fixture tool or prompt/resource that the free page-change profile does not expose; outside the single-tool stateless profile."
+        },
+        "logging-set-level": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "completion-complete": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "resources-list": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "resources-read-text": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "resources-read-binary": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "resources-templates-read": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "resources-subscribe": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "resources-unsubscribe": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "prompts-list": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "prompts-get-simple": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "prompts-get-with-args": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "prompts-get-embedded-resource": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "prompts-get-with-image": {
+          "applicability": "not_applicable",
+          "reason": "Requires a server capability the free profile does not declare (logging, completions, resources, prompts, sampling, elicitation)."
+        },
+        "server-sse-multiple-streams": {
+          "applicability": "not_applicable",
+          "reason": "Requires standalone or resumable SSE streams; the free profile answers each POST synchronously."
+        },
+        "server-sse-polling": {
+          "applicability": "not_applicable",
+          "reason": "Requires standalone or resumable SSE streams; the free profile answers each POST synchronously."
+        }
+      },
+      "unlisted": "applicable"
+    },
+    "2026-07-28": {
+      "served": false,
+      "wire": "stateless, per-request _meta, server/discover",
+      "default": {
+        "applicability": "unsupported",
+        "reason": "The free profile serves 2025-11-25 only and refuses an explicit 2026-07-28 pin (server/discover 400, JSON-RPC -32000).",
+        "caseRef": "CK-N12-002"
+      },
+      "scenarios": {},
+      "extensions": {
+        "io.modelcontextprotocol/tasks": {
+          "applicability": "unsupported",
+          "reason": "The Tasks extension is not declared by the free profile; tools/call stays synchronous (residual R-03).",
+          "caseRef": null,
+          "scenarioPrefix": "tasks-"
+        }
+      }
+    }
+  },
+  "harness": {
+    "checkIds": [
+      "scenario-timeout",
+      "wire-schema-harness-error"
+    ],
+    "descriptions": [
+      "Failed to run scenario"
+    ]
+  }
+}
