@@ -5,7 +5,7 @@
 // not installed (the shared authoring host has none); run them on a VM after
 // `npm ci` for the schema, A2A builder, live Streamable HTTP and stdio checks.
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { chmod, copyFile, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -123,6 +123,21 @@ function run(command, args, options = {}) {
 }
 
 const has = (command) => run(command, ["--version"]).status === 0;
+// For a child that calls a server listening in this process. spawnSync would
+// block this event loop, so the server could never answer and the child would
+// only end at the timeout.
+function runAsync(command, args, options = {}) {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, { ...options, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8").on("data", (chunk) => { stdout += chunk; });
+    child.stderr.setEncoding("utf8").on("data", (chunk) => { stderr += chunk; });
+    const timer = setTimeout(() => child.kill("SIGKILL"), 60_000);
+    child.on("error", (error) => { clearTimeout(timer); resolve({ status: null, stdout, stderr: stderr + String(error) }); });
+    child.on("close", (status) => { clearTimeout(timer); resolve({ status, stdout, stderr }); });
+  });
+}
 async function optional(specifier) {
   try { return await import(specifier); } catch { return null; }
 }
@@ -440,7 +455,8 @@ test("live Streamable HTTP round trip: recipes, Python and the Node client again
   const { mountPageChangeMcp } = await import("../../page-change-mcp.mjs");
   const { pageChangeMcpOutputSchema } = await import("../../page-change-mcp-output-schema.mjs");
   const app = express.default();
-  mountPageChangeMcp(app, { env: { ...ENV } });
+  // The free profile is off unless PAGE_CHANGE_HTTP_ENABLED is set, as the recipes say.
+  mountPageChangeMcp(app, { env: { ...ENV, PAGE_CHANGE_HTTP_ENABLED: "1" } });
   const server = app.listen(0, "127.0.0.1");
   await new Promise((resolve) => server.once("listening", resolve));
   t.after(() => new Promise((resolve) => server.close(resolve)));
@@ -449,6 +465,12 @@ test("live Streamable HTTP round trip: recipes, Python and the Node client again
     const response = await fetch(url, { method: "POST", headers: { "content-type": "application/json", accept: ACCEPT }, body: JSON.stringify(body) });
     return lastRpc(await response.text());
   };
+  // Protocol selection reads what this server actually advertises.
+  const { MCP_RECIPE_PROTOCOL_VERSIONS, advertisedMcpVersion, mcpInitializeRequest, selectProtocolVersion } = await import("../../caller-result-client/src/protocol-selection.mjs");
+  const init = await post(mcpInitializeRequest(0));
+  assert.deepEqual(selectProtocolVersion(advertisedMcpVersion(init), MCP_RECIPE_PROTOCOL_VERSIONS), { ok: true, protocolVersion: "2025-11-25" });
+  const asked = await post({ ...mcpInitializeRequest(0), params: { ...mcpInitializeRequest(0).params, protocolVersion: "2026-07-28" } });
+  assert.notEqual(advertisedMcpVersion(asked), "2026-07-28", "this source does not implement 2026-07-28");
   const save = await post(substitute(json(one("mcp-request", "save", "curl-http.md"))));
   const content = save.result.structuredContent;
   assert.equal(pageChangeMcpOutputSchema.safeParse(content).success, true);
@@ -469,24 +491,24 @@ test("live Streamable HTTP round trip: recipes, Python and the Node client again
 
   const dir = await scratch(t);
   if (has("python3")) {
-    const py = (...args) => run("python3", [PY, ...args], { cwd: dir });
-    const start = py("start", url, path.join(C1, "before.json"), path.join(C1, "after.json"), "title,description", "py-chain.json", "--discovery", "other");
+    const py = (...args) => runAsync("python3", [PY, ...args], { cwd: dir });
+    const start = await py("start", url, path.join(C1, "before.json"), path.join(C1, "after.json"), "title,description", "py-chain.json", "--discovery", "other");
     assert.equal(start.status, 0, start.stderr);
     const pyChain = await readJson(path.join(dir, "py-chain.json"));
     assert.equal(start.stdout.includes(pyChain.token), false);
-    assert.equal(py("continue", "py-chain.json", OTHER).status, 2);
-    assert.equal(py("continue", "py-chain.json", NEXT).status, 0);
+    assert.equal((await py("continue", "py-chain.json", OTHER)).status, 2);
+    assert.equal((await py("continue", "py-chain.json", NEXT)).status, 0);
     assert.equal((await readJson(path.join(dir, "py-chain.json"))).step, 1);
   }
-  const node = (...args) => run(process.execPath, [path.join(ROOT, "caller-result-client/bin/continue-free.mjs"), ...args], { cwd: dir });
-  const nodeStart = node("start", url, path.join(C1, "before.json"), path.join(C1, "after.json"), "title,description", "node-chain.json", "--discovery", "mcp");
+  const node = (...args) => runAsync(process.execPath, [path.join(ROOT, "caller-result-client/bin/continue-free.mjs"), ...args], { cwd: dir });
+  const nodeStart = await node("start", url, path.join(C1, "before.json"), path.join(C1, "after.json"), "title,description", "node-chain.json", "--discovery", "mcp");
   assert.equal(nodeStart.status, 0, nodeStart.stderr);
   const nodeChain = await readJson(path.join(dir, "node-chain.json"));
   assert.equal(nodeStart.stdout.includes(nodeChain.token), false);
-  assert.equal(node("continue", "node-chain.json", NEXT).status, 0);
+  assert.equal((await node("continue", "node-chain.json", NEXT)).status, 0);
   if (has("python3")) {
     // Cross-runtime: Python continues the chain the Node client saved.
-    const cross = run("python3", [PY, "continue", "node-chain.json", path.join(HERE, "fixtures/next.json")], { cwd: dir });
+    const cross = await runAsync("python3", [PY, "continue", "node-chain.json", path.join(HERE, "fixtures/next.json")], { cwd: dir });
     assert.notEqual(cross.status, 3, cross.stderr);
   }
 });

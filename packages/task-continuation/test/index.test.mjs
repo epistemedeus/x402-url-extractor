@@ -203,8 +203,8 @@ function legacyToken(secretEntry, payload) {
   return `${body}.${createHmac("sha256", secretEntry.secret).update(body).digest("base64url")}`;
 }
 
-test("module version is 1.2.0", () => {
-  assert.equal(MODULE_VERSION, "1.2.0");
+test("module version is 1.3.0", () => {
+  assert.equal(MODULE_VERSION, "1.3.0");
 });
 
 test("hashJson is canonical: key order never changes the hash", () => {

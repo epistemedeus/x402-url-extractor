@@ -30,9 +30,122 @@ CORRELATION_RE = re.compile(r"^ae:corr:v1:[A-Za-z0-9_-]{22}$")
 CODE_RE = re.compile(r"^[a-z0-9_]{1,64}$")
 FILE_MAX_BYTES = 64 * 1024
 
+# Protocol capability selection. Mirrors caller-result-client/src/protocol-selection.mjs
+# (a test keeps the lists equal). Exact match on the version the server
+# advertised in its initialize result; anything else is refused with
+# protocol_version_unsupported. No silent upgrade, no fallback guess.
+MCP_REQUESTED_PROTOCOL_VERSION = "2025-11-25"
+MCP_RECIPE_PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18"]
+PROTOCOL_VERSION_UNSUPPORTED = "protocol_version_unsupported"
+
+# Portable task-continuation handback (packages/task-continuation/handback.schema.json).
+HANDBACK_SCHEMA = "task-continuation.handback.v1"
+HANDBACK_MAX_BYTES = 16 * 1024
+HANDBACK_KEYS = {"schema", "v", "hashAlg", "task", "correlationId", "step", "expiresAt", "state", "pending", "result"}
+HANDBACK_STATES = ["preview", "quote", "execution", "result_unknown", "result", "acceptance", "settlement"]
+ISO_MS_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
+HEX64_RE = re.compile(r"^[a-f0-9]{64}$")
+SHA256_REF_RE = re.compile(r"^sha256:[a-f0-9]{64}$")
+TOOL_RE = re.compile(r"^[A-Za-z0-9_.:/-]{1,128}$")
+
 
 class Refused(Exception):
     pass
+
+
+def initialize_request(rpc_id=0):
+    return {"jsonrpc": "2.0", "id": rpc_id, "method": "initialize",
+            "params": {"protocolVersion": MCP_REQUESTED_PROTOCOL_VERSION, "capabilities": {},
+                       "clientInfo": {"name": "samedaydesk-free-continuation", "version": "1"}}}
+
+
+def select_protocol_version(advertised, supported=None):
+    supported = MCP_RECIPE_PROTOCOL_VERSIONS if supported is None else supported
+    offered = advertised if isinstance(advertised, list) else [advertised]
+    offered = [value for value in offered if isinstance(value, str)][:8]
+    for value in offered:
+        if value in supported:
+            return {"ok": True, "protocolVersion": value}
+    return {"ok": False, "charged": False, "code": PROTOCOL_VERSION_UNSUPPORTED,
+            "advertised": [value[:64] for value in offered], "supported": list(supported),
+            "nextStep": "The server advertised no protocol version this client implements. Use a client release that lists the advertised version; do not force a version."}
+
+
+def step_event_id(correlation_id, step):
+    text = "task-continuation/step-event|%s|%d" % (correlation_id, step)
+    h = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    variant = "%x" % ((int(h[16], 16) & 0x3) | 0x8)
+    return "%s-%s-4%s-%s%s-%s" % (h[0:8], h[8:12], h[13:16], variant, h[17:20], h[20:32])
+
+
+def _iso_ms(value):
+    if not isinstance(value, str) or not ISO_MS_RE.match(value):
+        return False
+    import datetime
+    try:
+        parsed = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
+    except ValueError:
+        return False
+    return parsed.strftime("%Y-%m-%dT%H:%M:%S.") + "%03dZ" % (parsed.microsecond // 1000) == value
+
+
+def _int(value):
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
+def check_handback(value):
+    """Same rules as checkHandback in packages/task-continuation/index.mjs."""
+    bad = Refused("continuation_handback_invalid")
+    if not isinstance(value, dict) or set(value) != HANDBACK_KEYS:
+        raise bad
+    if value["schema"] != HANDBACK_SCHEMA or value["v"] != 1 or isinstance(value["v"], bool):
+        raise bad
+    if value["hashAlg"] != "cj1":
+        raise Refused("continuation_hash_legacy")
+    task = value["task"]
+    if not isinstance(task, dict) or set(task) != {"tool", "origin", "subject", "termsVersion"}:
+        raise bad
+    if not isinstance(task["tool"], str) or not TOOL_RE.match(task["tool"]) \
+            or not isinstance(task["origin"], str) or not SHA256_REF_RE.match(task["origin"]) \
+            or not isinstance(task["subject"], str) or not HEX64_RE.match(task["subject"]) \
+            or not (task["termsVersion"] is None or (isinstance(task["termsVersion"], str) and SHA256_REF_RE.match(task["termsVersion"]))):
+        raise bad
+    if not isinstance(value["correlationId"], str) or not CORRELATION_RE.match(value["correlationId"]) or not _int(value["step"]):
+        raise bad
+    if not _iso_ms(value["expiresAt"]) or value["state"] not in HANDBACK_STATES:
+        raise bad
+    event = step_event_id(value["correlationId"], value["step"])
+    pending, result = value["pending"], value["result"]
+    if value["state"] in ("execution", "result_unknown"):
+        if not isinstance(pending, dict) or set(pending) != {"stepEventId", "step", "savedAt"} \
+                or pending["stepEventId"] != event or pending["step"] != value["step"] or not _iso_ms(pending["savedAt"]):
+            raise bad
+    elif pending is not None:
+        raise bad
+    if value["state"] in ("result", "acceptance", "settlement"):
+        if not isinstance(result, dict) or set(result) != {"stepEventId", "step", "digest"} \
+                or result["stepEventId"] != event or result["step"] != value["step"] \
+                or not isinstance(result["digest"], str) or not HEX64_RE.match(result["digest"]):
+            raise bad
+    elif result is not None:
+        raise bad
+    return value
+
+
+def import_handback(text):
+    if not isinstance(text, str) or len(text.encode("utf-8")) > HANDBACK_MAX_BYTES:
+        raise Refused("continuation_handback_invalid")
+    try:
+        value = json.loads(text)
+    except ValueError:
+        raise Refused("continuation_handback_invalid")
+    return check_handback(value)
+
+
+def export_handback(value):
+    # Canonical JSON, byte-identical to canonicalJson in the Node module for
+    # the handback's ASCII keys and values.
+    return json.dumps(check_handback(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
 def read_json(path):
@@ -63,12 +176,15 @@ def build_request(rpc_id, before, after, fields, token=None, correlation_id=None
     }
 
 
-def post(url, body, timeout=60):
+def post(url, body, timeout=60, protocol_version=None):
     data = json.dumps(body).encode("utf-8")
-    request = urllib.request.Request(url, data=data, method="POST", headers={
+    headers = {
         "content-type": "application/json",
         "accept": "application/json, text/event-stream",
-    })
+    }
+    if protocol_version:
+        headers["mcp-protocol-version"] = protocol_version
+    request = urllib.request.Request(url, data=data, method="POST", headers=headers)
     with urllib.request.urlopen(request, timeout=timeout) as response:
         text = response.read().decode("utf-8")
     messages = []
@@ -143,6 +259,14 @@ def main(argv):
     dry_run = "--dry-run" in args
     if dry_run:
         args.remove("--dry-run")
+    if len(args) == 2 and args[0] == "handback-check":
+        with open(args[1], "r", encoding="utf-8") as handle:
+            print(export_handback(import_handback(handle.read())))
+        return 0
+    if len(args) == 2 and args[0] == "protocol-check":
+        selected = select_protocol_version(args[1])
+        print(json.dumps(selected))
+        return 0 if selected["ok"] else 2
     if "--discovery" in args:
         index = args.index("--discovery")
         discovery = args[index + 1] if index + 1 < len(args) else None
@@ -174,7 +298,11 @@ def main(argv):
     if not isinstance(url, str) or not url.startswith(("http://", "https://")):
         raise Refused("usage_rejected")
     try:
-        reply = post(url, body)
+        selected = select_protocol_version((post(url, initialize_request(0)).get("result") or {}).get("protocolVersion"))
+        if not selected["ok"]:
+            print(json.dumps({"state": "refused", "refusal": selected}))
+            return 2
+        reply = post(url, body, protocol_version=selected["protocolVersion"])
     except (urllib.error.URLError, OSError, TimeoutError):
         sys.stderr.write("transport_failed\n")
         return 3

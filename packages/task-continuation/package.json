@@ -1,7 +1,7 @@
 {
   "name": "task-continuation",
-  "version": "1.2.0",
-  "description": "Dependency-free caller-held continuation: signed bearer token with kid keyring and expiry, canonical-JSON hashing, non-authorizing correlationId, discovery enum, refusal shape with exit map, deterministic step event id, validated 0600 caller file.",
+  "version": "1.3.0",
+  "description": "Dependency-free caller-held continuation: signed bearer token with kid keyring and expiry, canonical-JSON hashing, non-authorizing correlationId, discovery enum, refusal shape with exit map, deterministic step event id, validated 0600 caller file; 1.3.0 adds measurement fields with truthful discovery acquisition, task binding, a portable non-secret handback and the dispatch state kernel.",
   "type": "module",
   "private": true,
   "engines": {
@@ -9,15 +9,19 @@
   },
   "exports": {
     ".": "./index.mjs",
-    "./record.schema.json": "./record.schema.json"
+    "./record.schema.json": "./record.schema.json",
+    "./handback.schema.json": "./handback.schema.json",
+    "./measurement.schema.json": "./measurement.schema.json"
   },
   "files": [
     "index.mjs",
     "CONTRACT.md",
-    "record.schema.json"
+    "record.schema.json",
+    "handback.schema.json",
+    "measurement.schema.json"
   ],
   "scripts": {
-    "test": "node --test test/index.test.mjs"
+    "test": "node --test test/index.test.mjs test/consumer-contract.test.mjs"
   },
   "license": "MIT"
 }
