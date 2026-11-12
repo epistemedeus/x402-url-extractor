@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { operationIdentityFromAction } from "./operation-identity.mjs";
-import { freePageCompareAgentSkill } from "./page-change-free-surface.mjs";
+import { FREE_PAGE_COMPARE_ROUTE, FREE_PAGE_COMPARE_TOOL, freePageCompareAgentSkill } from "./page-change-free-surface.mjs";
+import { PAGE_CHANGE_CONTINUATION_META } from "./page-change-continuation.mjs";
 
 const A2A_VERSION = "1.0";
 const A2A_CATALOG_SKILL_ID = "discover-x402-paid-actions";
@@ -41,6 +42,94 @@ export function buildPaidActionSkills(actions = []) {
       inputModes: ["text/plain", "application/json"],
       outputModes: ["application/json"],
     };
+  });
+}
+
+// Machine recipe for continuing a free comparison from A2A. Not added to the
+// agent card. A2A terminal tasks are immutable: a continuation is a NEW task in
+// the same contextId that references the completed one. The caller keeps the
+// accepted artifact lineage and the bearer token; this server stores neither.
+export const FREE_PAGE_COMPARE_CONTINUATION_RECIPE_ID = "continue-held-page-observations";
+const A2A_TERMINAL_STATES = new Set(["TASK_STATE_COMPLETED", "TASK_STATE_FAILED", "TASK_STATE_CANCELED", "TASK_STATE_REJECTED"]);
+
+export function freePageCompareContinuationRecipe(publicUrl) {
+  const url = `${new URL(publicUrl).origin}${FREE_PAGE_COMPARE_ROUTE}`;
+  return {
+    id: FREE_PAGE_COMPARE_CONTINUATION_RECIPE_ID,
+    charged: false,
+    paymentRequired: false,
+    endpoint: { method: "POST", url, tool: FREE_PAGE_COMPARE_TOOL, meta: PAGE_CHANGE_CONTINUATION_META },
+    steps: [
+      { step: "save", send: "tools/call with before, after, fields and _meta {save:true}", keep: ["continuation.token", "continuation.correlationId", "after"] },
+      { step: "continue", send: "tools/call with before=kept after, a new after, the same fields and _meta {token}", keep: ["continuation.token", "continuation.correlationId", "after"] },
+    ],
+    a2a: {
+      contextId: "reuse",
+      taskId: "new_per_step",
+      referenceTaskIds: "previous_task",
+      completedTask: "immutable",
+      artifactLineage: "client_side",
+    },
+    parts: {
+      continuation: "part 1 data: {continuation: {token, correlationId, step}}. Bearer token, never log or share. No discovery here.",
+      measurement: "part 2 data: {measurement: {kind, tool, correlationId, step, discovery, outcome}}. No token or key here.",
+      discovery: "observed | declared | unknown, only on the measurement part, never read from the token",
+    },
+  };
+}
+
+function frozenCopy(value) {
+  if (!value || typeof value !== "object") return value;
+  const copy = Array.isArray(value) ? value.map(frozenCopy) : Object.fromEntries(Object.entries(value).map(([key, child]) => [key, frozenCopy(child)]));
+  return Object.freeze(copy);
+}
+
+const MEASUREMENT_FORBIDDEN_KEYS = new Set(["token", "continuation", "kid"]);
+
+function walk(value, visit, depth = 0) {
+  if (!value || typeof value !== "object" || depth > 32) return;
+  visit(value);
+  for (const child of Object.values(value)) walk(child, visit, depth + 1);
+}
+
+function assertSeparated(data, measurement) {
+  walk(data, (node) => {
+    if (!Array.isArray(node) && Object.hasOwn(node, "token") && Object.hasOwn(node, "discovery")) {
+      throw new Error("discovery must not sit beside a token; send it on the measurement part");
+    }
+  });
+  walk(measurement, (node) => {
+    if (Array.isArray(node)) return;
+    for (const key of Object.keys(node)) {
+      if (MEASUREMENT_FORBIDDEN_KEYS.has(key)) throw new Error("measurement part must not carry a token or key");
+    }
+  });
+}
+
+/**
+ * Client-side follow-up message for a terminal A2A task. Never mutates the
+ * completed task; returns a new taskId in the same contextId. The continuation
+ * (token) and the measurement (discovery) travel as separate parts.
+ */
+export function buildFreeCompareContinuationTask(priorTask, { data, measurement, taskId = randomUUID(), messageId = randomUUID() } = {}) {
+  if (!priorTask || typeof priorTask !== "object" || typeof priorTask.id !== "string" || typeof priorTask.contextId !== "string") {
+    throw new Error("prior task needs id and contextId");
+  }
+  if (!A2A_TERMINAL_STATES.has(priorTask.status?.state)) throw new Error("prior task is not terminal");
+  if (taskId === priorTask.id) throw new Error("continuation needs a new taskId");
+  assertSeparated(data, measurement);
+  const parts = [{ data: data ?? null, mediaType: "application/json" }];
+  if (measurement !== undefined) parts.push({ data: { measurement }, mediaType: "application/json" });
+  return frozenCopy({
+    taskId,
+    contextId: priorTask.contextId,
+    message: {
+      role: "ROLE_USER",
+      messageId,
+      contextId: priorTask.contextId,
+      referenceTaskIds: [priorTask.id],
+      parts,
+    },
   });
 }
 
