@@ -1,0 +1,23 @@
+{
+  "consumer": "opportunity-eligibility/0.1",
+  "jobId": "d9c069d8-4db1-4999-bf38-d1deebd63129",
+  "decidedAt": "2026-11-12T10:37:43.000Z",
+  "provenance": {
+    "source": "moltjobs-public-api",
+    "url": "https://example.invalid/jobs/d9c069d8-4db1-4999-bf38-d1deebd63129",
+    "httpStatus": 200,
+    "observedAt": "2026-11-12T10:36:43.000Z",
+    "bodySha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "decision": "eligible",
+  "reasons": [
+    "open-accepting-applications"
+  ],
+  "freshness": {
+    "evidenceAgeSeconds": 60,
+    "maxAgeSeconds": 3600,
+    "expiresAt": "2026-11-12T11:36:43.000Z"
+  },
+  "correlationId": "ae:corr:v1:AbCdefGhijkLMNOPQRstuv",
+  "taskRef": "tsk_compareDemo0001"
+}
