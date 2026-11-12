@@ -47,11 +47,43 @@ function parseRpcBody(text) {
   return messages.find((message) => message && (Object.hasOwn(message, "result") || Object.hasOwn(message, "error"))) || messages.at(-1) || null;
 }
 
-function toolBody(result) {
-  const text = result?.content?.find((item) => item.type === "text")?.text
-    ?? result?.result?.content?.find((item) => item.type === "text")?.text;
-  assert.equal(typeof text, "string");
-  return JSON.parse(text);
+// Separates an SDK or wire failure from a domain JSON result. Only text that
+// parses to this product's envelope is a domain body. SDK input validation
+// answers isError with "MCP error -32602: ..." text, which is a protocol
+// refusal and is never parsed as a domain result.
+function toolOutcome(message) {
+  if (message && typeof message === "object" && Object.hasOwn(message, "error")) {
+    return { kind: "rpc_error", code: message.error?.code, message: message.error?.message };
+  }
+  const result = message && typeof message === "object" && Object.hasOwn(message, "result") ? message.result : message;
+  const isError = result?.isError === true;
+  const text = result?.content?.find((item) => item.type === "text")?.text;
+  if (typeof text !== "string") return { kind: "wire", isError, text: null };
+  const protocol = /^MCP error (-?\d+):/.exec(text);
+  if (protocol) return { kind: "protocol", isError, code: Number(protocol[1]), text };
+  let body;
+  try { body = JSON.parse(text); } catch { return { kind: "wire", isError, text }; }
+  if (!body || typeof body !== "object" || Array.isArray(body) || body.product !== PRODUCT || body.schemaVersion !== SCHEMA_VERSION) {
+    return { kind: "wire", isError, text };
+  }
+  return { kind: "domain", isError, body, structuredContent: result.structuredContent };
+}
+
+function toolBody(message) {
+  const outcome = toolOutcome(message);
+  assert.equal(outcome.kind, "domain", `expected a domain JSON result, got ${outcome.kind}: ${outcome.text ?? outcome.message ?? ""}`);
+  return outcome.body;
+}
+
+function assertProtocolRefusal(message, code = -32602) {
+  const outcome = toolOutcome(message);
+  assert.equal(outcome.kind, "protocol", `expected an SDK protocol refusal, got ${outcome.kind}`);
+  assert.equal(outcome.isError, true);
+  assert.equal(outcome.code, code);
+  assert.match(outcome.text, /Input validation error/);
+  assert.match(outcome.text, new RegExp(OPPORTUNITY_COMPARE_MCP_TOOL));
+  assert.equal(message.result.structuredContent, undefined);
+  return outcome;
 }
 
 async function listenRoute(env = { [OPPORTUNITY_COMPARE_MCP_ENV]: OPPORTUNITY_COMPARE_MCP_FLAG_ON }, afterMount = null) {
@@ -181,17 +213,45 @@ test("typed refusal: malformed envelope is invalid_input on both halves", async 
     assert.equal(body.code, "invalid_input");
     assert.equal(body.error, "invalid_input");
   }
+  // Hosted: SDK input validation refuses schema-invalid arguments with an
+  // isError -32602 protocol result before the handler runs. Arguments that
+  // pass the SDK schema but fail the domain contract (an extra top-level key,
+  // which the SDK strips) still reach the handler and get the typed body.
   const profile = await listenRoute();
   try {
-    const hosted = await postRpc(profile.base, callCompareRpc(malformedEnvelope));
-    assert.equal(hosted.response.status, 200);
-    const body = toolBody(hosted.json);
-    assert.equal(body.ok, false);
-    assert.equal(body.code, "invalid_input");
-    assert.equal(hosted.json.result?.isError || body.ok === false, true);
+    for (const args of [malformedEnvelope, {}, { records: "nope" }, { records: [1] }]) {
+      const hosted = await postRpc(profile.base, callCompareRpc(args));
+      assert.equal(hosted.response.status, 200);
+      assertProtocolRefusal(hosted.json);
+      assertNoPaymentChallenge(hosted.response, hosted.json, hosted.text);
+    }
+    const extra = await postRpc(profile.base, callCompareRpc({ records: [eligible], extra: true }));
+    assert.equal(extra.response.status, 200);
+    const outcome = toolOutcome(extra.json);
+    assert.equal(outcome.kind, "domain");
+    assert.equal(outcome.isError, true);
+    assert.equal(outcome.body.ok, false);
+    assert.equal(outcome.body.charged, false);
+    assert.equal(outcome.body.code, "invalid_input");
+    assert.equal(outcome.body.error, "invalid_input");
   } finally {
     await profile.close();
   }
+});
+
+test("tool outcome: SDK protocol text and non-JSON text are never a domain result", () => {
+  const protocol = toolOutcome({
+    jsonrpc: "2.0",
+    id: 1,
+    result: { content: [{ type: "text", text: "MCP error -32602: Input validation error: Invalid arguments for tool opportunity_compare: x" }], isError: true },
+  });
+  assert.equal(protocol.kind, "protocol");
+  assert.equal(protocol.code, -32602);
+  assert.equal(toolOutcome({ jsonrpc: "2.0", id: 1, result: { content: [{ type: "text", text: "response exceeds server ceiling" }], isError: true } }).kind, "wire");
+  assert.equal(toolOutcome({ jsonrpc: "2.0", id: 1, result: { content: [{ type: "text", text: "{\"ok\":true}" }] } }).kind, "wire");
+  assert.equal(toolOutcome({ jsonrpc: "2.0", id: 1, error: { code: -32602, message: "Unknown tool" } }).kind, "rpc_error");
+  assert.equal(toolOutcome(null).kind, "wire");
+  assert.throws(() => toolBody({ jsonrpc: "2.0", id: 1, result: { content: [{ type: "text", text: "MCP error -32602: x" }], isError: true } }), assert.AssertionError);
 });
 
 test("typed refusal: a refused record is typed in result.refused on both halves", async () => {
@@ -258,7 +318,7 @@ test("typed refusal: an unknown record stays in result.unknown on both halves", 
   }
 });
 
-test("bounded input size: oversized body is payload_too_large; over 500 records is invalid_input", async () => {
+test("bounded input size: oversized body is payload_too_large; over 500 records is installed invalid_input and hosted -32602", async () => {
   const tooMany = await compareOpportunityRecords({ records: Array.from({ length: 501 }, () => ({ ...eligible, jobId: `id-${Math.random()}` })) });
   assert.equal(tooMany.isError, true);
   assert.equal(JSON.parse(tooMany.content[0].text).code, "invalid_input");
@@ -274,6 +334,40 @@ test("bounded input size: oversized body is payload_too_large; over 500 records 
     assert.equal(body.code, "payload_too_large");
     assert.equal(body.ok, false);
     assert.equal(body.charged, false);
+  } finally {
+    await profile.close();
+  }
+
+  // Hosted record bound: records small enough to pass the shared byte and
+  // node admission reach SDK validation, which refuses 501 records (maxItems
+  // 500) with a -32602 protocol result.
+  const route = await listenRoute();
+  try {
+    const small = Array.from({ length: 501 }, (_, i) => ({ jobId: `id-${i}` }));
+    const hosted = await postRpc(route.base, callCompareRpc({ records: small, now: NOW }));
+    assert.equal(hosted.response.status, 200);
+    assertProtocolRefusal(hosted.json);
+  } finally {
+    await route.close();
+  }
+});
+
+test("output ceiling: an oversized success is a typed output_too_large body, not SDK text", async () => {
+  const profile = await listenRoute({
+    [OPPORTUNITY_COMPARE_MCP_ENV]: "on",
+    PAGE_CHANGE_HTTP_MAX_OUTPUT_BYTES: "64",
+  });
+  try {
+    const hosted = await postRpc(profile.base, callCompareRpc(positiveArguments));
+    assert.equal(hosted.response.status, 200);
+    const outcome = toolOutcome(hosted.json);
+    assert.equal(outcome.kind, "domain");
+    assert.equal(outcome.isError, true);
+    assert.equal(outcome.body.ok, false);
+    assert.equal(outcome.body.charged, false);
+    assert.equal(outcome.body.code, "output_too_large");
+    assert.equal(outcome.body.error, "output_too_large");
+    assert.equal(outcome.structuredContent, undefined);
   } finally {
     await profile.close();
   }

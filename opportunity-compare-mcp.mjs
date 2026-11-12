@@ -213,22 +213,37 @@ export function mountOpportunityCompareMcp(app, { env = process.env, observe = n
       const host = {
         registerTool(name, config, handler) {
           return server.registerTool(name, config, async (args) => {
-            const result = await handler(suppliedArguments ?? args);
-            const output = result?.structuredContent || (result?.content?.[0]?.type === "text"
-              ? safeJson(result.content[0].text)
-              : null);
-            if (output && output.ok === true) {
-              if (Buffer.byteLength(JSON.stringify(output), "utf8") > limits.maxOutputBytes) {
-                throw new PageChangeHttpError("response exceeds server ceiling", { status: 413, code: "output_too_large" });
+            // A throw here would reach the SDK, which answers with plain
+            // non-JSON text. Answer with the typed failure body instead, the
+            // same way /mcp/page-change does. SDK input validation runs before
+            // this handler and keeps its own -32602 result.
+            try {
+              const result = await handler(suppliedArguments ?? args);
+              const output = result?.structuredContent || (result?.content?.[0]?.type === "text"
+                ? safeJson(result.content[0].text)
+                : null);
+              if (output && output.ok === true) {
+                if (Buffer.byteLength(JSON.stringify(output), "utf8") > limits.maxOutputBytes) {
+                  throw new PageChangeHttpError("response exceeds server ceiling", { status: 413, code: "output_too_large" });
+                }
               }
+              const failed = Boolean(result?.isError) || !output || output.ok !== true || output.charged !== false;
+              if (journalCompare) {
+                if (exchange.abort.signal.aborted) note("aborted", "request_aborted");
+                else if (failed) note("refused", typeof output?.code === "string" ? output.code : typeof output?.error === "string" ? output.error : undefined);
+                else note(pageChangeServiceOutcome(output));
+              }
+              return result;
+            } catch (error) {
+              const bounded = boundedToolError(error);
+              if (journalCompare) {
+                note(
+                  exchange.abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, bounded),
+                  exchange.abort.signal.aborted ? "request_aborted" : bounded?.code,
+                );
+              }
+              return { content: [{ type: "text", text: JSON.stringify(admissionBody(bounded)) }], isError: true };
             }
-            const failed = Boolean(result?.isError) || !output || output.ok !== true || output.charged !== false;
-            if (journalCompare) {
-              if (exchange.abort.signal.aborted) note("aborted", "request_aborted");
-              else if (failed) note("refused", typeof output?.code === "string" ? output.code : typeof output?.error === "string" ? output.error : undefined);
-              else note(pageChangeServiceOutcome(output));
-            }
-            return result;
           });
         },
       };
