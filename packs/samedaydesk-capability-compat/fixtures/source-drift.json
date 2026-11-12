@@ -1,0 +1,144 @@
+{
+  "schema": "samedaydesk.capability-compat.source-drift.fixture.v1",
+  "repo": "epistemedeus/x402-url-extractor",
+  "note": "Recorded from git history at the exact commits named below. ef846285 introduced service-version.mjs as the single version source when package.json was still 1.11.50; it did not introduce 1.23.55. No invented versions or rates.",
+  "observedAtInstalledPin": {
+    "commit": "e90676f48da875c5e0f475f57f7774de947b75a7",
+    "serviceVersion": "1.23.55",
+    "sdkVersion": "1.32.2",
+    "packageJson": {
+      "path": "package.json",
+      "gitBlobSha": "e75772786c9f216319d5d582ce93876d3d4a79f4",
+      "version": "1.23.55",
+      "dependency": {
+        "@modelcontextprotocol/sdk": "1.32.2"
+      }
+    },
+    "packageLock": {
+      "path": "package-lock.json",
+      "gitBlobSha": "c568833fa05e7d83c7d863f28e1435e43d21df74",
+      "bytes": 91414,
+      "lockfileVersion": 3,
+      "version": "1.23.55",
+      "sdk": {
+        "path": "packages[node_modules/@modelcontextprotocol/sdk]",
+        "version": "1.32.2",
+        "resolved": "https://registry.npmjs.org/@modelcontextprotocol/sdk/-/sdk-1.32.2.tgz",
+        "integrity": "sha512-SWsVtH/0vULSQStoZ6xxH2K09Li8fXYTMC64ZeogCdpZ3XSi1eCPOByV1OpuJxuI3OcmHhosDWYyii07tpPsLw=="
+      }
+    }
+  },
+  "sdkDrift": {
+    "classification": "compatible-minor",
+    "mapKind": "legacy",
+    "protocol": "2025-11-25",
+    "keepContract": "synchronous-free-page-change",
+    "before": {
+      "commit": "53069cfcb3094dc7f1b97ddfe4446dbe5c14c437",
+      "message": "Lock official MCP client compatibility on the existing merchant.",
+      "role": "H99110 writer base; package.json and package-lock.json both pin @modelcontextprotocol/sdk 1.30.0",
+      "serviceVersion": "1.23.55",
+      "sdkVersion": "1.30.0",
+      "packageJson": {
+        "path": "package.json",
+        "gitBlobSha": "5554344116d91b562cdc108f33956c6fb71bd8a0",
+        "version": "1.23.55",
+        "dependency": {
+          "@modelcontextprotocol/sdk": "1.30.0"
+        }
+      },
+      "packageLock": {
+        "path": "package-lock.json",
+        "gitBlobSha": "d9965d0f25c9fa099bf2680bed6c1163b5423af8",
+        "bytes": 129801,
+        "lockfileVersion": 3,
+        "version": "1.23.55",
+        "sdk": {
+          "path": "packages[node_modules/@modelcontextprotocol/sdk]",
+          "version": "1.30.0",
+          "resolved": "https://registry.npmjs.org/@modelcontextprotocol/sdk/-/sdk-1.30.0.tgz",
+          "integrity": "sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA=="
+        }
+      }
+    },
+    "introducedAt": {
+      "commit": "498e4fb515570cd0883605ad4450449cadb272a1",
+      "message": "fix(deps): bound reachable merchant dependency advisories",
+      "parent": "360fa586f936ef0d1c2daaafccf722da66b600ff",
+      "serviceVersion": "1.23.55",
+      "sdkVersion": "1.32.2",
+      "packageLock": {
+        "path": "package-lock.json",
+        "gitBlobSha": "19dd0b373458952f7969871c1e428aa2b94f8fcd",
+        "bytes": 129939,
+        "sdk": {
+          "path": "packages[node_modules/@modelcontextprotocol/sdk]",
+          "version": "1.32.2",
+          "resolved": "https://registry.npmjs.org/@modelcontextprotocol/sdk/-/sdk-1.32.2.tgz",
+          "integrity": "sha512-SWsVtH/0vULSQStoZ6xxH2K09Li8fXYTMC64ZeogCdpZ3XSi1eCPOByV1OpuJxuI3OcmHhosDWYyii07tpPsLw=="
+        }
+      }
+    },
+    "after": {
+      "commit": "e90676f48da875c5e0f475f57f7774de947b75a7",
+      "role": "installed merchant lock at the capability-pack base pin"
+    }
+  },
+  "serviceVersionDrift": {
+    "classification": "compatible-minor",
+    "keepContract": "synchronous-free-page-change",
+    "versionSource": {
+      "commit": "ef846285b02d76cb09bfa92925f6a330e3037b07",
+      "parent": "b37c072902fb9dadcd6b97e5fae989152f8897d3",
+      "message": "Use one merchant version source",
+      "serviceVersionThen": "1.11.50",
+      "note": "Introduced service-version.mjs, which exports SERVICE_VERSION from package.json. This commit did not introduce 1.23.55; both this commit and its parent declare 1.11.50."
+    },
+    "before": {
+      "commit": "b309c6e2a1e1794a324c1c422c1c841a76038686",
+      "serviceVersion": "1.23.54",
+      "sdkVersion": "1.30.0",
+      "alsoReleasedAt": {
+        "commit": "8611f361801d0d958dc69335a2a319dd633e3db2",
+        "message": "Release maintained lockfile identity corrections as 1.23.54",
+        "serviceVersion": "1.23.54",
+        "sdkVersion": "1.30.0",
+        "packageLock": {
+          "path": "package-lock.json",
+          "gitBlobSha": "8e896d5fd72703a0fdb4b193151e0dcbc149b7c2",
+          "bytes": 123263,
+          "version": "1.23.54",
+          "sdk": {
+            "path": "packages[node_modules/@modelcontextprotocol/sdk]",
+            "version": "1.30.0",
+            "resolved": "https://registry.npmjs.org/@modelcontextprotocol/sdk/-/sdk-1.30.0.tgz",
+            "integrity": "sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA=="
+          }
+        }
+      }
+    },
+    "introducedAt": {
+      "commit": "cd0609e5ad68e0b5a9e0fa90e17d26a8998235e7",
+      "parent": "b309c6e2a1e1794a324c1c422c1c841a76038686",
+      "message": "Persist bounded seller audit outcomes on exact delivery evidence (#212)",
+      "serviceVersion": "1.23.55",
+      "sdkVersion": "1.30.0",
+      "packageLock": {
+        "path": "package-lock.json",
+        "gitBlobSha": "001fa320adffe2dfb214e8651bcc379a2703c9b7",
+        "bytes": 123263,
+        "version": "1.23.55",
+        "sdk": {
+          "path": "packages[node_modules/@modelcontextprotocol/sdk]",
+          "version": "1.30.0",
+          "resolved": "https://registry.npmjs.org/@modelcontextprotocol/sdk/-/sdk-1.30.0.tgz",
+          "integrity": "sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA=="
+        }
+      }
+    },
+    "after": {
+      "commit": "e90676f48da875c5e0f475f57f7774de947b75a7",
+      "serviceVersion": "1.23.55"
+    }
+  }
+}
