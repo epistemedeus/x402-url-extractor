@@ -78,8 +78,12 @@ function toolOutcome(message) {
 // An HTTP reply that is not 200 is a transport admission refusal (413
 // payload_too_large, 400 json_node_limit, ...), even when its body is
 // product-shaped JSON. It is never a domain result or a semantic disagreement.
+// No reply at all (a connection reset or other socket error) is a transport
+// failure with an unknown outcome: not a 413 and not an admission refusal,
+// because no server receipt establishes a rejection.
 function hostedOutcome(reply) {
   const status = reply?.response?.status ?? reply?.status ?? null;
+  if (status === null) return { kind: "transport_failure", outcome: "unknown", error: reply?.error ?? null };
   if (status !== 200) return { kind: "transport", status, code: reply?.json?.code ?? null };
   return toolOutcome(reply.json);
 }
@@ -95,8 +99,12 @@ function installedOutcome(result) {
 function parityOver(installed, hosted) {
   const a = installedOutcome(installed);
   const b = hostedOutcome(hosted);
-  if (a.kind === "transport" || b.kind === "transport") return { compared: false, installed: a, hosted: b };
+  if ([a.kind, b.kind].some((kind) => kind === "transport" || kind === "transport_failure")) return { compared: false, installed: a, hosted: b };
   return { compared: true, installed: a, hosted: b, equal: a.kind === b.kind && isDeepStrictEqual(a.body, b.body) };
+}
+
+function domainOkForReset() {
+  return { content: [{ type: "text", text: JSON.stringify({ ok: true, product: PRODUCT, schemaVersion: SCHEMA_VERSION, charged: false }) }] };
 }
 
 function jsonNodes(value) {
@@ -334,7 +342,13 @@ test("tool outcome: SDK protocol text and non-JSON text are never a domain resul
   const tooLarge = hostedOutcome({ status: 413, json: { ...typed, error: "payload_too_large", code: "payload_too_large" } });
   assert.deepEqual(tooLarge, { kind: "transport", status: 413, code: "payload_too_large" });
   assert.equal(hostedOutcome({ status: 400, json: { ...typed, error: "json_node_limit", code: "json_node_limit" } }).kind, "transport");
-  assert.equal(hostedOutcome({ status: null, error: "ECONNRESET" }).kind, "transport");
+  const reset = hostedOutcome({ status: null, error: "ECONNRESET" });
+  assert.deepEqual(reset, { kind: "transport_failure", outcome: "unknown", error: "ECONNRESET" });
+  assert.notEqual(reset.kind, "transport");
+  assert.equal(Object.hasOwn(reset, "status"), false);
+  const resetParity = parityOver(domainOkForReset(), { status: null, error: "ECONNRESET" });
+  assert.equal(resetParity.compared, false);
+  assert.equal(resetParity.hosted.kind, "transport_failure");
   const refusedInstalled = { transport: { admitted: false, status: 413, code: "payload_too_large" } };
   assert.deepEqual(installedOutcome(refusedInstalled), { kind: "transport", status: 413, code: "payload_too_large" });
   const domainOk = { content: [{ type: "text", text: JSON.stringify({ ...typed, ok: true }) }] };
