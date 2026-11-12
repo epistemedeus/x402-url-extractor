@@ -1,0 +1,42 @@
+{
+  "note": "Retained hosted acquisition bytes from epistemedeus/neomorphic-io at the selected pin. Read from the git tree at that SHA. This is not a live download, not a customer, and not a claim that any public URL currently serves these files.",
+  "networkRequired": false,
+  "liveClaimed": false,
+  "neomorphicRepo": "epistemedeus/neomorphic-io",
+  "neomorphicSha": "3232f2891e7af5df3c2a350c764bfdc9d35b1f12",
+  "documentedHostedEntry": "https://agents.samedaydesk.com/mcp/page-change",
+  "documentedHostedEntryLive": false,
+  "artifacts": [
+    {
+      "path": "dist/downloads/samedaydesk-caller-result/0.1.2/samedaydesk-caller-result-0.1.2.tar.gz",
+      "sha": "8c31f96a11a4c3abd3828ed4fc7d0b8a6424bb22",
+      "bytes": 34755
+    },
+    {
+      "path": "dist/downloads/samedaydesk-caller-result/0.1.2/descriptor.json",
+      "sha": "ab864daeaf5d3adbd9f5724e0477e68956a47170",
+      "bytes": 1493
+    },
+    {
+      "path": "dist/downloads/samedaydesk-caller-result/0.1.2/provenance.json",
+      "sha": "4af1890857b6ab1e47f046f6ac878309bbf9989b",
+      "bytes": 1794
+    },
+    {
+      "path": "dist/downloads/samedaydesk-caller-result/0.1.1/INSTALL.md",
+      "sha": "dd706ede36328281e8964a400b3e912b208c203a",
+      "bytes": 973,
+      "note": "0.1.2 has no INSTALL.md in that tree; 0.1.1 documents unpack and npm ci --ignore-scripts."
+    },
+    {
+      "path": "dist/downloads/lockfile-pin-delta/0.1.0/package/package.json",
+      "sha": "8809e33a36a5124611b1dea574d5d50c2f853530",
+      "bytes": 446
+    },
+    {
+      "path": "dist/downloads/compatibility-envelope/0.0.1/COLD-INSTALL.txt",
+      "sha": "4b4d6a6d9c5d39701b82d95054dcd42c30e16d68",
+      "bytes": 1593
+    }
+  ]
+}
