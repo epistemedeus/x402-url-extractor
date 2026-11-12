@@ -1,0 +1,38 @@
+{
+  "name": "samedaydesk-capability-compat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Installable capability pack for official MCP client source and protocol changes on the free page-change profile. Optional maintained service is the existing POST /mcp/page-change mount. No payment, signing, or live merchant change.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "bin": {
+    "capability-compat": "bin/capability-compat.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./map": "./src/map.mjs",
+    "./probe": "./src/probe.mjs",
+    "./acquisition": "./src/acquisition.mjs",
+    "./pin": "./PIN.json",
+    "./schema/preview.v1": "./schema/capability-provider.preview.v1.schema.json"
+  },
+  "files": [
+    "bin",
+    "src",
+    "schema",
+    "fixtures",
+    "PIN.json",
+    "README.md",
+    "package-lock.json"
+  ],
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/sdk": "1.32.2"
+  },
+  "license": "MIT"
+}
