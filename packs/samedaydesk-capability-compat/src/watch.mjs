@@ -19,12 +19,24 @@ export function parseRpc(text) {
   return messages.find((message) => message && (Object.hasOwn(message, "result") || Object.hasOwn(message, "error"))) || messages.at(-1) || null;
 }
 
-export function watchFetch(origin) {
+function requestUrl(input) {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.href;
+  return input?.url || "";
+}
+
+/**
+ * Wrap a fetch implementation (injected, or globalThis.fetch) so probe code can
+ * record events. The wrapper is passed to StreamableHTTPClientTransport as
+ * `{ fetch }` (sdk 1.32.2 and client 2.4.0 both accept that option). This does
+ * not assign globalThis.fetch.
+ */
+export function createWatchedFetch(origin, { fetch: provided } = {}) {
+  const base = provided ?? globalThis.fetch.bind(globalThis);
   const events = [];
-  const original = globalThis.fetch.bind(globalThis);
-  globalThis.fetch = async (input, init = {}) => {
-    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    const response = await original(input, init);
+  const fetch = async (input, init = {}) => {
+    const url = requestUrl(input);
+    const response = await base(input, init);
     if (!String(url).startsWith(origin)) return response;
     let requestBody = null;
     if (typeof init.body === "string") {
@@ -53,8 +65,14 @@ export function watchFetch(origin) {
   };
   return {
     events,
-    restore() { globalThis.fetch = original; },
+    fetch,
+    restore() {},
   };
+}
+
+/** @deprecated use createWatchedFetch; kept as a compatible alias. Does not patch globalThis.fetch. */
+export function watchFetch(origin, options) {
+  return createWatchedFetch(origin, options);
 }
 
 export function noPaymentSignature(events) {

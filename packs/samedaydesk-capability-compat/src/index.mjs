@@ -12,3 +12,13 @@ export {
   compareHeldPages,
 } from "./probe.mjs";
 export { compareInstalledVsHosted, loadHostedAcquisitionReference } from "./acquisition.mjs";
+export {
+  describeCapabilities,
+  protocolFromEnv,
+  exitCodeForEnvelope,
+  diagnosticForEnvelope,
+  FAILURE_EXIT,
+  PREVIEW_SCHEMA,
+  DIAGNOSTIC_SCHEMA,
+  ENV_PROTOCOL_KEYS,
+} from "./describe-capabilities.mjs";

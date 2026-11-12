@@ -11,7 +11,7 @@ import {
   UNKNOWN_TOOL_RECOVERY,
   mapClientSdk,
 } from "./map.mjs";
-import { noPaymentSignature, watchFetch } from "./watch.mjs";
+import { noPaymentSignature, createWatchedFetch } from "./watch.mjs";
 
 const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/public-two-observations.json");
 
@@ -24,9 +24,48 @@ function endpointOrigin(endpoint) {
   return url.origin;
 }
 
-async function connectLegacy(endpoint) {
+export function isAbortError(error, signal) {
+  if (signal?.aborted) return true;
+  if (!error) return false;
+  if (error.name === "AbortError") return true;
+  if (error.code === "ABORT_ERR") return true;
+  return false;
+}
+
+export function throwIfAborted(signal, cause) {
+  if (!signal?.aborted && !isAbortError(cause, signal)) return;
+  if (cause && isAbortError(cause, signal) && cause !== signal.reason) throw cause;
+  const reason = signal?.reason;
+  if (reason instanceof Error) throw reason;
+  const error = new Error(reason ? String(reason) : "The operation was aborted");
+  error.name = "AbortError";
+  error.code = "ABORT_ERR";
+  if (reason !== undefined) error.cause = reason;
+  throw error;
+}
+
+/**
+ * Options accepted by StreamableHTTPClientTransport in
+ * @modelcontextprotocol/sdk@1.32.2 (dist/esm/client/streamableHttp.d.ts
+ * StreamableHTTPClientTransportOptions.fetch / requestInit) and
+ * @modelcontextprotocol/client@2.4.0 (dist/index.d.mts, same option names).
+ * Verified from unpkg source at those versions; both set this._fetch = opts?.fetch.
+ */
+export function transportOptions({ fetch, signal } = {}) {
+  const opts = {};
+  if (typeof fetch === "function") opts.fetch = fetch;
+  if (signal) opts.requestInit = { signal };
+  return Object.keys(opts).length ? opts : undefined;
+}
+
+function watchedTransport({ endpoint, fetch } = {}) {
+  const wire = createWatchedFetch(endpointOrigin(endpoint), { fetch });
+  return { wire, fetch: wire.fetch };
+}
+
+async function connectLegacy(endpoint, { fetch, signal } = {}) {
   const client = new LegacyClient({ name: "capability-compat-legacy", version: OFFICIAL_CLIENT_NEGOTIATION.lockedSdk });
-  const transport = new LegacyTransport(new URL(endpoint));
+  const transport = new LegacyTransport(new URL(endpoint), transportOptions({ fetch, signal }));
   await client.connect(transport);
   return {
     kind: "legacy",
@@ -36,7 +75,7 @@ async function connectLegacy(endpoint) {
   };
 }
 
-async function connectCurrent(endpoint, mode) {
+async function connectCurrent(endpoint, mode, { fetch, signal } = {}) {
   const options = mode === undefined || mode === "default"
     ? undefined
     : { versionNegotiation: { mode } };
@@ -44,7 +83,7 @@ async function connectCurrent(endpoint, mode) {
     ? OFFICIAL_CLIENT_NEGOTIATION.pinClientName
     : "capability-compat-current";
   const client = new CurrentClient({ name, version: OFFICIAL_CLIENT_NEGOTIATION.pinClientVersion }, options);
-  const transport = new CurrentTransport(new URL(endpoint));
+  const transport = new CurrentTransport(new URL(endpoint), transportOptions({ fetch, signal }));
   await client.connect(transport);
   return {
     kind: "current",
@@ -54,11 +93,12 @@ async function connectCurrent(endpoint, mode) {
   };
 }
 
-export async function connectClient({ endpoint, clientSdk, mode } = {}) {
+export async function connectClient({ endpoint, clientSdk, mode, fetch, signal } = {}) {
   if (!endpoint) throw new Error("endpoint is required");
+  throwIfAborted(signal);
   const mapped = mapClientSdk(clientSdk || OFFICIAL_CLIENT_NEGOTIATION.lockedCurrentClient);
-  if (mapped.kind === "legacy") return connectLegacy(endpoint);
-  return connectCurrent(endpoint, mode);
+  if (mapped.kind === "legacy") return connectLegacy(endpoint, { fetch, signal });
+  return connectCurrent(endpoint, mode, { fetch, signal });
 }
 
 export function isPinRefusalError(error) {
@@ -88,17 +128,20 @@ export async function detectPinRefusal({
   endpoint,
   clientSdk = OFFICIAL_CLIENT_NEGOTIATION.lockedCurrentClient,
   protocol = OFFICIAL_CLIENT_NEGOTIATION.refusedProtocol,
+  fetch,
+  signal,
 } = {}) {
   if (!endpoint) throw new Error("endpoint is required");
+  throwIfAborted(signal);
   const mapped = mapClientSdk(clientSdk);
   if (mapped.kind !== "current") {
     throw new Error("explicit protocol pin refusal is defined for @modelcontextprotocol/client 2.4.0");
   }
-  const wire = watchFetch(endpointOrigin(endpoint));
+  const { wire, fetch: watched } = watchedTransport({ endpoint, fetch });
   let session = null;
   let error = null;
   try {
-    session = await connectCurrent(endpoint, { pin: protocol });
+    session = await connectCurrent(endpoint, { pin: protocol }, { fetch: watched, signal });
   } catch (caught) {
     error = caught;
   } finally {
@@ -106,6 +149,7 @@ export async function detectPinRefusal({
       try { await session.close(); } catch { /* already closed or refused mid-session */ }
     }
   }
+  throwIfAborted(signal, error);
   const discover = describeFreeDiscoverRefusal(wire.events, protocol);
   const result = {
     connected: Boolean(session) && !error,
@@ -122,11 +166,14 @@ export async function detectPinRefusal({
 export async function recoverToSupportedProtocol({
   endpoint,
   clientSdk = OFFICIAL_CLIENT_NEGOTIATION.lockedCurrentClient,
+  fetch,
+  signal,
 } = {}) {
   if (!endpoint) throw new Error("endpoint is required");
+  throwIfAborted(signal);
   const mapped = mapClientSdk(clientSdk);
   const mode = mapped.kind === "current" ? "default" : undefined;
-  const session = await connectClient({ endpoint, clientSdk: mapped.id, mode });
+  const session = await connectClient({ endpoint, clientSdk: mapped.id, mode, fetch, signal });
   const protocol = session.protocol?.() ?? null;
   return { session, protocol, recovered: protocol === OFFICIAL_CLIENT_NEGOTIATION.legacyProtocol || protocol == null };
 }
@@ -143,8 +190,10 @@ export async function recoverUnknownTool({
   session,
   arguments: args,
   unknownName = UNKNOWN_TOOL_RECOVERY.exampleUnknownName,
+  signal,
 } = {}) {
   if (!session?.client) throw new Error("session.client is required");
+  throwIfAborted(signal);
   const request = args || loadHeldObservations();
   let unknown = null;
   try {
@@ -152,14 +201,16 @@ export async function recoverUnknownTool({
   } catch (error) {
     unknown = error;
   }
+  throwIfAborted(signal, unknown);
   if (!isUnknownToolError(unknown)) {
     throw unknown || new Error("expected unknown-tool refusal with tools/list recovery data");
   }
   const listed = await session.client.listTools();
+  throwIfAborted(signal);
   const names = (listed.tools || []).map((tool) => tool.name);
   const toolName = names.includes(FREE_PAGE_CHANGE.tool) ? FREE_PAGE_CHANGE.tool : names[0];
   const result = await session.client.callTool({ name: toolName, arguments: request });
-  return { unknown, listed: names, result, body: toolBody(result) };
+  return { unknown, listed: names, tools: listed.tools || [], result, body: toolBody(result) };
 }
 
 export function toolBody(result) {
@@ -179,9 +230,12 @@ export async function compareHeldPages({
   clientSdk = OFFICIAL_CLIENT_NEGOTIATION.lockedCurrentClient,
   arguments: args,
   mode = "default",
+  fetch,
+  signal,
 } = {}) {
-  const wire = watchFetch(endpointOrigin(endpoint));
-  const session = await connectClient({ endpoint, clientSdk, mode });
+  throwIfAborted(signal);
+  const { wire, fetch: watched } = watchedTransport({ endpoint, fetch });
+  const session = await connectClient({ endpoint, clientSdk, mode, fetch: watched, signal });
   try {
     const listed = await session.client.listTools();
     const names = (listed.tools || []).map((tool) => tool.name);
@@ -191,6 +245,7 @@ export async function compareHeldPages({
     return {
       protocol: session.protocol?.() ?? null,
       tools: names,
+      listedTools: listed.tools || [],
       result,
       body,
       charged: body.charged,

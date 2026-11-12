@@ -15,6 +15,8 @@ TGZ="samedaydesk-capability-compat-0.1.0.tgz"
 cd "$PACK"
 npm pack
 test -f "$PACK/$TGZ"
+TGZ_SHA256="$(sha256sum "$PACK/$TGZ" | awk '{print $1}')"
+echo "tgz sha256 ${TGZ_SHA256}  ${TGZ}"
 
 cd "$CONSUMER"
 npm install --ignore-scripts --prefer-offline --no-fund --no-audit "file:../samedaydesk-capability-compat/${TGZ}"
@@ -24,4 +26,7 @@ export PAGE_CHANGE_HTTP_ENABLED=1
 node --test --test-concurrency=1 \
   packs/samedaydesk-capability-compat/test/install-from-pack.test.mjs \
   packs/samedaydesk-capability-compat/test/installed-vs-hosted.test.mjs \
+  packs/samedaydesk-capability-compat/test/describe-capabilities.test.mjs \
   packs/samedaydesk-capability-compat-consumer/test/page-change-compat.test.mjs
+
+echo "tgz sha256 ${TGZ_SHA256}  ${TGZ}"
