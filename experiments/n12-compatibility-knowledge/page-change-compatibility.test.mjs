@@ -224,6 +224,10 @@ test("failure: unknown tool keeps the recovery mapping and does not take a paid 
   }), (error) => {
     assert.equal(error.code, UNKNOWN_TOOL_RECOVERY.jsonRpcCode);
     assert.deepEqual(error.data, unknownToolErrorData());
+    // Client-visible message at e90676f4 is not necessarily the raw JSON-RPC
+    // string "Unknown tool". mcp-current-client-compat.test.mjs asserts
+    // assert.match(String(unknown.message), /Unknown tool/).
+    assert.match(String(error.message), UNKNOWN_TOOL_RECOVERY.messagePattern);
     const mapped = mapUnknownToolRecovery(error, { attemptedName });
     assert.equal(mapped.nextMethod, "tools/list");
     assert.equal(mapped.tool, FREE_PAGE_CHANGE.tool);

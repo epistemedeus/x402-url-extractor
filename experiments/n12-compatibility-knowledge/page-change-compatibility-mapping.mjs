@@ -57,7 +57,17 @@ export const UNKNOWN_TOOL_RECOVERY = Object.freeze({
     }),
   }),
   jsonRpcCode: -32602,
+  // Raw HTTP JSON-RPC body at e90676f4 (page-change-mcp.http.test.mjs):
+  // assert.equal(aboveOrdinary.json.error.message, "Unknown tool")
+  // and postRpc unknown-tool bodies use message: "Unknown tool".
   message: "Unknown tool",
+  // Official client surface at the same pin (mcp-current-client-compat.test.mjs):
+  // assert.equal(unknown.code, -32602);
+  // assert.match(String(unknown.message), /Unknown tool/);
+  // The SDK client throw is not an exact message equality. The ordinary
+  // client recovery test asserts code and error.data only, not message ===
+  // "Unknown tool".
+  messagePattern: /Unknown tool/,
   nextMethod: "tools/list",
   availableTools: Object.freeze([FREE_PAGE_CHANGE.tool]),
 });
@@ -131,7 +141,7 @@ export function mapUnknownToolRecovery(error, { attemptedName } = {}) {
   if (code !== UNKNOWN_TOOL_RECOVERY.jsonRpcCode) {
     throw new Error("unknown_tool_recovery_unmapped");
   }
-  if (message !== UNKNOWN_TOOL_RECOVERY.message) {
+  if (!UNKNOWN_TOOL_RECOVERY.messagePattern.test(String(message ?? ""))) {
     throw new Error("unknown_tool_recovery_unmapped");
   }
   if (!data || data.nextMethod !== UNKNOWN_TOOL_RECOVERY.nextMethod) {
