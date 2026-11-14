@@ -376,6 +376,23 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     await client.close();
   }
   const extractOperation = openapi.paths["/extract"].get;
+  const feedbackPath = catalog.callerResultClient.feedback.http.path;
+  assert.equal(feedbackPath, "/commerce/caller-result-feedback");
+  assert.equal(extractOperation.externalDocs.url, new URL(feedbackPath, openapi.servers[0].url).href);
+  assert.match(extractOperation.externalDocs.description, /Optional, free.*only if.*Skipping/);
+  const feedbackContract = await fetch(base + new URL(extractOperation.externalDocs.url).pathname);
+  assert.equal(feedbackContract.status, 200);
+  assert.equal(feedbackContract.headers.get("cache-control"), "no-store");
+  assert.equal(feedbackContract.headers.has("payment-required"), false);
+  const feedback = await feedbackContract.json();
+  assert.equal(feedback.optional, true);
+  assert.equal(feedback.charged, false);
+  assert.equal(feedback.usefulness, "unknown");
+  assert.equal(feedback.path, feedbackPath);
+  assert.equal(feedback.header, catalog.callerResultClient.feedback.http.header);
+  assert.deepEqual(feedback.dispositions, ["useful", "not_useful"]);
+  assert.equal(feedbackContract.headers.has(feedback.header), false);
+  assert.equal(challengeResponse.headers.has(feedback.header), false);
   const extractOption = extractOperation.parameters.find((parameter) => parameter.name === "textExcerptLimitChars");
   const extractTool = mcpTools.find((tool) => tool.name === "extract");
   const extractResource = manifest.items.find((item) => item.resource.routeTemplate === "/extract").resource;
