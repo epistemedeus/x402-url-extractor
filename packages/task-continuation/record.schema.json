@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/epistemedeus/x402-url-extractor/packages/task-continuation/record.schema.json",
+  "title": "task-continuation.file.v1 caller record (module 1.2.0)",
+  "description": "The JSON object saveContinuationFile writes and loadContinuationFile accepts. Holds a bearer token: never log or publish it. Discovery never sits beside the token; it belongs on the separate measurement record. Expiry is checked at load against the clock, which a schema cannot express.",
+  "type": "object",
+  "required": ["schema", "v", "tool", "token", "kid", "correlationId", "step", "expiresAt", "hashAlg"],
+  "properties": {
+    "schema": { "const": "task-continuation.file.v1" },
+    "v": { "const": 1 },
+    "tool": { "type": "string", "pattern": "^[A-Za-z0-9_.:/-]{1,128}$" },
+    "token": { "type": "string", "maxLength": 1024, "pattern": "^tc1\\.[A-Za-z0-9_-]{16,900}\\.[A-Za-z0-9_-]{43}$" },
+    "kid": { "type": "string", "pattern": "^[a-z0-9-]{1,16}$" },
+    "correlationId": { "type": "string", "pattern": "^ae:corr:v1:[A-Za-z0-9_-]{22}$" },
+    "step": { "type": "integer", "minimum": 0 },
+    "expiresAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$" },
+    "hashAlg": { "const": "cj1" }
+  },
+  "not": { "required": ["discovery"] }
+}
