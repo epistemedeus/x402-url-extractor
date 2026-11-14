@@ -2285,6 +2285,13 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     }
     if (Object.keys(pathItem).length === 0) delete document.paths[route];
   }
+  const extractOperation = document.paths["/extract"]?.get;
+  if (extractOperation) {
+    extractOperation.externalDocs = {
+      url: `${PUBLIC_URL}${CALLER_RESULT_FEEDBACK_PATH}`,
+      description: "Optional, free result feedback. Use only if the paid result includes its caller-result feedback header. Skipping feedback does not affect the result.",
+    };
+  }
   validateOpenApiOperationIds(document);
   return compactPageChangeOpenApi(document);
 };
