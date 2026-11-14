@@ -260,6 +260,21 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
 
   assert.equal(await listening, true);
   const base = `http://127.0.0.1:${port}`;
+  const canonicalApiCatalog = "https://samedaydesk.com/.well-known/api-catalog";
+  const apiCatalogLink = `<${canonicalApiCatalog}>; rel=api-catalog`;
+  const gatewayHead = await fetch(base + "/", { method: "HEAD" });
+  assert.equal(gatewayHead.status, 200);
+  assert.equal(gatewayHead.headers.get("link"), apiCatalogLink);
+  for (const method of ["GET", "HEAD"]) {
+    const catalog = await fetch(base + "/.well-known/api-catalog?view=other", { method, redirect: "manual" });
+    assert.equal(catalog.status, 307);
+    assert.equal(catalog.headers.get("location"), canonicalApiCatalog);
+    assert.equal(catalog.headers.get("link"), apiCatalogLink);
+    assert.equal(catalog.headers.get("payment-required"), null);
+    assert.equal(catalog.headers.get("payment-response"), null);
+    assert.equal(catalog.headers.get("cache-control"), "public, max-age=300");
+    if (method === "HEAD") assert.equal(await catalog.text(), "");
+  }
   const proofResponse = await fetch(base + "/.well-known/nohumans-claim");
   assert.equal(proofResponse.status, 200);
   assert.match(proofResponse.headers.get("content-type"), /^text\/plain\b/i);

@@ -935,6 +935,16 @@ app.get("/v0/commerce-demand.json", async (req, res) => {
   }
 });
 
+// RFC 9727 section 5.1: the public site owns the catalog for both origins.
+const API_CATALOG_PATH = "/.well-known/api-catalog";
+const CANONICAL_API_CATALOG = `https://samedaydesk.com${API_CATALOG_PATH}`;
+const API_CATALOG_LINK = `<${CANONICAL_API_CATALOG}>; rel=api-catalog`;
+app.get(API_CATALOG_PATH, (_req, res) => {
+  res.set("Link", API_CATALOG_LINK);
+  res.set("Cache-Control", "public, max-age=300");
+  return res.redirect(307, CANONICAL_API_CATALOG);
+});
+
 // Domain-verification file for x402 directories (402 Index instant approval).
 // Free route (declared before the paywall). Hash set via env so it's editable without code changes.
 app.get("/.well-known/402index-verify.txt", (_req, res) => {
@@ -4370,6 +4380,7 @@ if (LOCKFILE_PIN_DELTA_ENABLED) {
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
 app.get("/", (req, res) => {
+  res.append("Link", API_CATALOG_LINK);
   const gateway = {
     service: "SameDayDesk agent evidence + machine payment gateway",
     what: "Free incident-backed platform health plus pay-per-call data tools that accept Base USDC and Circle Gateway Nanopayments.",
