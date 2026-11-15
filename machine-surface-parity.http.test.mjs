@@ -19,6 +19,7 @@ import { createOfferReceiptExtension } from "@x402/extensions/offer-receipt";
 import { validateBazaarContract } from "agent-payment-integrity";
 
 import { mcpToolNameForRoute, parseLlmsPaidRoutes, validateMachineSurfaceParity } from "./machine-surface-parity.mjs";
+import { sellerPreviewDiscovery } from "./seller-preview-guide.mjs";
 import { compareMcpCatalog } from "./mcp-catalog-projection.mjs";
 import { listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { opportunityPreflight } from "./opportunity-preflight.mjs";
@@ -207,6 +208,14 @@ test("NoHumans proof refuses missing, malformed, multiline and expired configura
   assert.equal(activeNoHumansClaimProof(cfg("fake-proof", now + 86_400_001), now), null);
   assert.equal(activeNoHumansClaimProof(cfg("fake\nproof", now + 1), now), null);
   assert.equal(activeNoHumansClaimProof(cfg("fake-proof", now + 1), now), "fake-proof");
+});
+
+test("a free seller preview never describes an alternate method or non-HTTPS origin", () => {
+  for (const origin of ["http://example.com", "https://user@example.com", "https://example.com:444"]) {
+    assert.equal(sellerPreviewDiscovery(origin, "GET", SELLER_INTEGRITY_ROUTE), null);
+  }
+  assert.equal(sellerPreviewDiscovery("https://example.com", "POST", SELLER_INTEGRITY_ROUTE), null);
+  assert.equal(sellerPreviewDiscovery("https://example.com", "GET", "/unrelated"), null);
 });
 
 test("live free surfaces keep canonical paid routes and kill Circle as a 23rd action", { timeout: 60_000 }, async (t) => {
@@ -490,6 +499,22 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(sampleLink.url, new URL(`${SELLER_INTEGRITY_ROUTE}/sample.json`, openapi.servers[0].url).href);
   assert.match(sampleLink.description, /Free synthetic JSON example.*does not run an audit/);
   const exampleDocument = sellerIntegrityAction.response.exampleDocument;
+  const preview = sellerIntegrityAction.buyerPreview;
+  assert.deepEqual(preview, {
+    kind: "local-cli", charged: false, paymentRequired: false, verifiesPaidDelivery: false,
+    instrument: { indexUrl: "https://neomorphic.io/api/v1/instruments", id: "seller-conformance", releasePointer: "/source/url" },
+    installGuideUrl: "https://github.com/epistemedeus/agent-payment-integrity#try-it",
+    checks: ["declared_output_fields", "unsigned_payment_offer"],
+    example: {
+      command: "audit", origin: openapi.servers[0].url, method: "GET", route: SELLER_INTEGRITY_ROUTE,
+      requiredPaths: ["report.findings", "report.repairPlan.actions"], maxRoutes: 1, publicDns: true,
+    },
+  });
+  assert.deepEqual(catalog.actions.filter((action) => action.buyerPreview).map((action) => action.route),
+    [SELLER_INTEGRITY_ROUTE]);
+  assert.equal(catalog.freeRecipes.some((recipe) => recipe.url === preview.instrument.indexUrl), false);
+  assert.equal(catalog.actions.some((action) => action.url === preview.instrument.indexUrl), false);
+  assert.match(llms, /--required-paths report\.findings,report\.repairPlan\.actions --max-routes 1/);
   assert.deepEqual(exampleDocument, {
     url: sampleLink.url, resultPointer: "/result", synthetic: true, charged: false,
   });

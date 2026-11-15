@@ -89,6 +89,7 @@ import {
   commerceProspectiveDeliveryOutputSchema,
 } from "./commerce-prospective-delivery.mjs";
 import { buildSkillContract } from "./skill-contract.mjs";
+import { sellerPreviewDiscovery } from "./seller-preview-guide.mjs";
 import { exposeAgenticTradeProxyDiagnostics } from "./agentictrade-proxy-diagnostics.mjs";
 import { assertPublicHttpUrl, extract, extractMcpOutputSchema, readMarkdown, readMcpOutputSchema } from "./extract.mjs";
 import { EXTRACT_EXCERPT_OPTION_DESCRIPTION } from "./extract-excerpt-budget.mjs";
@@ -1417,6 +1418,7 @@ const machineActionCatalog = () => ({
     const request = getDiscoveryRequestContract(`${method} ${route}`);
     const serviceMetadata = bazaarResourceMetadataFor(route);
     const identity = resourceIdentityFor(resource, method);
+    const buyerPreview = sellerPreviewDiscovery(PUBLIC_URL, method, route);
     return {
       name: route.replace(/^\//, "").replaceAll("/", "_"),
       method,
@@ -1432,6 +1434,7 @@ const machineActionCatalog = () => ({
       mimeType: resource.mimeType,
       ...serviceMetadata,
       request: projectDiscoveryRequest(resource.url, method, request),
+      ...(buyerPreview ? { buyerPreview } : {}),
       response: response ? {
         mimeType: "application/json",
         ...response,
