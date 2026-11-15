@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { createServer as createHttpServer, request as httpRequest } from "node:http";
 import { createServer as createNetServer } from "node:net";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -111,7 +111,16 @@ async function listenProfile(env, observe = null) {
 async function connectClient(base, rpcPath = PAGE_CHANGE_MCP_PATH) {
   const transport = new StreamableHTTPClientTransport(new URL(`${base}${rpcPath}`));
   const client = new Client({ name: "page-change-mcp-test", version: "0" });
-  await client.connect(transport);
+  try {
+    await client.connect(transport);
+  } catch (error) {
+    try {
+      await transport.close();
+    } catch (closeError) {
+      throw new AggregateError([error, closeError], "SDK fixture setup and cleanup failed");
+    }
+    throw error;
+  }
   return {
     client,
     transport,
@@ -175,7 +184,7 @@ async function startSink() {
 }
 
 async function stopChild(child) {
-  if (!child || child.exitCode !== null || child.signalCode !== null) return;
+  if (!child?.pid || child.exitCode !== null || child.signalCode !== null) return;
   child.kill("SIGTERM");
   await new Promise((resolve) => {
     const timer = setTimeout(() => {
@@ -189,60 +198,84 @@ async function stopChild(child) {
   });
 }
 
-async function startMerchant() {
+async function closeFixtures(cleanups) {
+  const errors = [];
+  for (const cleanup of cleanups.splice(0).reverse()) {
+    try {
+      await cleanup();
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  if (errors.length) throw new AggregateError(errors, "fixture cleanup failed");
+}
+
+async function startMerchant({ spawnProcess = spawn } = {}) {
   const dataDir = await mkdtemp(path.join(tmpdir(), "page-change-mcp-"));
-  const facilitator = await startFakeFacilitator();
-  const port = await unusedPort();
-  const child = spawn(process.execPath, ["server.js"], {
-    cwd,
-    env: {
-      ...process.env,
-      PORT: String(port),
-      NETWORK: "eip155:8453",
-      COMMERCE_DATA_DIR: dataDir,
-      COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
-      FACILITATOR: "xpay",
-      FACILITATOR_URL: facilitator.url,
-      MPP_SECRET_KEY: "test-secret-key-test-secret-key-32",
-      PUBLIC_URL: "https://agents.samedaydesk.com",
-      PAGE_CHANGE_HTTP_ENABLED: "1",
-      PAGE_CHANGE_SOURCE_COMMIT: "",
-      SOURCE_COMMIT: "",
-      RAILWAY_GIT_COMMIT_SHA: "",
-    },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  let output = "";
-  const started = Date.now();
-  await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(`merchant startup timed out: ${output.slice(-2000)}`)), 40000);
-    const onData = (chunk) => {
-      output = `${output}${chunk}`.slice(-80000);
-      if (output.includes("MCP server:  POST /mcp")) {
-        clearTimeout(timer);
-        resolve();
-      }
-    };
-    child.stdout.on("data", onData);
-    child.stderr.on("data", onData);
-    child.once("exit", (code, signal) => {
-      clearTimeout(timer);
-      reject(new Error(`merchant exited early code=${code} signal=${signal}\n${output.slice(-4000)}`));
+  const cleanup = [() => rm(dataDir, { recursive: true, force: true })];
+  try {
+    const facilitator = await startFakeFacilitator();
+    cleanup.push(() => facilitator.close());
+    const port = await unusedPort();
+    const child = spawnProcess(process.execPath, ["server.js"], {
+      cwd,
+      env: {
+        ...process.env,
+        PORT: String(port),
+        NETWORK: "eip155:8453",
+        COMMERCE_DATA_DIR: dataDir,
+        COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
+        FACILITATOR: "xpay",
+        FACILITATOR_URL: facilitator.url,
+        MPP_SECRET_KEY: "test-secret-key-test-secret-key-32",
+        PUBLIC_URL: "https://agents.samedaydesk.com",
+        PAGE_CHANGE_HTTP_ENABLED: "1",
+        PAGE_CHANGE_SOURCE_COMMIT: "",
+        SOURCE_COMMIT: "",
+        RAILWAY_GIT_COMMIT_SHA: "",
+      },
+      stdio: ["ignore", "pipe", "pipe"],
     });
-  });
-  return {
-    base: `http://127.0.0.1:${port}`,
-    output: () => output,
-    startupMs: Date.now() - started,
-    child,
-    dataDir,
-    facilitator,
-    async close() {
-      await stopChild(child);
-      await facilitator.close();
-      await rm(dataDir, { recursive: true, force: true });
-    },
-  };
+    cleanup.push(() => stopChild(child));
+    let output = "";
+    const started = Date.now();
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`merchant startup timed out: ${output.slice(-2000)}`)), 40000);
+      const onData = (chunk) => {
+        output = `${output}${chunk}`.slice(-80000);
+        if (output.includes("MCP server:  POST /mcp")) {
+          clearTimeout(timer);
+          resolve();
+        }
+      };
+      child.stdout.on("data", onData);
+      child.stderr.on("data", onData);
+      child.once("error", (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+      child.once("exit", (code, signal) => {
+        clearTimeout(timer);
+        reject(new Error(`merchant exited early code=${code} signal=${signal}\n${output.slice(-4000)}`));
+      });
+    });
+    return {
+      base: `http://127.0.0.1:${port}`,
+      output: () => output,
+      startupMs: Date.now() - started,
+      child,
+      dataDir,
+      facilitator,
+      close: () => closeFixtures(cleanup),
+    };
+  } catch (error) {
+    try {
+      await closeFixtures(cleanup);
+    } catch (closeError) {
+      throw new AggregateError([error, closeError], "merchant fixture setup and cleanup failed");
+    }
+    throw error;
+  }
 }
 
 test.before(async () => {
@@ -875,12 +908,47 @@ test("disabled profile stays mounted and refuses the compare without HTTP 404", 
   }
 });
 
+test("fixture cleanup drains every owner in reverse order even if one close fails", async () => {
+  const seen = [];
+  const closures = [
+    () => { seen.push("first"); },
+    () => { seen.push("middle"); throw new Error("bounded fixture close error"); },
+    () => { seen.push("last"); },
+  ];
+  await assert.rejects(() => closeFixtures(closures), AggregateError);
+  assert.deepEqual(seen, ["last", "middle", "first"]);
+  await closeFixtures(closures);
+  assert.equal(seen.length, 3);
+});
+
+test("merchant fixture releases its pre-start resources when the child exits early", { timeout: 10000 }, async () => {
+  let allocated;
+  let child;
+  await assert.rejects(() => startMerchant({
+    spawnProcess(executable, _args, options) {
+      allocated = { dataDir: options.env.COMMERCE_DATA_DIR, facilitatorUrl: options.env.FACILITATOR_URL };
+      child = spawn(executable, ["-e", "process.exit(19)"], options);
+      return child;
+    },
+  }), /merchant exited early code=19/);
+  assert.equal(child.exitCode, 19);
+  await assert.rejects(() => stat(allocated.dataDir), { code: "ENOENT" });
+  await assert.rejects(() => fetch(allocated.facilitatorUrl, { signal: AbortSignal.timeout(1500) }),
+    (error) => error.cause?.code === "ECONNREFUSED");
+});
+
 test("merchant catalog and payment protections stay unchanged around the free profile", { timeout: 90000 }, async () => {
-  const merchant = await startMerchant();
-  const sink = await startSink();
-  const paid = await connectClient(merchant.base, "/mcp");
-  const free = await connectClient(merchant.base);
+  const cleanups = [];
+  let merchant;
   try {
+    merchant = await startMerchant();
+    cleanups.push(() => merchant.close());
+    const sink = await startSink();
+    cleanups.push(() => sink.close());
+    const paid = await connectClient(merchant.base, "/mcp");
+    cleanups.push(() => paid.close());
+    const free = await connectClient(merchant.base);
+    cleanups.push(() => free.close());
     const before = (await paid.client.listTools()).tools.map((tool) => tool.name).sort();
     assert.equal(before.includes("extract"), true);
     assert.equal(before.includes("page_change"), true);
@@ -936,10 +1004,7 @@ test("merchant catalog and payment protections stay unchanged around the free pr
     assert.equal(stored.includes("Alpha v1"), false);
     assert.equal(stored.includes("6122072a04e1bce878c1a0bd9ad758cafc2f9416263113367bc7b4dc0b9c2554"), false);
   } finally {
-    await free.close();
-    await paid.close();
-    await sink.close();
-    await merchant.close();
+    await closeFixtures(cleanups);
   }
   assert.equal(merchant.child.exitCode !== null || merchant.child.signalCode !== null, true);
   await assert.rejects(() => fetch(`${merchant.base}/mcp`));
