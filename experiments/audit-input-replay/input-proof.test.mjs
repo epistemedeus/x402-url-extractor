@@ -32,7 +32,7 @@ function fixture({ amount = "10000", operationOverride = operation, status = 402
     } };
     throw new Error("unknown replay input");
   };
-  return { document, quote, called, requestImpl };
+  return { document, mpp: { status: 404 }, href: `${origin}${route}`, quote, called, requestImpl };
 }
 
 test("the installed audit accepts the wire fixture and a cold buyer matches exact saved inputs", async () => {
@@ -51,7 +51,7 @@ test("the existing schema evidence stays identical when only the quote changes",
   const before = await replayAuditInputs(input, saved.requestImpl);
   const after = await replayAuditInputs(input, changed.requestImpl);
   assert.equal(after.result.report.economics.x402.amountAtomic, "20000");
-  assert.match(before.result.report.responseContract.schemaDigest, /^[0-9a-f]{64}$/);
+  assert.match(before.result.report.responseContract.schemaDigest, /^sha256:[0-9a-f]{64}$/);
   assert.equal(before.result.report.responseContract.schemaDigest, after.result.report.responseContract.schemaDigest);
   assert.equal(before.proof.documentSha256, after.proof.documentSha256);
   assert.equal(matchesAuditInputs(before.proof, before.proof.digest, changed), false);
@@ -63,6 +63,8 @@ test("a byte rewrite, swapped route or missing trusted digest cannot match", asy
   const { proof } = await replayAuditInputs(input, saved.requestImpl);
   const reserialized = Buffer.from(JSON.stringify(JSON.parse(saved.document), null, 2));
   assert.equal(matchesAuditInputs(proof, proof.digest, { ...saved, document: reserialized }), false);
+  assert.equal(matchesAuditInputs(proof, proof.digest, { ...saved, href: `${saved.href}?different=1` }), false);
+  assert.equal(matchesAuditInputs(proof, proof.digest, { ...saved, mpp: { status: 200, document: saved.document } }), false);
   assert.equal(matchesAuditInputs({ ...proof, route: "/another" }, proof.digest, saved), false);
   assert.equal(matchesAuditInputs(proof, undefined, saved), false);
   assert.equal(matchesAuditInputs(proof, proof.digest, null), false);

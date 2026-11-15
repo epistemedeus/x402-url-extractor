@@ -17,3 +17,4 @@ jobs:
           node-version: 22.23.2
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node --test seller-integrity-audit.test.mjs experiments/audit-input-replay/input-proof.test.mjs
+      - run: node experiments/audit-input-replay/first-party.mjs
