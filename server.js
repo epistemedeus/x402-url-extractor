@@ -610,7 +610,6 @@ app.get(CAREERS_BOARD_COLD_PATH, function serveCareersBoardColdRecipe(_req, res)
 });
 const SELLER_INTEGRITY_AUDIT_ROUTE = "/commerce/seller-integrity-audit";
 const SELLER_INTEGRITY_AUDIT_SAMPLE_PATH = `${SELLER_INTEGRITY_AUDIT_ROUTE}/sample.json`;
-const SELLER_INTEGRITY_AUDIT_SAMPLE_URL = `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`;
 // Documentation only. Never accepts a target or reaches the audit, metering,
 // idempotency, or payment handlers.
 app.get(SELLER_INTEGRITY_AUDIT_SAMPLE_PATH, (_req, res) => {
@@ -667,6 +666,7 @@ mountScopedRepairCommerce(app, {
   dataDir: process.env.SCOPED_REPAIR_PACKET_DIR || null,
 });
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
+const SELLER_INTEGRITY_AUDIT_SAMPLE_URL = `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`;
 const extractionTrialDiscoveryUrl = `${PUBLIC_URL}${EXTRACTION_TRIAL_DISCOVERY}`;
 const idempotencyReplay = createIdempotencyReplay({
   publicUrl: PUBLIC_URL,
