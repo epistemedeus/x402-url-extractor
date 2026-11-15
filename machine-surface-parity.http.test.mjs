@@ -260,6 +260,21 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
 
   assert.equal(await listening, true);
   const base = `http://127.0.0.1:${port}`;
+  const canonicalApiCatalog = "https://samedaydesk.com/.well-known/api-catalog";
+  const apiCatalogLink = `<${canonicalApiCatalog}>; rel=api-catalog`;
+  const gatewayHead = await fetch(base + "/", { method: "HEAD" });
+  assert.equal(gatewayHead.status, 200);
+  assert.equal(gatewayHead.headers.get("link"), apiCatalogLink);
+  for (const method of ["GET", "HEAD"]) {
+    const catalog = await fetch(base + "/.well-known/api-catalog?view=other", { method, redirect: "manual" });
+    assert.equal(catalog.status, 307);
+    assert.equal(catalog.headers.get("location"), canonicalApiCatalog);
+    assert.equal(catalog.headers.get("link"), apiCatalogLink);
+    assert.equal(catalog.headers.get("payment-required"), null);
+    assert.equal(catalog.headers.get("payment-response"), null);
+    assert.equal(catalog.headers.get("cache-control"), "public, max-age=300");
+    if (method === "HEAD") assert.equal(await catalog.text(), "");
+  }
   const proofResponse = await fetch(base + "/.well-known/nohumans-claim");
   assert.equal(proofResponse.status, 200);
   assert.match(proofResponse.headers.get("content-type"), /^text\/plain\b/i);
@@ -361,6 +376,23 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     await client.close();
   }
   const extractOperation = openapi.paths["/extract"].get;
+  const feedbackPath = catalog.callerResultClient.feedback.http.path;
+  assert.equal(feedbackPath, "/commerce/caller-result-feedback");
+  assert.equal(extractOperation.externalDocs.url, new URL(feedbackPath, openapi.servers[0].url).href);
+  assert.match(extractOperation.externalDocs.description, /Optional, free.*only if.*Skipping/);
+  const feedbackContract = await fetch(base + new URL(extractOperation.externalDocs.url).pathname);
+  assert.equal(feedbackContract.status, 200);
+  assert.equal(feedbackContract.headers.get("cache-control"), "no-store");
+  assert.equal(feedbackContract.headers.has("payment-required"), false);
+  const feedback = await feedbackContract.json();
+  assert.equal(feedback.optional, true);
+  assert.equal(feedback.charged, false);
+  assert.equal(feedback.usefulness, "unknown");
+  assert.equal(feedback.path, feedbackPath);
+  assert.equal(feedback.header, catalog.callerResultClient.feedback.http.header);
+  assert.deepEqual(feedback.dispositions, ["useful", "not_useful"]);
+  assert.equal(feedbackContract.headers.has(feedback.header), false);
+  assert.equal(challengeResponse.headers.has(feedback.header), false);
   const extractOption = extractOperation.parameters.find((parameter) => parameter.name === "textExcerptLimitChars");
   const extractTool = mcpTools.find((tool) => tool.name === "extract");
   const extractResource = manifest.items.find((item) => item.resource.routeTemplate === "/extract").resource;
@@ -437,6 +469,41 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const sellerIntegrityAction = catalog.actions.find((action) => action.route === SELLER_INTEGRITY_ROUTE);
   const sellerIntegrityOutput = openapi.paths[SELLER_INTEGRITY_ROUTE].get.responses["200"].content["application/json"].schema;
   assert.deepEqual(sellerIntegrityOutput, sellerIntegrityAuditOutputSchema());
+  const sampleLink = openapi.paths[SELLER_INTEGRITY_ROUTE].get.externalDocs;
+  assert.equal(sampleLink.url, new URL(`${SELLER_INTEGRITY_ROUTE}/sample.json`, openapi.servers[0].url).href);
+  assert.match(sampleLink.description, /Free synthetic JSON example.*does not run an audit/);
+  const discoverySection = llms.split("## Discovery\n")[1]?.split("\n## ")[0];
+  assert.ok(discoverySection);
+  const discoveryLinks = new Map([...discoverySection.matchAll(/^- \[([^\]]+)\]\(([^)]+)\):/gm)]
+    .map(([, title, href]) => [title, href]));
+  assert.equal(discoveryLinks.get("API catalog"), "https://samedaydesk.com/.well-known/api-catalog");
+  assert.equal(discoveryLinks.get("OpenAPI"), new URL("/openapi.json", openapi.servers[0].url).href);
+  assert.equal(discoveryLinks.get("Seller integrity audit example result"), sampleLink.url);
+  const mppSellerAudit = mppOpenapi.paths[SELLER_INTEGRITY_ROUTE]?.get;
+  if (mppSellerAudit) assert.deepEqual(mppSellerAudit.externalDocs, sampleLink);
+  const sampleUrl = base + new URL(sampleLink.url).pathname;
+  const sampleResponse = await fetch(sampleUrl);
+  assert.equal(sampleResponse.status, 200);
+  assert.match(sampleResponse.headers.get("content-type"), /^application\/json\b/);
+  for (const header of ["payment-required", "payment-response", "www-authenticate"]) {
+    assert.equal(sampleResponse.headers.has(header), false, header);
+  }
+  const sample = await sampleResponse.json();
+  assert.equal(sample.sample, true);
+  assert.match(sample.sampleNote, /not a live check, payment, or customer result/);
+  assert.equal(sample.operation, `GET ${SELLER_INTEGRITY_ROUTE}`);
+  assert.equal(sample.source, new URL("/openapi.json", openapi.servers[0].url).href);
+  assert.deepEqual(sample.result, SELLER_INTEGRITY_AUDIT_EXAMPLE);
+  const sampleValidation = new Ajv({ strict: false }).compile(sellerIntegrityOutput);
+  assert.equal(sampleValidation(sample.result), true, JSON.stringify(sampleValidation.errors));
+  const sampleWithInputs = await fetch(`${sampleUrl}?origin=https%3A%2F%2Fexample.invalid&route=%2Fanything`, {
+    headers: { "payment-signature": "not-a-payment" },
+  });
+  assert.equal(sampleWithInputs.status, 200);
+  assert.deepEqual(await sampleWithInputs.json(), sample);
+  const sampleHead = await fetch(sampleUrl, { method: "HEAD" });
+  assert.equal(sampleHead.status, 200);
+  assert.equal(await sampleHead.text(), "");
   assert.deepEqual(sellerIntegrityAction.response, {
     mimeType: "application/json", schema: sellerIntegrityOutput, example: SELLER_INTEGRITY_AUDIT_EXAMPLE,
   });

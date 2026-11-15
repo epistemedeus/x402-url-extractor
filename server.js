@@ -613,6 +613,19 @@ app.get(CAREERS_BOARD_COLD_PATH, function serveCareersBoardColdRecipe(_req, res)
   res.set("Cache-Control", "public, max-age=300");
   return res.json(careersBoardColdRecipeBody());
 });
+const SELLER_INTEGRITY_AUDIT_SAMPLE_PATH = "/commerce/seller-integrity-audit/sample.json";
+// Documentation only. Never accepts a target or reaches the audit, metering,
+// idempotency, or payment handlers.
+app.get(SELLER_INTEGRITY_AUDIT_SAMPLE_PATH, (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json({
+    sample: true,
+    sampleNote: "Synthetic output from the public SameDayDesk OpenAPI. This is not a live check, payment, or customer result.",
+    source: `${PUBLIC_URL}/openapi.json`,
+    operation: "GET /commerce/seller-integrity-audit",
+    result: SELLER_INTEGRITY_AUDIT_EXAMPLE,
+  });
+});
 mountLockfilePinDeltaParser(app);
 
 function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
@@ -943,6 +956,16 @@ app.get("/v0/commerce-demand.json", async (req, res) => {
   } catch (error) {
     return res.status(503).json({ ok: false, error: "commerce_telemetry_unavailable" });
   }
+});
+
+// RFC 9727 section 5.1: the public site owns the catalog for both origins.
+const API_CATALOG_PATH = "/.well-known/api-catalog";
+const CANONICAL_API_CATALOG = `https://samedaydesk.com${API_CATALOG_PATH}`;
+const API_CATALOG_LINK = `<${CANONICAL_API_CATALOG}>; rel=api-catalog`;
+app.get(API_CATALOG_PATH, (_req, res) => {
+  res.set("Link", API_CATALOG_LINK);
+  res.set("Cache-Control", "public, max-age=300");
+  return res.redirect(307, CANONICAL_API_CATALOG);
 });
 
 // Domain-verification file for x402 directories (402 Index instant approval).
@@ -1467,6 +1490,8 @@ function renderServedLlmsTxt(catalog = machineActionCatalog()) {
     freeRecipes: catalog.freeRecipes,
     extractionTrialDiscovery: catalog.discovery.extractionTrial,
     callerResultClient: catalog.callerResultClient,
+    apiCatalogUrl: CANONICAL_API_CATALOG,
+    sellerAuditSampleUrl: `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`,
     freePageCompare: true,
   });
 }
@@ -1926,6 +1951,10 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/commerce/seller-integrity-audit": {
         get: {
           summary: RESOURCES[19].description,
+          externalDocs: {
+            url: `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`,
+            description: "Free synthetic JSON example of the audit result. It does not run an audit or verify a live seller route.",
+          },
           parameters: [
             { name: "origin", in: "query", required: true, description: "Credential-free public HTTPS seller origin on port 443.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } },
             { name: "route", in: "query", required: true, description: "Exact paid GET or POST path declared by the seller, without query or template parameters.", schema: { type: "string", pattern: "^/[^/?#{}][^?#{}]*$", example: "/commerce/payment-offer-preflight" } },
@@ -2284,6 +2313,13 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       }
     }
     if (Object.keys(pathItem).length === 0) delete document.paths[route];
+  }
+  const extractOperation = document.paths["/extract"]?.get;
+  if (extractOperation) {
+    extractOperation.externalDocs = {
+      url: `${PUBLIC_URL}${CALLER_RESULT_FEEDBACK_PATH}`,
+      description: "Optional, free result feedback. Use only if the paid result includes its caller-result feedback header. Skipping feedback does not affect the result.",
+    };
   }
   validateOpenApiOperationIds(document);
   return compactPageChangeOpenApi(document);
@@ -4380,6 +4416,7 @@ if (LOCKFILE_PIN_DELTA_ENABLED) {
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
 app.get("/", (req, res) => {
+  res.append("Link", API_CATALOG_LINK);
   const gateway = {
     service: "SameDayDesk agent evidence + machine payment gateway",
     what: "Free incident-backed platform health plus pay-per-call data tools that accept Base USDC and Circle Gateway Nanopayments.",
