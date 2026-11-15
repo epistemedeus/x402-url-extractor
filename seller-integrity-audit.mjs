@@ -1,4 +1,5 @@
-import { auditOrigin, normalizeOrigin } from "agent-payment-integrity";
+import { auditOrigin, normalizeOrigin, requestPinned } from "agent-payment-integrity";
+import { recordSellerAuditInputs, sellerAuditInputEvidenceSchema } from "./seller-audit-input-evidence.mjs";
 import {
   createReceiptReferralOffer,
   normalizeReceiptReferralId,
@@ -92,7 +93,7 @@ export function sellerIntegrityAuditOutputSchema() {
           },
           status: { type: ["integer", "null"] },
           runtimeChallengeVerified: { type: "boolean" },
-          probe: { type: ["object", "null"] },
+          probe: { type: ["object", "null"], properties: { inputEvidence: sellerAuditInputEvidenceSchema() } },
           protocols: { type: "array", items: { type: "string" } },
           valid: { type: "boolean" },
           findings: { type: "array", items: { type: "string" } },
@@ -229,12 +230,14 @@ function nextActionsFor(routeReport) {
   return [...actions];
 }
 
-export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = {}) {
+export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin, requestImpl = requestPinned } = {}) {
   const request = normalizeSellerIntegrityAuditInput(input);
   const { referral, ...auditRequest } = request;
+  const recorder = auditImpl === auditOrigin ? recordSellerAuditInputs(auditRequest, requestImpl) : null;
   let report;
   try {
-    report = await auditImpl({ ...auditRequest, maxRoutes: 1, publicDns: true });
+    report = await auditImpl({ ...auditRequest, maxRoutes: 1, publicDns: true,
+      ...(recorder ? { requestImpl: recorder.request } : {}) });
   } catch (error) {
     const message = String(error?.message || error);
     const ingress = error?.code === "document_ingress_route_unavailable"
@@ -293,6 +296,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
     };
   }
   const routeReport = report.routes[0];
+  const inputEvidence = recorder?.finish(routeReport.probe);
   const decision = !report.ok
     ? "repair_required"
     : report.machineBuyable
@@ -312,7 +316,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
       sellerVersions: report.versions,
       status: routeReport.status,
       runtimeChallengeVerified: routeReport.runtimeChallengeVerified,
-      probe: routeReport.probe,
+      probe: inputEvidence ? { ...routeReport.probe, inputEvidence } : routeReport.probe,
       protocols: routeReport.protocols,
       valid: routeReport.valid,
       findings: routeReport.findings,

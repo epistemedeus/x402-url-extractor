@@ -1,0 +1,50 @@
+name: Receive seller audit input evidence
+on:
+  push:
+    branches: [codex/seller-audit-observed-inputs-20261115]
+permissions:
+  contents: read
+jobs:
+  receipt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.23.2
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node --test seller-audit-input-evidence.test.mjs seller-integrity-audit.test.mjs receipt-referral-recheck.test.mjs machine-surface-parity.http.test.mjs startup-smoke.test.mjs
+      - name: Capture the listing's actual unpaid example through the ordinary auditor
+        run: |
+          node --input-type=module - <<'NODE'
+          import assert from 'node:assert/strict';
+          import { requestPinned } from 'agent-payment-integrity';
+          import { sellerIntegrityAudit } from './seller-integrity-audit.mjs';
+          const origin = 'https://agents.samedaydesk.com';
+          const route = '/commerce/payment-offer-preflight';
+          const allowed = ['/openapi.json', '/mpp-openapi.json', route, '/.well-known/agent-payment-evidence.json'];
+          let calls = 0;
+          const audit = await sellerIntegrityAudit({ origin, route }, {
+            requestImpl: async (input, options) => {
+              const url = new URL(input);
+              assert.equal(url.origin, origin);
+              assert.ok(allowed.includes(url.pathname) && ++calls <= 4);
+              return requestPinned(input, options);
+            },
+          });
+          const evidence = audit.report.probe?.inputEvidence;
+          assert.equal(audit.decision, 'machine_buyable');
+          assert.equal(audit.report.economics.x402.amountAtomic, '5000');
+          assert.equal(audit.boundary.targetPaymentSent, false);
+          assert.equal(evidence.scope, 'public_probe');
+          assert.deepEqual(evidence.observations.map(x => [x.kind, x.status]), [
+            ['openapi', 200], ['mpp_openapi', 200], ['probe', 402], ['purchase_evidence', 200],
+          ]);
+          assert.equal(calls, 4);
+          assert.equal(JSON.stringify(evidence).includes(origin), false);
+          console.log(JSON.stringify({ decision: audit.decision, calls, scope: evidence.scope,
+            statuses: evidence.observations.map(x => [x.kind, x.status]), paymentSent: false }));
+          NODE
