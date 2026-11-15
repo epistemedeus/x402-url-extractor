@@ -608,6 +608,19 @@ app.get(CAREERS_BOARD_COLD_PATH, function serveCareersBoardColdRecipe(_req, res)
   res.set("Cache-Control", "public, max-age=300");
   return res.json(careersBoardColdRecipeBody());
 });
+const SELLER_INTEGRITY_AUDIT_SAMPLE_PATH = "/commerce/seller-integrity-audit/sample.json";
+// Documentation only. Never accepts a target or reaches the audit, metering,
+// idempotency, or payment handlers.
+app.get(SELLER_INTEGRITY_AUDIT_SAMPLE_PATH, (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json({
+    sample: true,
+    sampleNote: "Synthetic output from the public SameDayDesk OpenAPI. This is not a live check, payment, or customer result.",
+    source: `${PUBLIC_URL}/openapi.json`,
+    operation: "GET /commerce/seller-integrity-audit",
+    result: SELLER_INTEGRITY_AUDIT_EXAMPLE,
+  });
+});
 mountLockfilePinDeltaParser(app);
 
 function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
@@ -1926,6 +1939,10 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/commerce/seller-integrity-audit": {
         get: {
           summary: RESOURCES[19].description,
+          externalDocs: {
+            url: `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`,
+            description: "Free synthetic JSON example of the audit result. It does not run an audit or verify a live seller route.",
+          },
           parameters: [
             { name: "origin", in: "query", required: true, description: "Credential-free public HTTPS seller origin on port 443.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } },
             { name: "route", in: "query", required: true, description: "Exact paid GET or POST path declared by the seller, without query or template parameters.", schema: { type: "string", pattern: "^/[^/?#{}][^?#{}]*$", example: "/commerce/payment-offer-preflight" } },
