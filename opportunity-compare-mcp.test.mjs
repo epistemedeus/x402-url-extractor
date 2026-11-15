@@ -288,6 +288,40 @@ test("positive compare on caller-held records (installed and hosted)", async () 
   }
 });
 
+test("as-of comparison refuses future evidence before ranking or suppressing a prior verdict", async () => {
+  const before = { ...eligible, decision: "not-eligible", reasons: ["prior-close"] };
+  const futureAt = new Date(Date.parse(NOW) + 1000).toISOString();
+  const after = { ...eligible, provenance: { ...eligible.provenance, observedAt: futureAt } };
+  const profile = await listenRoute();
+  try {
+    for (const args of [
+      { records: [after], now: NOW },
+      { records: [before, after], now: NOW },
+      { records: [after, before], now: NOW },
+      { records: [before, after], now: futureAt },
+    ]) {
+      const installed = installedOutcome(await compareOpportunityRecords(args));
+      const hosted = await postRpc(profile.base, callCompareRpc(args));
+      const body = toolBody(hosted.json);
+      assert.equal(hosted.response.status, 200);
+      assert.equal(body.charged, false);
+      assert.deepEqual(body.result, installed.body.result);
+      if (args.now === futureAt) {
+        assert.equal(body.result.eligible.length, 1);
+        assert.equal(body.result.refused.length, 0);
+        assert.equal(body.result.superseded.length, 1);
+      } else {
+        assert.equal(body.result.eligible.length, 0);
+        assert.equal(body.result.notEligible.length, args.records.length - 1);
+        assert.equal(body.result.superseded.length, 0);
+        assert.deepEqual(body.result.refused.map((row) => row.problems), [["evidence-observed-after-compare"]]);
+      }
+    }
+  } finally {
+    await profile.close();
+  }
+});
+
 test("typed refusal: malformed envelope is invalid_input on both halves", async () => {
   for (const args of [malformedEnvelope, {}, { records: "nope" }, { records: [1] }, { records: [eligible], extra: true }]) {
     const installed = await compareOpportunityRecords(args);
