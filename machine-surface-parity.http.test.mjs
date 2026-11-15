@@ -499,8 +499,8 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(sampleLink.url, new URL(`${SELLER_INTEGRITY_ROUTE}/sample.json`, openapi.servers[0].url).href);
   assert.match(sampleLink.description, /Free synthetic JSON example.*does not run an audit/);
   const exampleDocument = sellerIntegrityAction.response.exampleDocument;
-  const preview = sellerIntegrityAction.buyerPreview;
-  assert.deepEqual(preview, {
+  const buyerPreview = sellerIntegrityAction.buyerPreview;
+  assert.deepEqual(buyerPreview, {
     kind: "local-cli", charged: false, paymentRequired: false, verifiesPaidDelivery: false,
     instrument: { indexUrl: "https://neomorphic.io/api/v1/instruments", id: "seller-conformance", releasePointer: "/source/url" },
     installGuideUrl: "https://github.com/epistemedeus/agent-payment-integrity#try-it",
@@ -512,8 +512,8 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   });
   assert.deepEqual(catalog.actions.filter((action) => action.buyerPreview).map((action) => action.route),
     [SELLER_INTEGRITY_ROUTE]);
-  assert.equal(catalog.freeRecipes.some((recipe) => recipe.url === preview.instrument.indexUrl), false);
-  assert.equal(catalog.actions.some((action) => action.url === preview.instrument.indexUrl), false);
+  assert.equal(catalog.freeRecipes.some((recipe) => recipe.url === buyerPreview.instrument.indexUrl), false);
+  assert.equal(catalog.actions.some((action) => action.url === buyerPreview.instrument.indexUrl), false);
   assert.match(llms, /--required-paths report\.findings,report\.repairPlan\.actions --max-routes 1/);
   assert.deepEqual(exampleDocument, {
     url: sampleLink.url, resultPointer: "/result", synthetic: true, charged: false,
