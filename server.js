@@ -264,7 +264,6 @@ import {
 } from "./page-change-http.mjs";
 import { PAGE_CHANGE_MCP_PATH, isPageChangeMcpPath, mountPageChangeMcp } from "./page-change-mcp.mjs";
 import {
-  OPPORTUNITY_COMPARE_MCP_PATH,
   isOpportunityCompareMcpPath,
   maybeMountOpportunityCompareMcp,
 } from "./opportunity-compare-mcp.mjs";
@@ -641,11 +640,9 @@ mountPageChangeHttp(app, {
 mountPageChangeMcp(app, {
   observe: commerceTelemetry.freePageChangeObserver("mcp", { route: PAGE_CHANGE_MCP_PATH }),
 });
-// Default off. Root owns the production flag and deploy.
+// The read-only comparator is separate from page-change transport telemetry.
 // Mounted only when OPPORTUNITY_COMPARE_MCP is the exact value "on".
-maybeMountOpportunityCompareMcp(app, {
-  observe: commerceTelemetry.freePageChangeObserver("mcp", { route: OPPORTUNITY_COMPARE_MCP_PATH }),
-});
+maybeMountOpportunityCompareMcp(app);
 let mcpMountResult = null;
 let commerceWriterDrainStarted = false;
 
