@@ -608,7 +608,9 @@ app.get(CAREERS_BOARD_COLD_PATH, function serveCareersBoardColdRecipe(_req, res)
   res.set("Cache-Control", "public, max-age=300");
   return res.json(careersBoardColdRecipeBody());
 });
-const SELLER_INTEGRITY_AUDIT_SAMPLE_PATH = "/commerce/seller-integrity-audit/sample.json";
+const SELLER_INTEGRITY_AUDIT_ROUTE = "/commerce/seller-integrity-audit";
+const SELLER_INTEGRITY_AUDIT_SAMPLE_PATH = `${SELLER_INTEGRITY_AUDIT_ROUTE}/sample.json`;
+const SELLER_INTEGRITY_AUDIT_SAMPLE_URL = `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`;
 // Documentation only. Never accepts a target or reaches the audit, metering,
 // idempotency, or payment handlers.
 app.get(SELLER_INTEGRITY_AUDIT_SAMPLE_PATH, (_req, res) => {
@@ -617,7 +619,7 @@ app.get(SELLER_INTEGRITY_AUDIT_SAMPLE_PATH, (_req, res) => {
     sample: true,
     sampleNote: "Synthetic output from the public SameDayDesk OpenAPI. This is not a live check, payment, or customer result.",
     source: `${PUBLIC_URL}/openapi.json`,
-    operation: "GET /commerce/seller-integrity-audit",
+    operation: `GET ${SELLER_INTEGRITY_AUDIT_ROUTE}`,
     result: SELLER_INTEGRITY_AUDIT_EXAMPLE,
   });
 });
@@ -1084,7 +1086,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/chain/solana-transaction-receipt`, amount: priceToAtomic(SOLANA_TRANSACTION_RECEIPT_PRICE), description: "Get a normalized finalized Solana transaction receipt from one signature: success or failure status, slot, block time, fee, SPL-token owner deltas, canonical USDC deltas, and optional exact mint, recipient, amount, and payer verification. Returns explicit not-found or RPC-unavailable evidence, excludes raw instructions and logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/security/wallet-policy-conformance`, method: "POST", amount: priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate a credential-free standardized allow/deny matrix for an agent wallet or delegated signer. Distinguishes explicit provider policy denials from validation and generic provider failures, separates operation allowlisting from exact execution-shape control, and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/security/stateful-wallet-policy-conformance`, method: "POST", amount: priceToAtomic(STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate credential-free stateful wallet-policy observations for sequential cumulative limits, signed-but-unbroadcast accounting, ABI extraction integrity, concurrent oversubscription, counter-reference failure, and application serialization. Separates provider-policy enforcement from application guards and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet or resource IDs, counter values, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/commerce/seller-integrity-audit`, amount: priceToAtomic(SELLER_INTEGRITY_AUDIT_PRICE), description: "x402 and MPP seller integrity audit for one exact paid GET or POST route after a buyer integration fails, a seller changes the route, or before the next paid retry or release. Returns machine_buyable, contract_ready, or repair_required with exact repair actions. Checks constructible non-secret input, live unpaid GET terms, optional Bazaar metadata, and buyer-required success paths. Uses no credential or target payment, follows no redirect, and sends no target POST.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_ROUTE}`, amount: priceToAtomic(SELLER_INTEGRITY_AUDIT_PRICE), description: "x402 and MPP seller integrity audit for one exact paid GET or POST route after a buyer integration fails, a seller changes the route, or before the next paid retry or release. Returns machine_buyable, contract_ready, or repair_required with exact repair actions. Checks constructible non-secret input, live unpaid GET terms, optional Bazaar metadata, and buyer-required success paths. Uses no credential or target payment, follows no redirect, and sends no target POST.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/contract-qualified-search`, amount: priceToAtomic(CONTRACT_QUALIFIED_SEARCH_PRICE), description: "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON output paths. Returns bounded machine-buyable or contract-ready candidates plus controlled rejection reasons. Rejects unresolved routes and owned supply before audit, uses no credentials or wallet, sends no seller POST or target payment, reads no paid response body, and retains only a query digest.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/distribution/agent-surface-budget-audit`, amount: priceToAtomic(AGENT_SURFACE_BUDGET_AUDIT_PRICE), description: "Measure one public service's free MCP tools/list, OpenAPI, or both before an agent calls or pays. Returns byte counts, byte-derived token estimates, missing selection contracts, heaviest definitions, budget decisions, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. Uses public pinned DNS, follows no redirect, sends no credential or target payment, and calls no target tool.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}${CAREERS_BOARD_PATH}`, amount: CAREERS_BOARD_AMOUNT_ATOMIC, description: CAREERS_BOARD_DESCRIPTION, mimeType: "application/json" },
@@ -1427,7 +1429,18 @@ const machineActionCatalog = () => ({
       mimeType: resource.mimeType,
       ...serviceMetadata,
       request: projectDiscoveryRequest(resource.url, method, request),
-      response: response ? { mimeType: "application/json", ...response } : null,
+      response: response ? {
+        mimeType: "application/json",
+        ...response,
+        ...(method === "GET" && route === SELLER_INTEGRITY_AUDIT_ROUTE ? {
+          exampleDocument: {
+            url: SELLER_INTEGRITY_AUDIT_SAMPLE_URL,
+            resultPointer: "/result",
+            synthetic: true,
+            charged: false,
+          },
+        } : {}),
+      } : null,
     };
   }),
   freeRecipes: [
@@ -1481,7 +1494,7 @@ function renderServedLlmsTxt(catalog = machineActionCatalog()) {
     extractionTrialDiscovery: catalog.discovery.extractionTrial,
     callerResultClient: catalog.callerResultClient,
     apiCatalogUrl: CANONICAL_API_CATALOG,
-    sellerAuditSampleUrl: `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`,
+    sellerAuditSampleUrl: SELLER_INTEGRITY_AUDIT_SAMPLE_URL,
     freePageCompare: true,
   });
 }
@@ -1939,12 +1952,12 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
             : agentCashPaymentInfoFor(RESOURCES[13]),
         },
       },
-      "/commerce/seller-integrity-audit": {
+      [SELLER_INTEGRITY_AUDIT_ROUTE]: {
         get: {
           summary: "Audit x402 and MPP seller terms and response contracts",
           description: RESOURCES[19].description,
           externalDocs: {
-            url: `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`,
+            url: SELLER_INTEGRITY_AUDIT_SAMPLE_URL,
             description: "Free synthetic JSON example of the audit result. It does not run an audit or verify a live seller route.",
           },
           parameters: [
