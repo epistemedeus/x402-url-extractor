@@ -345,6 +345,21 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     readJson(base, "/v0/commerce-demand.json?days=90"),
   ]);
 
+  // Catalog consumers map OpenAPI summary to the short name, not the detail.
+  for (const doc of [openapi, mppOpenapi]) {
+    const audit = doc.paths[SELLER_INTEGRITY_ROUTE].get;
+    const preflight = doc.paths["/commerce/payment-offer-preflight"];
+    for (const operation of [audit, preflight.get, preflight.post]) {
+      assert.ok(operation.summary.length <= 64);
+      assert.ok(operation.summary.split(/\s+/).length <= 10);
+      assert.ok(operation.description.length > operation.summary.length);
+    }
+    assert.match(audit.description, /inspect a POST contract without sending a target POST/);
+    assert.match(audit.description, /required JSON success paths/);
+    assert.match(preflight.get.description, /amount, network, asset, recipient/);
+    assert.match(preflight.post.description, /^JSON-body form/);
+  }
+
   const preflightSource = "https://github.com/epistemedeus/agent-payment-integrity#try-it";
   const previewHeading = "## Free seller preview";
   const preview = (doc) => doc.split(previewHeading)[1]?.split("\n## ")[0];
