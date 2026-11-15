@@ -1,0 +1,39 @@
+name: Receive the saved vetted quote comparison
+on:
+  push:
+    branches: [codex/n15-vetted-quote-compare]
+permissions:
+  contents: read
+jobs:
+  quote:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.23.2
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node --test examples/vetted-quote-review.test.mjs payment-offer-preflight.test.mjs seller-audit-input-evidence.test.mjs
+      - name: Compare one actual unsigned challenge to the original vetted terms
+        run: |
+          node --input-type=module - <<'NODE'
+          import assert from 'node:assert/strict';
+          import { reviewVettedGetQuote } from './examples/vetted-quote-review.mjs';
+          const origin = 'https://agents.samedaydesk.com';
+          const route = '/commerce/payment-offer-preflight';
+          const url = new URL('/commerce/seller-integrity-audit', origin);
+          url.searchParams.set('origin', origin);
+          url.searchParams.set('route', route);
+          const result = await reviewVettedGetQuote({
+            source: 'swarmmemo-vetting-issue-53', url: url.href, method: 'GET', protocol: 'x402',
+            amountAtomic: '10000', network: 'eip155:8453', asset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            recipient: '0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee',
+          });
+          assert.equal(result.decision, 'observed_terms_match');
+          assert.deepEqual(result.changed, []);
+          assert.equal(result.boundary.paymentSent, false);
+          console.log(JSON.stringify(result));
+          NODE
