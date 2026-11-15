@@ -487,6 +487,14 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const sampleLink = openapi.paths[SELLER_INTEGRITY_ROUTE].get.externalDocs;
   assert.equal(sampleLink.url, new URL(`${SELLER_INTEGRITY_ROUTE}/sample.json`, openapi.servers[0].url).href);
   assert.match(sampleLink.description, /Free synthetic JSON example.*does not run an audit/);
+  const exampleDocument = sellerIntegrityAction.response.exampleDocument;
+  assert.deepEqual(exampleDocument, {
+    url: sampleLink.url, resultPointer: "/result", synthetic: true, charged: false,
+  });
+  assert.deepEqual(catalog.actions.filter((action) => action.response?.exampleDocument).map((action) => action.route),
+    [SELLER_INTEGRITY_ROUTE]);
+  assert.equal(catalog.actions.some((action) => action.url === exampleDocument.url), false);
+  assert.equal(catalog.freeRecipes.some((recipe) => recipe.url === exampleDocument.url), false);
   const discoverySection = llms.split("## Discovery\n")[1]?.split("\n## ")[0];
   assert.ok(discoverySection);
   const discoveryLinks = new Map([...discoverySection.matchAll(/^- \[([^\]]+)\]\(([^)]+)\):/gm)]
@@ -509,7 +517,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     assert.equal(feedbackHeader.example, undefined);
     assert.equal(operation.responses["402"].headers?.[feedback.header], undefined);
   }
-  const sampleUrl = base + new URL(sampleLink.url).pathname;
+  const sampleUrl = base + new URL(exampleDocument.url).pathname;
   const sampleResponse = await fetch(sampleUrl);
   assert.equal(sampleResponse.status, 200);
   assert.match(sampleResponse.headers.get("content-type"), /^application\/json\b/);
@@ -534,6 +542,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(await sampleHead.text(), "");
   assert.deepEqual(sellerIntegrityAction.response, {
     mimeType: "application/json", schema: sellerIntegrityOutput, example: SELLER_INTEGRITY_AUDIT_EXAMPLE,
+    exampleDocument,
   });
   assert.deepEqual(sellerIntegrityAction.request.schema.properties.queryParams, bazaar.schema.properties.input.properties.queryParams);
   assert.deepEqual(sellerIntegrityAction.request.example.queryParams, queryExample);
