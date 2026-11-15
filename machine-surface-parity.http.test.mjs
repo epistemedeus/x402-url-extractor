@@ -27,6 +27,8 @@ import { validatePaymentRequiredHeader } from "./bazaar-contract-audit.mjs";
 import { SELLER_INTEGRITY_AUDIT_EXAMPLE, sellerIntegrityAuditOutputSchema } from "./seller-integrity-audit.mjs";
 import { mirrorLegacyX402Body } from "./x402-legacy-body.mjs";
 import { activeNoHumansClaimProof } from "./nohumans-claim-proof.mjs";
+import { walletPolicyConformance } from "./wallet-policy-conformance.mjs";
+import { statefulWalletPolicyConformance } from "./stateful-wallet-policy-conformance.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const SNAPSHOT_MISSING_FROM_LLMS = [
@@ -550,6 +552,19 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const sellerIntegrityManifest = manifest.items.find((item) => item.resource.routeTemplate === SELLER_INTEGRITY_ROUTE);
   assert.equal(sellerIntegrityManifest.resource.description, sellerIntegrityDescription);
   assert.equal(sellerIntegrityTerms.resource.description, sellerIntegrityDescription);
+  for (const [route, evaluate] of [
+    ["/security/wallet-policy-conformance", walletPolicyConformance],
+    ["/security/stateful-wallet-policy-conformance", statefulWalletPolicyConformance],
+  ]) {
+    const action = catalog.actions.find((entry) => entry.method === "POST" && entry.route === route);
+    const published = openapi.paths[route].post.responses["200"].content["application/json"].example;
+    assert.deepEqual(action.response.example, published);
+    assert.equal(published.evaluatedAt, "2026-10-01T00:00:00.000Z");
+    const started = Date.now();
+    const fresh = evaluate(action.request.example.body);
+    assert.ok(started <= Date.parse(fresh.evaluatedAt) && Date.parse(fresh.evaluatedAt) <= Date.now());
+    assert.deepEqual({ ...fresh, evaluatedAt: published.evaluatedAt }, published);
+  }
   assert.equal(receipt.actionCount, 23);
   assert.equal(receipt.llmsCanonicalCount, 23);
   assert.equal(receipt.llmsAlternateCount, 1);
