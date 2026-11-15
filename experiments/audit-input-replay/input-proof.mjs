@@ -52,7 +52,8 @@ export async function replayAuditInputs(input, requestImpl) {
   const result = await sellerIntegrityAudit(input, {
     auditImpl: (options) => auditOrigin({
       ...options,
-      requestImpl: async (url, requestOptions) => {
+      requestImpl: async (urlInput, requestOptions) => {
+        const url = new URL(urlInput);
         if (url.origin !== options.origin) throw new Error("off-origin replay refused");
         if (!["/openapi.json", "/mpp-openapi.json", EVIDENCE_PATH, options.route].includes(url.pathname)) {
           unsupported = true;
