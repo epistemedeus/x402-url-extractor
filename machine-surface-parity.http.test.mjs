@@ -346,16 +346,16 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   ]);
 
   // Catalog consumers map OpenAPI summary to the short name, not the detail.
-  for (const doc of [openapi, mppOpenapi]) {
-    const audit = doc.paths[SELLER_INTEGRITY_ROUTE].get;
-    const preflight = doc.paths["/commerce/payment-offer-preflight"];
+  {
+    const audit = openapi.paths[SELLER_INTEGRITY_ROUTE].get;
+    const preflight = openapi.paths["/commerce/payment-offer-preflight"];
     for (const operation of [audit, preflight.get, preflight.post]) {
       assert.ok(operation.summary.length <= 64);
       assert.ok(operation.summary.split(/\s+/).length <= 10);
       assert.ok(operation.description.length > operation.summary.length);
     }
-    assert.match(audit.description, /inspect a POST contract without sending a target POST/);
-    assert.match(audit.description, /required JSON success paths/);
+    assert.match(audit.description, /sends no target POST/);
+    assert.match(audit.description, /buyer-required success paths/);
     assert.match(preflight.get.description, /amount, network, asset, recipient/);
     assert.match(preflight.post.description, /^JSON-body form/);
   }
@@ -479,8 +479,8 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     assert.deepEqual((await readJson(base, alias)).info.contact, contact, alias);
   }
 
-  const sellerIntegritySummary = openapi.paths[SELLER_INTEGRITY_ROUTE].get.summary;
-  assert.equal(sellerIntegritySummary.length, 469);
+  const sellerIntegrityDescription = openapi.paths[SELLER_INTEGRITY_ROUTE].get.description;
+  assert.equal(sellerIntegrityDescription.length, 469);
   const sellerIntegrityAction = catalog.actions.find((action) => action.route === SELLER_INTEGRITY_ROUTE);
   const sellerIntegrityOutput = openapi.paths[SELLER_INTEGRITY_ROUTE].get.responses["200"].content["application/json"].schema;
   assert.deepEqual(sellerIntegrityOutput, sellerIntegrityAuditOutputSchema());
@@ -495,6 +495,10 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(discoveryLinks.get("OpenAPI"), new URL("/openapi.json", openapi.servers[0].url).href);
   assert.equal(discoveryLinks.get("Seller integrity audit example result"), sampleLink.url);
   const mppSellerAudit = mppOpenapi.paths[SELLER_INTEGRITY_ROUTE]?.get;
+  if (mppSellerAudit) {
+    assert.equal(mppSellerAudit.summary, openapi.paths[SELLER_INTEGRITY_ROUTE].get.summary);
+    assert.equal(mppSellerAudit.description, sellerIntegrityDescription);
+  }
   if (mppSellerAudit) assert.deepEqual(mppSellerAudit.externalDocs, sampleLink);
   for (const operation of [openapi.paths[SELLER_INTEGRITY_ROUTE].get, mppSellerAudit].filter(Boolean)) {
     const feedbackHeader = operation.responses["200"].headers[feedback.header];
@@ -535,8 +539,8 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.deepEqual(sellerIntegrityAction.request.example.queryParams, queryExample);
   assert.equal(new URL(sellerIntegrityAction.request.exampleUrl).searchParams.has("referral"), false);
   const sellerIntegrityManifest = manifest.items.find((item) => item.resource.routeTemplate === SELLER_INTEGRITY_ROUTE);
-  assert.equal(sellerIntegrityManifest.resource.description, sellerIntegritySummary);
-  assert.equal(sellerIntegrityTerms.resource.description, sellerIntegritySummary);
+  assert.equal(sellerIntegrityManifest.resource.description, sellerIntegrityDescription);
+  assert.equal(sellerIntegrityTerms.resource.description, sellerIntegrityDescription);
   assert.equal(receipt.actionCount, 23);
   assert.equal(receipt.llmsCanonicalCount, 23);
   assert.equal(receipt.llmsAlternateCount, 1);

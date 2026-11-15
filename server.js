@@ -1942,7 +1942,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/commerce/seller-integrity-audit": {
         get: {
           summary: "Audit x402 and MPP seller terms and response contracts",
-          description: "Check one exact seller route before release or retry. Verify live unsigned GET terms or inspect a POST contract without sending a target POST. Check required JSON success paths, constructible inputs, and optional Bazaar metadata. Returns machine_buyable, contract_ready, or repair_required with next steps. No target credentials, payment, or redirects.",
+          description: RESOURCES[19].description,
           externalDocs: {
             url: `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`,
             description: "Free synthetic JSON example of the audit result. It does not run an audit or verify a live seller route.",
