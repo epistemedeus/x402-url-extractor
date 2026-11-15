@@ -1480,6 +1480,8 @@ function renderServedLlmsTxt(catalog = machineActionCatalog()) {
     freeRecipes: catalog.freeRecipes,
     extractionTrialDiscovery: catalog.discovery.extractionTrial,
     callerResultClient: catalog.callerResultClient,
+    apiCatalogUrl: CANONICAL_API_CATALOG,
+    sellerAuditSampleUrl: `${PUBLIC_URL}${SELLER_INTEGRITY_AUDIT_SAMPLE_PATH}`,
     freePageCompare: true,
   });
 }

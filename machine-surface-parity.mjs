@@ -112,6 +112,8 @@ export function renderLlmsTxt({
   freeRecipes = [],
   callerResultClient = null,
   extractionTrialDiscovery = null,
+  apiCatalogUrl = null,
+  sellerAuditSampleUrl = null,
   freePageCompare = false,
 } = {}) {
   if (!origin || !facilitator || !payTo) fail("origin, facilitator, and payTo are required");
@@ -156,8 +158,8 @@ ${alternate ? "4. The Circle Gateway route advertises GatewayWalletBatched x402 
 5. Runtime payment challenges are authoritative. Enforce the chosen scheme, network, amount, and recipient before signing.
 
 ## Discovery
-${extractionTrialDiscovery ? `- Walletless extraction trial contract (current availability, request and limits): ${extractionTrialDiscovery}\n` : ""}- x402 manifest: ${publicOrigin}/.well-known/x402
-- OpenAPI: ${publicOrigin}/openapi.json
+${extractionTrialDiscovery ? `- Walletless extraction trial contract (current availability, request and limits): ${extractionTrialDiscovery}\n` : ""}${apiCatalogUrl ? `- [API catalog](${apiCatalogUrl}): Canonical registry of machine interfaces.\n` : ""}- [OpenAPI](${publicOrigin}/openapi.json): Request parameters and response schemas.
+${sellerAuditSampleUrl ? `- [Seller integrity audit example result](${sellerAuditSampleUrl}): Free synthetic JSON. This read does not run an audit or require payment.\n` : ""}- x402 manifest: ${publicOrigin}/.well-known/x402
 - Skill contract: ${publicOrigin}/skill.md
 - Agent skills index: ${publicOrigin}/.well-known/skills/index.json
 - Action catalog: ${publicOrigin}/api/actions
