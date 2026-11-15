@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/machine-discovery.yml
       - server.js
+      - machine-surface-parity.mjs
       - machine-surface-parity.http.test.mjs
       - package-lock.json
 

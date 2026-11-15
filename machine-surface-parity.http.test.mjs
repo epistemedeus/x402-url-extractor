@@ -472,6 +472,13 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const sampleLink = openapi.paths[SELLER_INTEGRITY_ROUTE].get.externalDocs;
   assert.equal(sampleLink.url, new URL(`${SELLER_INTEGRITY_ROUTE}/sample.json`, openapi.servers[0].url).href);
   assert.match(sampleLink.description, /Free synthetic JSON example.*does not run an audit/);
+  const discoverySection = llms.split("## Discovery\n")[1]?.split("\n## ")[0];
+  assert.ok(discoverySection);
+  const discoveryLinks = new Map([...discoverySection.matchAll(/^- \[([^\]]+)\]\(([^)]+)\):/gm)]
+    .map(([, title, href]) => [title, href]));
+  assert.equal(discoveryLinks.get("API catalog"), "https://samedaydesk.com/.well-known/api-catalog");
+  assert.equal(discoveryLinks.get("OpenAPI"), new URL("/openapi.json", openapi.servers[0].url).href);
+  assert.equal(discoveryLinks.get("Seller integrity audit example result"), sampleLink.url);
   const mppSellerAudit = mppOpenapi.paths[SELLER_INTEGRITY_ROUTE]?.get;
   if (mppSellerAudit) assert.deepEqual(mppSellerAudit.externalDocs, sampleLink);
   const sampleUrl = base + new URL(sampleLink.url).pathname;
