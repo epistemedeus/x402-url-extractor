@@ -26,7 +26,11 @@ const liveMs = Math.round(performance.now() - started);
 assert.deepEqual(observations, [
   { path: "/openapi.json", status: 200 }, { path: "/mpp-openapi.json", status: 200 }, { path: route, status: 402 },
 ]);
-assert.equal(result.decision, "machine_buyable");
+const findings = result.report.findings.map((f) => /^[a-z0-9_-]+$/.test(f) ? f : f.split(":")[0]);
+console.log(JSON.stringify({ decision: result.decision, contract: result.report.responseContract?.decision,
+  observations, findings, protocols: result.report.protocols, proofPresent: !!proof }));
+assert.ok(["machine_buyable", "repair_required"].includes(result.decision));
+assert.equal(result.report.runtimeChallengeVerified, true);
 assert.equal(result.report.economics.x402.amountAtomic, "5000");
 assert.ok(proof, "the actual serving evidence profile must be supported");
 const verifyAt = performance.now();

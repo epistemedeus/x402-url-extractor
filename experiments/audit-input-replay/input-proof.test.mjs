@@ -79,3 +79,11 @@ test("uncovered and unavailable evidence never receives a complete x402 input ma
   assert.equal((await replayAuditInputs({ ...input, requiredPaths: ["ok"] }, normal.requestImpl)).proof, null);
   await assert.rejects(replayAuditInputs(input), /replay transport/);
 });
+
+test("a verified quote can substantiate a repair result without converting it to approval", async () => {
+  const saved = fixture({ operationOverride: { ...operation, responses: {} } });
+  const { result, proof } = await replayAuditInputs(input, saved.requestImpl);
+  assert.equal(result.decision, "repair_required");
+  assert.equal(result.report.runtimeChallengeVerified, true);
+  assert.equal(matchesAuditInputs(proof, proof?.digest, saved), true);
+});

@@ -74,7 +74,8 @@ export async function replayAuditInputs(input, requestImpl) {
   const quote = observed.get(request.route);
   if (unsupported || observed.size !== 3 || (mpp?.status !== 404 && (mpp?.status !== 200 || !mpp.digest))
       || request.method !== "GET" || request.requireBazaar || request.requiredPaths.length
-      || result.decision !== "machine_buyable" || report.protocols.length !== 1 || report.protocols[0] !== "x402"
+      || !report.auditCompleted || !report.runtimeChallengeVerified
+      || report.protocols.length !== 1 || report.protocols[0] !== "x402"
       || document?.status !== 200 || quote?.status !== 402 || !document.digest || !quote.digest || !quote.targetDigest) {
     return { result, proof: null };
   }
