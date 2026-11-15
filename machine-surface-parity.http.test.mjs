@@ -481,11 +481,20 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(discoveryLinks.get("Seller integrity audit example result"), sampleLink.url);
   const mppSellerAudit = mppOpenapi.paths[SELLER_INTEGRITY_ROUTE]?.get;
   if (mppSellerAudit) assert.deepEqual(mppSellerAudit.externalDocs, sampleLink);
+  for (const operation of [openapi.paths[SELLER_INTEGRITY_ROUTE].get, mppSellerAudit].filter(Boolean)) {
+    const feedbackHeader = operation.responses["200"].headers[feedback.header];
+    assert.deepEqual(feedbackHeader.schema, { type: "string" });
+    assert.ok(feedbackHeader.description.includes(extractOperation.externalDocs.url));
+    assert.match(feedbackHeader.description, /Optional, one-time.*free reporting.*only if this response includes the header/);
+    assert.equal(feedbackHeader.required, undefined);
+    assert.equal(feedbackHeader.example, undefined);
+    assert.equal(operation.responses["402"].headers?.[feedback.header], undefined);
+  }
   const sampleUrl = base + new URL(sampleLink.url).pathname;
   const sampleResponse = await fetch(sampleUrl);
   assert.equal(sampleResponse.status, 200);
   assert.match(sampleResponse.headers.get("content-type"), /^application\/json\b/);
-  for (const header of ["payment-required", "payment-response", "www-authenticate"]) {
+  for (const header of ["payment-required", "payment-response", "www-authenticate", feedback.header]) {
     assert.equal(sampleResponse.headers.has(header), false, header);
   }
   const sample = await sampleResponse.json();

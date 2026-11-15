@@ -1954,7 +1954,16 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
             { name: "referral", in: "query", required: false, description: "Optional privacy-bounded referral ID derived from a complete seller-signed x402 offer-receipt envelope. It labels acquisition only and cannot change price, authorization, or delivery.", schema: { type: "string", pattern: "^r1_[0-9a-f]{64}$" } },
           ],
           responses: {
-            "200": { description: "bounded seller machine-buyability report and repair actions", content: { "application/json": { schema: sellerIntegrityAuditOutputSchema() } } },
+            "200": {
+              description: "bounded seller machine-buyability report and repair actions",
+              headers: {
+                [CALLER_RESULT_FEEDBACK_HEADER]: {
+                  description: `Optional, one-time capability to say whether this result helped. See ${PUBLIC_URL}${CALLER_RESULT_FEEDBACK_PATH} for the free reporting contract. Use only if this response includes the header. Skipping feedback does not affect the result.`,
+                  schema: { type: "string" },
+                },
+              },
+              content: { "application/json": { schema: sellerIntegrityAuditOutputSchema() } },
+            },
             "400": { description: "invalid public origin or exact route, charged nothing" },
             "402": { description: `payment required (x402 or MPP, ${SELLER_INTEGRITY_AUDIT_PRICE} USDC base)` },
           },
