@@ -1095,6 +1095,9 @@ const RESOURCES = [
 ];
 assertCdpResourceDescriptionCompatibility(RESOURCES);
 
+// Documentation is synthetic and stable across process starts. Actual
+// evaluation handlers still omit this option and use their current clock.
+const WALLET_POLICY_DISCOVERY_CLOCK = Object.freeze({ now: Date.UTC(2026, 9, 1) });
 const WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
   profileId: "privy-solana-lab",
   provider: "Privy",
@@ -3871,7 +3874,7 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
             bodyType: "json",
             input: WALLET_POLICY_DISCOVERY_INPUT,
             inputSchema: walletPolicyConformanceInputSchema(),
-            output: { example: walletPolicyConformance(WALLET_POLICY_DISCOVERY_INPUT) },
+            output: { example: walletPolicyConformance(WALLET_POLICY_DISCOVERY_INPUT, WALLET_POLICY_DISCOVERY_CLOCK) },
             outputSchema: walletPolicyConformanceOutputSchema(),
           }),
         },
@@ -3889,7 +3892,7 @@ const x402HttpServer = new LegacyBodyX402HTTPResourceServer(
             bodyType: "json",
             input: STATEFUL_WALLET_POLICY_DISCOVERY_INPUT,
             inputSchema: statefulWalletPolicyConformanceInputSchema(),
-            output: { example: statefulWalletPolicyConformance(STATEFUL_WALLET_POLICY_DISCOVERY_INPUT) },
+            output: { example: statefulWalletPolicyConformance(STATEFUL_WALLET_POLICY_DISCOVERY_INPUT, WALLET_POLICY_DISCOVERY_CLOCK) },
             outputSchema: statefulWalletPolicyConformanceOutputSchema(),
           }),
         },

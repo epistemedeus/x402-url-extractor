@@ -51,12 +51,12 @@ export function normalizeStatefulWalletPolicyConformanceInput(input) {
   }
 }
 
-export function statefulWalletPolicyConformance(input) {
+export function statefulWalletPolicyConformance(input, evaluationOptions) {
   const normalized = normalizeStatefulWalletPolicyConformanceInput(input);
   const standard = evaluateStatefulWalletPolicyObservations({
     schemaVersion: STANDARD_INPUT_SCHEMA,
     ...normalized,
-  });
+  }, evaluationOptions);
   const { schemaVersion: standardSchemaVersion, ...result } = standard;
   return Object.freeze({
     schemaVersion: PRODUCT_SCHEMA,

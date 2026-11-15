@@ -54,12 +54,12 @@ export function normalizeWalletPolicyConformanceInput(input) {
   }
 }
 
-export function walletPolicyConformance(input) {
+export function walletPolicyConformance(input, evaluationOptions) {
   const normalized = normalizeWalletPolicyConformanceInput(input);
   const standard = evaluateWalletPolicyObservations({
     schemaVersion: STANDARD_INPUT_SCHEMA,
     ...normalized,
-  });
+  }, evaluationOptions);
   const { schemaVersion: standardSchemaVersion, ...result } = standard;
   return Object.freeze({
     schemaVersion: PRODUCT_SCHEMA,
