@@ -43,6 +43,12 @@ export function combine(records, { now = Date.now() } = {}) {
   const superseded = [];
   records.forEach((r, index) => {
     const problems = validate(r);
+    // Historical decisions may only use observations already available at
+    // compare time. Reject before ranking or deduplication so a later reading
+    // cannot masquerade as current or hide the last usable decision.
+    if (!problems.length && Date.parse(r.provenance.observedAt) > now) {
+      problems.push('evidence-observed-after-compare');
+    }
     if (problems.length) { refused.push({ index, jobId: r?.jobId ?? null, source: r?.provenance?.source ?? null, problems }); return; }
     const key = `${r.provenance.source}\u0000${r.jobId}`;
     const prev = latest.get(key);
