@@ -16,6 +16,14 @@ export const REQUIRED = Object.freeze({
   freshness: ['evidenceAgeSeconds', 'maxAgeSeconds', 'expiresAt'],
 });
 const DECISIONS = new Set(['eligible', 'not-eligible', 'unknown']);
+const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+function evidenceTime(value) {
+  if (typeof value !== 'string' || value.length > 40 || !UTC_TIMESTAMP.test(value)) return NaN;
+  const parsed = Date.parse(value);
+  // Date.parse can silently normalize an invalid day of the month.
+  return Number.isFinite(parsed) && new Date(parsed).toISOString().slice(0, 19) === value.slice(0, 19) ? parsed : NaN;
+}
 
 // Returns a list of problems; empty means the record has every shared key with a usable type.
 export function validate(r) {
@@ -24,17 +32,22 @@ export function validate(r) {
   for (const [section, keys] of Object.entries(REQUIRED)) {
     const obj = section ? r[section] : r;
     if (section && (!obj || typeof obj !== 'object')) { out.push(`missing:${section}`); continue; }
-    for (const k of keys) if (!(k in obj)) out.push(`missing:${section ? section + '.' : ''}${k}`);
+    for (const k of keys) if (!Object.hasOwn(obj, k)) out.push(`missing:${section ? section + '.' : ''}${k}`);
   }
   if (out.length) return out;
   if (!DECISIONS.has(r.decision)) out.push(`bad-decision:${r.decision}`);
   if (!Array.isArray(r.reasons)) out.push('bad-reasons');
   if (typeof r.provenance.source !== 'string' || !r.provenance.source) out.push('bad-provenance.source');
-  if (r.jobId === null || r.jobId === undefined || r.jobId === '') out.push('bad-jobId');
+  if (!(typeof r.jobId === 'string' && r.jobId.length > 0) && !Number.isSafeInteger(r.jobId)) out.push('bad-jobId');
+  if (!Number.isFinite(evidenceTime(r.provenance.observedAt))) out.push('bad-provenance.observedAt');
+  if (!Number.isSafeInteger(r.freshness.maxAgeSeconds) || r.freshness.maxAgeSeconds < 1 || r.freshness.maxAgeSeconds > 86400) {
+    out.push('bad-freshness.maxAgeSeconds');
+  }
+  if (r.freshness.expiresAt !== null && !Number.isFinite(evidenceTime(r.freshness.expiresAt))) out.push('bad-freshness.expiresAt');
   return out;
 }
 
-const age = (observedAt, now) => { const t = Date.parse(observedAt); return Number.isFinite(t) ? Math.max(0, Math.round((now - t) / 1000)) : null; };
+const age = (observedAt, now) => Math.max(0, Math.round((now - evidenceTime(observedAt)) / 1000));
 
 // combine(records, { now }) -> { comparer, comparedAt, eligible, notEligible, unknown, refused, superseded, counts }
 export function combine(records, { now = Date.now() } = {}) {
@@ -46,33 +59,30 @@ export function combine(records, { now = Date.now() } = {}) {
     // Historical decisions may only use observations already available at
     // compare time. Reject before ranking or deduplication so a later reading
     // cannot masquerade as current or hide the last usable decision.
-    if (!problems.length && Date.parse(r.provenance.observedAt) > now) {
+    if (!problems.length && evidenceTime(r.provenance.observedAt) > now) {
       problems.push('evidence-observed-after-compare');
     }
     if (problems.length) { refused.push({ index, jobId: r?.jobId ?? null, source: r?.provenance?.source ?? null, problems }); return; }
-    const key = `${r.provenance.source}\u0000${r.jobId}`;
+    const key = JSON.stringify([r.provenance.source, String(r.jobId)]);
     const prev = latest.get(key);
     if (!prev) { latest.set(key, { r, index }); return; }
-    const newer = (Date.parse(r.provenance.observedAt) || -Infinity) > (Date.parse(prev.r.provenance.observedAt) || -Infinity);
+    const newer = evidenceTime(r.provenance.observedAt) > evidenceTime(prev.r.provenance.observedAt);
     const [keep, drop] = newer ? [{ r, index }, prev] : [prev, { r, index }];
     latest.set(key, keep);
     superseded.push({ index: drop.index, source: drop.r.provenance.source, jobId: drop.r.jobId, observedAt: drop.r.provenance.observedAt, by: keep.r.provenance.observedAt });
   });
 
   const eligible = [], notEligible = [], unknown = [];
-  const counts = {};
+  const counts = new Map();
   for (const { r, index } of latest.values()) {
     // Every verdict lapses when its evidence is older than its maxAgeSeconds. An eligible verdict
     // also lapses at its own expiresAt (which may be capped by a deadline), whichever is earlier;
     // an eligible verdict without a usable expiresAt falls back to the evidence-age limit alone.
     // A passed deadline caps eligibility but does not make a not-eligible verdict stale.
-    const observedMs = Date.parse(r.provenance.observedAt);
-    const maxAgeMs = Number(r.freshness.maxAgeSeconds) * 1000;
-    const ageLimitMs = Number.isFinite(observedMs) && Number.isFinite(maxAgeMs) ? observedMs + maxAgeMs : NaN;
-    const ownMs = Date.parse(r.freshness.expiresAt);
-    const expiresMs = r.decision === 'eligible'
-      ? (Number.isFinite(ownMs) && Number.isFinite(ageLimitMs) ? Math.min(ownMs, ageLimitMs) : (Number.isFinite(ageLimitMs) ? ageLimitMs : ownMs))
-      : ageLimitMs;
+    const observedMs = evidenceTime(r.provenance.observedAt);
+    const ageLimitMs = observedMs + r.freshness.maxAgeSeconds * 1000;
+    const ownMs = evidenceTime(r.freshness.expiresAt);
+    const expiresMs = r.decision === 'eligible' && Number.isFinite(ownMs) ? Math.min(ownMs, ageLimitMs) : ageLimitMs;
     const entry = {
       index,
       source: r.provenance.source,
@@ -93,14 +103,14 @@ export function combine(records, { now = Date.now() } = {}) {
       entry.previousDecision = r.decision;
     }
     (entry.decision === 'eligible' ? eligible : entry.decision === 'not-eligible' ? notEligible : unknown).push(entry);
-    counts[entry.source] ??= { eligible: 0, 'not-eligible': 0, unknown: 0 };
-    counts[entry.source][entry.decision]++;
+    if (!counts.has(entry.source)) counts.set(entry.source, { eligible: 0, 'not-eligible': 0, unknown: 0 });
+    counts.get(entry.source)[entry.decision]++;
   }
   const order = (a, b) => (a.evidenceAgeSeconds ?? Infinity) - (b.evidenceAgeSeconds ?? Infinity)
     || (Date.parse(a.expiresAt) || Infinity) - (Date.parse(b.expiresAt) || Infinity)
     || String(a.source).localeCompare(String(b.source)) || String(a.jobId).localeCompare(String(b.jobId));
   eligible.sort(order); notEligible.sort(order); unknown.sort(order);
-  return { comparer: COMPARER, comparedAt: new Date(now).toISOString(), order: 'freshest evidence first, then soonest expiry', eligible, notEligible, unknown, refused, superseded, counts };
+  return { comparer: COMPARER, comparedAt: new Date(now).toISOString(), order: 'freshest evidence first, then soonest expiry', eligible, notEligible, unknown, refused, superseded, counts: Object.fromEntries(counts) };
 }
 
 export function recordsFrom(parsed) {

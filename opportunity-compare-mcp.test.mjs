@@ -322,6 +322,48 @@ test("as-of comparison refuses future evidence before ranking or suppressing a p
   }
 });
 
+test("invalid freshness cannot replace a known verdict in installed or mounted comparison", async () => {
+  const prior = { ...eligible, decision: "not-eligible", reasons: ["prior-close"] };
+  const malformed = [
+    { ...eligible, provenance: { ...eligible.provenance, observedAt: null } },
+    { ...eligible, provenance: { ...eligible.provenance, observedAt: "2026-10-32T10:00:00Z" } },
+    { ...eligible, freshness: { ...eligible.freshness, maxAgeSeconds: "3600" } },
+    { ...eligible, freshness: { ...eligible.freshness, expiresAt: "2026-11-31T12:00:00Z" } },
+  ];
+  const corrected = {
+    ...eligible,
+    provenance: { ...eligible.provenance, observedAt: NOW },
+    freshness: { ...eligible.freshness, expiresAt: null },
+  };
+  const profile = await listenRoute();
+  try {
+    for (const records of [...[false, true].map(reverse => reverse ? [...malformed, prior] : [prior, ...malformed]), [prior, corrected]]) {
+      const args = { records, now: NOW };
+      const installed = installedOutcome(await compareOpportunityRecords(args));
+      const hosted = await postRpc(profile.base, callCompareRpc(args));
+      const body = toolBody(hosted.json);
+      assert.equal(hosted.response.status, 200);
+      assert.equal(body.charged, false);
+      assert.deepEqual(body.result, installed.body.result);
+      if (records.length === 2) {
+        assert.equal(body.result.eligible.length, 1);
+        assert.equal(body.result.refused.length, 0);
+        assert.equal(body.result.superseded.length, 1);
+      } else {
+        assert.deepEqual(body.result.eligible, []);
+        assert.equal(body.result.notEligible[0].jobId, eligible.jobId);
+        assert.deepEqual(body.result.superseded, []);
+        assert.deepEqual(body.result.refused.map(row => row.problems), [
+          ["bad-provenance.observedAt"], ["bad-provenance.observedAt"],
+          ["bad-freshness.maxAgeSeconds"], ["bad-freshness.expiresAt"],
+        ]);
+      }
+    }
+  } finally {
+    await profile.close();
+  }
+});
+
 test("typed refusal: malformed envelope is invalid_input on both halves", async () => {
   for (const args of [malformedEnvelope, {}, { records: "nope" }, { records: [1] }, { records: [eligible], extra: true }]) {
     const installed = await compareOpportunityRecords(args);
