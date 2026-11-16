@@ -89,8 +89,18 @@ export function createOpportunityTab({ publicUrl, houseUrl, sellerToken, price, 
           || resultBody !== result.toString("base64url") || digest(result) !== charge.resultDigest) {
         throw new Error("House receipt mismatch");
       }
+      const statement = new URL(charge.statementUrl);
+      if (statement.protocol !== "https:" && !(statement.protocol === "http:" && statement.hostname === "127.0.0.1")) {
+        throw new Error("House statement origin mismatch");
+      }
+      if (statement.username || statement.password || statement.search || statement.hash
+          || !/^\/v1\/statements\/tab_[a-f0-9-]{36}\.\d{1,6}$/.test(statement.pathname)
+          || [charge.amountUsd, charge.exposureUsd, charge.limitUsd].some((amount) => !/^\d{1,13}(?:\.\d{1,6})?$/.test(amount))) {
+        throw new Error("House statement receipt mismatch");
+      }
       return res.set("Cache-Control", "no-store")
         .set("House-Charge", encode(charge))
+        .set("Tab-Statement", `charged=${charge.amountUsd}; open=${charge.exposureUsd}; limit=${charge.limitUsd}; url=${statement.href}`)
         .type("application/json").status(200).send(result);
     } catch {
       return refuse(503, "house_receipt_unavailable", { retry: "same_letter_and_request" });
