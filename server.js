@@ -218,6 +218,7 @@ import {
   listDeclaredAgentDiscoverySources,
 } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
+import { createOpportunityTab, OPPORTUNITY_TAB_PATH } from "./opportunity-house-tab.mjs";
 import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts, registerReplayHttpLifecycle } from "./idempotency-replay.mjs";
 import { assertSameMcpProjection, describeMcpCatalog, mcpCatalogCacheControl, projectMcpInventory } from "./mcp-catalog-projection.mjs";
 import { registerIndexingPayloadContinuity } from "./indexing-payload-continuity.mjs";
@@ -2668,7 +2669,14 @@ const validateOpportunityPreflightRequest = (req, res, next) => {
 };
 app.head("/work/opportunity-preflight", validateOpportunityPreflightRequest);
 app.get("/work/opportunity-preflight", validateOpportunityPreflightRequest);
-app.post("/work/opportunity-preflight", validateOpportunityPreflightRequest);
+app.post(OPPORTUNITY_TAB_PATH, validateOpportunityPreflightRequest, createOpportunityTab({
+  publicUrl: PUBLIC_URL,
+  houseUrl: process.env.OPPORTUNITY_HOUSE_ORIGIN,
+  sellerToken: process.env.OPPORTUNITY_HOUSE_SELLER_TOKEN,
+  price: OPPORTUNITY_PREFLIGHT_PRICE,
+  calculate: opportunityResult,
+  hasPaymentCredential,
+}));
 
 // Validate public targeting and brand-blind intent before payment. The paid
 // The default audit never fetches the target origin and uses no marketplace
@@ -4376,13 +4384,16 @@ app.get("/defi/morpho-preliquidation-replay", async (req, res) => {
 // Paid: deterministic opportunity economics and evidence preflight. This route
 // reads no account and performs no claim, bid, submission, or payment action on
 // the source platform.
+function opportunityResult(input) {
+  const platform = typeof input?.platform === "string" ? input.platform.trim().toLowerCase() : null;
+  const platformCard = platform ? getPlatformHealthCard(platform) : null;
+  return opportunityPreflight(input, { platformCard });
+}
+
 const serveOpportunityPreflight = async (req, res) => {
   try {
-    const input = req.method === "POST" ? req.body : req.query;
-    const platform = typeof input?.platform === "string" ? input.platform.trim().toLowerCase() : null;
-    const platformCard = platform ? getPlatformHealthCard(platform) : null;
     res.set("Cache-Control", "no-store");
-    return res.json(opportunityPreflight(input, { platformCard }));
+    return res.json(opportunityResult(req.method === "POST" ? req.body : req.query));
   } catch (error) {
     return res.status(503).json({
       ok: false,
