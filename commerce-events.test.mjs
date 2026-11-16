@@ -5930,7 +5930,9 @@ test("the demand report counts later UTC-day returns and joins parseable attempt
     id: "00000000-0000-4000-8000-" + (++ordinal).toString().padStart(12, "0"),
     originClass: "external",
     agentDiscoverySource: null,
-    ...(attrs.paymentPresent && { paymentFailureCode: "payment_verification_failed" }),
+    ...(attrs.paymentPresent && {
+      paymentFailureCode: "payment_verification_failed", paymentActor: "f".repeat(24),
+    }),
     ...attrs,
   });
   const firstActor = "a".repeat(24);
