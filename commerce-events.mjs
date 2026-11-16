@@ -969,46 +969,51 @@ function decodeResponseSettlement(res) {
 // Derive a lower-bound cohort from retained writer events and the existing
 // network/client pseudonym. A payer key is a different identity namespace.
 function summarizeChallengeCohorts(populations, { generatedAtMs, credentialAttemptSinceMs, externalCredentialAttemptCoverage }) {
-  const rows = [];
-  for (const { name, events, coverage } of populations) {
-    const actors = new Map();
+  const actors = new Map();
+  for (const { name, events } of populations) {
     for (const event of events) {
       if (event.kind !== "paid" || event.matched !== true || !isCanonicalActorKey(event.actor)) continue;
       const ts = eventTimestampMs(event);
       if (ts === null || ts > generatedAtMs) continue;
-
-      const actor = actors.get(event.actor) ?? { firstChallenge: Infinity, lastSeen: -Infinity, lastAttempt: -Infinity };
       const result = eventResult(event);
       if (result === "protocol_discovery" || isSemanticUnmatched(event)) continue;
+
+      const actor = actors.get(event.actor) ?? { firstChallenge: Infinity, lastSeen: -Infinity, lastAttempt: -Infinity };
       actor.lastSeen = Math.max(actor.lastSeen, ts);
-      if (result === "challenge" && event.paymentPresent === false) {
-        actor.firstChallenge = Math.min(actor.firstChallenge, ts);
+      if (result === "challenge" && event.paymentPresent === false && ts < actor.firstChallenge) {
+        actor.firstChallenge = ts;
+        actor.population = name;
       }
-      if (event.paymentPresent === true && event.paymentCredentialParsed === true
+      if (name === "external" && event.paymentPresent === true && event.paymentCredentialParsed === true
           && (credentialAttemptSinceMs === null || ts >= credentialAttemptSinceMs)) {
         actor.lastAttempt = Math.max(actor.lastAttempt, ts);
       }
       actors.set(event.actor, actor);
     }
-    const cohorts = new Map();
-    for (const actor of actors.values()) {
-      if (!Number.isFinite(actor.firstChallenge)) continue;
-      const day = new Date(actor.firstChallenge).toISOString().slice(0, 10);
-      const cohort = cohorts.get(day) ?? { firstChallengeDay: day, challengedActors: 0, laterDayReturnedActors: 0, attemptedPaymentActors: 0 };
-      cohort.challengedActors++;
-      if (Math.floor(actor.lastSeen / DAY_MS) > Math.floor(actor.firstChallenge / DAY_MS)) cohort.laterDayReturnedActors++;
-      if (actor.lastAttempt >= actor.firstChallenge) cohort.attemptedPaymentActors++;
-      cohorts.set(day, cohort);
-    }
-    rows.push({ population: name, observationCoverage: coverage ?? COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
-      cohorts: [...cohorts.values()].sort((a, b) => a.firstChallengeDay.localeCompare(b.firstChallengeDay)) });
   }
+
+  const cohorts = new Map(populations.map(({ name }) => [name, new Map()]));
+  for (const actor of actors.values()) {
+    if (!Number.isFinite(actor.firstChallenge)) continue;
+    const day = new Date(actor.firstChallenge).toISOString().slice(0, 10);
+    const group = cohorts.get(actor.population);
+    const cohort = group.get(day) ?? { firstChallengeDay: day, challengedActors: 0, laterDayReturnedActors: 0, attemptedPaymentActors: 0 };
+    cohort.challengedActors++;
+    if (Math.floor(actor.lastSeen / DAY_MS) > Math.floor(actor.firstChallenge / DAY_MS)) cohort.laterDayReturnedActors++;
+    if (actor.lastAttempt >= actor.firstChallenge) cohort.attemptedPaymentActors++;
+    group.set(day, cohort);
+  }
+
   return {
     schema: "samedaydesk.retained-challenge-cohorts.v1",
     observedThrough: new Date(generatedAtMs).toISOString(),
     externalCredentialAttemptCoverage: externalCredentialAttemptCoverage ?? COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
-    populations: rows,
-    boundary: "UTC dates, first unpaid challenge observed in the retained window. A return is a matched paid-route observation on a later UTC date. Attempts use the same retained network/client pseudonym and a parseable payment credential, at or after its first challenge. Today may be incomplete. Counts are observed lower bounds; earlier challenges, identity drift, key rotation and retained gaps can change cohort membership. Unidentified automation can remain. This is neither person-level retention nor settlement.",
+    populations: populations.map(({ name, coverage }) => ({
+      population: name,
+      observationCoverage: coverage ?? COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
+      cohorts: [...cohorts.get(name).values()].sort((a, b) => a.firstChallengeDay.localeCompare(b.firstChallengeDay)),
+    })),
+    boundary: "UTC dates, first unpaid challenge observed in the retained window. The first challenge determines the population. A return is a matched paid-route observation on a later UTC date. Attempts join parseable external payment credentials to the same retained network/client pseudonym at or after its first challenge. Today may be incomplete. Counts are observed lower bounds; earlier challenges, identity drift, key rotation and retained gaps can change cohort membership. Unidentified automation can remain. This is neither person-level retention nor settlement.",
   };
 }
 
