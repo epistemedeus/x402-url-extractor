@@ -3166,7 +3166,8 @@ test("one retained event does not expose exact timestamps or millisecond values"
   await rm(dataDir, { recursive: true, force: true });
 });
 
-test("sparse retained events omit exact timing from serialized public output", async () => {
+test("sparse retained events omit exact timing from serialized public output", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-08-21T12:00:00Z") });
   const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-sparse-privacy-"));
   const first = "2026-08-18T09:14:03.447Z";
   const second = "2026-08-20T04:11:08.002Z";
@@ -5912,4 +5913,63 @@ test("agent-surface budget audit keeps its paid server event and does not mint c
     responseDigest: "cd".repeat(32),
   }), null);
   await rm(dataDir, { recursive: true, force: true });
+});
+
+test("the demand report counts later UTC-day returns and joins parseable attempts within each first-challenge cohort", async (t) => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-cohorts-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const today = new Date().toISOString().slice(0, 10);
+  const now = Date.parse(today + "T00:00:00Z");
+  const day = 86_400_000;
+  const at = (daysAgo, minutes) => new Date(now - daysAgo * day + minutes * 60_000).toISOString();
+  const first = at(2, 23 * 60 + 30);
+  const second = at(1, 10);
+  const third = new Date().toISOString();
+  let ordinal = 0;
+  const row = (attrs) => privacySafeEvent({
+    id: "00000000-0000-4000-8000-" + (++ordinal).toString().padStart(12, "0"),
+    originClass: "external",
+    agentDiscoverySource: null,
+    ...(attrs.paymentPresent && {
+      paymentFailureCode: "payment_verification_failed", paymentActor: "f".repeat(24),
+    }),
+    ...attrs,
+  });
+  const firstActor = "a".repeat(24);
+  const sameDayActor = "b".repeat(24);
+  const laterPayer = "c".repeat(24);
+  const crawler = "d".repeat(24);
+  const noChallenge = "e".repeat(24);
+  await seedEventFiles(dataDir, {
+    rotated: [
+      row({ ts: at(2, 23 * 60 + 25), actor: sameDayActor, paymentPresent: true, paymentCredentialParsed: true, paymentProtocol: "x402" }),
+      row({ ts: first, actor: firstActor }),
+      row({ ts: first, actor: sameDayActor }),
+      row({ ts: at(2, 23 * 60 + 32), actor: sameDayActor }),
+      row({ ts: second, actor: laterPayer, originClass: "external" }),
+      row({ ts: second, actor: crawler, originClass: "crawler", agentDiscoverySource: "openai-user" }),
+    ],
+    current: [
+      row({ ts: third, actor: firstActor }),
+      row({ ts: third, actor: laterPayer, paymentPresent: true, paymentCredentialParsed: true, paymentProtocol: "x402" }),
+      row({ ts: third, actor: noChallenge, paymentPresent: true, paymentCredentialParsed: true, paymentProtocol: "x402" }),
+      row({ ts: third, actor: crawler, agentDiscoverySource: "openai-user", paymentPresent: true, paymentCredentialParsed: true, paymentProtocol: "x402" }),
+      row({ ts: third, actor: sameDayActor, originClass: "internal" }),
+    ],
+  });
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "cohort-fixture" });
+  const report = (await telemetry.snapshot({ days: 14 })).firstChallengeCohorts;
+  assert.equal(report.externalCredentialAttemptCoverage, COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW);
+  const external = report.populations.find(({ population }) => population === "external");
+  assert.deepEqual(external.cohorts, [
+    { firstChallengeDay: first.slice(0, 10), challengedActors: 2, laterDayReturnedActors: 1, attemptedPaymentActors: 0 },
+    { firstChallengeDay: second.slice(0, 10), challengedActors: 1, laterDayReturnedActors: 1, attemptedPaymentActors: 1 },
+  ]);
+  const declared = report.populations.find(({ population }) => population === "declared_crawler");
+  assert.deepEqual(declared.cohorts, [
+    { firstChallengeDay: second.slice(0, 10), challengedActors: 1, laterDayReturnedActors: 1, attemptedPaymentActors: 1 },
+  ]);
+  for (const actor of [firstActor, sameDayActor, laterPayer, crawler, noChallenge]) {
+    assert.equal(JSON.stringify(report).includes(actor), false);
+  }
 });
