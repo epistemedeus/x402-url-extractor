@@ -8,6 +8,16 @@ import { merchantInteger } from "./merchant-zod4-values.mjs";
 import { legacyMcpJsonSchema } from "./mcp-zod4-wire.mjs";
 import { PAGE_CHANGE_HTTP_PRODUCT, PAGE_CHANGE_HTTP_SCHEMA } from "./page-change-http.mjs";
 import {
+  PAGE_CHANGE_CONTINUATION_META,
+  PAGE_CHANGE_CONTINUATION_TOKEN_MAX_CHARS,
+  PAGE_CHANGE_CONTINUATION_TOKEN_RE,
+  PAGE_CHANGE_CONTINUATION_TOOL,
+  PAGE_CHANGE_CONTINUATION_VERSION,
+  PAGE_CHANGE_CORRELATION_RE,
+  PAGE_CHANGE_DISCOVERY_SOURCES,
+  PAGE_CHANGE_DISCOVERY_STATUSES,
+} from "./page-change-continuation.mjs";
+import {
   ALL_FIELDS,
   ROW_STATUSES,
   SCHEMA as PAGE_CHANGE_BRIEF_SCHEMA,
@@ -244,12 +254,47 @@ const reportSchema = closed({
   }),
 });
 
+// Present only when the caller sent _meta samedaydesk/continuation. The token
+// is a caller-held bearer capability. correlationId never authorizes a restore.
+// Discovery lives only on the separate measurement record, never beside the
+// token, and is never read from the token.
+const continuationSchema = closed({
+  v: z.literal(PAGE_CHANGE_CONTINUATION_VERSION),
+  tool: z.literal(PAGE_CHANGE_CONTINUATION_TOOL),
+  token: z.string().max(PAGE_CHANGE_CONTINUATION_TOKEN_MAX_CHARS).regex(PAGE_CHANGE_CONTINUATION_TOKEN_RE),
+  kid: z.string().regex(/^[a-z0-9-]{1,16}$/),
+  correlationId: z.string().regex(PAGE_CHANGE_CORRELATION_RE),
+  step: merchantInteger().nonnegative(),
+  expiresAt: z.string().regex(SNAPSHOT_TIME),
+  next: closed({
+    method: z.literal("tools/call"),
+    tool: z.literal(PAGE_CHANGE_CONTINUATION_TOOL),
+    meta: z.literal(PAGE_CHANGE_CONTINUATION_META),
+    send: z.string().min(1),
+  }),
+});
+
+const measurementSchema = closed({
+  v: z.literal(PAGE_CHANGE_CONTINUATION_VERSION),
+  kind: z.literal("measurement"),
+  tool: z.literal(PAGE_CHANGE_CONTINUATION_TOOL),
+  correlationId: z.string().regex(PAGE_CHANGE_CORRELATION_RE),
+  step: merchantInteger().nonnegative(),
+  discovery: closed({
+    status: z.enum(PAGE_CHANGE_DISCOVERY_STATUSES),
+    source: z.enum(PAGE_CHANGE_DISCOVERY_SOURCES).nullable(),
+  }),
+  outcome: z.string().regex(/^[a-z][a-z0-9_]{0,31}$/).nullable(),
+});
+
 export const pageChangeMcpOutputSchema = closed({
   ok: z.literal(true),
   product: z.literal(PAGE_CHANGE_HTTP_PRODUCT),
   schemaVersion: z.literal(PAGE_CHANGE_HTTP_SCHEMA),
   charged: z.literal(false),
   report: reportSchema,
+  continuation: continuationSchema.optional(),
+  measurement: measurementSchema.optional(),
 });
 
 export function pageChangeMcpOutputJsonSchema() {
