@@ -1,0 +1,67 @@
+{
+  "schema": "samedaydesk.capability-compat.pin.v1",
+  "package": "samedaydesk-capability-compat",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "publication": "draft-archive",
+  "charged": false,
+  "assignmentPin": {
+    "repo": "epistemedeus/pilot",
+    "sha": "0d9eed5f7b949f71767724cbf3d72ac55ad3dbb2",
+    "document": "overview/self-evaluations/2026-11-12-participant-economy/INTEGRATED-DECISIONS.md",
+    "revision": 2
+  },
+  "sourcePins": {
+    "merchant": {
+      "repo": "epistemedeus/x402-url-extractor",
+      "sha": "e90676f48da875c5e0f475f57f7774de947b75a7",
+      "packageName": "x402-merchant",
+      "packageVersion": "1.23.55"
+    },
+    "samedaydeskSelected": {
+      "repo": "epistemedeus/samedaydesk",
+      "sha": "32437117e5232480b18349721069b2a8a0fc2a2c",
+      "note": "Selected consumer pin, not default main."
+    },
+    "neomorphic": {
+      "repo": "epistemedeus/neomorphic-io",
+      "sha": "3232f2891e7af5df3c2a350c764bfdc9d35b1f12"
+    }
+  },
+  "lockedDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@modelcontextprotocol/client": "2.4.0"
+  },
+  "originalFailureCommits": {
+    "officialClientMatrixH99110": {
+      "sha": "53069cfcb3094dc7f1b97ddfe4446dbe5c14c437",
+      "message": "Lock official MCP client compatibility on the existing merchant.",
+      "result": "docs/reviews/h99110-mcp-current-client-compat/RESULT.md",
+      "test": "mcp-current-client-compat.test.mjs",
+      "writerBaseSdk": "1.30.0",
+      "note": "The pack pins sdk 1.32.2 from the installed merchant lock at e90676f4, not the H99110 writer-base 1.30.0, so npm ci uses versions already present in that lock."
+    },
+    "unknownToolRecoveryPr271": {
+      "sha": "e90676f48da875c5e0f475f57f7774de947b75a7",
+      "test": "page-change-mcp.http.test.mjs"
+    },
+    "officialClientDiagnosticPr141": {
+      "sha": "49ae6182403ccf2b338af1153a9e9ee9530e271e",
+      "message": "Diagnose an official client refusal apart from a paid audit. (#141)"
+    },
+    "axiosPin": {
+      "sha": "424c5fbcda77c8dbbd8fb3f6b669a7c3600e4bf2",
+      "message": "Add the 2026-07-28 merchant opt-in and pin axios 1.20.0",
+      "role": "permitted environment-pin counterexample only; not the primary journey"
+    }
+  },
+  "protocols": {
+    "supportedOnFreeProfile": "2025-11-25",
+    "refusedPinOnFreeProfile": "2026-07-28"
+  },
+  "tool": "compare_page_observations",
+  "path": "/mcp/page-change",
+  "documentedHostedEntry": "https://agents.samedaydesk.com/mcp/page-change",
+  "documentedHostedEntryLive": false
+}

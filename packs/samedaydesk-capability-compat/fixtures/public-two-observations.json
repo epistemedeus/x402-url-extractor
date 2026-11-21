@@ -1,0 +1,110 @@
+{
+  "before": {
+    "ok": true,
+    "product": "samedaydesk-extract-batch",
+    "schemaVersion": "samedaydesk.extract-batch.v0",
+    "quote": {
+      "amountAtomic": "10000",
+      "displayUsdc": "0.01",
+      "meaning": "SYNTHETIC offline construction example only. No URL fetch, payment, receipt, observation or freshness is evidenced."
+    },
+    "jobId": "0000000000000000000000000000000000000000000000000000000000000000",
+    "jobStatus": "completed",
+    "stopReason": null,
+    "partial": false,
+    "sources": [
+      {
+        "id": "item-001",
+        "source": "https://synthetic.example.invalid/page",
+        "status": "success",
+        "data": {
+          "title": "Synthetic title before",
+          "description": "Stable synthetic description"
+        },
+        "notes": [],
+        "error": null,
+        "provenance": {
+          "transport": "synthetic",
+          "note": "SYNTHETIC offline construction example only. No URL fetch, payment, receipt, observation or freshness is evidenced."
+        }
+      }
+    ],
+    "accounting": {
+      "requests": 0,
+      "bytes": 0,
+      "wallMs": 0,
+      "retries": 0,
+      "succeeded": 0,
+      "partial": 0,
+      "failed": 0,
+      "unknown": 0,
+      "skippedDuplicate": 0
+    },
+    "costInputs": {
+      "note": "SYNTHETIC offline construction example only. No URL fetch, payment, receipt, observation or freshness is evidenced."
+    },
+    "charged": false,
+    "boundary": {
+      "guaranteedUrlSuccess": false,
+      "introductoryPrice": true,
+      "sourceFetchBeforeAuthorization": false,
+      "automaticRetries": false
+    }
+  },
+  "after": {
+    "ok": true,
+    "product": "samedaydesk-extract-batch",
+    "schemaVersion": "samedaydesk.extract-batch.v0",
+    "quote": {
+      "amountAtomic": "10000",
+      "displayUsdc": "0.01",
+      "meaning": "SYNTHETIC offline construction example only. No URL fetch, payment, receipt, observation or freshness is evidenced."
+    },
+    "jobId": "1111111111111111111111111111111111111111111111111111111111111111",
+    "jobStatus": "completed",
+    "stopReason": null,
+    "partial": false,
+    "sources": [
+      {
+        "id": "item-001",
+        "source": "https://synthetic.example.invalid/page",
+        "status": "success",
+        "data": {
+          "title": "Synthetic title after",
+          "description": "Stable synthetic description"
+        },
+        "notes": [],
+        "error": null,
+        "provenance": {
+          "transport": "synthetic",
+          "note": "SYNTHETIC offline construction example only. No URL fetch, payment, receipt, observation or freshness is evidenced."
+        }
+      }
+    ],
+    "accounting": {
+      "requests": 0,
+      "bytes": 0,
+      "wallMs": 0,
+      "retries": 0,
+      "succeeded": 0,
+      "partial": 0,
+      "failed": 0,
+      "unknown": 0,
+      "skippedDuplicate": 0
+    },
+    "costInputs": {
+      "note": "SYNTHETIC offline construction example only. No URL fetch, payment, receipt, observation or freshness is evidenced."
+    },
+    "charged": false,
+    "boundary": {
+      "guaranteedUrlSuccess": false,
+      "introductoryPrice": true,
+      "sourceFetchBeforeAuthorization": false,
+      "automaticRetries": false
+    }
+  },
+  "fields": [
+    "title",
+    "description"
+  ]
+}

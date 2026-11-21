@@ -1,0 +1,390 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "samedaydesk.capability-provider.preview.v1",
+  "title": "samedaydesk.capability-provider.preview.v1",
+  "description": "Authoritative preview envelope for the samedaydesk-capability-compat provider. SDS CLI references this schema by version and sha256 rather than copying it. Envelopes carry only nonsecret references: no credentials, tokens, raw page bodies, or payment signatures.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/success"
+    },
+    {
+      "$ref": "#/$defs/failure"
+    }
+  ],
+  "$defs": {
+    "iso8601Utc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "ISO 8601 UTC timestamp from now(), ending in Z."
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "version"
+      ],
+      "properties": {
+        "package": {
+          "type": "string",
+          "const": "samedaydesk-capability-compat"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "recoveryAction": {
+      "type": "string",
+      "enum": [
+        "reconnect",
+        "list_tools",
+        "re_pin",
+        "none"
+      ]
+    },
+    "errorCode": {
+      "type": "string",
+      "enum": [
+        "endpoint_unreachable",
+        "protocol_unrecoverable",
+        "tool_missing",
+        "response_invalid",
+        "unsupported_client_sdk"
+      ]
+    },
+    "digestOrNull": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      ]
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "detected",
+        "recovered",
+        "recovery"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "protocol_refused",
+            "unknown_tool",
+            "source_version_changed",
+            "client_sdk_changed",
+            "env_changed"
+          ]
+        },
+        "detected": {
+          "type": "boolean"
+        },
+        "recovered": {
+          "type": "boolean"
+        },
+        "evidence": {
+          "type": "object"
+        },
+        "recovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action"
+          ],
+          "properties": {
+            "action": {
+              "$ref": "#/$defs/recoveryAction"
+            },
+            "protocol": {
+              "type": "string"
+            },
+            "nextMethod": {
+              "type": "string"
+            },
+            "instruction": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "success": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "observedAt",
+        "provider",
+        "source",
+        "endpoint",
+        "protocol",
+        "capabilities",
+        "preview",
+        "changes",
+        "installedVsHosted",
+        "paymentSignature"
+      ],
+      "properties": {
+        "schema": {
+          "const": "samedaydesk.capability-provider.preview.v1"
+        },
+        "ok": {
+          "const": true
+        },
+        "observedAt": {
+          "$ref": "#/$defs/iso8601Utc"
+        },
+        "provider": {
+          "$ref": "#/$defs/provider"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "repo",
+            "sha",
+            "changed"
+          ],
+          "properties": {
+            "repo": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha": {
+              "type": "string",
+              "minLength": 1
+            },
+            "changed": {
+              "type": "boolean"
+            }
+          }
+        },
+        "endpoint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url",
+            "kind",
+            "liveClaimed"
+          ],
+          "properties": {
+            "url": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "loopback",
+                "recorded"
+              ]
+            },
+            "liveClaimed": {
+              "const": false
+            }
+          }
+        },
+        "protocol": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requested",
+            "negotiated",
+            "supported"
+          ],
+          "properties": {
+            "requested": {
+              "type": "string"
+            },
+            "negotiated": {
+              "type": "string"
+            },
+            "supported": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tool",
+              "path",
+              "effect",
+              "charged",
+              "auth",
+              "inputSchemaDigest"
+            ],
+            "properties": {
+              "tool": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "effect": {
+                "type": "string",
+                "const": "read"
+              },
+              "charged": {
+                "const": false
+              },
+              "auth": {
+                "type": "string",
+                "const": "none"
+              },
+              "inputSchemaDigest": {
+                "$ref": "#/$defs/digestOrNull"
+              }
+            }
+          }
+        },
+        "preview": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tool",
+            "charged",
+            "usefulResult",
+            "verdict"
+          ],
+          "properties": {
+            "tool": {
+              "type": "string"
+            },
+            "charged": {
+              "const": false
+            },
+            "usefulResult": {
+              "type": "string"
+            },
+            "verdict": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/change"
+          }
+        },
+        "installedVsHosted": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "installedBytes",
+            "hostedBytes",
+            "hostedSha",
+            "network",
+            "liveClaimed"
+          ],
+          "properties": {
+            "installedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "hostedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "hostedSha": {
+              "type": "string"
+            },
+            "network": {
+              "const": false
+            },
+            "liveClaimed": {
+              "const": false
+            }
+          }
+        },
+        "paymentSignature": {
+          "const": null
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "observedAt",
+        "provider",
+        "error",
+        "paymentSignature"
+      ],
+      "properties": {
+        "schema": {
+          "const": "samedaydesk.capability-provider.preview.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "observedAt": {
+          "$ref": "#/$defs/iso8601Utc"
+        },
+        "provider": {
+          "$ref": "#/$defs/provider"
+        },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "retryable",
+            "recovery"
+          ],
+          "properties": {
+            "code": {
+              "$ref": "#/$defs/errorCode"
+            },
+            "retryable": {
+              "type": "boolean"
+            },
+            "recovery": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "action",
+                "instruction"
+              ],
+              "properties": {
+                "action": {
+                  "$ref": "#/$defs/recoveryAction"
+                },
+                "instruction": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "paymentSignature": {
+          "const": null
+        }
+      }
+    }
+  }
+}
