@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 
-test("production entry reaches the listening state without a startup exception", async () => {
+async function assertListening(compareFlag) {
   const dataDir = await mkdtemp(path.join(tmpdir(), "samedaydesk-startup-smoke-"));
   const child = spawn(process.execPath, ["server.js"], {
     cwd,
@@ -17,6 +17,7 @@ test("production entry reaches the listening state without a startup exception",
       PORT: "0",
       COMMERCE_DATA_DIR: dataDir,
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
+      OPPORTUNITY_COMPARE_MCP: compareFlag,
       MPP_SECRET_KEY: "",
       PUBLIC_URL: "https://agents.samedaydesk.com",
     },
@@ -56,7 +57,10 @@ test("production entry reaches the listening state without a startup exception",
     });
     await rm(dataDir, { recursive: true, force: true });
   }
-});
+}
+
+test("production entry reaches the listening state with comparator disabled", () => assertListening(""));
+test("production entry reaches the listening state with comparator enabled", () => assertListening("on"));
 
 test("invalid x402 builder code fails closed before listening", async () => {
   const dataDir = await mkdtemp(path.join(tmpdir(), "samedaydesk-builder-code-invalid-"));

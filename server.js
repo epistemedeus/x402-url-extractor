@@ -264,6 +264,10 @@ import {
   pageChangeHttpOutputSchema,
 } from "./page-change-http.mjs";
 import { PAGE_CHANGE_MCP_PATH, isPageChangeMcpPath, mountPageChangeMcp } from "./page-change-mcp.mjs";
+import {
+  isOpportunityCompareMcpPath,
+  maybeMountOpportunityCompareMcp,
+} from "./opportunity-compare-mcp.mjs";
 import { buildRouteBindingReport } from "./route-binding-inspect.mjs";
 import {
   CAREERS_BOARD_AMOUNT_ATOMIC,
@@ -594,7 +598,7 @@ const jsonParser = express.json({
 });
 app.use((req, res, next) => {
   // POST /mcp owns MCP_JSON_RPC_MAX_BYTES. The ordinary parser must not run first.
-  if (req.path === "/mcp" || isPageChangeMcpPath(req.path) || isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
+  if (req.path === "/mcp" || isPageChangeMcpPath(req.path) || isOpportunityCompareMcpPath(req.path) || isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
   return jsonParser(req, res, next);
 });
 // Parsing precedes observation and the semantic validator. Keep that boundary:
@@ -638,6 +642,9 @@ mountPageChangeHttp(app, {
 mountPageChangeMcp(app, {
   observe: commerceTelemetry.freePageChangeObserver("mcp", { route: PAGE_CHANGE_MCP_PATH }),
 });
+// The read-only comparator is separate from page-change transport telemetry.
+// Mounted only when OPPORTUNITY_COMPARE_MCP is the exact value "on".
+maybeMountOpportunityCompareMcp(app);
 let mcpMountResult = null;
 let commerceWriterDrainStarted = false;
 
