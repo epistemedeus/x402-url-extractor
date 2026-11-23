@@ -192,5 +192,22 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
       assert.equal(mail.rowCount,1);
     }
     assert.equal(settles-before,7);
+    if(process.env.WATCH_ORDER_PREVIEW==="1") {
+      process.env.SDS_SKILL_WATCH_USDC="1";process.env.SDS_TEST_LEGACY_LINKS='{"legacy_skill_watch":"test_watch"}';
+      stripe.paymentLinks={list:async()=>({has_more:false,data:[{id:"plink_watch",active:true,livemode:false,url:"https://buy.stripe.com/test_watch"}]}),
+        listLineItems:async()=>({has_more:false,data:[{quantity:1,price:{id:"price_watch",active:true,currency:"usd",unit_amount:1200,
+          product:{active:true,id:"prod_watch",name:"SkillGuard Watch"},recurring:{interval:"month",interval_count:1}}}]})};
+      const path=origin(site)+"/api/checkout/hosted/skillguard-watch",order=randomUUID();
+      const html=await (await fetch(path)).text();assert.match(html,/12 USD per month/);assert.ok(html.indexOf("Pay by card")<html.indexOf("Pay with USDC"));
+      const opened=await fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({order,
+        method:"base_usdc",repositories:"https://github.com/example/watch",email:"watch@example.test"})});
+      assert.equal(opened.status,201);const {paymentUrl}=await opened.json();
+      const paid=await payOrder({resource:paymentUrl,amount:"12000000",account:payer,fetchImpl:toGateway});
+      assert.equal(paid.status,200);assert.equal((await paid.json()).state,"paid");assert.equal(settles-before,8);
+      const periods=await pool.query(`select * from ${careTable("care_periods")} where order_id=$1`,[order]);
+      assert.equal(periods.rowCount,1);
+      const invoice=await pool.query(`select * from ${careTable("care_orders")} where rail_parent=$1`,[order]);
+      assert.equal(invoice.rowCount,1);assert.equal(invoice.rows[0].rail_attempt,null);assert.equal(invoice.rows[0].amount_cents,1200);
+    }
   }
 });
