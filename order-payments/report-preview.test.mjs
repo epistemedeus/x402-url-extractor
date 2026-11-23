@@ -48,7 +48,15 @@ test("a SameDayDesk report settles through the independent gateway client and it
   assert.match(await (await fetch(entry)).text(),/Pay with USDC on Base/);
   const body={order:randomUUID(),method:"base_usdc",publicOrigin:"https://example.com",getRoute:"/one",email:"buyer@example.test",authorized:true};
   const start=()=>fetch(entry+"/order",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}).then(r=>r.json());
+  const status = async () => {
+    const response = await fetch(entry + "/order/status", { method: "POST", headers: { "content-type":"application/json" },
+      body: JSON.stringify({ order: body.order }) });
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+  assert.deepEqual(await status(), { state: "new", canOrderAgain: false });
   const [order,duplicate]=await Promise.all([start(),start()]);assert.deepEqual(order,duplicate);
+  assert.deepEqual(await status(), { state: "waiting", canOrderAgain: false, wallet: order.paymentUrl + "/wallet" });
   const owner=(url,init)=>{assert.equal(new URL(url).origin,SITE_ORIGINS.neo);return fetch(houseUrl+new URL(url).pathname,init);};
   let settlements=0;
   const app=express();mountOrderPayments(app,{merchant,network:"eip155:8453",env:{ORDER_PAYMENTS_NEO_TOKEN:token,MPP_SECRET_KEY:token},
@@ -63,6 +71,7 @@ test("a SameDayDesk report settles through the independent gateway client and it
   const res=await payOrder({resource:order.paymentUrl,amount:"490000000",account:payer,fetchImpl:transport});
   assert.equal(res.status,200);assert.equal((await res.json()).state,"paid");assert.equal(settlements,1);
   assert.equal((await pool.query("select 1 from house_intake where state='paid' and body#>>'{payment,receipt,payer}'=$1",[payer.address])).rowCount,1);
+  assert.deepEqual(await status(), { state: "paid", canOrderAgain: true, wallet: order.paymentUrl + "/wallet" });
   const {originalPayment:q}=await prepareRefund({site:"neo",order:order.order,token:admin,client:publicClient,fetchImpl:owner});
   const transactionHash=mine({from:merchant,to:q.payer,value:q.amountAtomic},true);
   const canonical={schema:"pilot.merchant-refund.canonical.v1",role:"merchant_refund",site:"neo",order:q.order,operationId:q.operationId,
@@ -70,6 +79,7 @@ test("a SameDayDesk report settles through the independent gateway client and it
     amountAtomic:q.amountAtomic,status:"success",exactTransferVerified:true};
   await prepareRefund({site:"neo",order:order.order,token:admin,client:publicClient,fetchImpl:owner,canonical});
   const final=await (await transport(new Request(order.paymentUrl))).json();
+  assert.deepEqual(await status(), { state: "refunded", canOrderAgain: true, wallet: order.paymentUrl + "/wallet" });
   assert.equal(final.state,"refunded");assert.equal(final.receipt.refund.transaction,transactionHash);
   assert.equal((await pool.query("select 1 from house_desk_mail")).rowCount,1);
 });
