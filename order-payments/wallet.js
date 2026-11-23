@@ -14,6 +14,17 @@ const refresh = document.querySelector("#refresh");
 const mobile = document.querySelector("#mobile");
 let codeReady=false;
 document.querySelector("#order").textContent = reference;
+// The page wears the sending site's dress (set by the server); these name that site and show what this browser can do.
+const root = document.documentElement;
+const site = ({ sds: ["SameDayDesk", "https://samedaydesk.com"], ein: ["EIN.LLC", "https://ein.llc"], neo: ["Neomorphic", "https://neomorphic.io"] })[root.dataset.site];
+if (site) { document.querySelector("#site").textContent = site[0] + " order"; document.querySelector("#again").href = site[1]; }
+const sync = () => { root.dataset.wallet = window.ethereum ? "injected" : "none"; };
+sync();
+mobile.open = matchMedia("(min-width: 768px)").matches;
+document.querySelector("#copy").onclick = async event => {
+  try { await navigator.clipboard.writeText(location.href); event.target.textContent = "Link copied. Paste it in your wallet app's browser."; }
+  catch { event.target.textContent = location.href; }
+};
 let busy = false, submitted = false, timer, signedKey;
 const read = () => fetch(signedKey ? endpoint.href + "/requests/" + signedKey : endpoint, { cache: "no-store", credentials: "omit", redirect: "error" });
 
@@ -29,9 +40,11 @@ function terms(response, result) {
 async function show(response) {
   const result = await response.clone().json();
   clearTimeout(timer);
+  sync();
   button.hidden = true;
   mobile.hidden=true;
   if (response.status === 404 && signedKey) {
+    root.dataset.state = "unknown";
     state.textContent = "Your signed request has no confirmed payment yet. Refresh its status.";
     return;
   }
@@ -44,13 +57,16 @@ async function show(response) {
         codeReady=true;
       } catch { /* Wallet connection remains available. */ }
     }
+    root.dataset.state = submitted ? "seen" : "waiting";
     mobile.hidden=!codeReady || submitted;
     document.querySelector("#amount").textContent = formatUnits(BigInt(term.amount), 6) + " USDC";
     button.hidden = submitted;
     state.textContent = submitted ? "Checking your signed payment. Refresh its status." : "Waiting for payment.";
   } else {
+    root.dataset.state = result.state || "unknown";
+    document.querySelector("#title").textContent = result.state === "paid" ? "Paid" : result.state === "refunded" ? "Refunded" : "Pay with USDC";
     state.textContent = ({ seen: "Payment seen. Waiting for confirmation.", paid: "Paid. Your receipt is ready.",
-      conflict: "Another payment request is attached to this order.", closed: "This invoice is closed.", expired: "This quote expired.", held: "Payment under review. Keep your order reference.",
+      conflict: "Another payment request is attached to this order.", closed: "This invoice is closed.", expired: "This price hold ended before payment. Nothing was charged.", held: "Payment under review. Keep your order reference.",
       refunded: "Refund confirmed.", refund_pending: "Refund awaiting confirmation." })[result.state] || "Checking payment status.";
     if (result.state === "seen" && result.providerReason) {
       state.textContent = "Provider response: " + result.providerReason + ". Checking the original payment.";
@@ -69,10 +85,10 @@ async function show(response) {
     const debit = result.receipt?.transaction || result.review?.evidence?.transaction;
     if (debit) {
       document.querySelector("#history").hidden = false;
-      document.querySelector("#debit").textContent = debit;
+      document.querySelector("#debit").replaceChildren(Object.assign(document.createElement("a"), { href: "https://basescan.org/tx/" + debit, textContent: debit }));
       const refund = result.receipt?.refund?.transaction;
       document.querySelector("#refund-label").hidden = !refund;
-      document.querySelector("#refund").textContent = refund || "";
+      document.querySelector("#refund").replaceChildren(...(refund ? [Object.assign(document.createElement("a"), { href: "https://basescan.org/tx/" + refund, textContent: refund })] : []));
     }
     if (result.amount) document.querySelector("#amount").textContent = formatUnits(BigInt(result.amount), 6) + " USDC";
     if (result.state === "seen" || result.state === "refund_pending") timer = setTimeout(check, 12000);
@@ -80,7 +96,7 @@ async function show(response) {
 }
 async function check() {
   if (busy) return;
-  try { await show(await read()); } catch { state.textContent = "Status is temporarily unavailable. Refresh this order."; }
+  try { await show(await read()); } catch { root.dataset.state = "unknown"; state.textContent = "Status is temporarily unavailable. Refresh this order."; }
 }
 refresh.onclick = check;
 button.onclick = async () => {
