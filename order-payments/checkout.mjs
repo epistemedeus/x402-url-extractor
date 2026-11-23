@@ -1,6 +1,6 @@
 import { reconcileRefund } from "./refund.mjs";
 import { Receipt } from "mppx";
-import { encodePaymentResponseHeader } from "@x402/core/http";
+import { decodePaymentRequiredHeader, encodePaymentRequiredHeader, encodePaymentResponseHeader } from "@x402/core/http";
 import { evm, Mppx } from "mppx/server";
 import { formatUnits, getAddress } from "viem";
 import { amountForCents, reconcileOrder } from "./reconcile.mjs";
@@ -11,11 +11,18 @@ const json = (value, status, headers) => Response.json(value, {
 const hash = /^0x[0-9a-f]{64}$/i;
 // The facilitator may reply before finality. Emit protocol success only from the
 // site's finalized receipt, including after a lost provider response or restart.
-function finalizedHeaders(row) {
-  if (row.state !== "paid" || !row.receipt || !row.attempt) return {};
+async function finalizedHeaders(row, trust) {
+  if (!row.receipt || !row.attempt || !["paid","refunded"].includes(row.state)) return {};
   const { transaction: reference, payer, timestamp } = row.receipt;
+  if (row.state === "refunded") {
+    if (row.attempt.protocol !== "x402" || !trust?.enabled) return {};
+    const original = await trust.finalizedOrderReceipt(row.resource,payer,reference,Number(BigInt(timestamp)));
+    return { "order-original-receipt": Buffer.from(JSON.stringify(original)).toString("base64") };
+  }
   if (row.attempt.protocol === "x402") return { "payment-response": encodePaymentResponseHeader({
     success: true, network: "eip155:8453", transaction: reference, payer,
+    ...(trust?.enabled && { extensions: { "offer-receipt": { info: { receipt: await trust.finalizedOrderReceipt(
+      row.resource, payer, reference, Number(BigInt(timestamp))) } } } }),
   }) };
   return { "payment-receipt": Receipt.serialize(Receipt.from({ method: "evm", status: "success",
     reference, timestamp: new Date(Number(BigInt(timestamp) * 1000n)).toISOString() })) };
@@ -24,7 +31,7 @@ const terminal = new Set(["paid", "held", "refunded", "refund_pending", "closed"
 
 // owner is the site's authenticated order repository. arm must commit before returning true.
 // The only settlement transport here is the already configured merchant facilitator.
-export async function checkoutOrder({ request, owner, client, facilitator, merchant, secretKey, now = Date.now }) {
+export async function checkoutOrder({ request, owner, client, facilitator, merchant, secretKey, trust, now = Date.now }) {
   const quote = await owner.load();
   if (!quote) return json({ error: "order_not_found" }, 404);
   const amount = amountForCents(quote.cents);
@@ -34,18 +41,18 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
     return json({ error: "order_terms_unavailable" }, 409);
   }
   const view = row => ({ order: quote.id, version: quote.version, amount, network: "eip155:8453",
-    state: row.state, ...(row.transaction && { providerTransaction: row.transaction }),
+    state: row.state, ...(row.ownerQa === true && { classification: "owner_qa" }), ...(row.transaction && { providerTransaction: row.transaction }),
     ...(row.providerReason && { providerReason: row.providerReason }), ...(row.reason && { reason: row.reason }), ...(row.receipt && { receipt: row.receipt }) });
   async function read(row) {
     if (row.state === "refund_pending") {
       const observed = await reconcileRefund(client, row.receipt, row.refund, merchant);
       row = await owner.refundObserved(row.refund.original, observed);
     }
-    if (terminal.has(row.state)) return json(view(row), row.state === "held" ? 409 : 200, finalizedHeaders(row));
+    if (terminal.has(row.state)) return json(view(row), row.state === "held" ? 409 : 200, await finalizedHeaders(row, trust));
     if (!row.attempt) return json(view(row), 202);
     const observed = await reconcileOrder({ client, quote: row, attempt: row.attempt, merchant });
     const current = await owner.observe(row.attempt, observed);
-    return json({ ...view(current), ...(current.state === "seen" && observed.review && { review: observed.review }) }, current.state === "paid" ? 200 : current.state === "held" ? 409 : 202, finalizedHeaders(current));
+    return json({ ...view(current), ...(current.state === "seen" && observed.review && { review: observed.review }) }, current.state === "paid" ? 200 : current.state === "held" ? 409 : 202, await finalizedHeaders(current, trust));
   }
   if (quote.state !== "waiting") return read(quote);
   if (now() >= quote.expires) return json({ ...view(quote), state: "expired" }, 410);
@@ -109,6 +116,16 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
     headers.delete("content-length");
     const hasCredential = request.headers.has("payment-signature") || request.headers.has("authorization");
     if (hasCredential) return new Response(result.challenge.body, { status: 402, headers });
+    if (trust?.enabled) {
+      const required = decodePaymentRequiredHeader(headers.get("payment-required"));
+      const validFor = Math.min(300, Math.floor(quote.expires / 1000) - Math.floor(now() / 1000));
+      if (validFor < 1) return json({ ...view(quote), state: "expired" }, 410);
+      const extension = await trust.resourceServerExtension.enrichPaymentRequiredResponse({ offerValiditySeconds: validFor },
+        { paymentRequiredResponse: required, requirements: required.accepts });
+      if (!extension?.info?.offers?.length) throw Error("merchant order attestation unavailable");
+      required.extensions = { ...required.extensions, "offer-receipt": extension };
+      headers.set("payment-required", encodePaymentRequiredHeader(required));
+    }
     headers.set("content-type", "application/json");
     return new Response(JSON.stringify(view(quote)), { status: 402, headers });
   }

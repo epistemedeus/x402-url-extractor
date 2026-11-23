@@ -37,7 +37,7 @@ function siteOrder(site, id, token, fetchImpl) {
     observe: (attempt, result) => call("observe", { attempt, result }) };
 }
 
-export function mountOrderPayments(app, { merchant, network, facilitator, env = process.env,
+export function mountOrderPayments(app, { merchant, network, facilitator, trust, env = process.env,
   client = publicHistoricalClient("base"), fetchImpl = fetch }) {
   const assetRoot = fileURLToPath(new URL(".", import.meta.url));
   app.get("/order-payments/assets/wallet.js", (_req, res) => res.sendFile("dist/wallet.js", { root: assetRoot }));
@@ -60,9 +60,9 @@ export function mountOrderPayments(app, { merchant, network, facilitator, env = 
     if (headers.has("authorization") && headers.has("payment-signature")) return res.sendStatus(400);
     const request = new Request(new URL(req.originalUrl, paymentOrigin), { headers });
     try {
-      const response = await checkoutOrder({ request, merchant, facilitator, secretKey: env.MPP_SECRET_KEY, client,
+      const response = await checkoutOrder({ request, merchant, facilitator, trust, secretKey: env.MPP_SECRET_KEY, client,
         owner: siteOrder(site, id, token, fetchImpl) });
-      for (const name of ["payment-required", "www-authenticate", "content-type", "payment-response", "payment-receipt"])
+      for (const name of ["payment-required", "www-authenticate", "content-type", "payment-response", "payment-receipt", "order-original-receipt"])
         if (response.headers.has(name)) res.set(name, response.headers.get(name));
       return res.status(response.status).send(await response.text());
     } catch {

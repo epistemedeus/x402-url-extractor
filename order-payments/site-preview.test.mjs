@@ -1,5 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { createCommerceTrust } from "../commerce-trust.mjs";
 import { once } from "node:events";
 import { createRequire } from "node:module";
 import { randomBytes, randomUUID } from "node:crypto";
@@ -43,7 +46,8 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
     return fetch(origin(site) + new URL(url).pathname, init);
   };
   const app = express();
-  mountOrderPayments(app, { merchant, network: "eip155:8453", env: { ORDER_PAYMENTS_SDS_TOKEN: token, MPP_SECRET_KEY: token },
+  const trust=createCommerceTrust({privateKey:"0x"+"3".repeat(64),network:"eip155:8453"});
+  mountOrderPayments(app, { merchant, trust, network: "eip155:8453", env: { ORDER_PAYMENTS_SDS_TOKEN: token, MPP_SECRET_KEY: token },
     client: publicClient, fetchImpl: toSite, facilitator: { verify: async () => ({ isValid: true }), settle: async payload => {
       settles++; return { success: true, network: "eip155:8453", transaction: mine(payload.payload.authorization) };
     } } });
@@ -117,4 +121,41 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
     assert.ok(events.rows.every(r => r.test));
   }
   assert.equal(settles, 2);
+  if (process.env.OWNER_ORDER_PREVIEW_SOURCE) {
+    const { runOwnerOrder } = await import(pathToFileURL(resolve(process.env.OWNER_ORDER_PREVIEW_SOURCE,"tools/payment-rail/self-test/owner-order.mjs")));
+    const dir=await mkdtemp(resolve(tmpdir(),"owner-order-test-"));t.after(()=>rm(dir,{recursive:true,force:true}));
+    for(const loseResponse of [false,true]) {
+      const input=await createOwnedOrder(pool,process.env.SDS_CARE_SCHEMA,{id:randomUUID(),cents:1,email:"owner@example.test",live:false,origin:SITE_ORIGINS.sds});
+      const env={OWNER_CANARY_EXPECTED_AMOUNT_ATOMIC:"10000",OWNER_CANARY_EXPECTED_RECIPIENT:merchant,OWNER_CANARY_EXPECTED_TIMEOUT_SECONDS:"300",
+        OWNER_CANARY_EXPECTED_RECEIPT_SIGNER:trust.signerAddress,OWNER_CANARY_ATTEMPT_DIR:dir};
+      let walletReads=0,sendCount=0;
+      const common={input,env,chain:()=>publicClient,expectedPayer:payer.address,admitSigner:()=>{walletReads++;return payer;},fetchImpl:async(url,init)=>{
+        const req=new Request(url,init),r=await toGateway(req);
+        if(req.headers.has("payment-signature")) {sendCount++;if(loseResponse)throw Error("lost reply");}
+        return r;
+      }};
+      const preflight=await runOwnerOrder({...common,mode:"--preflight"});assert.equal(walletReads,0);
+      await assert.rejects(runOwnerOrder({...common,mode:"--preflight",env:{...env,OWNER_CANARY_EXPECTED_RECEIPT_SIGNER:payer.address}}));
+      await assert.rejects(runOwnerOrder({...common,mode:"--execute",env:{...env,OWNER_CANARY_EXPECTED_SCHEMA_SHA256:"0".repeat(64)}}));
+      assert.equal(walletReads,0);env.OWNER_CANARY_EXPECTED_SCHEMA_SHA256=preflight.schemaSha256;
+      const results=await Promise.allSettled([runOwnerOrder({...common,mode:"--execute"}),runOwnerOrder({...common,mode:"--execute"})]);
+      assert.equal(results.filter(r=>r.status==="fulfilled" && r.value.state==="paid").length,loseResponse?0:1,JSON.stringify(results.map(r=>r.value||r.reason.message)));
+      assert.equal(walletReads,1);assert.equal(sendCount,1);
+      const received=await runOwnerOrder({...common,mode:"--receive"});assert.equal(received.state,"paid");assert.equal(walletReads,1);
+      if (!loseResponse) {
+        const r=await prepareRefund({order:input.paymentReference,site:"sds",token:admin,client:publicClient,fetchImpl:toSite});
+        const q=r.originalPayment,transactionHash=mine({from:q.merchant,to:q.payer,value:q.amountAtomic},true);
+        const canonical={schema:"pilot.merchant-refund.canonical.v1",role:"merchant_refund",site:"sds",order:q.order,
+          operationId:q.operationId,originalPayment:q.original,network:q.network,token:q.token,source:q.merchant,recipient:q.payer,
+          amountAtomic:q.amountAtomic,status:"success",exactTransferVerified:true,logIndex:0,transactionHash};
+        await prepareRefund({order:q.order,site:"sds",token:admin,client:publicClient,fetchImpl:toSite,canonical});
+        const refunded=await runOwnerOrder({...common,mode:"--receive"});
+        assert.equal(refunded.state,"refunded");assert.equal(refunded.refund,transactionHash);
+        await assert.rejects(runOwnerOrder({...common,mode:"--receive",chain:()=>({...publicClient,getTransaction:async({hash})=>({
+          ...await publicClient.getTransaction({hash}),from:payer.address})})}),/finalized owner transfer/);
+        assert.equal(sendCount,1);assert.equal(walletReads,1);
+      }
+    }
+    assert.equal(settles,4);
+  }
 });

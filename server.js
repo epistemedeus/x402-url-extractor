@@ -1257,7 +1257,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   [CAREERS_BOARD_PATH]: { operationId: "readNamedCareersBoard", tags: ["Web Data"] },
 };
 
-mountOrderPayments(app, { merchant: PAY_TO, network: NETWORK, facilitator: facilitatorClient });
+mountOrderPayments(app, { merchant: PAY_TO, network: NETWORK, facilitator: facilitatorClient, trust: commerceTrust });
 
 const mppDualStack = createMppDualStack({
   facilitatorClient,
