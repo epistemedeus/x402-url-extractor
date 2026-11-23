@@ -33,7 +33,47 @@ export function checkRefund(q, f) {
   throw conflict();
 }
 
+const requestKey = value => typeof value === "string" && /^[0-9a-f]{64}$/.test(value);
+
+// Secondary signed requests stay on the original order. Only an independently
+// received debit can enter refund preparation. The primary fulfillment is untouched.
+function projectReview(q, action, body) {
+  const key = body.review;
+  if (!requestKey(key)) throw conflict();
+  const reviews = q.reviews || {};
+  const entry = Object.hasOwn(reviews, key) ? reviews[key] : null;
+  const primary = q.attempt;
+  const section = entry && { id:q.id, resource:q.resource, version:entry.attempt.version, cents:entry.cents,
+    created:entry.created, expires:entry.expires, startBlock:q.startBlock, ownerQa:q.ownerQa, ...entry };
+  if (action === "review-register") {
+    if (entry) return { value: {matched: true} };
+    const a = body.attempt;
+    if (!primary || !a || !requestKey(a.requestKey) || a.requestKey !== key || primary.requestKey === key ||
+        !word.test(a.nonce) || !address.test(a.payer) || a.version !== q.version || !uint(a.validBefore) ||
+        a.nextBlock !== q.startBlock || !["x402","mpp"].includes(a.protocol) ||
+        [primary,...Object.values(reviews).map(r=>r.attempt)].some(b => same(b.payer,a.payer) && same(b.nonce,a.nonce))) {
+      return { value: {matched: false} };
+    }
+    return { patch: { reviews: {...reviews, [key]: {state:"seen", attempt:a, cents:q.cents, created:q.created, expires:q.expires}} }, value: {matched: true} };
+  }
+  if (action === "review-read" || action === "refund-read") return { value: section };
+  if (!section) throw conflict();
+  const op = action === "review-observe" ? "observe" : action;
+  if (!["observe","refund-reserve","refund-bind","refund-observe"].includes(op)) throw conflict();
+  const { review, ...input } = body;
+  const plan = projectRailChange(section, op, input);
+  if (!plan.patch) return plan;
+  const patch = {...plan.patch};
+  if (op === "observe" && patch.state === "paid") {
+    patch.state = "held";
+    patch.reason = "additional_order_payment";
+  }
+  const updated = {...entry,...patch};
+  return { patch: {reviews: {...reviews,[key]:updated}}, value: plan.value ?? {...section,...patch} };
+}
+
 export function projectRailChange(q, action, body) {
+  if (body.review !== undefined) return projectReview(q, action, body);
   if (["load","refund-read"].includes(action)) return { value: q };
   const { attempt: a, result: r } = body, original = q.receipt;
   if (action === "anchor") {
@@ -44,7 +84,7 @@ export function projectRailChange(q, action, body) {
     if (q.state !== "waiting" || q.expires <= Date.now() || q.created > Date.now() || q.version !== a?.version ||
         (a.validBefore !== undefined && !uint(a.validBefore)) || !word.test(a.nonce) || !address.test(a.payer) || !uint(a.nextBlock) || a.nextBlock !== q.startBlock ||
         !["mpp","x402"].includes(a.protocol)) return { value: { armed: false } };
-    return { patch: { state: "seen", attempt: { payer: a.payer, nonce: a.nonce, version: q.version, nextBlock: a.nextBlock, ...(a.validBefore && { validBefore: a.validBefore }), protocol: a.protocol } },
+    return { patch: { state: "seen", attempt: { payer: a.payer, nonce: a.nonce, version: q.version, nextBlock: a.nextBlock, ...(a.validBefore && { validBefore: a.validBefore }), ...(requestKey(a.requestKey) && {requestKey:a.requestKey}), protocol: a.protocol } },
       value: { armed: true } };
   }
   if (action === "refund-reserve") {

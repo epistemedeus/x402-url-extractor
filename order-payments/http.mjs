@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { checkoutOrder } from "./checkout.mjs";
+import { checkoutOrder, reviewOrder } from "./checkout.mjs";
 import { publicHistoricalClient } from "../transaction-receipt.mjs";
 
 export const SITE_ORIGINS = Object.freeze({
@@ -26,12 +26,13 @@ function siteOrder(site, id, token, fetchImpl) {
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (res.status === 404 && action === "load") return null;
+    if (res.status === 404 && ["load","review-read"].includes(action)) return null;
     if (!res.ok) throw Error("order owner unavailable");
     return readSiteResult(site, res);
   }
   return { load: () => call("load"), arm: async attempt => (await call("arm", { attempt })).armed === true,
     anchor: async block => (await call("anchor", { block })).block,
+    review: (action, key, data = {}) => call(action === "refund-observe" ? action : "review-" + action, {...data, review:key}),
     submitted: (attempt, result) => call("submitted", { attempt, result }),
     refundObserved: (original, result) => call("refund-observe", { original, result }),
     observe: (attempt, result) => call("observe", { attempt, result }) };
@@ -47,6 +48,27 @@ export function mountOrderPayments(app, { merchant, network, facilitator, trust,
     res.set({ "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex",
       "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" });
     return res.sendFile("wallet.html", { root: assetRoot });
+  });
+  app.get(ORDER_PATH + "/requests/:key", async (req, res) => {
+    res.set({ "Cache-Control":"no-store", "Referrer-Policy":"no-referrer", "X-Robots-Tag":"noindex" });
+    const {site,id,key} = req.params;
+    if (!Object.hasOwn(SITE_ORIGINS,site) || !uuid.test(id) || !/^[0-9a-f]{64}$/.test(key) ||
+        req.method !== "GET" || req.originalUrl !== `/order-payments/${site}/${id}/requests/${key}` ||
+        network !== "eip155:8453" || (env[`ORDER_PAYMENTS_${site.toUpperCase()}_TOKEN`]?.length ?? 0) < 32) return res.sendStatus(404);
+    try {
+      const owner = siteOrder(site,id,env[`ORDER_PAYMENTS_${site.toUpperCase()}_TOKEN`],fetchImpl);
+      const row = await owner.load();
+      if (!row) return res.sendStatus(404);
+      const statusUrl = paymentOrigin + req.originalUrl;
+      const r = row.attempt?.requestKey === key
+        ? await checkoutOrder({request:new Request(paymentOrigin + `/order-payments/${site}/${id}`),
+            owner,client,merchant,facilitator,trust,secretKey:env.MPP_SECRET_KEY})
+        : await reviewOrder({owner,client,merchant,key,statusUrl});
+      for (const name of ["payment-response","payment-receipt","order-original-receipt"]) {
+        if (r.headers.has(name)) res.set(name,r.headers.get(name));
+      }
+      return res.status(r.status).type("json").send(await r.text());
+    } catch { return res.status(503).json({error:"payment_review_unavailable"}); }
   });
   app.get(ORDER_PATH, async (req, res) => {
     res.set({ "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex" });

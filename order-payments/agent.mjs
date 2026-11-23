@@ -25,9 +25,18 @@ export async function payOrder({ resource, amount, account, fetchImpl = fetch })
     return { headers: { "payment-signature": await signer.createCredential(response) } };
   });
   let sent = false;
-  return wrapFetchWithPayment(async req => {
+  const response = await wrapFetchWithPayment(async req => {
     if (sent) throw Error("payment has already been submitted, read the original order");
     if (req.headers.has("payment-signature")) sent = true;
     return fetchImpl(new Request(req, { redirect: "error", credentials: "omit", cache: "no-store" }));
   }, client)(resource);
+  if (response.ok) {
+    const result = await response.clone().json();
+    if (["paid","refunded"].includes(result.state) &&
+        (result.order !== url.pathname.split("/").pop() || result.amount !== amount || !result.receipt?.payer ||
+         getAddress(result.receipt.payer) !== getAddress(account.address))) {
+      return Response.json({state:"conflict",error:"order_payment_belongs_to_another_intent"}, {status:409});
+    }
+  }
+  return response;
 }

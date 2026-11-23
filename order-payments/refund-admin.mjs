@@ -5,18 +5,20 @@ import { SITE_ORIGINS, readSiteResult } from "./http.mjs";
 import { publicHistoricalClient } from "../transaction-receipt.mjs";
 
 // Root-only reservation and unsigned signing input. No signing or broadcasting implementation here.
-export async function prepareRefund({ order, site, token, client, fetchImpl = fetch, now = Date.now, canonical = null }) {
+export async function prepareRefund({ order, site, token, client, fetchImpl = fetch, now = Date.now, canonical = null, review = null }) {
   if (!Object.hasOwn(SITE_ORIGINS, site) || !/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/.test(order) ||
       !token || token.length < 32) throw Error("expected enrolled site, payment reference and private admin credential");
+  if (review !== null && !/^[0-9a-f]{64}$/.test(review)) throw Error("invalid payment review reference");
   const call = async (action, body) => {
     const res = await fetchImpl(new URL(`/api/order-payments/refunds/${order}/${action}`, SITE_ORIGINS[site]), {
       method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify(body), redirect: "error", signal: AbortSignal.timeout(10000),
+      body: JSON.stringify(review ? {...body, review} : body), redirect: "error", signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) throw Error("refund owner refused: " + res.status);
     return readSiteResult(site, res);
   };
   const row = await call("read", {});
+  if (!row) throw Error("payment effect not found");
   if (canonical) {
     const q=row.refund?.request;
     if (!q || canonical.schema!=="pilot.merchant-refund.canonical.v1" || canonical.role!=="merchant_refund" ||
@@ -27,7 +29,7 @@ export async function prepareRefund({ order, site, token, client, fetchImpl = fe
         canonical.amountAtomic!==q.amountAtomic || !/^0x[0-9a-f]{64}$/i.test(canonical.transactionHash) ||
         !Number.isSafeInteger(canonical.logIndex) || canonical.logIndex<0) throw Error("controller canonical refund mismatch");
     await call("bind",{original:q.original,operationId:q.operationId,transaction:canonical.transactionHash,transferLogIndex:canonical.logIndex});
-    return {action:"read_original_order",resource:row.resource};
+    return {action:"read_original_order",resource:review ? row.resource + "/requests/" + review : row.resource};
   }
   if (row.refund) return { action: "read_status_only", state: row.refund.state, original: row.refund.original,
     ...(row.refund.request && { existingIntent:row.refund.request }) };
@@ -41,10 +43,18 @@ export async function prepareRefund({ order, site, token, client, fetchImpl = fe
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const [site, order, mode, file] = process.argv.slice(2);
+  const [site, order, ...args] = process.argv.slice(2);
+  let review = null;
+  if (args[0] === "--review") {
+    args.shift();
+    review = args.shift();
+  }
+  if (review === undefined) throw Error("expected a payment review reference");
+  const [mode,file] = args;
+  if (args.length > 2) throw Error("unexpected refund arguments");
   if (mode && (mode!=="--receive" || !file)) throw Error("expected --receive PRIVATE_CANONICAL_FILE");
   if (!process.env.REFUND_ADMIN_TOKEN_FILE) throw Error("set REFUND_ADMIN_TOKEN_FILE to the protected file");
   const token = (await readFile(process.env.REFUND_ADMIN_TOKEN_FILE, "utf8")).trim();
-  const result = await prepareRefund({ site, order, token, canonical:file ? JSON.parse(await readFile(file,"utf8")) : null, client: publicHistoricalClient("base") });
+  const result = await prepareRefund({ site, order, token, review, canonical:file ? JSON.parse(await readFile(file,"utf8")) : null, client: publicHistoricalClient("base") });
   console.log(JSON.stringify(result));
 }

@@ -1,4 +1,5 @@
 import { reconcileRefund } from "./refund.mjs";
+import { paymentRequestKey } from "./request-key.mjs";
 import { Receipt } from "mppx";
 import { decodePaymentRequiredHeader, encodePaymentRequiredHeader, encodePaymentResponseHeader } from "@x402/core/http";
 import { evm, Mppx } from "mppx/server";
@@ -40,7 +41,7 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
       typeof quote.version !== "string" || !quote.version || quote.version.length > 180) {
     return json({ error: "order_terms_unavailable" }, 409);
   }
-  const view = row => ({ order: quote.id, version: quote.version, amount, network: "eip155:8453",
+  const view = row => ({ order: quote.id, version: quote.version, amount, created: quote.created, expires: quote.expires, network: "eip155:8453",
     state: row.state, ...(row.ownerQa === true && { classification: "owner_qa" }), ...(row.transaction && { providerTransaction: row.transaction }),
     ...(row.providerReason && { providerReason: row.providerReason }), ...(row.reason && { reason: row.reason }), ...(row.receipt && { receipt: row.receipt }) });
   async function read(row) {
@@ -54,7 +55,22 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
     const current = await owner.observe(row.attempt, observed);
     return json({ ...view(current), ...(current.state === "seen" && observed.review && { review: observed.review }) }, current.state === "paid" ? 200 : current.state === "held" ? 409 : 202, await finalizedHeaders(current, trust));
   }
-  if (quote.state !== "waiting") return read(quote);
+  const protocol = request.headers.has("payment-signature") ? "x402" : "mpp";
+  const wire = request.headers.get("payment-signature") || request.headers.get("authorization");
+  const key = wire ? await paymentRequestKey(quote.resource, { ...quote, order:quote.id, amount }, protocol, wire) : null;
+  const dispute = async (row, contender) => {
+    const statusUrl = row.resource + "/requests/" + key;
+    if (contender && owner.review) {
+      const saved = await owner.review("register", key, { attempt: contender });
+      if (saved?.matched) return reviewOrder({ owner, client, merchant, key, statusUrl });
+    }
+    return json({ error: "different_payment_request", order: row.id, state: "conflict" }, 409);
+  };
+  if (quote.state !== "waiting") {
+    if (!key || key === quote.attempt?.requestKey) return read(quote);
+    if (quote.reviews?.[key]) return reviewOrder({ owner, client, merchant, key, statusUrl: quote.resource + "/requests/" + key });
+    if (!quote.attempt || now() >= quote.expires) return dispute(quote);
+  }
   if (now() >= quote.expires) return json({ ...view(quote), state: "expired" }, 410);
   // Anchor before releasing any payable challenge. A lost response or an externally mined
   // authorization can then be recovered from the first block where it could have appeared.
@@ -75,9 +91,11 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
       if (!/^[1-9][0-9]{0,18}$/.test(validBefore) || BigInt(validBefore) > BigInt(limit)) {
         return { isValid: false, invalidReason: "invalid_authorization_expiry" };
       }
-      attempt = { payer: getAddress(auth.from), nonce: auth.nonce, validBefore, version: quote.version,
+      attempt = { requestKey: key, payer: getAddress(auth.from), nonce: auth.nonce, validBefore, version: quote.version,
         nextBlock: anchor, protocol: request.headers.has("payment-signature") ? "x402" : "mpp" };
-      armed = await owner.arm(attempt);
+      // Reaching this callback requires the maintained EVM verifier to recover
+      // the payer and bind its authorization to this exact challenge/resource.
+      armed = quote.state === "waiting" && await owner.arm(attempt);
       if (!armed) { lostRace = true; return { isValid: false, invalidReason: "order_already_reserved" }; }
       const verified = await facilitator.verify(payload, terms).catch(() => ({ isValid: false, invalidReason: "verification_unavailable" }));
       if (!verified.isValid) {
@@ -115,6 +133,7 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
     headers.set("cache-control", "no-store");
     headers.delete("content-length");
     const hasCredential = request.headers.has("payment-signature") || request.headers.has("authorization");
+    if (hasCredential && quote.state !== "waiting") return dispute(quote);
     if (hasCredential) return new Response(result.challenge.body, { status: 402, headers });
     if (trust?.enabled) {
       const required = decodePaymentRequiredHeader(headers.get("payment-required"));
@@ -129,5 +148,23 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
     headers.set("content-type", "application/json");
     return new Response(JSON.stringify(view(quote)), { status: 402, headers });
   }
-  return read(await owner.load());
+  const current = await owner.load();
+  if (key && current.attempt?.requestKey !== key) return dispute(current, lostRace ? attempt : null);
+  return read(current);
+}
+
+export async function reviewOrder({ owner, client, merchant, key, statusUrl }) {
+  let row = await owner.review("read", key);
+  if (!row?.attempt) return json({ error: "payment_review_not_found" }, 404);
+  if (row.state === "seen") {
+    const result = await reconcileOrder({ client, quote: row, attempt: row.attempt, merchant });
+    row = await owner.review("observe", key, { attempt: row.attempt, result });
+  } else if (row.state === "refund_pending") {
+    const result = await reconcileRefund(client, row.receipt, row.refund, merchant);
+    row = await owner.review("refund-observe", key, { original: row.refund.original, result });
+  }
+  // A secondary payment never fulfills the order or receives its success headers.
+  return json({ error: "different_payment_request", order:row.id, version:row.version, amount:amountForCents(row.cents), network:"eip155:8453",
+    ...(row.ownerQa && {classification:"owner_qa"}), state: row.state, statusUrl,
+    ...(row.reason && { reason: row.reason }), ...(row.receipt && { receipt: row.receipt }) }, 409);
 }

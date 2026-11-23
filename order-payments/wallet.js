@@ -1,3 +1,4 @@
+import { paymentRequestKey } from "./request-key.mjs";
 import QRCode from "qrcode";
 import { Mppx, evm } from "mppx/client";
 import { createWalletClient, custom, formatUnits, getAddress } from "viem";
@@ -13,8 +14,8 @@ const refresh = document.querySelector("#refresh");
 const mobile = document.querySelector("#mobile");
 let codeReady=false;
 document.querySelector("#order").textContent = reference;
-let busy = false, submitted = false, timer;
-const read = () => fetch(endpoint, { cache: "no-store", credentials: "omit", redirect: "error" });
+let busy = false, submitted = false, timer, signedKey;
+const read = () => fetch(signedKey ? endpoint.href + "/requests/" + signedKey : endpoint, { cache: "no-store", credentials: "omit", redirect: "error" });
 
 function terms(response, result) {
   const required = Header.decodePaymentRequired(response.headers.get("payment-required"));
@@ -30,6 +31,10 @@ async function show(response) {
   clearTimeout(timer);
   button.hidden = true;
   mobile.hidden=true;
+  if (response.status === 404 && signedKey) {
+    state.textContent = "Your signed request has no confirmed payment yet. Refresh its status.";
+    return;
+  }
   if (result.order !== reference) throw Error("The order could not be read.");
   if (response.status === 402) {
     const term = terms(response, result);
@@ -45,7 +50,7 @@ async function show(response) {
     state.textContent = submitted ? "Checking your signed payment. Refresh its status." : "Waiting for payment.";
   } else {
     state.textContent = ({ seen: "Payment seen. Waiting for confirmation.", paid: "Paid. Your receipt is ready.",
-      closed: "This invoice is closed.", expired: "This quote expired.", held: "Payment under review. Keep your order reference.",
+      conflict: "Another payment request is attached to this order.", closed: "This invoice is closed.", expired: "This quote expired.", held: "Payment under review. Keep your order reference.",
       refunded: "Refund confirmed.", refund_pending: "Refund awaiting confirmation." })[result.state] || "Checking payment status.";
     if (result.state === "seen" && result.providerReason) {
       state.textContent = "Provider response: " + result.providerReason + ". Checking the original payment.";
@@ -53,6 +58,7 @@ async function show(response) {
     if (result.state === "held") {
       state.textContent = ({
         authorization_expired_unused: "Your authorization expired unused. No USDC was collected.",
+        additional_order_payment: "Another payment completed this order. This transfer is recorded for a refund.",
         wrong_asset: "The transfer used a different token. Keep this transaction and order reference for support.",
         amount_changed: "The received amount differs from the quote. Keep this order reference for support.",
         quote_changed_or_expired: "The transfer arrived against a changed or expired quote. Keep this order reference for support.",
@@ -84,7 +90,8 @@ button.onclick = async () => {
     if (!window.ethereum) throw Error("Open this payment link in your wallet browser.");
     const response = await read();
     if (response.status !== 402) { await show(response); return; }
-    const term = terms(response, await response.clone().json());
+    const quote = await response.clone().json();
+    const term = terms(response, quote);
     const wallet = createWalletClient({ chain: base, transport: custom(window.ethereum) });
     const [address] = await wallet.requestAddresses();
     if (await wallet.getChainId() !== base.id) await wallet.switchChain({ id: base.id });
@@ -95,6 +102,8 @@ button.onclick = async () => {
     const headers = new Headers(response.headers);
     headers.delete("www-authenticate");
     const signature = await client.createCredential(new Response(null, { status: 402, headers }));
+    signedKey = await paymentRequestKey(endpoint.href, quote, "x402", signature);
+    try { sessionStorage.setItem("request/" + reference, signedKey); } catch { /* this tab still owns the digest */ }
     submitted = true;
     try { sessionStorage.setItem("submitted/" + reference, "1"); } catch { /* the owner still elects one submission */ }
     const paid = await fetch(endpoint, { credentials: "omit", cache: "no-store", redirect: "error",
@@ -105,5 +114,9 @@ button.onclick = async () => {
       (err?.message === "Open this payment link in your wallet browser." ? err.message : "Payment was not confirmed. Check your wallet and this order.");
   } finally { busy = false; button.disabled = false; }
 };
-try { submitted = sessionStorage.getItem("submitted/" + reference) === "1"; } catch { /* optional browser memory */ }
+try {
+  const stored = sessionStorage.getItem("request/" + reference);
+  if (stored && /^[0-9a-f]{64}$/.test(stored)) signedKey = stored;
+  submitted = Boolean(signedKey) || sessionStorage.getItem("submitted/" + reference) === "1";
+} catch { /* optional browser memory */ }
 void check();

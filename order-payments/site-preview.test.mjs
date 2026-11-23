@@ -174,6 +174,59 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
     }
     assert.equal(settles,4);
   }
+  if (process.env.PAYMENT_REPLAY_PREVIEW === "1") {
+    const { decodePaymentSignatureHeader } = await import("@x402/core/http");
+    const qaId = randomUUID();
+    const qa = await createOwnedOrder(pool,process.env.SDS_CARE_SCHEMA,{
+      id:qaId,cents:1,email:"owner@example.test",live:false,origin:SITE_ORIGINS.sds
+    });
+    const originalTerms = await toGateway(new Request(qa.agent));
+    const first = await payOrder({resource:qa.agent,amount:"10000",account:payer,fetchImpl:toGateway});
+    assert.equal(first.status,200);
+    const firstReceipt = (await first.json()).receipt;
+    const second = privateKeyToAccount("0x"+"4".repeat(64)); // isolated fixture only
+    const settledBefore = settles;
+    const fresh = await payOrder({resource:qa.agent,amount:"10000",account:second,fetchImpl:toGateway});
+    assert.equal(fresh.status,409);
+    assert.equal((await fresh.json()).receipt,undefined);
+    let signed;
+    const contender = await payOrder({resource:qa.agent,amount:"10000",account:second,fetchImpl:async req=>{
+      if (!req.headers.has("payment-signature")) return originalTerms.clone();
+      signed = req.headers.get("payment-signature");
+      return toGateway(req);
+    }});
+    assert.equal(contender.status,409);
+    assert.equal(contender.headers.get("payment-response"),null);
+    const pending = await contender.json();
+    assert.equal(pending.state,"seen");assert.equal(pending.receipt,undefined);
+    assert.ok(pending.statusUrl.startsWith(qa.agent+"/requests/"));
+    const key = pending.statusUrl.split("/").pop();
+    const ownStatus = async () => (await toGateway(new Request(pending.statusUrl))).json();
+    const secondaryDebit = mine(decodePaymentSignatureHeader(signed).payload.authorization);
+    const observed = await ownStatus();
+    assert.deepEqual([observed.state,observed.reason,observed.receipt.transaction,observed.receipt.payer],
+      ["held","additional_order_payment",secondaryDebit,second.address]);
+    assert.notEqual(secondaryDebit,firstReceipt.transaction);
+    const repeated = await toGateway(new Request(qa.agent,{headers:{"payment-signature":signed}}));
+    assert.equal(repeated.status,409);assert.equal((await repeated.json()).receipt.transaction,secondaryDebit);
+    const adminReview = {site:"sds",order:qa.paymentReference,review:key,token:admin,client:publicClient,fetchImpl:toSite};
+    const { originalPayment: q } = await prepareRefund(adminReview);
+    assert.equal(q.transaction,secondaryDebit);assert.equal(q.payer,second.address);
+    const refundHash = mine({from:merchant,to:second.address,value:"10000"},true);
+    const canonical = {schema:"pilot.merchant-refund.canonical.v1",role:"merchant_refund",site:q.site,order:q.order,
+      operationId:q.operationId,originalPayment:q.original,network:q.network,token:q.token,source:q.merchant,recipient:q.payer,
+      amountAtomic:q.amountAtomic,status:"success",exactTransferVerified:true,logIndex:0,transactionHash:refundHash};
+    await prepareRefund({...adminReview,canonical});
+    await prepareRefund({...adminReview,canonical});
+    const restored = await ownStatus();
+    assert.equal(restored.state,"refunded");assert.equal(restored.receipt.refund.recipient,second.address);
+    assert.equal(restored.receipt.refund.transaction,refundHash);
+    const original = await (await toGateway(new Request(qa.agent))).json();
+    assert.equal(original.state,"paid");assert.deepEqual(original.receipt, firstReceipt);
+    assert.equal(settles,settledBefore);
+    const siteReceiving = await receiveOwnedOrder(pool,process.env.SDS_CARE_SCHEMA,qaId);
+    assert.equal(siteReceiving.state,"paid");
+  }
   if (process.env.HOSTED_ORDER_PREVIEW === "1") {
     const {hostedLinks}=await load("server/lib/hosted-offer-catalog.js");
     const {legacyOffer}=await load("server/lib/legacy-order.js");
