@@ -31,6 +31,7 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import { mountScopedRepairCommerce } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/mount.mjs";
 import { isScopedRepairPath } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/paths.mjs";
+import { mountOrderPayments } from "./order-payments/http.mjs";
 import { paymentMiddlewareFromHTTPServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import {
@@ -1255,6 +1256,8 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/security/stateful-wallet-policy-conformance": { operationId: "evaluateStatefulWalletPolicyConformance", tags: ["Security"] },
   [CAREERS_BOARD_PATH]: { operationId: "readNamedCareersBoard", tags: ["Web Data"] },
 };
+
+mountOrderPayments(app, { merchant: PAY_TO, network: NETWORK, facilitator: facilitatorClient });
 
 const mppDualStack = createMppDualStack({
   facilitatorClient,

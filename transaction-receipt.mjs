@@ -220,6 +220,8 @@ export function publicHistoricalClient(network = "base", rpcUrls) {
   const calls = { receipt: 0, block: 0, paid: 0, model: 0 };
   return {
     calls,
+    getChainId: () => inner.getChainId(),
+    getLogs: (args) => inner.getLogs(args),
     async getTransactionReceipt(args) {
       calls.receipt += 1;
       return inner.getTransactionReceipt(args);
