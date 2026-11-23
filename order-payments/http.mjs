@@ -3,12 +3,19 @@ import { checkoutOrder } from "./checkout.mjs";
 import { publicHistoricalClient } from "../transaction-receipt.mjs";
 
 export const SITE_ORIGINS = Object.freeze({
-  sds: "https://samedaydesk.com", ein: "https://ein.llc", neo: "https://neomorphic.io",
+  sds: "https://samedaydesk.com", ein: "https://ein.llc", neo: "https://api.neomorphic.io",
 });
 export const ORDER_PATH = "/order-payments/:site/:id";
 const uuid = /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/;
 const paymentOrigin = "https://agents.samedaydesk.com";
 const forwarded = ["authorization", "payment-signature"];
+
+export async function readSiteResult(site, response) {
+  const value = await response.json();
+  if (site !== "neo") return value;
+  if (value?.ok !== true || !value.result || typeof value.result !== "object") throw Error("order owner did not confirm");
+  return value.result;
+}
 
 // Only controller-enrolled sites are reachable. The public request controls neither URL nor headers
 // used for the internal call. A POST is sent once and an ambiguous result is left for readback.
@@ -21,7 +28,7 @@ function siteOrder(site, id, token, fetchImpl) {
     });
     if (res.status === 404 && action === "load") return null;
     if (!res.ok) throw Error("order owner unavailable");
-    return res.json();
+    return readSiteResult(site, res);
   }
   return { load: () => call("load"), arm: async attempt => (await call("arm", { attempt })).armed === true,
     anchor: async block => (await call("anchor", { block })).block,

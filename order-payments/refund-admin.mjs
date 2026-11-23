@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { directRefundTerms, verifyRefundSource } from "./refund.mjs";
-import { SITE_ORIGINS } from "./http.mjs";
+import { SITE_ORIGINS, readSiteResult } from "./http.mjs";
 import { publicHistoricalClient } from "../transaction-receipt.mjs";
 
 // Root-only reservation and unsigned signing input. No signing or broadcasting implementation here.
@@ -14,7 +14,7 @@ export async function prepareRefund({ order, site, token, client, fetchImpl = fe
       body: JSON.stringify(body), redirect: "error", signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) throw Error("refund owner refused: " + res.status);
-    return res.json();
+    return readSiteResult(site, res);
   };
   const row = await call("read", {});
   if (canonical) {

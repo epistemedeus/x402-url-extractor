@@ -6,19 +6,18 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import express from "express";
-import { erc20Abi, encodeFunctionData, encodeAbiParameters, encodeEventTopics, parseAbiItem, recoverTypedDataAddress } from "viem";
+import { recoverTypedDataAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mountOrderPayments, SITE_ORIGINS } from "./http.mjs";
 import { payOrder } from "./agent.mjs";
 import { prepareRefund } from "./refund-admin.mjs";
+import { previewChain } from "./preview-chain.mjs";
 import { BASE_USDC } from "../settlement-proof.mjs";
 
 const siteRoot = process.env.SDS_PREVIEW_SOURCE;
 const enrolled = siteRoot && process.env.SDS_PRIVATE_PREVIEW === "1";
 const merchant = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
 const payer = privateKeyToAccount("0x" + "2".repeat(64)); // public deterministic fixture
-const used = parseAbiItem("event AuthorizationUsed(address indexed authorizer, bytes32 indexed nonce)");
-const transfer = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
 const origin = server => "http://127.0.0.1:" + server.address().port;
 
 test("SDS wallet and independent agent use the gateway and existing PostgreSQL receipt through refund", { skip: !enrolled }, async t => {
@@ -37,34 +36,8 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
   const care = createCareService({ store, stripe: {}, live: false, secret: token, origin: SITE_ORIGINS.sds, orderPayments: true });
   const site = createSdsApp({ care }).listen(0, "127.0.0.1");
   await once(site, "listening"); t.after(() => new Promise(r => site.close(r)));
-  let blockNo = 3n, settles = 0;
-  const receipts = [], blocks = new Map(), transactions = new Map();
-  const publicClient = {
-    getChainId: async () => 8453,
-    getBlock: async ({ blockNumber }) => blocks.get(blockNumber) ?? { number: blockNo, timestamp: BigInt(Math.floor(Date.now()/1000)) },
-    getTransaction: async ({hash}) => transactions.get(hash),
-    getTransactionReceipt: async ({ hash }) => receipts.find(r => r.transactionHash === hash),
-    async getLogs({ args, fromBlock, toBlock }) {
-      return receipts.filter(r => r.blockNumber >= fromBlock && r.blockNumber <= toBlock && r.payer === args.authorizer && r.nonce === args.nonce)
-        .map(r => r.logs[0]);
-    },
-  };
-  function mine(auth,direct=false) {
-    blockNo++;
-    const hash = "0x" + blockNo.toString(16).padStart(64,"0");
-    const block = { number: blockNo, timestamp: BigInt(Math.floor(Date.now()/1000)), hash };
-    blocks.set(blockNo, block);
-    const log = (topics,data,logIndex) => ({ address: BASE_USDC, topics, data, logIndex, blockHash: hash, blockNumber: blockNo, transactionHash: hash });
-    const logs = [log(encodeEventTopics({ abi: [used], args: { authorizer: auth.from, nonce: auth.nonce } }), "0x", 0),
-      log(encodeEventTopics({ abi: [transfer], args: { from: auth.from, to: auth.to } }), encodeAbiParameters([{ type: "uint256" }], [BigInt(auth.value)]), 1)];
-    if(direct) {
-      logs.shift(); logs[0].logIndex=0;
-      transactions.set(hash,{ hash,from:auth.from,to:BASE_USDC,blockHash:hash,value:0n,
-        input:encodeFunctionData({abi:erc20Abi,functionName:"transfer",args:[auth.to,BigInt(auth.value)]}) });
-    }
-    receipts.push({ status: "success", from: "0x" + "5".repeat(40), transactionHash: hash, blockHash: hash, blockNumber: blockNo, payer: auth.from, nonce: auth.nonce, logs });
-    return hash;
-  }
+  let settles = 0;
+  const { publicClient, mine } = previewChain();
   const toSite = (url, init) => {
     assert.equal(new URL(url).origin, SITE_ORIGINS.sds);
     return fetch(origin(site) + new URL(url).pathname, init);
