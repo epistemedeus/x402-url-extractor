@@ -87,7 +87,10 @@ button,.pay-again{box-sizing:border-box;display:inline-flex;align-items:center;j
 :root[data-wallet="none"] #pay{order:2;border-color:var(--rule-strong);background:transparent;color:var(--ink)}
 :root[data-wallet="none"] .pay-once{order:3}
 @media (min-width:768px){:root[data-wallet="none"][data-state="waiting"] .pay-copy{display:none}}
-:root[data-state="expired"] .pay-again{display:inline-flex;justify-self:start}
+:root[data-again] .pay-again{display:inline-flex;justify-self:start}
+/* One way on from every end: back to the site once settled, a message to the site while someone has to look. */
+.pay-way{display:none;justify-self:start;align-items:center;min-block-size:2.75rem;color:var(--accent-text);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+:root:is([data-state="paid"],[data-state="refunded"]) #back,:root:is([data-state="held"],[data-state="conflict"],[data-state="closed"]) #mail{display:inline-flex}
 #history{margin:0;display:grid;border-block:1px solid var(--rule)}
 #history>div{display:grid;gap:.2rem;padding-block:.6rem}#history>div+div{border-block-start:1px solid var(--rule)}
 #history dt{font:500 .6875rem/1.3 var(--mono);letter-spacing:var(--label-tracking);text-transform:uppercase;color:var(--soft)}
@@ -111,10 +114,10 @@ button,.pay-again{box-sizing:border-box;display:inline-flex;align-items:center;j
 </style></head><body><main>
 <header class="pay-head"><p class="pay-site" id="site"></p><h1 id="title">Pay with USDC</h1></header>
 <div class="pay-main">
-<div><p class="pay-amount" id="amount"></p><p class="pay-quiet">On Base, to <code id="to" title="0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee">0x8904dF…213Cee</code>. Order <code id="order"></code></p></div>
+<div><p class="pay-amount" id="amount"></p><p class="pay-quiet">On Base, to <code id="to" title="0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee">0x8904dF…213Cee</code>. Order <code id="order"></code>.<span id="hold"></span></p></div>
 <ol class="pay-track" aria-hidden="true"><li class="pay-station"><span class="pay-node"></span>Sign</li><li class="pay-station"><span class="pay-node"></span>Confirming on Base</li><li class="pay-station"><span class="pay-node"></span>Paid</li></ol>
 <p id="state" role="status">Reading your order.</p>
-<div class="pay-do"><button id="pay" hidden>Connect wallet and pay</button><button class="pay-copy" id="copy" type="button">Copy link for your wallet app</button><p class="pay-once">Sign once. No network fee.</p><a class="pay-again" id="again" href="/">Start the order again</a></div>
+<div class="pay-do"><button id="pay" hidden>Connect wallet and pay</button><button class="pay-copy" id="copy" type="button">Copy link for your wallet app</button><p class="pay-once">Sign once. No network fee.</p><a class="pay-again" id="again" href="/">Start the order again</a><a class="pay-way" id="back" href="/">Back</a><a class="pay-way" id="mail" href="mailto:">Email us about this order</a></div>
 <dl id="history" hidden><div><dt>Payment transaction</dt><dd id="debit"></dd></div><div><dt id="refund-label" hidden>Refund transaction</dt><dd id="refund"></dd></div></dl>
 <button id="refresh">Check status</button>
 </div>
