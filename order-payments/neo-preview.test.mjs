@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { once } from "node:events";
 import { generateKeyPairSync, randomBytes, randomUUID } from "node:crypto";
-import { resolve } from "node:path";
+import { resolve, extname, sep } from "node:path";
+import {readFile} from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { previewWalletBrowser,payWithPreviewWallet } from "./preview-wallet.mjs";
 import express from "express";
@@ -136,4 +137,54 @@ test("Neomorphic mounted subscription month, repair, owner QA and refunds", {ski
   const wp=await(await transport(new Request(qw.agent))).json();await reverse(wp);
   assert.equal((await site(qaPath+"/"+walletId.order,undefined,{signed:true,status:200})).value.siteRoundTripRecorded,true);
   assert.equal(settlements,4);
+  const staticRoot=resolve(neo,"dist"),siteOrigin="https://neomorphic.io";
+  const contentType={".js":"text/javascript",".css":"text/css",".html":"text/html",".json":"application/json",".svg":"image/svg+xml",".woff2":"font/woff2"};
+  const browserCalls=[];
+  async function pageFor(path){
+    const page=await browser.newPage();await page.setRequestInterception(true);
+    page.on("request",async req=>{
+      try{
+        const target=new URL(req.url());
+        if(target.origin===siteOrigin){
+          const file=resolve(staticRoot,"."+target.pathname+(target.pathname.endsWith("/")?"index.html":""));
+          assert.ok(file.startsWith(staticRoot+sep));
+          const bytes=await readFile(file);
+          return await req.respond({status:200,contentType:contentType[extname(file)] || "application/octet-stream",body:bytes});
+        }
+        if(target.origin===SITE_ORIGINS.neo){
+          const result=await fetch(houseUrl+target.pathname,{method:req.method(),headers:req.headers(),
+            ...(req.postData() && {body:req.postData()})});
+          if(target.origin===SITE_ORIGINS.neo) browserCalls.push([req.method(),target.pathname,result.status,(await result.clone().json().catch(()=>({}))).error]);
+          return await req.respond({status:result.status,headers:Object.fromEntries(result.headers),body:Buffer.from(await result.arrayBuffer())});
+        }
+        if(target.origin==="https://agents.samedaydesk.com"){
+          const result=await transport(new Request(req.url(),{headers:req.headers()}));
+          return await req.respond({status:result.status,headers:Object.fromEntries(result.headers),body:Buffer.from(await result.arrayBuffer())});
+        }
+        return await req.abort();
+      }catch {if(!req.isInterceptResolutionHandled())await req.abort();}
+    });
+    await page.goto(siteOrigin+path,{waitUntil:"domcontentloaded"});return page;
+  }
+  const deskPage=await pageFor("/desk/subscribe/");
+  await deskPage.waitForSelector("[data-usdc]:not([hidden])");
+  assert.equal(await deskPage.$eval("[data-buy]",b=>b.hidden),false);
+  await deskPage.type("[data-email]","human@example.test");
+  await Promise.all([deskPage.waitForNavigation(),deskPage.click("[data-wallet]")]);
+  assert.match(deskPage.url(),/^https:\/\/agents\.samedaydesk\.com\/order-payments\/neo\/[a-f0-9-]{36}\/wallet$/);
+  await deskPage.close();
+  const reportPage=await pageFor("/services/seller-conformance/fixed-scope/?finding=checkout");
+  await reportPage.waitForSelector("[data-report-usdc]:not([hidden])");
+  await reportPage.click("[data-report-usdc] summary");await reportPage.type("[name=email]","human@example.test");
+  await reportPage.type("[name=publicOrigin]","https://example.com");await reportPage.type("[name=getRoute]","/catalog");
+  await reportPage.click("[name=authorized]");
+  await Promise.all([reportPage.waitForNavigation({timeout:8000}),reportPage.click("[data-report-usdc] button[type=submit]")]).catch(async e=>{
+    throw Error(e.message+" "+JSON.stringify(browserCalls)+" "+await reportPage.$eval("[data-report-usdc] [role=status]",el=>el.textContent));
+  });
+  const reportResource=reportPage.url().replace(/\/wallet$/,"");
+  const reportPaid=await pay({paymentUrl:reportResource},49000);
+  const attached=await pool.query("select * from house_report_orders where order_id=$1",[reportPaid.order]);
+  assert.equal(attached.rows[0].checkout_details.finding,"checkout");assert.equal(attached.rows[0].state,"paid");
+  await reverse(reportPaid);await reportPage.close();
+  assert.equal(settlements,5);
 });

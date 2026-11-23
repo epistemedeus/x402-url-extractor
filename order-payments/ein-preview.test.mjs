@@ -9,6 +9,7 @@ import { resolve, join } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
 import { payWithPreviewWallet, previewWalletBrowser } from "./preview-wallet.mjs";
 import express from "express";
+import {decodePaymentSignatureHeader} from "@x402/core/http";
 import { privateKeyToAccount } from "viem/accounts";
 import { payOrder } from "./agent.mjs";
 import { mountOrderPayments, SITE_ORIGINS } from "./http.mjs";
@@ -36,12 +37,24 @@ test("emitted EIN filing, pre-claim agent payment and original verified human fu
   const identity=(await login.json()).idToken;assert.ok(identity);
   const portProbe=createServer().listen(0,"127.0.0.1");await once(portProbe,"listening");const port=portProbe.address().port;
   await new Promise(r=>portProbe.close(r));
+  let cardCalls=0;
+  const stripeApp=express();
+  stripeApp.post("/v1/checkout/sessions",express.text({type:"*/*"}),(req,res)=>{
+    const form=new URLSearchParams(req.body),order=form.get("metadata[einFilingOrder]");
+    const cents=Number(form.get("line_items[0][price_data][unit_amount]"));
+    if(!order || !Number.isSafeInteger(cents) || cents<=0){res.sendStatus(400);return;}
+    cardCalls++;
+    res.json({id:"cs_test_"+order,object:"checkout.session",livemode:false,status:"open",amount_total:cents,
+      metadata:{einFilingOrder:order},url:"https://checkout.stripe.com/c/pay/cs_test_"+order});
+  });
+  const stripeHost=stripeApp.listen(0,"127.0.0.1");await once(stripeHost,"listening");
+  t.after(()=>new Promise(r=>stripeHost.close(r)));
   const token=randomBytes(36).toString("hex"), refund=randomBytes(36).toString("hex");
   const env={PATH:process.env.PATH,HOME:process.env.HOME,NODE_ENV:"test",PORT:String(port),PUBLIC_URL:SITE_ORIGINS.ein,
     GCLOUD_PROJECT:project,GOOGLE_CLOUD_PROJECT:project,FIREBASE_SERVICE_ACCOUNT_KEY:JSON.stringify(account),FIREBASE_FIRESTORE_DATABASE_ID:"ein-llc-e",
     FIRESTORE_EMULATOR_HOST:process.env.FIRESTORE_EMULATOR_HOST,FIREBASE_AUTH_EMULATOR_HOST:process.env.FIREBASE_AUTH_EMULATOR_HOST,
     JWT_SECRET:randomBytes(32).toString("hex"),STRIPE_SECRET_KEY:"sk_test_isolated_fixture",EIN_ONLY_CHECKOUT:"1",EIN_ANNUAL_REPORT_CHECKOUT:"1",
-    ALLOW_STRIPE_API_OVERRIDE:"1",STRIPE_API_HOST:"127.0.0.1",STRIPE_API_PORT:"9",STRIPE_API_PROTOCOL:"http",LOG_LEVEL:"error",
+    ALLOW_STRIPE_API_OVERRIDE:"1",STRIPE_API_HOST:"127.0.0.1",STRIPE_API_PORT:String(stripeHost.address().port),STRIPE_API_PROTOCOL:"http",LOG_LEVEL:"error",
     EIN_ORDER_USDC:"1",ORDER_PAYMENTS_EIN_TOKEN:token,ORDER_PAYMENTS_EIN_REFUND_ADMIN:refund,ADMIN_UID:ownerUid};
   const server=spawn(process.execPath,["app.mjs"],{cwd:root,env,stdio:["ignore","pipe","pipe"]});
   let logs="";server.stdout.on("data",c=>logs=(logs+c).slice(-1800));server.stderr.on("data",c=>logs=(logs+c).slice(-1800));
@@ -60,7 +73,12 @@ test("emitted EIN filing, pre-claim agent payment and original verified human fu
   const {publicClient,mine}=previewChain(), payer=privateKeyToAccount("0x"+"5".repeat(64));
   const merchant="0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
   const trust=createCommerceTrust({privateKey:"0x"+"3".repeat(64),network:"eip155:8453"});
-  const toSite=(url,init)=>{assert.equal(new URL(url).origin,SITE_ORIGINS.ein);return fetch(base+new URL(url).pathname,init);};
+  const toSite=async(url,init)=>{
+    assert.equal(new URL(url).origin,SITE_ORIGINS.ein);
+    const response=await fetch(base+new URL(url).pathname,init);
+    if(!response.ok) t.diagnostic("Owner response "+response.status+" for "+new URL(url).pathname.split("/").at(-1));
+    return response;
+  };
   let settles=0;
   const app=express();mountOrderPayments(app,{merchant,trust,network:"eip155:8453",client:publicClient,fetchImpl:toSite,
     env:{ORDER_PAYMENTS_EIN_TOKEN:token,MPP_SECRET_KEY:token},facilitator:{verify:async()=>({isValid:true}),
@@ -70,15 +88,15 @@ test("emitted EIN filing, pre-claim agent payment and original verified human fu
     const out=new Response(r.body,{status:r.status,headers:r.headers});Object.defineProperty(out,"url",{value:req.url});return out;};
   const pay=async(resource,cents)=>{const r=await payOrder({resource,amount:String(BigInt(cents)*10000n),account:payer,fetchImpl:send});
     const out=await r.json();assert.equal(r.status,200,JSON.stringify(out));assert.equal(out.state,"paid");return out;};
-  const reverse=async paid=>{
-    const args={order:paid.order,site:"ein",token:refund,client:publicClient,fetchImpl:toSite};
+  const reverse=async (paid,review)=>{
+    const args={order:paid.order,site:"ein",token:refund,client:publicClient,fetchImpl:toSite,...(review && {review})};
     const {originalPayment:q}=await prepareRefund(args);assert.equal(q.payer,payer.address);
     const hash=mine({from:merchant,to:payer.address,value:q.amountAtomic},true);
     const canonical={schema:"pilot.merchant-refund.canonical.v1",role:"merchant_refund",order:q.order,site:q.site,operationId:q.operationId,
       originalPayment:q.original,network:q.network,token:q.token,source:q.merchant,recipient:q.payer,amountAtomic:q.amountAtomic,
       status:"success",exactTransferVerified:true,logIndex:0,transactionHash:hash};
     await prepareRefund({...args,canonical});await prepareRefund({...args,canonical});
-    const after=await (await send(new Request(q.resource))).json();assert.equal(after.state,"refunded");assert.equal(after.receipt.refund.transaction,hash);
+    const after=await (await send(new Request(review ? q.resource+"/requests/"+review : q.resource))).json();assert.equal(after.state,"refunded");assert.equal(after.receipt.refund.transaction,hash);
   };
   for(const product of ["ein-only","annual-report"]) {
     const quote=await api("/filings/quote",{product,requestId:randomUUID(),companyName:"Preview Company",state:"Wyoming",
@@ -92,6 +110,19 @@ test("emitted EIN filing, pre-claim agent payment and original verified human fu
     await reverse(paid);
     assert.equal((await db.collection("filing_orders").doc(quote.id).get()).data().refundedCents,quote.price.totalCents);
   }
+  const raceQuote=()=>api("/filings/quote",{product:"ein-only",requestId:randomUUID(),companyName:"Race preview",state:"Wyoming",
+    signerName:"Preview Owner",mailingAddress:"Fixture address",detailsConfirmed:true,formedOn:"2026-01-10",activity:"Software",reason:"started_business"});
+  const cardRef=await raceQuote();
+  await api("/filings/"+cardRef.id+"/checkout",{});
+  await api("/filings/"+cardRef.id+"/checkout",{method:"base_usdc"},409);
+  const race=await raceQuote(),beforeCard=cardCalls;
+  const simultaneous=await Promise.all([{}, {method:"base_usdc"}].map(body=>fetch(base+"/api/filings/"+race.id+"/checkout",{
+    method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+identity},body:JSON.stringify(body)
+  })));
+  assert.deepEqual(simultaneous.map(r=>r.status).sort(),[200,409]);
+  const elected=(await db.collection("filing_orders").doc(race.id).get()).data();
+  assert.equal(Boolean(elected.usdc),!elected.stripeRequest);
+  assert.equal(cardCalls-beforeCard,elected.usdc ? 0 : 1);
   const spec = await api("/agent/v1/openapi.json", undefined, 200, false, "GET");
   assert.equal(spec.paths["/api/agent/v1/applications/{applicationId}/payment"].post.operationId,"openApplicationPayment");
   const facts={goal:"Accept payments",hasUsEntity:"no",hasEin:"no",providerRequiresUsEntity:"yes",providerRequiresEin:"yes",selectedState:"Wyoming",intendedEmail:email};
@@ -130,6 +161,25 @@ test("emitted EIN filing, pre-claim agent payment and original verified human fu
   assert.equal((await db.collection("orders").get()).size,2);
   await reverse(humanPaid);
   assert.equal(settles,4);
+  const late=await api("/filings/quote",{product:"ein-only",requestId:randomUUID(),companyName:"Late preview",state:"Wyoming",
+    signerName:"Preview Owner",mailingAddress:"Fixture address",detailsConfirmed:true,formedOn:"2026-01-10",activity:"Software",reason:"started_business"});
+  const lateRef=db.collection("filing_orders").doc(late.id), expires=Date.now()+5500;
+  // Seed a nearly expired original filing before either wallet has obtained a quote.
+  await lateRef.update({createdAt:expires-120*60_000});
+  const close=await api("/filings/"+late.id+"/checkout",{method:"base_usdc"});
+  let recoveredWire;
+  await payOrder({resource:close.paymentUrl,amount:String(BigInt(late.price.totalCents)*10000n),account:payer,fetchImpl:async req=>{
+    if(!req.headers.has("payment-signature")) return send(req);
+    recoveredWire=req.headers.get("payment-signature");return new Response(null,{status:503});
+  }});
+  assert.ok(recoveredWire);
+  await pause(Math.max(0,expires+1100-Date.now()));
+  mine(decodePaymentSignatureHeader(recoveredWire).payload.authorization);
+  const recovered=await send(new Request(close.paymentUrl,{headers:{"payment-signature":recoveredWire}}));
+  const retained=await recovered.json();
+  assert.equal(recovered.status,409);assert.equal(retained.state,"held");assert.equal(retained.receipt.payer,payer.address);
+  await reverse(retained,retained.statusUrl.split("/").at(-1));
+  assert.equal((await lateRef.get()).data().status,"quoted");assert.equal(settles,4);
   const qaId=randomUUID();
   async function cli(mode,key=qaId) {
     const child=spawn(process.execPath,[join(root,"artifacts/api-server/dist/owner-usdc-qa.mjs"),mode,key],{cwd:root,env,
