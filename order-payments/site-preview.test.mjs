@@ -29,7 +29,7 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
   const { createSdsApp } = await load("server/app.js");
   const { openCareStore } = await load("server/lib/care-store.js");
   const { createCareService } = await load("server/lib/care-service.js");
-  const { createOwnedOrder } = await load("server/scripts/care-usdc-qa.mjs");
+  const { createOwnedOrder,receiveOwnedOrder } = await load("server/scripts/care-usdc-qa.mjs");
   const { careTable } = await load("server/lib/care-database.js");
   const store = openCareStore(), pool = new pg.Pool({ connectionString: process.env.SDS_CARE_DATABASE_URL });
   t.after(async () => { await store.close(); await pool.end(); });
@@ -120,6 +120,12 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
     const events = await pool.query(`select event,test from ${careTable("journey_events")} where order_id=$1`, [id]);
     assert.deepEqual(events.rows.map(r => r.event).sort(), ["checkout_started","payment_refunded","payment_verified"]);
     assert.ok(events.rows.every(r => r.test));
+    if (receiveOwnedOrder) {
+      const siteReceipt=await receiveOwnedOrder(pool,process.env.SDS_CARE_SCHEMA,id);
+      assert.equal(siteReceipt.siteRoundTripRecorded,true);assert.equal(siteReceipt.customerRevenue,false);
+      assert.equal(siteReceipt.original,final.receipt.transaction);assert.equal(siteReceipt.refund,transactionHash);
+      assert.equal(siteReceipt.receiptRows,1);assert.equal(siteReceipt.receiptAccepted,false);
+    }
   }
   assert.equal(settles, 2);
   if (process.env.OWNER_ORDER_PREVIEW_SOURCE) {
