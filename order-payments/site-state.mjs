@@ -42,9 +42,9 @@ export function projectRailChange(q, action, body) {
   }
   if (action === "arm") {
     if (q.state !== "waiting" || q.expires <= Date.now() || q.created > Date.now() || q.version !== a?.version ||
-        !word.test(a.nonce) || !address.test(a.payer) || !uint(a.nextBlock) || a.nextBlock !== q.startBlock ||
+        (a.validBefore !== undefined && !uint(a.validBefore)) || !word.test(a.nonce) || !address.test(a.payer) || !uint(a.nextBlock) || a.nextBlock !== q.startBlock ||
         !["mpp","x402"].includes(a.protocol)) return { value: { armed: false } };
-    return { patch: { state: "seen", attempt: { payer: a.payer, nonce: a.nonce, version: q.version, nextBlock: a.nextBlock, protocol: a.protocol } },
+    return { patch: { state: "seen", attempt: { payer: a.payer, nonce: a.nonce, version: q.version, nextBlock: a.nextBlock, ...(a.validBefore && { validBefore: a.validBefore }), protocol: a.protocol } },
       value: { armed: true } };
   }
   if (action === "refund-reserve") {
@@ -83,7 +83,7 @@ export function projectRailChange(q, action, body) {
   if (action === "submitted") {
     if (r.transaction && (!word.test(r.transaction) || q.transaction && q.transaction !== r.transaction)) throw conflict();
     return { patch: { ...(r.transaction && { transaction: r.transaction }), 
-      ...(typeof r.reason === "string" && /^[A-Za-z0-9_:-]{1,96}$/.test(r.reason) && { reason: r.reason }) }, value: {} };
+      ...(typeof r.reason === "string" && /^[A-Za-z0-9_:-]{1,96}$/.test(r.reason) && { reason: r.reason, providerReason: r.reason }) }, value: {} };
   }
   if (action !== "observe") throw conflict();
   if (q.state !== "seen") return { value: q };

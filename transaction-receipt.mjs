@@ -222,6 +222,7 @@ export function publicHistoricalClient(network = "base", rpcUrls) {
     calls,
     getChainId: () => inner.getChainId(),
     getLogs: (args) => inner.getLogs(args),
+    readContract: (args) => inner.readContract(args),
     getTransaction: (args) => inner.getTransaction(args),
     async getTransactionReceipt(args) {
       calls.receipt += 1;

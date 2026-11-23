@@ -36,10 +36,24 @@ async function show(response) {
     state.textContent = ({ seen: "Payment seen. Waiting for confirmation.", paid: "Paid. Your receipt is ready.",
       closed: "This invoice is closed.", expired: "This quote expired.", held: "Payment under review. Keep your order reference.",
       refunded: "Refund confirmed.", refund_pending: "Refund awaiting confirmation." })[result.state] || "Checking payment status.";
-    if (result.receipt?.transaction) {
+    if (result.state === "seen" && result.providerReason) {
+      state.textContent = "Provider response: " + result.providerReason + ". Checking the original payment.";
+    }
+    if (result.state === "held") {
+      state.textContent = ({
+        authorization_expired_unused: "Your authorization expired unused. No USDC was collected.",
+        wrong_asset: "The transfer used a different token. Keep this transaction and order reference for support.",
+        amount_changed: "The received amount differs from the quote. Keep this order reference for support.",
+        quote_changed_or_expired: "The transfer arrived against a changed or expired quote. Keep this order reference for support.",
+      })[result.reason] || state.textContent;
+      if (result.providerReason) state.textContent += " Provider response: " + result.providerReason + ".";
+    }
+    if (result.review) state.textContent = "The reported transfer needs review. Checking the original USDC authorization.";
+    const debit = result.receipt?.transaction || result.review?.evidence?.transaction;
+    if (debit) {
       document.querySelector("#history").hidden = false;
-      document.querySelector("#debit").textContent = result.receipt.transaction;
-      const refund = result.receipt.refund?.transaction;
+      document.querySelector("#debit").textContent = debit;
+      const refund = result.receipt?.refund?.transaction;
       document.querySelector("#refund-label").hidden = !refund;
       document.querySelector("#refund").textContent = refund || "";
     }

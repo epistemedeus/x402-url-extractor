@@ -31,11 +31,12 @@ function fixture(id = "2fb2b696-27fb-4839-8bce-0cb4c9e3e69a") {
       if (row.state !== "waiting") return false;
       row.state = "seen"; row.attempt = structuredClone(attempt); return true;
     },
-    async submitted(_, result) { if (result.headers) row.receiptHeaders = result.headers; if (result.reason) row.reason = result.reason; },
+    async submitted(_, result) { if (result.headers) row.receiptHeaders = result.headers; if (result.transaction) row.transaction = result.transaction; if (result.reason) row.providerReason = row.reason = result.reason; },
     async observe(_, result) {
       if (row.state !== "seen") return structuredClone(row);
       row.state = result.state;
-      if (result.state === "paid") { calls.paid++; row.receipt = result.evidence; }
+      if (result.state === "paid") calls.paid++;
+      if (result.evidence) row.receipt = result.evidence;
       if (result.reason) row.reason = result.reason;
       if (result.nextBlock) row.attempt.nextBlock = result.nextBlock;
       return structuredClone(row);
@@ -158,4 +159,70 @@ test("protected refund input requires the original canonical debit independently
   for (const patch of [{transferLogIndex:5},{transaction:"0x"+"6".repeat(64)},{amount:"1"},{payer:other.address}]) {
     await assert.rejects(verifyRefundSource(f.client,{...f.row,receipt:{...f.row.receipt,...patch}},merchant));
   }
+});
+
+
+test("a facilitator refusal remains visible until the signed authorization expires unused", async () => {
+  const f = fixture();
+  f.facilitator.verify = async () => { f.calls.verify++; return { isValid: false, invalidReason: "insufficient_funds" }; };
+  const h = await credential(await f.call(), "x402");
+  const initial = await (await f.call(h)).json();
+  assert.equal(initial.state, "seen");
+  assert.equal(initial.providerReason, "insufficient_funds");
+  assert.match(f.row.attempt.validBefore, /^[1-9][0-9]+$/);
+  f.block.timestamp = BigInt(f.row.attempt.validBefore);
+  f.client.getBlock = async () => f.block;
+  f.client.readContract = async ({ address, functionName, args, blockNumber }) => {
+    assert.equal(address, BASE_USDC);
+    assert.equal(functionName, "authorizationState");
+    assert.deepEqual(args, [payer.address, f.row.attempt.nonce]);
+    assert.equal(blockNumber, f.block.number);
+    return false;
+  };
+  const held = await f.call(h);
+  assert.equal(held.status, 409);
+  assert.deepEqual([f.row.reason, f.row.providerReason], ["authorization_expired_unused", "insufficient_funds"]);
+  assert.equal(f.calls.verify, 1);
+  assert.equal(f.calls.settle, 0);
+  assert.equal(f.calls.paid, 0);
+});
+
+test("a foreign-token provider hash shows its actual movement and never grants the order", async () => {
+  const f = fixture();
+  f.facilitator.settle = async () => {
+    f.calls.settle++;
+    f.mine(f.row.attempt, "123", other.address);
+    return { success: true, transaction: tx, network: "eip155:8453" };
+  };
+  f.client.getLogs = async () => [];
+  const read = f.client.getTransactionReceipt;
+  f.client.getTransactionReceipt = async args => {
+    const r = await read(args);
+    return { ...r, logs: r.logs.map(log => ({ ...log, address: other.address })) };
+  };
+  const pending = await (await f.call(await credential(await f.call(), "mpp"))).json();
+  assert.equal(pending.state, "seen");
+  assert.equal(pending.review.reason, "wrong_asset");
+  f.block.timestamp = BigInt(f.row.attempt.validBefore);
+  f.client.readContract = async () => false;
+  const held = await (await f.call()).json();
+  assert.deepEqual([held.state, held.reason, held.receipt.asset, held.receipt.amount, held.receipt.payer],
+    ["held", "wrong_asset", other.address, "123", payer.address]);
+  await assert.rejects(verifyRefundSource(f.client, f.row, merchant));
+  assert.equal(f.calls.settle, 1);
+  assert.equal(f.calls.paid, 0);
+});
+
+test("an unavailable nonce read or an unexplained consumed nonce cannot become a proven nonpayment", async () => {
+  const f = fixture();
+  f.facilitator.settle = async () => { throw Error("unknown"); };
+  await f.call(await credential(await f.call(), "x402"));
+  f.block.timestamp = BigInt(f.row.attempt.validBefore);
+  f.client.getBlock = async () => f.block;
+  f.client.readContract = async () => { throw Error("unavailable"); };
+  await assert.rejects(f.call(), /unavailable/);
+  assert.equal(f.row.state, "seen");
+  f.client.readContract = async () => true;
+  assert.equal((await (await f.call()).json()).reason, "consumed_without_matched_transfer");
+  assert.equal(f.calls.paid, 0);
 });

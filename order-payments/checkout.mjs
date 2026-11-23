@@ -34,7 +34,8 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
     return json({ error: "order_terms_unavailable" }, 409);
   }
   const view = row => ({ order: quote.id, version: quote.version, amount, network: "eip155:8453",
-    state: row.state, ...(row.reason && { reason: row.reason }), ...(row.receipt && { receipt: row.receipt }) });
+    state: row.state, ...(row.transaction && { providerTransaction: row.transaction }),
+    ...(row.providerReason && { providerReason: row.providerReason }), ...(row.reason && { reason: row.reason }), ...(row.receipt && { receipt: row.receipt }) });
   async function read(row) {
     if (row.state === "refund_pending") {
       const observed = await reconcileRefund(client, row.receipt, row.refund, merchant);
@@ -42,9 +43,9 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
     }
     if (terminal.has(row.state)) return json(view(row), row.state === "held" ? 409 : 200, finalizedHeaders(row));
     if (!row.attempt) return json(view(row), 202);
-    const observed = await reconcileOrder({ client, quote, attempt: row.attempt, merchant });
+    const observed = await reconcileOrder({ client, quote: row, attempt: row.attempt, merchant });
     const current = await owner.observe(row.attempt, observed);
-    return json(view(current), current.state === "paid" ? 200 : current.state === "held" ? 409 : 202, finalizedHeaders(current));
+    return json({ ...view(current), ...(current.state === "seen" && observed.review && { review: observed.review }) }, current.state === "paid" ? 200 : current.state === "held" ? 409 : 202, finalizedHeaders(current));
   }
   if (quote.state !== "waiting") return read(quote);
   if (now() >= quote.expires) return json({ ...view(quote), state: "expired" }, 410);
@@ -62,7 +63,12 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
     async verify(payload, terms) {
       const auth = payload.payload.authorization;
       if (await client.getChainId() !== 8453 || now() >= quote.expires) throw Error("invalid_chain_or_expiry");
-      attempt = { payer: getAddress(auth.from), nonce: auth.nonce, version: quote.version,
+      const validBefore = String(auth.validBefore);
+      const limit = request.headers.has("payment-signature") ? Math.floor(now() / 1000) + 301 : Math.ceil(quote.expires / 1000);
+      if (!/^[1-9][0-9]{0,18}$/.test(validBefore) || BigInt(validBefore) > BigInt(limit)) {
+        return { isValid: false, invalidReason: "invalid_authorization_expiry" };
+      }
+      attempt = { payer: getAddress(auth.from), nonce: auth.nonce, validBefore, version: quote.version,
         nextBlock: anchor, protocol: request.headers.has("payment-signature") ? "x402" : "mpp" };
       armed = await owner.arm(attempt);
       if (!armed) { lostRace = true; return { isValid: false, invalidReason: "order_already_reserved" }; }
