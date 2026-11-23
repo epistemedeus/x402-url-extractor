@@ -6,7 +6,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import express from "express";
-import { encodeAbiParameters, encodeEventTopics, parseAbiItem, recoverTypedDataAddress } from "viem";
+import { erc20Abi, encodeFunctionData, encodeAbiParameters, encodeEventTopics, parseAbiItem, recoverTypedDataAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mountOrderPayments, SITE_ORIGINS } from "./http.mjs";
 import { payOrder } from "./agent.mjs";
@@ -38,17 +38,18 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
   const site = createSdsApp({ care }).listen(0, "127.0.0.1");
   await once(site, "listening"); t.after(() => new Promise(r => site.close(r)));
   let blockNo = 3n, settles = 0;
-  const receipts = [], blocks = new Map();
+  const receipts = [], blocks = new Map(), transactions = new Map();
   const publicClient = {
     getChainId: async () => 8453,
     getBlock: async ({ blockNumber }) => blocks.get(blockNumber) ?? { number: blockNo, timestamp: BigInt(Math.floor(Date.now()/1000)) },
+    getTransaction: async ({hash}) => transactions.get(hash),
     getTransactionReceipt: async ({ hash }) => receipts.find(r => r.transactionHash === hash),
     async getLogs({ args, fromBlock, toBlock }) {
       return receipts.filter(r => r.blockNumber >= fromBlock && r.blockNumber <= toBlock && r.payer === args.authorizer && r.nonce === args.nonce)
         .map(r => r.logs[0]);
     },
   };
-  function mine(auth) {
+  function mine(auth,direct=false) {
     blockNo++;
     const hash = "0x" + blockNo.toString(16).padStart(64,"0");
     const block = { number: blockNo, timestamp: BigInt(Math.floor(Date.now()/1000)), hash };
@@ -56,6 +57,11 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
     const log = (topics,data,logIndex) => ({ address: BASE_USDC, topics, data, logIndex, blockHash: hash, blockNumber: blockNo, transactionHash: hash });
     const logs = [log(encodeEventTopics({ abi: [used], args: { authorizer: auth.from, nonce: auth.nonce } }), "0x", 0),
       log(encodeEventTopics({ abi: [transfer], args: { from: auth.from, to: auth.to } }), encodeAbiParameters([{ type: "uint256" }], [BigInt(auth.value)]), 1)];
+    if(direct) {
+      logs.shift(); logs[0].logIndex=0;
+      transactions.set(hash,{ hash,from:auth.from,to:BASE_USDC,blockHash:hash,value:0n,
+        input:encodeFunctionData({abi:erc20Abi,functionName:"transfer",args:[auth.to,BigInt(auth.value)]}) });
+    }
     receipts.push({ status: "success", from: "0x" + "5".repeat(40), transactionHash: hash, blockHash: hash, blockNumber: blockNo, payer: auth.from, nonce: auth.nonce, logs });
     return hash;
   }
@@ -114,11 +120,20 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
       assert.equal(res.status, 200); assert.equal((await res.json()).receipt.payer, payer.address);
     }
     const r = await prepareRefund({ order: qa.paymentReference, site: "sds", token: admin, client: publicClient, fetchImpl: toSite });
-    assert.equal(r.action, "reserved_for_existing_signer"); assert.equal(r.typedData.message.to, payer.address);
-    assert.equal(r.typedData.message.value, "10000");
+    assert.equal(r.action,"reserved_for_controller"); assert.equal(r.originalPayment.payer,payer.address);
+    assert.equal(r.originalPayment.amountAtomic,"10000");
     const retry = await prepareRefund({ order: qa.paymentReference, site: "sds", token: admin, client: publicClient, fetchImpl: toSite });
     assert.equal(retry.action, "read_status_only");
-    mine(r.typedData.message); // controlled chain fixture represents Root's external refund effect
+    assert.equal((await (await toGateway(new Request(qa.agent))).json()).state,"refund_pending");
+    const q=r.originalPayment;
+    const transactionHash=mine({from:q.merchant,to:q.payer,value:q.amountAtomic},true);
+    const canonical={ schema:"pilot.merchant-refund.canonical.v1",role:"merchant_refund",site:"sds",order:q.order,
+      operationId:q.operationId,originalPayment:q.original,network:q.network,token:q.token,source:q.merchant,recipient:q.payer,
+      amountAtomic:q.amountAtomic,status:"success",exactTransferVerified:true,logIndex:0,transactionHash };
+    await assert.rejects(prepareRefund({order:q.order,site:"sds",token:admin,client:publicClient,fetchImpl:toSite,canonical:{...canonical,recipient:merchant}}));
+    const bind=()=>prepareRefund({order:q.order,site:"sds",token:admin,client:publicClient,fetchImpl:toSite,canonical});
+    assert.equal((await bind()).action,"read_original_order");
+    assert.equal((await bind()).action,"read_original_order");
     const final = await (await toGateway(new Request(qa.agent))).json();
     assert.equal(final.state, "refunded");
     assert.equal(final.receipt.refund.recipient, payer.address);

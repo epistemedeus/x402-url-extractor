@@ -384,7 +384,9 @@ export function assertReviewedClosure(lock) {
     errors.push("agent-payment-integrity must use the combined source and aligned payment packages");
   }
   const fetchRows = one("@x402/fetch");
-  if (!fetchRows.every((row) => row.dev)) errors.push("@x402/fetch must stay a devDependency");
+  if (!fetchRows.some(row => row.path === "node_modules/@x402/fetch" && !row.dev && row.version === PAYMENT_PINS["@x402/fetch"])) {
+    errors.push("the order agent requires the pinned @x402/fetch at runtime");
+  }
   for (const [name, version] of Object.entries({ "follow-redirects": "1.16.2", hono: "4.13.11", "ip-address": "10.7.4" })) {
     if (one(name).some((row) => row.version !== version)) errors.push(`${name} must resolve to ${version}`);
   }

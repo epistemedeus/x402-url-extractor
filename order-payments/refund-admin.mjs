@@ -1,11 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
-import { refundTerms, verifyRefundSource } from "./refund.mjs";
+import { directRefundTerms, verifyRefundSource } from "./refund.mjs";
 import { SITE_ORIGINS } from "./http.mjs";
 import { publicHistoricalClient } from "../transaction-receipt.mjs";
 
 // Root-only reservation and unsigned signing input. No signing or broadcasting implementation here.
-export async function prepareRefund({ order, site, token, client, fetchImpl = fetch, now = Date.now }) {
+export async function prepareRefund({ order, site, token, client, fetchImpl = fetch, now = Date.now, canonical = null }) {
   if (!Object.hasOwn(SITE_ORIGINS, site) || !/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/.test(order) ||
       !token || token.length < 32) throw Error("expected enrolled site, payment reference and private admin credential");
   const call = async (action, body) => {
@@ -17,20 +17,34 @@ export async function prepareRefund({ order, site, token, client, fetchImpl = fe
     return res.json();
   };
   const row = await call("read", {});
-  if (row.refund) return { action: "read_status_only", state: row.refund.state, original: row.refund.original };
+  if (canonical) {
+    const q=row.refund?.request;
+    if (!q || canonical.schema!=="pilot.merchant-refund.canonical.v1" || canonical.role!=="merchant_refund" ||
+        canonical.originalPayment!==q.original || canonical.order!==order || canonical.site!==site ||
+        canonical.operationId!==q.operationId || canonical.exactTransferVerified!==true || canonical.status!=="success" ||
+        canonical.network!==q.network || canonical.token?.toLowerCase()!==q.token.toLowerCase() ||
+        canonical.source?.toLowerCase()!==q.merchant.toLowerCase() || canonical.recipient?.toLowerCase()!==q.payer.toLowerCase() ||
+        canonical.amountAtomic!==q.amountAtomic || !/^0x[0-9a-f]{64}$/i.test(canonical.transactionHash) ||
+        !Number.isSafeInteger(canonical.logIndex) || canonical.logIndex<0) throw Error("controller canonical refund mismatch");
+    await call("bind",{original:q.original,operationId:q.operationId,transaction:canonical.transactionHash,transferLogIndex:canonical.logIndex});
+    return {action:"read_original_order",resource:row.resource};
+  }
+  if (row.refund) return { action: "read_status_only", state: row.refund.state, original: row.refund.original,
+    ...(row.refund.request && { existingIntent:row.refund.request }) };
   if (!["paid", "held"].includes(row.state) || await client.getChainId() !== 8453) throw Error("ineligible refund");
   const from = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
-  const original = await verifyRefundSource(client,row,from,now());
-  const refund = refundTerms(original, from, String((await client.getBlock({ blockTag: "latest" })).number), now());
+  await verifyRefundSource(client,row,from,now());
+  const refund = directRefundTerms(row,site,from);
   const result = await call("reserve", { refund });
   if (!result.won) return { action: "read_status_only", original: refund.original };
-  return { action: "reserved_for_existing_signer", original: refund.original, typedData: refund.typedData };
+  return { action: "reserved_for_controller", original:refund.original, originalPayment:refund.request };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const [site, order] = process.argv.slice(2);
+  const [site, order, mode, file] = process.argv.slice(2);
+  if (mode && (mode!=="--receive" || !file)) throw Error("expected --receive PRIVATE_CANONICAL_FILE");
   if (!process.env.REFUND_ADMIN_TOKEN_FILE) throw Error("set REFUND_ADMIN_TOKEN_FILE to the protected file");
   const token = (await readFile(process.env.REFUND_ADMIN_TOKEN_FILE, "utf8")).trim();
-  const result = await prepareRefund({ site, order, token, client: publicHistoricalClient("base") });
+  const result = await prepareRefund({ site, order, token, canonical:file ? JSON.parse(await readFile(file,"utf8")) : null, client: publicHistoricalClient("base") });
   console.log(JSON.stringify(result));
 }

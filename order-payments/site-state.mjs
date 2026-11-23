@@ -13,21 +13,24 @@ const same = (s, t) => typeof s === "string" && typeof t === "string" && s.toLow
 
 // Both Care and account orders validate the exact message a protected signer will see.
 export function checkRefund(q, f) {
-  const original = q.receipt, msg = f?.typedData?.message, data = f?.typedData, domain = data?.domain;
-  const fields = [["from","address"],["to","address"],["value","uint256"],["validAfter","uint256"],["validBefore","uint256"],["nonce","bytes32"]];
-  if (data?.primaryType !== "TransferWithAuthorization" || Object.keys(data.types ?? {}).length !== 1 ||
-      JSON.stringify(data.types.TransferWithAuthorization?.map(x => [x.name,x.type])) !== JSON.stringify(fields) ||
-      domain?.name !== "USD Coin" || domain.version !== "2" || domain.chainId !== 8453 || !same(domain.verifyingContract,asset) ||
-      Object.keys(domain).length !== 4 || Object.keys(msg ?? {}).length !== 6 || msg.validAfter !== "0" ||
-      !Number.isSafeInteger(f.expires) || msg.validBefore !== String(f.expires / 1000) ||
-      !uint(original?.amount) || BigInt(original.amount) <= 0n || same(original.payer,recipient)) throw conflict();
-  if (!["paid","held"].includes(q.state) || !word.test(original?.transaction) || !word.test(original.blockHash) ||
-        !Number.isSafeInteger(original.transferLogIndex) || original.transferLogIndex < 0 || !same(original.recipient,recipient) || !same(original.asset,asset) ||
-        f?.original !== `8453:${original.transaction.toLowerCase()}:${original.transferLogIndex}` ||
-        f.state !== "refund_pending" || !uint(f.nextBlock) || !Number.isSafeInteger(f.created) ||
-        f.created > Date.now() + 10000 || f.expires !== f.created + 300000 || f.expires <= Date.now() ||
-        !same(msg?.from,recipient) || !same(msg?.to,original.payer) || msg.value !== original.amount ||
-        msg.nonce !== "0x" + createHash("sha256").update("order-refund/v1/" + f.original).digest("hex")) throw conflict();
+  const original = q.receipt;
+  if (f?.request) {
+    const r=f.request;
+    const originalKey=`8453:${String(original?.transaction).toLowerCase()}:${original?.transferLogIndex}`;
+    const op="merchant-refund-"+createHash("sha256").update(originalKey).digest("hex");
+    if (!["paid","held"].includes(q.state) || r.schema!=="pilot.merchant-refund.order.v1" || f.state!=="refund_pending" ||
+        f.original!==originalKey || r.original!==originalKey || r.operationId!==op || r.order!==q.id || r.resource!==q.resource ||
+        !["sds","ein","neo"].includes(r.site) || q.resource!=="https://agents.samedaydesk.com/order-payments/"+r.site+"/"+q.id ||
+        r.network!=="eip155:8453" || !same(r.merchant,recipient) || !same(r.token,asset) || !same(original?.recipient,recipient) ||
+        !same(original.asset,asset) || !same(r.payer,original.payer) || same(r.payer,recipient) || !address.test(r.payer) ||
+        !uint(r.amountAtomic) || BigInt(r.amountAtomic)<=0n || r.amountAtomic!==original.amount ||
+        !word.test(r.transaction) || !word.test(r.blockHash) || !word.test(r.nonce) || !uint(r.block) ||
+        !Number.isSafeInteger(r.logIndex) || r.logIndex<0 || !Number.isSafeInteger(r.transferLogIndex) || r.transferLogIndex<=r.logIndex ||
+        ["transaction","block","blockHash","nonce","logIndex","transferLogIndex"].some(k=>r[k]!==original[k]) ||
+        f.transaction || f.typedData || !same(q.attempt?.payer,r.payer) || q.attempt?.nonce!==r.nonce) throw conflict();
+    return;
+  }
+  throw conflict();
 }
 
 export function projectRailChange(q, action, body) {
@@ -50,12 +53,24 @@ export function projectRailChange(q, action, body) {
     checkRefund(q, f);
     return { patch: { refund: f, state: "refund_pending" }, value: { won: true } };
   }
+  if (action === "refund-bind") {
+    const f=q.refund;
+    if (!f?.request || f.original!==body.original || f.request.operationId!==body.operationId ||
+        !word.test(body.transaction) || !Number.isSafeInteger(body.transferLogIndex) || body.transferLogIndex<0) throw conflict();
+    if (f.transaction) {
+      if (!same(f.transaction,body.transaction) || f.transferLogIndex!==body.transferLogIndex) throw conflict();
+      return {value:{bound:true}};
+    }
+    if (q.state!=="refund_pending") throw conflict();
+    return {patch:{refund:{...f,transaction:body.transaction,transferLogIndex:body.transferLogIndex}},value:{bound:true}};
+  }
   if (action === "refund-observe") {
     if (!q.refund || q.refund.original !== body.original) throw conflict();
     if (q.state !== "refund_pending") return { value: q };
     const e = r.evidence;
     if (r.state === "paid") {
-      if (!word.test(e?.transaction) || !word.test(e.blockHash) || e.nonce !== q.refund.typedData.message.nonce ||
+      if (!word.test(e?.transaction) || !word.test(e.blockHash) || (q.refund.request ? e.operationId!==q.refund.request.operationId || !same(e.transaction,q.refund.transaction) ||
+          e.transferLogIndex!==q.refund.transferLogIndex : e.nonce !== q.refund.typedData.message.nonce) ||
           !same(e.payer,recipient) || !same(e.recipient,original.payer) || !same(e.asset,asset) || e.amount !== original.amount) throw conflict();
       return { patch: { state: "refunded", refund: { ...q.refund, state: "refunded", evidence: e }, receipt: { ...original, refund: e } } };
     }
