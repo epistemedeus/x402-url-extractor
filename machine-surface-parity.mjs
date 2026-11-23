@@ -72,7 +72,13 @@ export function formatLlmsPrice(priceAtomicUsdc) {
 
 export function parseLlmsPaidRoutes(text) {
   const routes = [];
+  let endpoints = true; // Also accept a standalone endpoint-list fragment.
   for (const line of String(text || "").split(/\r?\n/)) {
+    if (/^##\s/.test(line)) {
+      endpoints = line.trim() === "## Endpoints";
+      continue;
+    }
+    if (!endpoints) continue;
     const match = /^\s*-\s*\[([^\]]+)\]\((https:[^)]+)\)/.exec(line);
     if (!match) continue;
     const url = new URL(match[2]);

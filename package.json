@@ -40,7 +40,8 @@
     "test:oct29-merchant-compatibility": "node --test --test-concurrency=1 experiments/oct29-merchant-compatibility/axios-transport.test.mjs experiments/oct29-merchant-compatibility/schema-catalog.test.mjs experiments/oct29-merchant-compatibility/merchant-compatibility.test.mjs",
     "test:task-linked-delivery": "node --test --test-concurrency=1 commerce-outcome-binding.test.mjs commerce-outcome-binding.concurrency.test.mjs task-linked-delivery/receiving.test.mjs task-linked-delivery/experiments/delivery-outcome-100173/test/join.test.mjs commerce-outcome-binding.root.test.mjs",
     "test:useful-economics": "node --test --test-concurrency=1 task-linked-delivery/experiments/useful-economics-100290/test/join.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/merchant-execution.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/cold-export.test.mjs",
-    "test:public-acquisition": "node --test machine-acquisition.test.mjs public-acquisition/engine.test.mjs public-acquisition/receiving-lifecycle.test.mjs public-acquisition/receiving-file-bounds.test.mjs"
+    "test:public-acquisition": "node --test machine-acquisition.test.mjs public-acquisition/engine.test.mjs public-acquisition/receiving-lifecycle.test.mjs public-acquisition/receiving-file-bounds.test.mjs",
+    "build": "node order-payments/build-wallet.mjs"
   },
   "engines": {
     "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
@@ -55,6 +56,7 @@
     "@x402/evm": "2.29.0",
     "@x402/express": "2.29.0",
     "@x402/extensions": "2.29.0",
+    "@x402/fetch": "2.29.0",
     "@x402/mcp": "2.29.0",
     "agent-payment-integrity": "https://github.com/epistemedeus/agent-payment-integrity/archive/91e920a22205c93773c70724b56bca7b6611542f.tar.gz",
     "agent-payment-policy": "0.12.0",
@@ -85,13 +87,16 @@
       "zod": "4.6.7"
     },
     "follow-redirects": "1.16.2",
-    "hono": "4.13.11",
-    "ip-address": "10.7.4"
+    "hono": "4.13.16",
+    "ip-address": "10.7.4",
+    "@hono/node-server": "2.1.6"
   },
   "devDependencies": {
     "@agentcash/discovery": "1.7.5",
     "@modelcontextprotocol/client": "2.4.0",
-    "@x402/fetch": "2.29.0",
-    "axios": "1.20.0"
+    "axios": "1.20.0",
+    "esbuild": "0.25.12",
+    "jsqr": "1.4.0",
+    "qrcode": "1.5.3"
   }
 }

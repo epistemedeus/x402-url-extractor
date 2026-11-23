@@ -3,6 +3,7 @@ import {
   createEIP712OfferReceiptIssuer,
   createOfferReceiptExtension,
   declareOfferReceiptExtension,
+  signReceiptEIP712,
 } from "@x402/extensions/offer-receipt";
 
 const PRIVATE_KEY_PATTERN = /^0x[0-9a-fA-F]{64}$/;
@@ -34,6 +35,12 @@ export function createCommerceTrust({ privateKey, network, includeTxHash = true 
     signerAddress: account.address,
     keyId,
     issuer,
+    // The same finalized order always has the same merchant receipt, including
+    // a later read after a lost response. The issuer stays inside this owner.
+    async finalizedOrderReceipt(resourceUrl, payer, transaction, issuedAt) {
+      const payload = { version: 1, resourceUrl, payer, network, transaction, issuedAt };
+      return { format: "eip712", payload, signature: await signReceiptEIP712(payload, typed => account.signTypedData(typed)) };
+    },
     resourceServerExtension: createOfferReceiptExtension(issuer),
     routeExtensions: declareOfferReceiptExtension({ includeTxHash }),
   };
