@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { createCommerceTrust } from "../commerce-trust.mjs";
 import { once } from "node:events";
 import { createRequire } from "node:module";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import express from "express";
@@ -28,6 +28,7 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
   const load = p => import(pathToFileURL(resolve(siteRoot, p)));
   const { createSdsApp } = await load("server/app.js");
   const { openCareStore } = await load("server/lib/care-store.js");
+  const { drainCareMail } = await load("server/lib/care-mail.js");
   const { createCareService } = await load("server/lib/care-service.js");
   const { createOwnedOrder,receiveOwnedOrder } = await load("server/scripts/care-usdc-qa.mjs");
   const { careTable } = await load("server/lib/care-database.js");
@@ -71,6 +72,39 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
       const res = await payOrder({ resource: qa.agent, amount: "10000", account: payer, fetchImpl: toGateway });
       assert.equal(res.status, 200); assert.equal((await res.json()).receipt.payer, payer.address);
     }
+    const messages = [];
+    const mailProviderId = randomUUID();
+    const sent = await drainCareMail({store, secret: token, from: "contact@samedaydesk.com", replyTo: "contact@samedaydesk.com",
+      send: async (message, options) => {
+        assert.equal(options.idempotencyKey, "sameday-care/receipt/" + id);
+        messages.push(message);
+        return {data: {id: mailProviderId}};
+      }});
+    assert.deepEqual(sent, {accepted: 1, deferred: 0});
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].to, "owner@example.test");
+    assert.match(messages[0].text, /Paid: 0\.01 USD/);
+    const intakeLink = new URL(messages[0].text.match(/https:\/\/\S+/)[0]);
+    assert.equal(intakeLink.origin + intakeLink.pathname, SITE_ORIGINS.sds + "/care/intake");
+    const intakeParams = Object.fromEntries(new URLSearchParams(intakeLink.hash.slice(1)));
+    assert.equal(intakeParams.order, id);
+    const receiptView = await fetch(origin(site) + "/api/care/receipt", {
+      method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(intakeParams)});
+    assert.equal(receiptView.status, 200);
+    const buyerView = await receiptView.json();
+    assert.equal(buyerView.state, "paid");
+    assert.equal(buyerView.amountCents, 1);
+    const beforeDelivery = await receiveOwnedOrder(pool, process.env.SDS_CARE_SCHEMA, id);
+    assert.equal(beforeDelivery.receiptAccepted, true);
+    assert.equal(beforeDelivery.receiptDeliveryObserved, false);
+    const eventID = "msg_" + randomUUID(), timestamp = String(Math.floor(Date.now() / 1000));
+    const webhookKey = randomBytes(32);
+    process.env.RESEND_WEBHOOK_SECRET = "whsec_" + webhookKey.toString("base64");
+    const payload = JSON.stringify({type:"email.delivered",data:{email_id:mailProviderId}});
+    const signature = createHmac("sha256",webhookKey).update(eventID+"."+timestamp+"."+payload).digest("base64");
+    const delivery = await fetch(origin(site)+"/api/webhooks/resend",{method:"POST",body:payload,
+      headers:{"content-type":"application/json","svix-id":eventID,"svix-timestamp":timestamp,"svix-signature":"v1,"+signature}});
+    assert.equal(delivery.status, 200);
     const r = await prepareRefund({ order: qa.paymentReference, site: "sds", token: admin, client: publicClient, fetchImpl: toSite });
     assert.equal(r.action,"reserved_for_controller"); assert.equal(r.originalPayment.payer,payer.address);
     assert.equal(r.originalPayment.amountAtomic,"10000");
@@ -92,13 +126,14 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
     assert.notEqual(final.receipt.transaction, final.receipt.refund.transaction);
     assert.equal((await store.order(id)).refunded_cents, 1);
     const events = await pool.query(`select event,test from ${careTable("journey_events")} where order_id=$1`, [id]);
-    assert.deepEqual(events.rows.map(r => r.event).sort(), ["checkout_started","payment_refunded","payment_verified"]);
+    assert.deepEqual(events.rows.map(r => r.event).sort(), ["checkout_started","payment_refunded","payment_verified","receipt_sent"]);
     assert.ok(events.rows.every(r => r.test));
     if (receiveOwnedOrder) {
       const siteReceipt=await receiveOwnedOrder(pool,process.env.SDS_CARE_SCHEMA,id);
       assert.equal(siteReceipt.siteRoundTripRecorded,true);assert.equal(siteReceipt.customerRevenue,false);
       assert.equal(siteReceipt.original,final.receipt.transaction);assert.equal(siteReceipt.refund,transactionHash);
-      assert.equal(siteReceipt.receiptRows,1);assert.equal(siteReceipt.receiptAccepted,false);
+      assert.equal(siteReceipt.receiptRows,1);assert.equal(siteReceipt.receiptAccepted,true);
+      assert.equal(siteReceipt.receiptDeliveryObserved,true);assert.equal(siteReceipt.receiptDeliveryIssue,false);
     }
   }
   assert.equal(settles, 2);
