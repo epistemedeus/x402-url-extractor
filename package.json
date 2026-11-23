@@ -87,13 +87,16 @@
       "zod": "4.6.7"
     },
     "follow-redirects": "1.16.2",
-    "hono": "4.13.11",
-    "ip-address": "10.7.4"
+    "hono": "4.13.16",
+    "ip-address": "10.7.4",
+    "@hono/node-server": "2.1.6"
   },
   "devDependencies": {
     "@agentcash/discovery": "1.7.5",
     "@modelcontextprotocol/client": "2.4.0",
     "axios": "1.20.0",
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "jsqr": "1.4.0",
+    "qrcode": "1.5.3"
   }
 }

@@ -1,3 +1,4 @@
+import QRCode from "qrcode";
 import { Mppx, evm } from "mppx/client";
 import { createWalletClient, custom, formatUnits, getAddress } from "viem";
 import { base } from "viem/chains";
@@ -9,6 +10,8 @@ const merchant = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
 const button = document.querySelector("#pay");
 const state = document.querySelector("#state");
 const refresh = document.querySelector("#refresh");
+const mobile = document.querySelector("#mobile");
+let codeReady=false;
 document.querySelector("#order").textContent = reference;
 let busy = false, submitted = false, timer;
 const read = () => fetch(endpoint, { cache: "no-store", credentials: "omit", redirect: "error" });
@@ -26,9 +29,17 @@ async function show(response) {
   const result = await response.clone().json();
   clearTimeout(timer);
   button.hidden = true;
+  mobile.hidden=true;
   if (result.order !== reference) throw Error("The order could not be read.");
   if (response.status === 402) {
     const term = terms(response, result);
+    if (!codeReady) {
+      try {
+        await QRCode.toCanvas(document.querySelector("#code"),endpoint.href+"/wallet",{width:232,margin:4,errorCorrectionLevel:"M"});
+        codeReady=true;
+      } catch { /* Wallet connection remains available. */ }
+    }
+    mobile.hidden=!codeReady || submitted;
     document.querySelector("#amount").textContent = formatUnits(BigInt(term.amount), 6) + " USDC";
     button.hidden = submitted;
     state.textContent = submitted ? "Checking your signed payment. Refresh its status." : "Waiting for payment.";

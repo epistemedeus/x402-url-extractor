@@ -1,3 +1,4 @@
+import jsQR from "jsqr";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -90,6 +91,13 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
       });
       await page.goto(qa.wallet);
       await page.waitForSelector("#pay:not([hidden])", { timeout: 10000 });
+      await page.waitForSelector("#mobile:not([hidden])");
+      const code=await page.$eval("#code",canvas=>{
+        const {data,width,height}=canvas.getContext("2d").getImageData(0,0,canvas.width,canvas.height);
+        return {pixels:Array.from(data),width,height};
+      });
+      assert.equal(jsQR(Uint8ClampedArray.from(code.pixels),code.width,code.height)?.data,qa.wallet);
+      assert.equal(signs,0);
       await page.click("#pay");
       await page.waitForFunction(() => document.querySelector("#state").textContent.startsWith("Paid."), { timeout: 10000 });
       assert.equal(signs, 1); await page.close();
