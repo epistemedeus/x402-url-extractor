@@ -36,7 +36,8 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
   const token = randomBytes(36).toString("hex"), admin = randomBytes(36).toString("hex");
   process.env.ORDER_PAYMENTS_SDS_TOKEN = token;
   process.env.ORDER_PAYMENTS_SDS_REFUND_ADMIN = admin;
-  const care = createCareService({ store, stripe: {}, live: false, secret: token, origin: SITE_ORIGINS.sds, orderPayments: true });
+  const stripe = {};
+  const care = createCareService({ store, stripe, live: false, secret: token, origin: SITE_ORIGINS.sds, orderPayments: true });
   const site = createSdsApp({ care }).listen(0, "127.0.0.1");
   await once(site, "listening"); t.after(() => new Promise(r => site.close(r)));
   let settles = 0;
@@ -158,5 +159,38 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
       }
     }
     assert.equal(settles,4);
+  }
+  if (process.env.HOSTED_ORDER_PREVIEW === "1") {
+    const {hostedLinks}=await load("server/lib/hosted-offer-catalog.js");
+    const {legacyOffer}=await load("server/lib/legacy-order.js");
+    const ids=Object.keys(hostedLinks).filter(id=>legacyOffer(id));
+    process.env.SDS_ORDER_USDC="1";
+    process.env.SDS_LEGACY_USDC_OFFERS=ids.join(",");
+    process.env.SDS_TEST_LEGACY_LINKS=JSON.stringify(Object.fromEntries(ids.map(id=>[id,"test_"+id])));
+    stripe.paymentLinks={
+      list:async()=>({has_more:false,data:ids.map(id=>({id:"plink_"+id,url:"https://buy.stripe.com/test_"+id,
+        livemode:false,active:true,after_completion:{type:"hosted_confirmation"},custom_fields:[]}))}),
+      listLineItems:async link=>{const id=link.slice(6);return {has_more:false,data:[{quantity:1,price:{id:"price_"+id,
+        currency:"usd",active:true,unit_amount:legacyOffer(id).cents,product:{active:true,id:"prod_"+id,name:legacyOffer(id).title}}}]};}
+    };
+    const before=settles;
+    for(const id of ids) {
+      const path=origin(site)+"/api/checkout/hosted/"+id;
+      const offer=await (await fetch(path,{headers:{accept:"application/json"}})).json();
+      assert.deepEqual(offer.methods,["card","base_usdc"]);
+      const body={order:randomUUID(),method:"base_usdc",email:"owner@example.test",target:"https://example.com/project",city:"Palo Alto"};
+      const open=async method=>fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...body,method})});
+      const [first,replay]=await Promise.all([open("base_usdc"),open("base_usdc")]);
+      assert.equal(first.status,201);assert.equal(replay.status,201);
+      const opened=await first.json();assert.deepEqual(await replay.json(),opened);
+      assert.equal((await open("card")).status,409);
+      const paid=await payOrder({resource:opened.paymentUrl,amount:String(BigInt(offer.cents)*10000n),account:payer,fetchImpl:toGateway});
+      assert.equal(paid.status,200);const payment=await paid.json();assert.equal(payment.state,"paid");
+      assert.equal(payment.receipt.payer,payer.address);
+      assert.equal((await (await toGateway(new Request(opened.paymentUrl))).json()).receipt.transaction,payment.receipt.transaction);
+      const mail=await pool.query(`select mail_key from ${careTable("care_mail")} where hosted_order_id=$1`,[opened.order]);
+      assert.equal(mail.rowCount,1);
+    }
+    assert.equal(settles-before,7);
   }
 });
