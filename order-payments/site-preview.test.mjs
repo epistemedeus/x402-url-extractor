@@ -135,6 +135,7 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
         return r;
       }};
       const preflight=await runOwnerOrder({...common,mode:"--preflight"});assert.equal(walletReads,0);
+      assert.equal(preflight.schemaSha256,"79261db44a0547453fdec90fbc191051c6fe5c4528705f7f397c049a7456c7a6");
       await assert.rejects(runOwnerOrder({...common,mode:"--preflight",env:{...env,OWNER_CANARY_EXPECTED_RECEIPT_SIGNER:payer.address}}));
       await assert.rejects(runOwnerOrder({...common,mode:"--execute",env:{...env,OWNER_CANARY_EXPECTED_SCHEMA_SHA256:"0".repeat(64)}}));
       assert.equal(walletReads,0);env.OWNER_CANARY_EXPECTED_SCHEMA_SHA256=preflight.schemaSha256;
