@@ -1,4 +1,4 @@
-import jsQR from "jsqr";
+import { payWithPreviewWallet, previewWalletBrowser } from "./preview-wallet.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -10,7 +10,6 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import express from "express";
-import { recoverTypedDataAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mountOrderPayments, SITE_ORIGINS } from "./http.mjs";
 import { payOrder } from "./agent.mjs";
@@ -62,45 +61,12 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
     Object.defineProperty(response, "url", { value: req.url });
     return response;
   };
-  const { default: puppeteer } = await import(pathToFileURL(createRequire(resolve(process.env.PREVIEW_RELEASE_KIT, "package.json")).resolve("puppeteer-core")));
-  const browser = await puppeteer.launch({ executablePath: process.env.RELEASE_CHROME || "/usr/bin/google-chrome",
-    headless: true, args: ["--no-sandbox","--disable-dev-shm-usage","--disable-background-networking"] });
-  t.after(() => browser.close());
+  const browser = await previewWalletBrowser(t);
   for (const mode of ["wallet", "agent"]) {
     const id = randomUUID();
     const qa = await createOwnedOrder(pool, process.env.SDS_CARE_SCHEMA, { id, cents: 1, email: "owner@example.test", live: false, origin: SITE_ORIGINS.sds });
     if (mode === "wallet") {
-      const page = await browser.newPage();
-      let signs = 0;
-      await page.exposeFunction("fixtureRpc", async ({ method, params }) => {
-        if (["eth_requestAccounts","eth_accounts"].includes(method)) return [payer.address];
-        if (method === "eth_chainId") return "0x2105";
-        if (method === "eth_signTypedData_v4") {
-          signs++; const typed = JSON.parse(params[1]); assert.equal(typed.message.value, "10000"); assert.equal(typed.message.to.toLowerCase(), merchant.toLowerCase());
-          const signature = await payer.signTypedData(typed);
-          assert.equal(await recoverTypedDataAddress({ ...typed, signature }), payer.address); return signature;
-        }
-        throw Error("unexpected fixture wallet method " + method);
-      });
-      await page.evaluateOnNewDocument(() => { window.ethereum = { request: arg => window.fixtureRpc(arg) }; });
-      await page.setRequestInterception(true);
-      page.on("request", async request => {
-        if (new URL(request.url()).origin !== "https://agents.samedaydesk.com") return request.abort();
-        const response = await toGateway(new Request(request.url(), { headers: request.headers() }));
-        await request.respond({ status: response.status, headers: Object.fromEntries(response.headers), body: Buffer.from(await response.arrayBuffer()) });
-      });
-      await page.goto(qa.wallet);
-      await page.waitForSelector("#pay:not([hidden])", { timeout: 10000 });
-      await page.waitForSelector("#mobile:not([hidden])");
-      const code=await page.$eval("#code",canvas=>{
-        const {data,width,height}=canvas.getContext("2d").getImageData(0,0,canvas.width,canvas.height);
-        return {pixels:Array.from(data),width,height};
-      });
-      assert.equal(jsQR(Uint8ClampedArray.from(code.pixels),code.width,code.height)?.data,qa.wallet);
-      assert.equal(signs,0);
-      await page.click("#pay");
-      await page.waitForFunction(() => document.querySelector("#state").textContent.startsWith("Paid."), { timeout: 10000 });
-      assert.equal(signs, 1); await page.close();
+      await payWithPreviewWallet(browser,qa,payer,merchant,toGateway);
     } else {
       const res = await payOrder({ resource: qa.agent, amount: "10000", account: payer, fetchImpl: toGateway });
       assert.equal(res.status, 200); assert.equal((await res.json()).receipt.payer, payer.address);

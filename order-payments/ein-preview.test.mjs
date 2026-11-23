@@ -7,6 +7,7 @@ import { generateKeyPairSync, randomBytes, randomUUID } from "node:crypto";
 import { createServer } from "node:net";
 import { resolve, join } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
+import { payWithPreviewWallet, previewWalletBrowser } from "./preview-wallet.mjs";
 import express from "express";
 import { privateKeyToAccount } from "viem/accounts";
 import { payOrder } from "./agent.mjs";
@@ -130,11 +131,16 @@ test("emitted EIN filing, pre-claim agent payment and original verified human fu
   await reverse(humanPaid);
   assert.equal(settles,4);
   const qaId=randomUUID();
-  async function cli(mode) {
-    const child=spawn(process.execPath,[join(root,"artifacts/api-server/dist/owner-usdc-qa.mjs"),mode,qaId],{cwd:root,env,
+  async function cli(mode,key=qaId) {
+    const child=spawn(process.execPath,[join(root,"artifacts/api-server/dist/owner-usdc-qa.mjs"),mode,key],{cwd:root,env,
       stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",c=>output+=c);child.stderr.resume();
     const [code]=await once(child,"exit");assert.equal(code,0);return JSON.parse(output.trim().split("\n").at(-1));
   }
+  const walletId=randomUUID(), walletQa=await cli("--create",walletId);
+  const browser=await previewWalletBrowser(t);
+  await payWithPreviewWallet(browser,walletQa,payer,merchant,send);
+  const wp=await(await send(new Request(walletQa.agent))).json();
+  assert.equal(wp.classification,"owner_qa");await reverse(wp);assert.equal((await cli("--receive",walletId)).siteRoundTripRecorded,true);
   const qa=await cli("--create");assert.deepEqual(await cli("--create"),qa);const marked=await pay(qa.agent,qa.cents);
   assert.equal(marked.classification,"owner_qa");await reverse(marked);
   const received=await cli("--receive");assert.equal(received.siteRoundTripRecorded,true);assert.equal(received.customerRevenue,false);

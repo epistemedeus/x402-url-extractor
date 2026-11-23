@@ -15,4 +15,4 @@ export HOUSE_TEST_PG_SOCKET="$dir" HOUSE_TEST_PG_PORT=55414
 cd "$NEO_REPORT_PREVIEW_SOURCE/services/house"
 node --test test/postgres/report-order-rail.test.mjs test/postgres/report-payments.test.mjs test/postgres/desk-payments.test.mjs
 cd "$gateway"
-node --test order-payments/report-preview.test.mjs
+node --test order-payments/report-preview.test.mjs order-payments/neo-preview.test.mjs
