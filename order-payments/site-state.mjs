@@ -48,10 +48,12 @@ function projectReview(q, action, body) {
   if (action === "review-register") {
     if (entry) return { value: {matched: true} };
     const a = body.attempt;
-    if (!primary || !a || !requestKey(a.requestKey) || a.requestKey !== key || primary.requestKey === key ||
+    const expiredUnsubmitted = !primary && q.state === "waiting" && body.expired === true &&
+      q.expires <= Date.now() && uint(q.startBlock);
+    if ((!primary && !expiredUnsubmitted) || !a || !requestKey(a.requestKey) || a.requestKey !== key || primary?.requestKey === key ||
         !word.test(a.nonce) || !address.test(a.payer) || a.version !== q.version || !uint(a.validBefore) ||
         a.nextBlock !== q.startBlock || !["x402","mpp"].includes(a.protocol) ||
-        [primary,...Object.values(reviews).map(r=>r.attempt)].some(b => same(b.payer,a.payer) && same(b.nonce,a.nonce))) {
+        [...(primary ? [primary] : []),...Object.values(reviews).map(r=>r.attempt)].some(b => same(b.payer,a.payer) && same(b.nonce,a.nonce))) {
       return { value: {matched: false} };
     }
     return { patch: { reviews: {...reviews, [key]: {state:"seen", attempt:a, cents:q.cents, created:q.created, expires:q.expires}} }, value: {matched: true} };
@@ -66,7 +68,7 @@ function projectReview(q, action, body) {
   const patch = {...plan.patch};
   if (op === "observe" && patch.state === "paid") {
     patch.state = "held";
-    patch.reason = "additional_order_payment";
+    patch.reason = primary ? "additional_order_payment" : "returned_after_expiry";
   }
   const updated = {...entry,...patch};
   return { patch: {reviews: {...reviews,[key]:updated}}, value: plan.value ?? {...section,...patch} };

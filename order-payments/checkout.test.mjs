@@ -226,3 +226,36 @@ test("an unavailable nonce read or an unexplained consumed nonce cannot become a
   assert.equal((await (await f.call()).json()).reason, "consumed_without_matched_transfer");
   assert.equal(f.calls.paid, 0);
 });
+
+for (const protocol of ["x402","mpp"]) {
+  test(protocol+" receives a returned expired signature and an external debit without spending",async t=>{
+    const {projectRailChange}=await import("./site-state.mjs");
+    const {historicalAuthorization}=await import("./order-authorization.mjs");
+    const {paymentRequestKey}=await import("./request-key.mjs");
+    const f=fixture(),challenge=await f.call();
+    const headers=await credential(challenge,protocol);
+    const wire=Object.values(headers)[0],amount=amountForCents(f.row.cents);
+    const key=await paymentRequestKey(f.row.resource,{...f.row,order:f.row.id,amount},protocol,wire);
+    const signed=new Request(f.row.resource,{headers});
+    const original=await historicalAuthorization(signed,f.row,amount,merchant,"isolated valueless challenge fixture material",key);
+    assert.equal(original.payer,payer.address);
+    f.mine(original);
+    f.owner.review=async(action,review,input={})=>{
+      const plan=projectRailChange(f.row,"review-"+action,{...input,review});
+      Object.assign(f.row,plan.patch);
+      return plan.value;
+    };
+    t.mock.timers.enable({apis:["Date"],now:f.row.expires+1000});
+    const expired=await f.call();assert.equal(expired.status,410);
+    const foreign=fixture("6fa925a5-f1e3-4ae5-8470-e827a71c3173");
+    const otherWire=await credential(await foreign.call(),protocol);
+    assert.equal((await f.call(otherWire)).status,410);
+    assert.equal(f.row.reviews,undefined);
+    const recovered=await f.call(headers);
+    assert.equal(recovered.status,409);
+    const body=await recovered.json();
+    assert.equal(body.state,"held");assert.equal(body.reason,"returned_after_expiry");assert.ok(body.statusUrl.endsWith(key));assert.equal(body.receipt.payer,payer.address);
+    assert.deepEqual(await(await f.call(headers)).json(),body);
+    assert.equal(f.row.state,"waiting");assert.equal(f.calls.verify,0);assert.equal(f.calls.settle,0);assert.equal(f.calls.paid,0);
+  });
+}

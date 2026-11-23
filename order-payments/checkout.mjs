@@ -2,8 +2,8 @@ import { reconcileRefund } from "./refund.mjs";
 import { paymentRequestKey } from "./request-key.mjs";
 import { Receipt } from "mppx";
 import { decodePaymentRequiredHeader, encodePaymentRequiredHeader, encodePaymentResponseHeader } from "@x402/core/http";
-import { evm, Mppx } from "mppx/server";
-import { formatUnits, getAddress } from "viem";
+import { historicalAuthorization, orderCharge } from "./order-authorization.mjs";
+import { getAddress } from "viem";
 import { amountForCents, reconcileOrder } from "./reconcile.mjs";
 
 const json = (value, status, headers) => Response.json(value, {
@@ -58,10 +58,10 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
   const protocol = request.headers.has("payment-signature") ? "x402" : "mpp";
   const wire = request.headers.get("payment-signature") || request.headers.get("authorization");
   const key = wire ? await paymentRequestKey(quote.resource, { ...quote, order:quote.id, amount }, protocol, wire) : null;
-  const dispute = async (row, contender) => {
+  const dispute = async (row, contender, expired = false) => {
     const statusUrl = row.resource + "/requests/" + key;
     if (contender && owner.review) {
-      const saved = await owner.review("register", key, { attempt: contender });
+      const saved = await owner.review("register", key, { attempt: contender, ...(expired && {expired:true}) });
       if (saved?.matched) return reviewOrder({ owner, client, merchant, key, statusUrl });
     }
     return json({ error: "different_payment_request", order: row.id, state: "conflict" }, 409);
@@ -69,9 +69,16 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
   if (quote.state !== "waiting") {
     if (!key || key === quote.attempt?.requestKey) return read(quote);
     if (quote.reviews?.[key]) return reviewOrder({ owner, client, merchant, key, statusUrl: quote.resource + "/requests/" + key });
-    if (!quote.attempt || now() >= quote.expires) return dispute(quote);
+    if (!quote.attempt && now() < quote.expires) return dispute(quote);
   }
-  if (now() >= quote.expires) return json({ ...view(quote), state: "expired" }, 410);
+  if (now() >= quote.expires) {
+    if (key && quote.reviews?.[key]) return reviewOrder({owner,client,merchant,key,statusUrl:quote.resource+"/requests/"+key});
+    if (key && quote.startBlock && owner.review) {
+      const contender=await historicalAuthorization(request,quote,amount,merchant,secretKey,key).catch(()=>null);
+      if (contender) return dispute(quote,contender,true);
+    }
+    return quote.state==="waiting" ? json({...view(quote),state:"expired"},410) : dispute(quote);
+  }
   // Anchor before releasing any payable challenge. A lost response or an externally mined
   // authorization can then be recovered from the first block where it could have appeared.
   if (await client.getChainId() !== 8453) throw Error("expected Base chain");
@@ -117,12 +124,7 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
       return settled;
     },
   };
-  const server = Mppx.create({ secretKey, realm: new URL(quote.resource).host, methods: [evm({
-    currency: evm.assets.base.USDC, recipient: merchant, x402: { facilitator: guardedFacilitator },
-  })] });
-  const route = server.evm.charge({ amount: formatUnits(BigInt(amount), 6), externalId: quote.id,
-    scope: JSON.stringify([quote.resource, quote.version, quote.created, quote.expires, amount]),
-    expires: new Date(quote.expires).toISOString() });
+  const {route}=orderCharge(quote,amount,merchant,secretKey,guardedFacilitator);
   let result;
   try { result = await route(request); }
   catch (err) {
