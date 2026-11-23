@@ -34,7 +34,7 @@ async function show(response) {
     state.textContent = submitted ? "Checking your signed payment. Refresh its status." : "Waiting for payment.";
   } else {
     state.textContent = ({ seen: "Payment seen. Waiting for confirmation.", paid: "Paid. Your receipt is ready.",
-      expired: "This quote expired.", held: "Payment under review. Keep your order reference.",
+      closed: "This invoice is closed.", expired: "This quote expired.", held: "Payment under review. Keep your order reference.",
       refunded: "Refund confirmed.", refund_pending: "Refund awaiting confirmation." })[result.state] || "Checking payment status.";
     if (result.amount) document.querySelector("#amount").textContent = formatUnits(BigInt(result.amount), 6) + " USDC";
     if (result.state === "seen" || result.state === "refund_pending") timer = setTimeout(check, 12000);

@@ -1,4 +1,6 @@
 import { reconcileRefund } from "./refund.mjs";
+import { Receipt } from "mppx";
+import { encodePaymentResponseHeader } from "@x402/core/http";
 import { evm, Mppx } from "mppx/server";
 import { formatUnits, getAddress } from "viem";
 import { amountForCents, reconcileOrder } from "./reconcile.mjs";
@@ -7,8 +9,18 @@ const json = (value, status, headers) => Response.json(value, {
   status, headers: { "cache-control": "no-store", ...headers },
 });
 const hash = /^0x[0-9a-f]{64}$/i;
-const receiptHeaders = ["payment-response", "payment-receipt"];
-const terminal = new Set(["paid", "held", "refunded", "refund_pending"]);
+// The facilitator may reply before finality. Emit protocol success only from the
+// site's finalized receipt, including after a lost provider response or restart.
+function finalizedHeaders(row) {
+  if (row.state !== "paid" || !row.receipt || !row.attempt) return {};
+  const { transaction: reference, payer, timestamp } = row.receipt;
+  if (row.attempt.protocol === "x402") return { "payment-response": encodePaymentResponseHeader({
+    success: true, network: "eip155:8453", transaction: reference, payer,
+  }) };
+  return { "payment-receipt": Receipt.serialize(Receipt.from({ method: "evm", status: "success",
+    reference, timestamp: new Date(Number(BigInt(timestamp) * 1000n)).toISOString() })) };
+}
+const terminal = new Set(["paid", "held", "refunded", "refund_pending", "closed"]);
 
 // owner is the site's authenticated order repository. arm must commit before returning true.
 // The only settlement transport here is the already configured merchant facilitator.
@@ -28,11 +40,11 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
       const observed = await reconcileRefund(client, row.receipt, row.refund, merchant);
       row = await owner.refundObserved(row.refund.original, observed);
     }
-    if (terminal.has(row.state)) return json(view(row), row.state === "held" ? 409 : 200, row.receiptHeaders);
+    if (terminal.has(row.state)) return json(view(row), row.state === "held" ? 409 : 200, finalizedHeaders(row));
     if (!row.attempt) return json(view(row), 202);
     const observed = await reconcileOrder({ client, quote, attempt: row.attempt, merchant });
     const current = await owner.observe(row.attempt, observed);
-    return json(view(current), current.state === "paid" ? 200 : current.state === "held" ? 409 : 202, current.receiptHeaders);
+    return json(view(current), current.state === "paid" ? 200 : current.state === "held" ? 409 : 202, finalizedHeaders(current));
   }
   if (quote.state !== "waiting") return read(quote);
   if (now() >= quote.expires) return json({ ...view(quote), state: "expired" }, 410);
@@ -94,11 +106,5 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
     headers.set("content-type", "application/json");
     return new Response(JSON.stringify(view(quote)), { status: 402, headers });
   }
-  const current = await owner.load();
-  if (armed && result?.status === 200 && current.attempt) {
-    const response = result.withReceipt(new Response());
-    const headers = Object.fromEntries(receiptHeaders.filter(k => response.headers.has(k)).map(k => [k, response.headers.get(k)]));
-    await owner.submitted(current.attempt, { headers });
-  }
-  return read(current);
+  return read(await owner.load());
 }

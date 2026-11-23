@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { Mppx, evm } from "mppx/client";
 import { encodeEventTopics, encodeAbiParameters, parseAbiItem } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { decodePaymentRequiredHeader } from "@x402/core/http";
+import { Receipt } from "mppx";
+import { decodePaymentResponseHeader, decodePaymentRequiredHeader } from "@x402/core/http";
 import { BASE_USDC } from "../settlement-proof.mjs";
 import { payOrder } from "./agent.mjs";
 import { checkoutOrder } from "./checkout.mjs";
@@ -86,7 +87,10 @@ for (const protocol of ["mpp", "x402"]) test(protocol + " signed quote, two paye
   assert.ok(results.some(r => r.status === 200), JSON.stringify(await Promise.all(results.map(r => r.clone().text()))));
   assert.equal(f.calls.settle, 1);
   assert.equal(f.calls.paid, 1);
-  assert.equal((await f.call(headers[0])).status, 200);
+  const replay = await f.call(headers[0]);
+  assert.equal(replay.status, 200);
+  if (protocol === "x402") assert.equal(decodePaymentResponseHeader(replay.headers.get("payment-response")).transaction, tx);
+  else assert.equal(Receipt.fromResponse(replay).reference, tx);
   assert.equal(f.row.receipt.payer, f.row.attempt.payer);
   assert.equal(f.row.receipt.amount, "499000000");
   assert.equal(f.row.receipt.transaction, tx);
@@ -104,7 +108,9 @@ test("unknown submit, restarted service, finalized receipt and distinct relayer"
   assert.equal((await f.call(h)).status, 202);
   assert.equal((await f.call(h)).status, 202);
   f.mine(f.row.attempt);
-  assert.equal((await f.call()).status, 200);
+  const recovered = await f.call();
+  assert.equal(recovered.status, 200);
+  assert.equal(decodePaymentResponseHeader(recovered.headers.get("payment-response")).payer, payer.address);
   assert.equal(f.calls.settle, 1);
   assert.equal(f.row.receipt.payer, payer.address);
   assert.notEqual(f.row.receipt.payer, other.address);
@@ -133,4 +139,13 @@ test("independent @x402/fetch agent completes the same order with one signed req
   assert.equal(response.status, 200);
   assert.equal((await response.json()).receipt.payer, payer.address);
   assert.equal(f.calls.settle, 1);
+});
+
+test("a provider success before finality carries no protocol success receipt", async () => {
+  const f = fixture();
+  f.facilitator.settle = async () => ({ success: true, transaction: tx, network: "eip155:8453" });
+  const response = await f.call(await credential(await f.call(), "mpp"));
+  assert.equal(response.status, 202);
+  assert.equal(response.headers.has("payment-receipt"), false);
+  assert.equal(response.headers.has("payment-response"), false);
 });
