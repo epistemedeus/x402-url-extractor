@@ -17,6 +17,10 @@ dsn="postgresql://$(id -un)@127.0.0.1/postgres?host=$pg_dir&port=55401"
 node server/scripts/care-enrollment.mjs sds_care_fixture sds_care_fixture_app | psql -X -q -v ON_ERROR_STOP=1 "$dsn"
 export SDS_PRIVATE_PREVIEW=1 SDS_CARE_SCHEMA=sds_care_fixture
 export SDS_CARE_DATABASE_URL="postgresql://sds_care_fixture_app@127.0.0.1/postgres?host=$pg_dir&port=55401"
+if [[ "${HOSTED_TABS_PREVIEW:-}" == "1" ]]; then
+  npm run build
+  export NODE_ENV=production
+fi
 cd "$gateway_source"
 npm run build
 node --test order-payments/site-preview.test.mjs

@@ -206,6 +206,42 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
       assert.equal(mail.rowCount,1);
     }
     assert.equal(settles-before,7);
+    if(process.env.HOSTED_TABS_PREVIEW==="1") {
+      const link=origin(site)+"/api/checkout/hosted/ai-readiness-fix-pack";
+      const tabs=await Promise.all([browser.newPage(),browser.newPage()]);
+      const keys=()=>Promise.all(tabs.map(tab=>tab.evaluate(async()=>(await import("/checkout/order-key.js")).pendingOrder(location.pathname))));
+      try {
+        await Promise.all(tabs.map(tab=>tab.goto(link)));
+        const [a,b]=await keys();assert.equal(a,b);
+        const start=(tab,method)=>tab.evaluate(async({order,method})=>{
+          const r=await fetch(location.pathname,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({order,method,
+            email:"owner@example.test",target:"https://example.com/owned"})});
+          return {status:r.status,body:await r.json()};
+        },{order:a,method});
+        const opens=await Promise.all(tabs.map(tab=>start(tab,"base_usdc")));
+        assert.deepEqual(opens[0],opens[1]);assert.equal(opens[0].status,201);
+        const paid=await payOrder({resource:opens[0].body.paymentUrl,amount:"39000000",account:payer,fetchImpl:toGateway});
+        assert.equal((await paid.json()).state,"paid");
+        await Promise.all(tabs.map(tab=>tab.reload()));
+        await Promise.all(tabs.map(tab=>tab.waitForSelector("#again:not([hidden])")));
+        await Promise.all(tabs.map(async tab=>{
+          // Dispatch both clicks without switching the shared headless browser's foreground tab.
+          await tab.evaluate(() => document.querySelector("#again").click());
+          try {
+            await tab.waitForFunction(() => performance.getEntriesByType("navigation")[0]?.type === "reload" &&
+              document.querySelector("#again")?.hidden, {timeout: 8000});
+          } catch (error) {
+            throw Error("Repeat purchase did not return to checkout: " + await tab.$eval("#state",node=>node.textContent),{cause:error});
+          }
+        }));
+        const [c,d]=await keys();assert.equal(c,d);assert.notEqual(c,a);
+        const race=await Promise.all(tabs.map((tab,i)=>tab.evaluate(async({order,method})=>
+          (await fetch(location.pathname,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({order,method,
+            email:"owner@example.test",target:"https://example.com/owned"})})).status,
+          {order:c,method:i===0?"card":"base_usdc"})));
+        assert.deepEqual(race.sort(),[201,409]);
+      } finally {await Promise.all(tabs.map(tab=>tab.close()));}
+    }
     if(process.env.WATCH_ORDER_PREVIEW==="1") {
       process.env.SDS_SKILL_WATCH_USDC="1";process.env.SDS_TEST_LEGACY_LINKS='{"legacy_skill_watch":"test_watch"}';
       stripe.paymentLinks={list:async()=>({has_more:false,data:[{id:"plink_watch",active:true,livemode:false,url:"https://buy.stripe.com/test_watch"}]}),
@@ -217,7 +253,7 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
         method:"base_usdc",repositories:"https://github.com/example/watch",email:"watch@example.test"})});
       assert.equal(opened.status,201);const {paymentUrl}=await opened.json();
       const paid=await payOrder({resource:paymentUrl,amount:"12000000",account:payer,fetchImpl:toGateway});
-      assert.equal(paid.status,200);assert.equal((await paid.json()).state,"paid");assert.equal(settles-before,8);
+      assert.equal(paid.status,200);assert.equal((await paid.json()).state,"paid");assert.equal(settles-before,process.env.HOSTED_TABS_PREVIEW==="1"?9:8);
       const periods=await pool.query(`select * from ${careTable("care_periods")} where order_id=$1`,[order]);
       assert.equal(periods.rowCount,1);
       const invoice=await pool.query(`select * from ${careTable("care_orders")} where rail_parent=$1`,[order]);
