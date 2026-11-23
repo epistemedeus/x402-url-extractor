@@ -41,7 +41,7 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
   const receipts = [], blocks = new Map();
   const publicClient = {
     getChainId: async () => 8453,
-    getBlock: async ({ blockNumber }) => blocks.get(blockNumber) ?? { number: blockNo, timestamp: BigInt(Math.ceil(Date.now()/1000)) },
+    getBlock: async ({ blockNumber }) => blocks.get(blockNumber) ?? { number: blockNo, timestamp: BigInt(Math.floor(Date.now()/1000)) },
     getTransactionReceipt: async ({ hash }) => receipts.find(r => r.transactionHash === hash),
     async getLogs({ args, fromBlock, toBlock }) {
       return receipts.filter(r => r.blockNumber >= fromBlock && r.blockNumber <= toBlock && r.payer === args.authorizer && r.nonce === args.nonce)
@@ -51,7 +51,7 @@ test("SDS wallet and independent agent use the gateway and existing PostgreSQL r
   function mine(auth) {
     blockNo++;
     const hash = "0x" + blockNo.toString(16).padStart(64,"0");
-    const block = { number: blockNo, timestamp: BigInt(Math.ceil(Date.now()/1000)), hash };
+    const block = { number: blockNo, timestamp: BigInt(Math.floor(Date.now()/1000)), hash };
     blocks.set(blockNo, block);
     const log = (topics,data,logIndex) => ({ address: BASE_USDC, topics, data, logIndex, blockHash: hash, blockNumber: blockNo, transactionHash: hash });
     const logs = [log(encodeEventTopics({ abi: [used], args: { authorizer: auth.from, nonce: auth.nonce } }), "0x", 0),

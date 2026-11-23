@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
-import { refundTerms } from "./refund.mjs";
+import { refundTerms, verifyRefundSource } from "./refund.mjs";
 import { SITE_ORIGINS } from "./http.mjs";
 import { publicHistoricalClient } from "../transaction-receipt.mjs";
 
@@ -20,7 +20,8 @@ export async function prepareRefund({ order, site, token, client, fetchImpl = fe
   if (row.refund) return { action: "read_status_only", state: row.refund.state, original: row.refund.original };
   if (!["paid", "held"].includes(row.state) || await client.getChainId() !== 8453) throw Error("ineligible refund");
   const from = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
-  const refund = refundTerms(row.receipt, from, String((await client.getBlock({ blockTag: "latest" })).number), now());
+  const original = await verifyRefundSource(client,row,from,now());
+  const refund = refundTerms(original, from, String((await client.getBlock({ blockTag: "latest" })).number), now());
   const result = await call("reserve", { refund });
   if (!result.won) return { action: "read_status_only", original: refund.original };
   return { action: "reserved_for_existing_signer", original: refund.original, typedData: refund.typedData };

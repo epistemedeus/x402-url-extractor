@@ -34,3 +34,20 @@ export async function reconcileRefund(client, receipt, refund, merchant) {
     attempt: { version: expected.original, nextBlock: refund.nextBlock, payer: merchant, nonce: expected.typedData.message.nonce },
     merchant: expected.typedData.message.to, amount: receipt.amount });
 }
+
+// Re-read the original effect before releasing a protected signing request. An
+// amount mismatch can be returned only in the amount actually received.
+export async function verifyRefundSource(client, row, merchant, now = Date.now()) {
+  const e = row.receipt;
+  if (!e || !row.attempt || row.attempt.nonce !== e.nonce ||
+      getAddress(row.attempt.payer) !== getAddress(e.payer) || !/^(0|[1-9][0-9]{0,19})$/.test(e.block)) {
+    throw Error("original order debit is not attributable");
+  }
+  const proof = await reconcileAuthorization({ client, quote: { version:row.attempt.version,created:0,expires:now + 1 },
+    attempt:{ version:row.attempt.version,payer:row.attempt.payer,nonce:row.attempt.nonce,nextBlock:e.block },
+    merchant, amount:e.amount, window:1n });
+  if (proof.state !== "paid" || ["transaction","blockHash","logIndex","transferLogIndex","nonce","amount","timestamp","block"]
+      .some(key=>proof.evidence[key] !== e[key]) || getAddress(proof.evidence.recipient) !== getAddress(e.recipient) ||
+      getAddress(proof.evidence.asset) !== getAddress(e.asset)) throw Error("original finalized debit could not be received");
+  return proof.evidence;
+}

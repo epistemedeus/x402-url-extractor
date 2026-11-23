@@ -6,6 +6,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { Receipt } from "mppx";
 import { decodePaymentResponseHeader, decodePaymentRequiredHeader } from "@x402/core/http";
 import { BASE_USDC } from "../settlement-proof.mjs";
+import { verifyRefundSource } from "./refund.mjs";
 import { payOrder } from "./agent.mjs";
 import { checkoutOrder } from "./checkout.mjs";
 import { amountForCents, reconcileOrder } from "./reconcile.mjs";
@@ -148,4 +149,13 @@ test("a provider success before finality carries no protocol success receipt", a
   assert.equal(response.status, 202);
   assert.equal(response.headers.has("payment-receipt"), false);
   assert.equal(response.headers.has("payment-response"), false);
+});
+
+test("protected refund input requires the original canonical debit independently of the order projection", async () => {
+  const f=fixture();
+  await f.call(await credential(await f.call(),"x402"));
+  assert.equal((await verifyRefundSource(f.client,f.row,merchant)).transaction,tx);
+  for (const patch of [{transferLogIndex:5},{transaction:"0x"+"6".repeat(64)},{amount:"1"},{payer:other.address}]) {
+    await assert.rejects(verifyRefundSource(f.client,{...f.row,receipt:{...f.row.receipt,...patch}},merchant));
+  }
 });

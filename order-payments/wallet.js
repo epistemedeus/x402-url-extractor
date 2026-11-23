@@ -36,6 +36,13 @@ async function show(response) {
     state.textContent = ({ seen: "Payment seen. Waiting for confirmation.", paid: "Paid. Your receipt is ready.",
       closed: "This invoice is closed.", expired: "This quote expired.", held: "Payment under review. Keep your order reference.",
       refunded: "Refund confirmed.", refund_pending: "Refund awaiting confirmation." })[result.state] || "Checking payment status.";
+    if (result.receipt?.transaction) {
+      document.querySelector("#history").hidden = false;
+      document.querySelector("#debit").textContent = result.receipt.transaction;
+      const refund = result.receipt.refund?.transaction;
+      document.querySelector("#refund-label").hidden = !refund;
+      document.querySelector("#refund").textContent = refund || "";
+    }
     if (result.amount) document.querySelector("#amount").textContent = formatUnits(BigInt(result.amount), 6) + " USDC";
     if (result.state === "seen" || result.state === "refund_pending") timer = setTimeout(check, 12000);
   }
@@ -64,7 +71,7 @@ button.onclick = async () => {
     headers.delete("www-authenticate");
     const signature = await client.createCredential(new Response(null, { status: 402, headers }));
     submitted = true;
-    sessionStorage.setItem("submitted/" + reference, "1");
+    try { sessionStorage.setItem("submitted/" + reference, "1"); } catch { /* the owner still elects one submission */ }
     const paid = await fetch(endpoint, { credentials: "omit", cache: "no-store", redirect: "error",
       headers: { "payment-signature": signature } });
     await show(paid);
@@ -73,5 +80,5 @@ button.onclick = async () => {
       (err?.message === "Open this payment link in your wallet browser." ? err.message : "Payment was not confirmed. Check your wallet and this order.");
   } finally { busy = false; button.disabled = false; }
 };
-submitted = sessionStorage.getItem("submitted/" + reference) === "1";
+try { submitted = sessionStorage.getItem("submitted/" + reference) === "1"; } catch { /* optional browser memory */ }
 void check();

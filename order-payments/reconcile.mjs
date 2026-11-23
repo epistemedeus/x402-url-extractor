@@ -65,7 +65,7 @@ export async function reconcileAuthorization({ client, quote, attempt, merchant,
     { client: { getTransactionReceipt: async () => receipt, getBlock: async () => block } });
   if (!proof.settlement.verified) return { state: "held", reason: "ambiguous_transfer", evidence };
   const at = block.timestamp * 1000n;
-  if (at < BigInt(quote.created) || at >= BigInt(quote.expires) || quote.version !== attempt.version) {
+  if (block.timestamp < BigInt(Math.floor(quote.created / 1000)) || at >= BigInt(quote.expires) || quote.version !== attempt.version) {
     return { state: "held", reason: "quote_changed_or_expired", evidence };
   }
   return { state: "paid", evidence };
