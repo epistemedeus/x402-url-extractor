@@ -1,0 +1,6 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pay with USDC</title>
+<style>
+:root{color-scheme:light dark;font:16px/1.55 system-ui,sans-serif}body{margin:8vh auto;padding:1.4rem;max-width:31rem}h1{font-size:2rem}
+dt{font-weight:650;margin-top:1rem}dd{margin:0;overflow-wrap:anywhere}button{padding:.65rem 1rem;font:inherit;margin:.3rem .5rem .3rem 0;cursor:pointer}
+</style></head><body><main><h1>Pay with USDC</h1><dl><dt>Amount</dt><dd id="amount">Loading</dd><dt>Network</dt><dd>Base</dd><dt>Order reference</dt><dd id="order"></dd></dl><p id="state" role="status">Reading your order.</p><button id="pay" hidden>Connect wallet and pay</button><button id="refresh">Refresh status</button></main><script type="module" src="/order-payments/assets/wallet.js"></script></body></html>

@@ -1,3 +1,4 @@
+import { reconcileRefund } from "./refund.mjs";
 import { evm, Mppx } from "mppx/server";
 import { formatUnits, getAddress } from "viem";
 import { amountForCents, reconcileOrder } from "./reconcile.mjs";
@@ -23,6 +24,10 @@ export async function checkoutOrder({ request, owner, client, facilitator, merch
   const view = row => ({ order: quote.id, version: quote.version, amount, network: "eip155:8453",
     state: row.state, ...(row.reason && { reason: row.reason }), ...(row.receipt && { receipt: row.receipt }) });
   async function read(row) {
+    if (row.state === "refund_pending") {
+      const observed = await reconcileRefund(client, row.receipt, row.refund, merchant);
+      row = await owner.refundObserved(row.refund.original, observed);
+    }
     if (terminal.has(row.state)) return json(view(row), row.state === "held" ? 409 : 200, row.receiptHeaders);
     if (!row.attempt) return json(view(row), 202);
     const observed = await reconcileOrder({ client, quote, attempt: row.attempt, merchant });

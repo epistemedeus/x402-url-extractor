@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { checkoutOrder } from "./checkout.mjs";
 import { publicHistoricalClient } from "../transaction-receipt.mjs";
 
@@ -25,11 +26,21 @@ function siteOrder(site, id, token, fetchImpl) {
   return { load: () => call("load"), arm: async attempt => (await call("arm", { attempt })).armed === true,
     anchor: async block => (await call("anchor", { block })).block,
     submitted: (attempt, result) => call("submitted", { attempt, result }),
+    refundObserved: (original, result) => call("refund-observe", { original, result }),
     observe: (attempt, result) => call("observe", { attempt, result }) };
 }
 
 export function mountOrderPayments(app, { merchant, network, facilitator, env = process.env,
   client = publicHistoricalClient("base"), fetchImpl = fetch }) {
+  const assetRoot = fileURLToPath(new URL(".", import.meta.url));
+  app.get("/order-payments/assets/wallet.js", (_req, res) => res.sendFile("dist/wallet.js", { root: assetRoot }));
+  app.get(ORDER_PATH + "/wallet", (req, res) => {
+    const { site, id } = req.params;
+    if (!Object.hasOwn(SITE_ORIGINS, site) || !uuid.test(id) || !env[`ORDER_PAYMENTS_${site.toUpperCase()}_TOKEN`]) return res.sendStatus(404);
+    res.set({ "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex",
+      "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" });
+    return res.sendFile("wallet.html", { root: assetRoot });
+  });
   app.get(ORDER_PATH, async (req, res) => {
     res.set({ "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex" });
     const { site, id } = req.params;
@@ -39,7 +50,7 @@ export function mountOrderPayments(app, { merchant, network, facilitator, env = 
     if (network !== "eip155:8453" || !token || token.length < 32 || !env.MPP_SECRET_KEY) return res.sendStatus(404);
     const headers = new Headers();
     for (const name of forwarded) if (req.get(name)) headers.set(name, req.get(name));
-    if (headers.size > 1 || (headers.has("authorization") && headers.has("payment-signature"))) return res.sendStatus(400);
+    if (headers.has("authorization") && headers.has("payment-signature")) return res.sendStatus(400);
     const request = new Request(new URL(req.originalUrl, paymentOrigin), { headers });
     try {
       const response = await checkoutOrder({ request, merchant, facilitator, secretKey: env.MPP_SECRET_KEY, client,

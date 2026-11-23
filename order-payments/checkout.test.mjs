@@ -5,6 +5,7 @@ import { encodeEventTopics, encodeAbiParameters, parseAbiItem } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import { BASE_USDC } from "../settlement-proof.mjs";
+import { payOrder } from "./agent.mjs";
 import { checkoutOrder } from "./checkout.mjs";
 import { amountForCents, reconcileOrder } from "./reconcile.mjs";
 
@@ -123,4 +124,13 @@ for (const defect of ["amount", "expired", "changed", "token"]) test("recovery h
 test("exact cents only", () => {
   for (const val of [0, -1, 3.14, "99", NaN, Infinity, 2 ** 53]) assert.throws(() => amountForCents(val));
   assert.equal(amountForCents(99999999), "999999990000");
+});
+
+test("independent @x402/fetch agent completes the same order with one signed request", async () => {
+  const f = fixture();
+  const response = await payOrder({ resource: f.row.resource, amount: "499000000", account: payer,
+    fetchImpl: req => f.call(req.headers) });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).receipt.payer, payer.address);
+  assert.equal(f.calls.settle, 1);
 });

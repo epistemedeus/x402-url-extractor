@@ -20,7 +20,11 @@ function decode(log, event) {
 // Only the owner supplies the admitted payer, nonce and scan start. No client-supplied hash is needed.
 // One bounded finalized range per read. The owner may persist nextBlock for the next read.
 export async function reconcileOrder({ client, quote, attempt, merchant, window = 1500n }) {
-  const amount = amountForCents(quote.cents);
+  return reconcileAuthorization({ client, quote, attempt, merchant, amount: amountForCents(quote.cents), window });
+}
+
+export async function reconcileAuthorization({ client, quote, attempt, merchant, amount, window = 1500n }) {
+  if (!/^[1-9][0-9]{0,15}$/.test(amount)) throw Error("invalid recovery amount");
   const payer = getAddress(attempt.payer);
   const recipient = getAddress(merchant);
   if (!word.test(attempt.nonce) || !uint.test(attempt.nextBlock) || window < 1n || window > 2000n ||
